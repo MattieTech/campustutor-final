@@ -2187,5 +2187,45 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<script>
+/* ============================================================
+   CATEGORY TAB SWITCHING – Academic AI Tools vs Study Tools
+   ============================================================ */
+function switchToolCategory(cat) {
+  var academic = document.getElementById('academicToolsSection');
+  var study    = document.getElementById('studyToolsSection');
+  var tabAcad  = document.getElementById('tabCatAcademic');
+  var tabStudy = document.getElementById('tabCatStudy');
+
+  if (!academic || !study || !tabAcad || !tabStudy) return;
+
+  if (cat === 'study') {
+    academic.style.display = 'none';
+    study.style.display    = 'flex';
+    study.style.flexDirection = 'column';
+    tabStudy.classList.add('active');
+    tabAcad.classList.remove('active');
+  } else {
+    study.style.display    = 'none';
+    academic.style.display = 'flex';
+    academic.style.flexDirection = 'column';
+    tabAcad.classList.add('active');
+    tabStudy.classList.remove('active');
+  }
+}
+
+/* ============================================================
+   STUDY TOOL NAVIGATION – opens study.html with tool param
+   ============================================================ */
+function openStudyToolAction(action) {
+  window.location.href = '/pages/study.html?tool=' + encodeURIComponent(action);
+}
+
+/* Initialise default view on page load */
+document.addEventListener('DOMContentLoaded', function() {
+  switchToolCategory('academic');
+});
+</script>
+
 </body>
 </html>

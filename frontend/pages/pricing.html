@@ -614,13 +614,35 @@
     .pricing-toggle-wrap {
       margin-bottom: 14px !important;
     }
+    /* Fix tab pills cut-off on mobile */
+    .pricing-toggle-box {
+      max-width: calc(100vw - 32px) !important;
+      overflow: hidden !important;
+    }
     .pricing-view-pill {
-      padding: 7px 14px !important;
-      font-size: 0.8rem !important;
+      padding: 7px 10px !important;
+      font-size: 0.75rem !important;
+      white-space: nowrap !important;
+      flex: 1 1 0 !important;
+      justify-content: center !important;
     }
     .ct-pricing-wrapper {
       padding: 10px 12px 85px 12px !important;
       gap: 12px !important;
+    }
+    /* Fix navbar right actions overflow */
+    .ct-nav-right-actions {
+      gap: 4px !important;
+    }
+    .ct-daily-gift-btn span {
+      display: none !important;
+    }
+    .ct-daily-gift-btn {
+      padding: 6px 8px !important;
+      min-width: 34px !important;
+    }
+    .logout-btn-desktop {
+      display: none !important;
     }
     #activePlanAlert {
       padding: 10px 14px !important;
