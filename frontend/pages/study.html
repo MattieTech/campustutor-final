@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Study — CampusTutor AI</title>
+<link rel="stylesheet" href="/css/style.css"/>
+
+<!-- KaTeX CSS — renders LaTeX math beautifully -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css"/>
+
+<style>
+/* ── KaTeX display equation centering ── */
+.katex-display {
+  margin: 1.2em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.katex { font-size: 1.08em; }
+
+/* ── AI output typography ── */
+.ai-output { line-height: 1.85; }
+.ai-output h2 { margin-top: 20px; margin-bottom: 10px; }
+.ai-output h2:first-child { margin-top: 0; }
+.ai-output p  { margin-bottom: 10px; }
+
+/* ── result animation ── */
+.result-anim { animation: fadeUp 0.35s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── explain row ── */
+.explain-row { display:flex; gap:10px; }
+@media(max-width:560px) { .explain-row { flex-direction:column; } }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">☰</button>
+  <a href="/" class="brand">
+    <div class="brand-icon">🎓</div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span>
+  </a>
+  <div class="navbar-right">
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+    <a href="/pages/dashboard.html" class="pill-btn">← Dashboard</a>
+    <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop">Log Out</button>
+  </div>
+</nav>
+
+<div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="closeMobileMenu()"></div>
+<nav class="mobile-menu" id="mobileMenu">
+  <a href="/pages/dashboard.html" class="mobile-menu-item" onclick="closeMobileMenu()">🏠 Dashboard</a>
+  <a href="/pages/upload.html" class="mobile-menu-item" onclick="closeMobileMenu()">📤 Uploads</a>
+  <a href="/pages/history.html" class="mobile-menu-item" onclick="closeMobileMenu()">📊 History</a>
+  <a href="/pages/dashboard.html#profile" class="mobile-menu-item" onclick="closeMobileMenu()">👤 Profile</a>
+  <button class="mobile-menu-item logout" onclick="logout()">🚪 Logout</button>
+</nav>
+
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">Navigation</div>
+    <a href="/pages/dashboard.html" class="sidebar-link">🏠 Dashboard</a>
+    <a href="/pages/upload.html"    class="sidebar-link">📤 Upload PDF</a>
+
+    <div class="sidebar-section" style="margin-top:8px;">Tools Used</div>
+    <div id="toolsList"></div>
+
+    <div class="sidebar-bottom">
+      <div style="font-size:.7rem;color:var(--label4);text-align:center;padding:8px;">
+        ⚡ Developed by MattieTech
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div>
+          <h1 id="pageTitle">📄 Loading...</h1>
+          <p id="pageSubtitle" style="color:var(--label3);font-size:.88rem;">
+            Getting your document ready...
+          </p>
+        </div>
+        <span class="badge badge-blue" id="xpBadge" style="margin-left:auto;display:none;">
+          +0 XP this session
+        </span>
+      </div>
+    </div>
+
+    <!-- AI Action Buttons -->
+    <div class="action-grid">
+      <button class="action-btn" id="btnSum" onclick="runSummarize()">
+        <span class="action-icon">📋</span>
+        <span class="action-title">Summarize Notes</span>
+        <span class="action-desc">Get a clean overview of all key points</span>
+      </button>
+      <button class="action-btn" id="btnQ" onclick="runQuestions()">
+        <span class="action-icon">📝</span>
+        <span class="action-title">Revision Questions</span>
+        <span class="action-desc">MCQs + essay questions with model answers</span>
+      </button>
+      <button class="action-btn" id="btnFlash" onclick="runFlashcards()">
+        <span class="action-icon">🃏</span>
+        <span class="action-title">Create Flashcards</span>
+        <span class="action-desc">Interactive flip-card study set</span>
+      </button>
+    </div>
+
+    <!-- Explain Concept -->
+    <div class="card" style="margin-bottom:22px;">
+      <div class="card-body">
+        <div class="card-title">💡 Explain a Concept</div>
+        <div class="card-sub">
+          Type any topic from your notes for a beginner-friendly explanation
+          with properly rendered equations
+        </div>
+        <div class="explain-row">
+          <input
+            class="form-input"
+            type="text"
+            id="conceptInput"
+            placeholder="e.g. &quot;Quadratic formula&quot; or &quot;Newton's second law&quot;"
+            style="flex:1;"
+          />
+          <button class="btn btn-primary" id="btnExplain" onclick="runExplain()">
+            Explain It 💡
+          </button>
+        </div>
+        <!-- Explain result rendered here -->
+        <div id="explainResult" style="margin-top:16px;display:none;" class="result-anim"></div>
+      </div>
+    </div>
+
+    <!-- Results Tabs (populated dynamically) -->
+    <div id="resultsArea" style="display:none;">
+      <div class="tabs" id="tabsBar"></div>
+      <div id="tabContent" style="margin-top:18px;"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- KaTeX auto-render (processes \( \) and \[ \] in the page) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+
+<script src="/js/api.js"></script>
+<script>
+// ── THEME & MOBILE MENU ────────────────────────────────────────
+requireAuth();
+
+function initThemeToggle(){
+  const themeBtn = document.getElementById('themeBtn');
+  if(!themeBtn) return;
+  const t = localStorage.getItem('ct_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
+  themeBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const c = document.documentElement.getAttribute('data-theme');
+    const n = c === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', n);
+    localStorage.setItem('ct_theme', n);
+    themeBtn.textContent = n === 'dark' ? '☀️' : '🌙';
+  });
+}
+
+function initMobileMenu(){
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.querySelector('.sidebar');
+  if(!mobileMenuBtn || !sidebar) return;
+  
+  function updateMobileMenuVisibility(){
+    mobileMenuBtn.style.display = window.innerWidth <= 768 ? 'grid' : 'none';
+    if(window.innerWidth > 768) sidebar.classList.remove('mobile-open');
+  }
+  updateMobileMenuVisibility();
+  window.addEventListener('resize', updateMobileMenuVisibility);
+  
+  mobileMenuBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    sidebar.classList.toggle('mobile-open');
+    mobileMenuBtn.textContent = sidebar.classList.contains('mobile-open') ? '✕' : '☰';
+  });
+  
+  sidebar.querySelectorAll('a, button').forEach(el => {
+    el.addEventListener('click', () => {
+      sidebar.classList.remove('mobile-open');
+      mobileMenuBtn.textContent = '☰';
+    });
+  });
+}
+
+const t = localStorage.getItem('ct_theme') || 'light';
+document.documentElement.setAttribute('data-theme', t);
+initThemeToggle();
+initMobileMenu();
+
+// ── URL PARAMS ─────────────────────────────────────────────────
+const params  = new URLSearchParams(window.location.search);
+const docId   = params.get('docId');
+const docName = params.get('name') || 'Document';
+
+if (!docId) {
+  showToast('No document selected.', 'error');
+  window.location.href = '/pages/dashboard.html';
+}
+
+document.getElementById('pageTitle').textContent    = '📄 ' + docName;
+document.getElementById('pageSubtitle').textContent = 'Use the AI tools below to study this document';
+
+// Track XP earned this session
+let sessionXP = 0;
+
+// ── LOAD SAVED RESULTS ─────────────────────────────────────────
+// When the page loads, restore any previously generated content
+// so the student doesn't have to re-generate on every visit.
+loadSavedResults();
+
+async function loadSavedResults() {
+  const { data, error } = await apiGetResults(docId);
+  if (error || !data.results) return;
+  const r = data.results;
+  if (r.summary)    showResult('summary',   '📋 Summary',   r.summary);
+  if (r.questions)  showResult('questions', '📝 Questions', r.questions);
+  if (r.flashcards) showFlashcards(r.flashcards);
+}
+
+// ── AI ACTIONS ─────────────────────────────────────────────────
+
+async function runSummarize() {
+  const btn = document.getElementById('btnSum');
+  setBtnLoading(btn, 'Summarizing…');
+  const { data, error } = await apiSummarize(docId);
+  resetBtn(btn, '📋', 'Summarize Notes', 'Get a clean overview of all key points');
+  if (error) { showToast(error, 'error'); return; }
+  showResult('summary', '📋 Summary', data.summary);
+  awardXP(15, 'first_summary');
+  showToast('Summary ready! +15 XP 🌟', 'success');
+}
+
+async function runQuestions() {
+  const btn = document.getElementById('btnQ');
+  setBtnLoading(btn, 'Generating questions…');
+  const { data, error } = await apiGenerateQuestions(docId);
+  resetBtn(btn, '📝', 'Revision Questions', 'MCQs + essay questions with model answers');
+  if (error) { showToast(error, 'error'); return; }
+  showResult('questions', '📝 Questions', data.questions);
+  awardXP(20, 'first_quiz');
+  showToast('Questions ready! +20 XP 🌟', 'success');
+}
+
+async function runFlashcards() {
+  const btn = document.getElementById('btnFlash');
+  setBtnLoading(btn, 'Creating flashcards…');
+  const { data, error } = await apiGenerateFlashcards(docId);
+  resetBtn(btn, '🃏', 'Create Flashcards', 'Interactive flip-card study set');
+  if (error) { showToast(error, 'error'); return; }
+  showFlashcards(data.flashcards);
+  awardXP(15, 'first_flash');
+  showToast('Flashcards ready! +15 XP 🌟', 'success');
+}
+
+async function runExplain() {
+  const concept = document.getElementById('conceptInput').value.trim();
+  if (!concept) { showToast('Please type a concept to explain.', 'error'); return; }
+
+  const btn = document.getElementById('btnExplain');
+  btn.disabled = true;
+  btn.textContent = 'Thinking… 🤔';
+
+  const { data, error } = await apiExplain(docId, concept);
+  btn.disabled = false;
+  btn.textContent = 'Explain It 💡';
+
+  if (error) { showToast(error, 'error'); return; }
+
+  const box = document.getElementById('explainResult');
+  box.style.display = 'block';
+  // Render markdown + then run KaTeX over the result
+  box.innerHTML = `<div class="ai-output">${markdownToHTML(data.explanation)}</div>`;
+  renderMath(box);
+  showToast('Explanation ready!', 'success');
+}
+
+// ── RESULT DISPLAY ─────────────────────────────────────────────
+
+const panels = {}; // tracks which tabs have been created
+
+function showResult(key, label, content) {
+  ensureResultsArea();
+
+  if (panels[key]) {
+    // Tab already exists — just update its content
+    const panelEl = document.getElementById('panel-' + key);
+    panelEl.innerHTML = buildResultWithDownload(key, content);
+    renderMath(panelEl);
+    activateTab(key);
+    return;
+  }
+
+  // Create tab button with download icon
+  const tabsBar = document.getElementById('tabsBar');
+  const btn = document.createElement('button');
+  btn.className  = 'tab-btn';
+  btn.id         = 'tab-' + key;
+  btn.innerHTML = `${label} <span style="margin-left:8px;font-size:0.9rem;">⬇️</span>`;
+  btn.onclick    = (e) => {
+    // If they click the download icon, trigger download
+    if(e.target.textContent.includes('⬇️')) {
+      downloadResult(key);
+    } else {
+      activateTab(key);
+    }
+  };
+  tabsBar.appendChild(btn);
+
+  // Create panel div
+  const tc = document.getElementById('tabContent');
+  const panel = document.createElement('div');
+  panel.className = 'tab-panel';
+  panel.id        = 'panel-' + key;
+  panel.innerHTML = buildResultWithDownload(key, content);
+  tc.appendChild(panel);
+
+  panels[key] = true;
+  activateTab(key);
+
+  // Run KaTeX on the newly created panel
+  renderMath(panel);
+
+  addSidebarTool(label, key);
+}
+
+function showFlashcards(cards) {
+  ensureResultsArea();
+  const key = 'flashcards', label = '🃏 Flashcards';
+
+  if (panels[key]) {
+    const panelEl = document.getElementById('panel-' + key);
+    panelEl.innerHTML = buildFlashcardHTML(cards);
+    renderMath(panelEl);
+    activateTab(key);
+    return;
+  }
+
+  const tabsBar = document.getElementById('tabsBar');
+  const btn = document.createElement('button');
+  btn.className  = 'tab-btn';
+  btn.id         = 'tab-' + key;
+  btn.textContent = label;
+  btn.onclick    = () => activateTab(key);
+  tabsBar.appendChild(btn);
+
+  const tc = document.getElementById('tabContent');
+  const panel = document.createElement('div');
+  panel.className = 'tab-panel';
+  panel.id        = 'panel-' + key;
+  panel.innerHTML = buildFlashcardHTML(cards);
+  tc.appendChild(panel);
+
+  panels[key] = true;
+  activateTab(key);
+
+  // KaTeX on flashcard text (front/back may contain LaTeX)
+  renderMath(panel);
+
+  addSidebarTool(label, key);
+}
+
+// ── BUILDERS ───────────────────────────────────────────────────
+
+function buildResultWithDownload(key, content) {
+  const downloadBtnHTML = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+      <button class="btn btn-sm btn-primary" onclick="downloadResult('${key}')">⬇️ Download</button>
+    </div>`;
+  return downloadBtnHTML + `<div class="ai-output result-anim">${markdownToHTML(content)}</div>`;
+}
+
+function downloadResult(key) {
+  const docIdFromURL = new URLSearchParams(window.location.search).get('docId');
+  if(!docIdFromURL) {
+    showToast('Error: No document ID', 'error');
+    return;
+  }
+  
+  switch(key) {
+    case 'summary':
+      downloadSummaryTXT(docIdFromURL);
+      break;
+    case 'questions':
+      downloadQuestionsTXT(docIdFromURL);
+      break;
+    case 'explanation':
+      downloadExplanationTXT(docIdFromURL);
+      break;
+    case 'flashcards':
+      downloadFlashcardsCSV(docIdFromURL);
+      break;
+    default:
+      showToast('Download not available for this content', 'info');
+  }
+}
+
+function buildAIOutputHTML(content) {
+  // Wrap in result-anim so it fades in nicely
+  return `<div class="ai-output result-anim">${markdownToHTML(content)}</div>`;
+}
+
+function buildFlashcardHTML(cards) {
+  if (!Array.isArray(cards) || cards.length === 0) {
+    return '<p style="color:var(--label3);">No flashcards were generated.</p>';
+  }
+
+  const cardHTML = cards.map(c => `
+    <div class="flashcard" onclick="this.classList.toggle('flipped')" title="Click to flip">
+      <div class="flashcard-inner">
+        <div class="flashcard-front">
+          <div class="fc-cat">${c.category || 'General'}</div>
+          <div class="fc-front-text">${c.front}</div>
+          <div class="fc-hint">Tap to reveal →</div>
+        </div>
+        <div class="flashcard-back">
+          <div class="fc-cat">Answer</div>
+          <div class="fc-back-text">${c.back}</div>
+          <div class="fc-hint">← Tap to flip back</div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <p style="font-size:.82rem;color:var(--label3);">
+        Click any card to reveal the answer ✨
+      </p>
+      <button class="btn btn-sm btn-primary" onclick="downloadFlashcardsCSV('${docId}')">⬇️ Download CSV</button>
+    </div>
+    <div class="flashcard-grid result-anim">${cardHTML}</div>`;
+}
+
+// ── TAB HELPERS ────────────────────────────────────────────────
+
+function ensureResultsArea() {
+  document.getElementById('resultsArea').style.display = 'block';
+}
+
+function activateTab(key) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+  const tabEl   = document.getElementById('tab-' + key);
+  const panelEl = document.getElementById('panel-' + key);
+  if (tabEl)   tabEl.classList.add('active');
+  if (panelEl) panelEl.classList.add('active');
+
+  document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── SIDEBAR TOOL LIST ──────────────────────────────────────────
+const addedTools = new Set();
+function addSidebarTool(label, key) {
+  if (addedTools.has(key)) return;
+  addedTools.add(key);
+  const a = document.createElement('a');
+  a.className = 'sidebar-link';
+  a.style.cssText = 'font-size:.82rem;padding:8px 12px;cursor:pointer;';
+  a.textContent = label;
+  a.onclick = () => activateTab(key);
+  document.getElementById('toolsList').appendChild(a);
+}
+
+// ── BUTTON STATE HELPERS ───────────────────────────────────────
+function setBtnLoading(btn, text) {
+  btn.disabled = true;
+  btn.querySelector('.action-icon').textContent = '⏳';
+  btn.querySelector('.action-title').textContent = text;
+}
+
+function resetBtn(btn, icon, title, desc) {
+  btn.disabled = false;
+  btn.querySelector('.action-icon').textContent  = icon;
+  btn.querySelector('.action-title').textContent = title;
+  btn.querySelector('.action-desc').textContent  = desc;
+}
+
+// ── XP ─────────────────────────────────────────────────────────
+function awardXP(pts, badgeKey) {
+  sessionXP += pts;
+  const badge = document.getElementById('xpBadge');
+  badge.style.display = 'inline-flex';
+  badge.textContent = `+${sessionXP} XP this session`;
+
+  const cur = parseInt(localStorage.getItem('ct_xp') || '0');
+  localStorage.setItem('ct_xp', cur + pts);
+
+  if (badgeKey) {
+    const badges = JSON.parse(localStorage.getItem('ct_badges') || '[]');
+    if (!badges.includes(badgeKey)) {
+      badges.push(badgeKey);
+      localStorage.setItem('ct_badges', JSON.stringify(badges));
+    }
+  }
+}
+
+// Press Enter in concept input to trigger explain
+document.getElementById('conceptInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runExplain();
+});
+
+// Mobile Menu Toggle
+function toggleMobileMenu(){const m=document.getElementById('mobileMenu'),o=document.getElementById('mobileMenuOverlay');m.classList.toggle('open');o.classList.toggle('open');}
+function closeMobileMenu(){document.getElementById('mobileMenu').classList.remove('open');document.getElementById('mobileMenuOverlay').classList.remove('open');}
+</script>
+</body>
+</html>

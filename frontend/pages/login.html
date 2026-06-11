@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Log In — CampusTutor AI</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body class="auth-page">
+<div class="auth-orb1"></div>
+<div class="auth-orb2"></div>
+<div class="auth-card">
+  <div style="position:absolute;top:16px;right:16px;">
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+  </div>
+  <div class="auth-brand">
+    <div class="auth-brand-icon">🎓</div>
+    <h1><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></h1>
+    <p>Welcome back! Log in to continue.</p>
+  </div>
+  <div class="alert alert-error" id="errMsg"></div>
+  <form id="loginForm">
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input class="form-input" type="email" id="email" placeholder="you@school.edu.ng" required autocomplete="email"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" type="password" id="password" placeholder="Your password" required autocomplete="current-password"/>
+    </div>
+    <button type="submit" class="btn btn-primary btn-full btn-lg" id="loginBtn">Log In →</button>
+  </form>
+  <div class="auth-divider">or</div>
+  <div class="auth-footer">Don't have an account? <a href="/pages/signup.html">Sign up free</a></div>
+  <div style="text-align:center;margin-top:12px;"><a href="/" style="font-size:0.8rem;color:var(--label3);">← Back to Home</a></div>
+  <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:0.5px solid var(--sep);font-size:0.73rem;color:var(--label4);">⚡ Developed & Maintained by MattieTech</div>
+</div>
+<script src="/js/api.js"></script>
+<script>
+const t = localStorage.getItem('ct_theme')||'light';
+document.documentElement.setAttribute('data-theme',t);
+document.getElementById('themeBtn').textContent = t==='dark'?'☀️':'🌙';
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  const c=document.documentElement.getAttribute('data-theme');
+  const n=c==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',n);
+  localStorage.setItem('ct_theme',n);
+  document.getElementById('themeBtn').textContent=n==='dark'?'☀️':'🌙';
+});
+redirectIfLoggedIn();
+document.getElementById('loginForm').addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  const err=document.getElementById('errMsg');
+  err.style.display='none';
+  const btn=document.getElementById('loginBtn');
+  btn.disabled=true; btn.textContent='Logging in...';
+  const {data,error}=await apiLogin(document.getElementById('email').value.trim(),document.getElementById('password').value);
+  if(error){err.textContent=error;err.style.display='block';btn.disabled=false;btn.textContent='Log In →';return;}
+  showToast(`Welcome back, ${data.user.fullName}! 👋`,'success');
+  setTimeout(()=>{window.location.href='/pages/dashboard.html';},800);
+});
+</script>
+</body>
+</html>

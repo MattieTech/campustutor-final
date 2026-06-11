@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Upload PDF — CampusTutor AI</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<nav class="navbar">
+  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">☰</button>
+  <a href="/" class="brand"><div class="brand-icon">🎓</div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></a>
+  <div class="navbar-right">
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+    <a href="/pages/dashboard.html" class="pill-btn">← Dashboard</a>
+    <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop">Log Out</button>
+  </div>
+</nav>
+
+<div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="closeMobileMenu()"></div>
+<nav class="mobile-menu" id="mobileMenu">
+  <a href="/pages/dashboard.html" class="mobile-menu-item" onclick="closeMobileMenu()">🏠 Dashboard</a>
+  <a href="/pages/upload.html" class="mobile-menu-item" onclick="closeMobileMenu()">📤 Uploads</a>
+  <a href="/pages/history.html" class="mobile-menu-item" onclick="closeMobileMenu()">📊 History</a>
+  <a href="/pages/dashboard.html#profile" class="mobile-menu-item" onclick="closeMobileMenu()">👤 Profile</a>
+  <button class="mobile-menu-item logout" onclick="logout()">🚪 Logout</button>
+</nav>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">Navigation</div>
+    <a href="/pages/dashboard.html" class="sidebar-link">🏠 Dashboard</a>
+    <a href="/pages/upload.html" class="sidebar-link active">📤 Upload PDF</a>
+    <div class="sidebar-bottom"><div style="font-size:0.7rem;color:var(--label4);text-align:center;padding:8px;">⚡ Developed by MattieTech</div></div>
+  </aside>
+  <main class="main-content" style="max-width:680px;">
+    <div class="page-header">
+      <h1>Upload Files 📤</h1>
+      <p>Upload PDF notes, images, or screenshots to analyze with AI</p>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <!-- PDF Upload -->
+        <div style="margin-bottom: 32px;">
+          <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px;">📄 Upload PDF</h3>
+          <div class="upload-zone" id="pdfUploadZone">
+            <input type="file" id="pdfInput" accept=".pdf"/>
+            <div class="upload-icon">📄</div>
+            <h3>Drop your PDF here</h3>
+            <p>or click to browse files</p>
+            <p style="margin-top:6px;font-size:0.75rem;">PDF only · Max 50MB</p>
+          </div>
+          <div id="pdfFileInfo" style="display:none;margin-top:18px;padding:14px;background:rgba(118,118,128,0.06);border-radius:var(--r);border:0.5px solid var(--sep);display:flex;align-items:center;gap:14px;">
+            <div style="font-size:1.8rem;">📄</div>
+            <div style="flex:1;"><div id="pdfFileName" style="font-weight:700;font-size:0.9rem;"></div><div id="pdfFileSize" style="font-size:0.78rem;color:var(--label3);margin-top:2px;"></div></div>
+            <button onclick="clearPdfFile()" class="btn btn-ghost btn-sm">✕</button>
+          </div>
+          <div id="pdfProgressArea" style="display:none;margin-top:18px;">
+            <div style="font-size:0.83rem;color:var(--label3);margin-bottom:8px;" id="pdfProgressLabel">Uploading...</div>
+            <div class="progress-bar"><div class="progress-fill" id="pdfProgressFill" style="width:0%"></div></div>
+          </div>
+          <button class="btn btn-primary btn-full btn-lg" id="pdfUploadBtn" onclick="uploadPDF()" disabled style="margin-top:20px;">📤 Upload & Process PDF</button>
+        </div>
+
+        <!-- Image Upload -->
+        <div>
+          <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px;">📸 Upload Image (JPG, PNG, WEBP)</h3>
+          <div class="upload-zone" id="imageUploadZone">
+            <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.webp"/>
+            <div class="upload-icon">📸</div>
+            <h3>Drop your image here</h3>
+            <p>or click to browse files</p>
+            <p style="margin-top:6px;font-size:0.75rem;">JPG, PNG, WEBP · Max 50MB</p>
+          </div>
+          <div id="imageFileInfo" style="display:none;margin-top:18px;padding:14px;background:rgba(118,118,128,0.06);border-radius:var(--r);border:0.5px solid var(--sep);display:flex;align-items:center;gap:14px;">
+            <div style="font-size:1.8rem;">📸</div>
+            <div style="flex:1;"><div id="imageFileName" style="font-weight:700;font-size:0.9rem;"></div><div id="imageFileSize" style="font-size:0.78rem;color:var(--label3);margin-top:2px;"></div></div>
+            <button onclick="clearImageFile()" class="btn btn-ghost btn-sm">✕</button>
+          </div>
+          <div id="imageProgressArea" style="display:none;margin-top:18px;">
+            <div style="font-size:0.83rem;color:var(--label3);margin-bottom:8px;" id="imageProgressLabel">Uploading...</div>
+            <div class="progress-bar"><div class="progress-fill" id="imageProgressFill" style="width:0%"></div></div>
+          </div>
+          <button class="btn btn-primary btn-full btn-lg" id="imageUploadBtn" onclick="uploadImage()" disabled style="margin-top:20px;">📤 Upload Image</button>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:20px;padding:20px;background:rgba(0,122,255,0.06);border:0.5px solid rgba(0,122,255,0.2);border-radius:var(--r-lg);">
+      <h3 style="font-size:0.88rem;color:var(--blue);margin-bottom:10px;font-family:var(--font-ui);font-weight:700;">💡 Tips for Best Results</h3>
+      <ul style="font-size:0.83rem;color:var(--label3);padding-left:18px;line-height:2.1;">
+        <li>Use text-based PDFs (not scanned images)</li>
+        <li>PDFs from Microsoft Word or Google Docs work best</li>
+        <li>Keep files under 10MB for fast processing</li>
+        <li>One topic per upload gives more focused AI results</li>
+      </ul>
+    </div>
+  </main>
+</div>
+<script src="/js/api.js"></script>
+<script>
+requireAuth();
+
+function initThemeToggle(){
+  const themeBtn = document.getElementById('themeBtn');
+  if(!themeBtn) return;
+  const t = localStorage.getItem('ct_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
+  themeBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const c = document.documentElement.getAttribute('data-theme');
+    const n = c === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', n);
+    localStorage.setItem('ct_theme', n);
+    themeBtn.textContent = n === 'dark' ? '☀️' : '🌙';
+  });
+}
+
+function initMobileMenu(){
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.querySelector('.sidebar');
+  if(!mobileMenuBtn || !sidebar) return;
+  
+  function updateMobileMenuVisibility(){
+    mobileMenuBtn.style.display = window.innerWidth <= 768 ? 'grid' : 'none';
+    if(window.innerWidth > 768) sidebar.classList.remove('mobile-open');
+  }
+  updateMobileMenuVisibility();
+  window.addEventListener('resize', updateMobileMenuVisibility);
+  
+  mobileMenuBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    sidebar.classList.toggle('mobile-open');
+    mobileMenuBtn.textContent = sidebar.classList.contains('mobile-open') ? '✕' : '☰';
+  });
+  
+  sidebar.querySelectorAll('a, button').forEach(el => {
+    el.addEventListener('click', () => {
+      sidebar.classList.remove('mobile-open');
+      mobileMenuBtn.textContent = '☰';
+    });
+  });
+}
+
+const t=localStorage.getItem('ct_theme')||'light';
+document.documentElement.setAttribute('data-theme',t);
+initThemeToggle();
+initMobileMenu();
+
+// ── PDF UPLOAD HANDLERS ────────────────────────────────────────
+const pdfInput=document.getElementById('pdfInput');
+const pdfUploadZone=document.getElementById('pdfUploadZone');
+const pdfUploadBtn=document.getElementById('pdfUploadBtn');
+const pdfFileInfo=document.getElementById('pdfFileInfo');
+let selectedPdfFile=null;
+
+pdfInput.addEventListener('change',e=>{if(e.target.files[0])handlePdfFile(e.target.files[0]);});
+function handlePdfFile(f){
+  if(f.type!=='application/pdf'){showToast('Please select a PDF file only.','error');return;}
+  if(f.size>50*1024*1024){showToast('File too large. Max 50MB.','error');return;}
+  selectedPdfFile=f;
+  document.getElementById('pdfFileName').textContent=f.name;
+  document.getElementById('pdfFileSize').textContent=fmtSize(f.size);
+  pdfFileInfo.style.display='flex';
+  pdfUploadBtn.disabled=false;pdfUploadBtn.textContent=`📤 Upload "${f.name.length>30?f.name.substring(0,30)+'…':f.name}"`;
+}
+function clearPdfFile(){selectedPdfFile=null;pdfInput.value='';pdfFileInfo.style.display='none';pdfUploadBtn.disabled=true;pdfUploadBtn.textContent='📤 Upload & Process PDF';}
+
+pdfUploadZone.addEventListener('dragover',e=>{e.preventDefault();pdfUploadZone.classList.add('dragover');});
+pdfUploadZone.addEventListener('dragleave',()=>pdfUploadZone.classList.remove('dragover'));
+pdfUploadZone.addEventListener('drop',e=>{e.preventDefault();pdfUploadZone.classList.remove('dragover');if(e.dataTransfer.files[0])handlePdfFile(e.dataTransfer.files[0]);});
+
+async function uploadPDF(){
+  if(!selectedPdfFile)return;
+  document.getElementById('pdfProgressArea').style.display='block';
+  const lbl=document.getElementById('pdfProgressLabel'),fill=document.getElementById('pdfProgressFill');
+  pdfUploadBtn.disabled=true;
+  let p=0;
+  const iv=setInterval(()=>{
+    p=Math.min(p+Math.random()*12,85);fill.style.width=p+'%';
+    lbl.textContent=p<40?'Uploading PDF…':p<70?'Extracting text…':'Saving to database…';
+  },300);
+  const{data,error}=await apiUploadPDF(selectedPdfFile);
+  clearInterval(iv);
+  if(error){fill.style.width='100%';fill.style.background='var(--red)';lbl.textContent='Upload failed.';showToast(error,'error');pdfUploadBtn.disabled=false;return;}
+  fill.style.width='100%';lbl.textContent='✅ Done! Redirecting...';
+  // Award XP + badge
+  const xp=parseInt(localStorage.getItem('ct_xp')||'0');localStorage.setItem('ct_xp',xp+20);
+  const badges=JSON.parse(localStorage.getItem('ct_badges')||'[]');
+  if(!badges.includes('first_upload')){badges.push('first_upload');localStorage.setItem('ct_badges',JSON.stringify(badges));}
+  showToast('PDF uploaded! +20 XP 🌟','success');
+  setTimeout(()=>{window.location.href=`/pages/study.html?docId=${data.document.id}&name=${encodeURIComponent(data.document.fileName)}`;},1000);
+}
+
+// ── IMAGE UPLOAD HANDLERS ──────────────────────────────────────
+const imageInput=document.getElementById('imageInput');
+const imageUploadZone=document.getElementById('imageUploadZone');
+const imageUploadBtn=document.getElementById('imageUploadBtn');
+const imageFileInfo=document.getElementById('imageFileInfo');
+let selectedImageFile=null;
+
+imageInput.addEventListener('change',e=>{if(e.target.files[0])handleImageFile(e.target.files[0]);});
+function handleImageFile(f){
+  const allowed=['image/jpeg','image/jpg','image/png','image/webp'];
+  if(!allowed.includes(f.type)){showToast('Only JPG, PNG, and WEBP images are allowed.','error');return;}
+  if(f.size>50*1024*1024){showToast('File too large. Max 50MB.','error');return;}
+  selectedImageFile=f;
+  document.getElementById('imageFileName').textContent=f.name;
+  document.getElementById('imageFileSize').textContent=fmtSize(f.size);
+  imageFileInfo.style.display='flex';
+  imageUploadBtn.disabled=false;imageUploadBtn.textContent=`📤 Upload "${f.name.length>30?f.name.substring(0,30)+'…':f.name}"`;
+}
+function clearImageFile(){selectedImageFile=null;imageInput.value='';imageFileInfo.style.display='none';imageUploadBtn.disabled=true;imageUploadBtn.textContent='📤 Upload Image';}
+
+imageUploadZone.addEventListener('dragover',e=>{e.preventDefault();imageUploadZone.classList.add('dragover');});
+imageUploadZone.addEventListener('dragleave',()=>imageUploadZone.classList.remove('dragover'));
+imageUploadZone.addEventListener('drop',e=>{e.preventDefault();imageUploadZone.classList.remove('dragover');if(e.dataTransfer.files[0])handleImageFile(e.dataTransfer.files[0]);});
+
+async function uploadImage(){
+  if(!selectedImageFile)return;
+  document.getElementById('imageProgressArea').style.display='block';
+  const lbl=document.getElementById('imageProgressLabel'),fill=document.getElementById('imageProgressFill');
+  imageUploadBtn.disabled=true;
+  let p=0;
+  const iv=setInterval(()=>{
+    p=Math.min(p+Math.random()*15,90);fill.style.width=p+'%';
+    lbl.textContent='Uploading image…';
+  },300);
+  
+  try{
+    const formData=new FormData();
+    formData.append('image',selectedImageFile);
+    const response=await fetch(`/api/upload/image`,{
+      method:'POST',
+      headers:{Authorization:`Bearer ${getToken()}`},
+      body:formData
+    });
+    const data=await response.json();
+    clearInterval(iv);
+    if(!response.ok){
+      fill.style.width='100%';fill.style.background='var(--red)';lbl.textContent='Upload failed.';
+      showToast(data.error||'Upload failed.','error');imageUploadBtn.disabled=false;return;
+    }
+    fill.style.width='100%';lbl.textContent='✅ Done! Redirecting...';
+    const xp=parseInt(localStorage.getItem('ct_xp')||'0');localStorage.setItem('ct_xp',xp+15);
+    const badges=JSON.parse(localStorage.getItem('ct_badges')||'[]');
+    if(!badges.includes('first_upload')){badges.push('first_upload');localStorage.setItem('ct_badges',JSON.stringify(badges));}
+    showToast('Image uploaded! +15 XP 🌟','success');
+    setTimeout(()=>{window.location.href=`/pages/study.html?docId=${data.document.id}&name=${encodeURIComponent(data.document.fileName)}`;},1000);
+  }catch(err){
+    clearInterval(iv);fill.style.width='100%';fill.style.background='var(--red)';lbl.textContent='Upload failed.';
+    showToast('Upload failed. Check your connection.','error');imageUploadBtn.disabled=false;
+  }
+}
+
+function fmtSize(b){if(b<1024)return b+' B';if(b<1024*1024)return(b/1024).toFixed(1)+' KB';return(b/(1024*1024)).toFixed(1)+' MB';}
+
+// Mobile Menu Toggle
+function toggleMobileMenu(){const m=document.getElementById('mobileMenu'),o=document.getElementById('mobileMenuOverlay');m.classList.toggle('open');o.classList.toggle('open');}
+function closeMobileMenu(){document.getElementById('mobileMenu').classList.remove('open');document.getElementById('mobileMenuOverlay').classList.remove('open');}
+</script>
+</body>
+</html>

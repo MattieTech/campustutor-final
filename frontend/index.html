@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="description" content="CampusTutor AI — The AI-powered study assistant for university students. Upload notes, generate summaries, flashcards and revision questions instantly."/>
+<title>CampusTutor AI — Study Smarter, Not Harder</title>
+<link rel="stylesheet" href="/css/style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+<link rel="manifest" href="/manifest.json"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="brand">
+    <div class="brand-icon">🎓</div>
+    <span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span> <span class="brand-ai">AI</span>
+  </a>
+  <div class="navbar-right">
+    <button class="theme-btn" id="themeBtn" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+    <a href="/pages/login.html" class="pill-btn">Log In</a>
+    <a href="/pages/signup.html" class="btn btn-primary btn-sm">Get Started</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-chip">✦ AI-Powered Study Assistant</div>
+    <h1>Study Smarter,<br><em>Achieve More</em></h1>
+    <p>Upload your lecture notes and let CampusTutor AI instantly summarize, explain difficult concepts, generate revision questions, and create interactive flashcards — all in seconds.</p>
+    <div class="hero-cta">
+      <a href="/pages/signup.html" class="btn btn-primary btn-lg">📤 Upload Notes Free</a>
+      <a href="#features" class="btn btn-glass btn-lg">See How It Works</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-num">10K+</div><div class="hero-stat-label">Students Helped</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">50K+</div><div class="hero-stat-label">Notes Processed</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">4.9★</div><div class="hero-stat-label">Student Rating</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">Free</div><div class="hero-stat-label">Always</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="container">
+    <span class="eyebrow">What We Offer</span>
+    <h2 class="section-title">Everything You Need to Ace Exams</h2>
+    <p class="section-sub">Four powerful AI tools, all from a single PDF upload</p>
+    <div class="feat-grid">
+      <div class="feat-card reveal">
+        <div class="feat-icon feat-icon-blue">📋</div>
+        <h3>Smart Summaries</h3>
+        <p>Get a clean, structured summary of any lecture notes with key points highlighted — ready in seconds.</p>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon feat-icon-purple">💡</div>
+        <h3>Concept Explainer</h3>
+        <p>Type any topic and get a simple, friendly explanation with real-world examples and memory tricks.</p>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon feat-icon-green">📝</div>
+        <h3>Revision Questions</h3>
+        <p>Auto-generate MCQs, short answer and essay questions with model answers for exam prep.</p>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon feat-icon-orange">🃏</div>
+        <h3>Flashcards</h3>
+        <p>Interactive flip-card flashcards for every key term and concept. Perfect for last-minute revision.</p>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon feat-icon-red">⏱️</div>
+        <h3>Pomodoro Timer</h3>
+        <p>Built-in focus timer helps you study in effective bursts with smart break reminders.</p>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon feat-icon-teal">🏆</div>
+        <h3>XP & Achievements</h3>
+        <p>Earn points, unlock badges, maintain study streaks and level up your academic performance.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section section-alt" id="how">
+  <div class="container">
+    <span class="eyebrow">Simple 4-Step Process</span>
+    <h2 class="section-title">How CampusTutor AI Works</h2>
+    <p class="section-sub">From notes to knowledge in under a minute</p>
+    <div class="steps-grid">
+      <div class="step reveal"><div class="step-num">1</div><h3>Create Account</h3><p>Sign up free in 30 seconds — no credit card needed, ever.</p></div>
+      <div class="step reveal"><div class="step-num">2</div><h3>Upload Your PDF</h3><p>Drop your lecture notes PDF into the upload zone and we process it instantly.</p></div>
+      <div class="step reveal"><div class="step-num">3</div><h3>Choose Your Tool</h3><p>Summarize, explain concepts, generate questions, or create flashcards — your choice.</p></div>
+      <div class="step reveal"><div class="step-num">4</div><h3>Ace Your Exams</h3><p>Use your AI-generated materials, track your progress, and celebrate your wins.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section" id="about">
+  <div class="container">
+    <span class="eyebrow">About</span>
+    <h2 class="section-title">Built for Nigerian Students,<br><em>By a Nigerian Developer</em></h2>
+    <div class="about-grid" style="margin-top:48px;">
+      <div>
+        <div class="about-visual">
+          <div class="about-visual-inner">
+            <div class="about-logo-big">🎓</div>
+            <div style="font-family:var(--font-d);font-size:1.3rem;margin-bottom:6px;">MattieTech</div>
+            <div style="font-size:0.83rem;color:var(--label3);">Developer & Maintainer</div>
+            <div style="display:flex;gap:10px;justify-content:center;margin-top:18px;">
+              <span class="badge badge-blue">Developer</span>
+              <span class="badge badge-purple">Designer</span>
+              <span class="badge badge-green">Student</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:1.6rem;margin-bottom:16px;letter-spacing:-0.02em;">Our Vision</h3>
+        <p style="color:var(--label2);font-size:0.95rem;line-height:1.8;margin-bottom:16px;">CampusTutor AI was built to make quality academic support accessible to every university student — regardless of their financial situation or location.</p>
+        <p style="color:var(--label3);font-size:0.9rem;line-height:1.8;margin-bottom:24px;">As a 100-level Software Engineering student at CUSTECH, Osara, I understand the struggles students face — limited time, complex notes, and expensive tutors. CampusTutor AI is my answer to that problem.</p>
+        <ul class="mission-list">
+          <li class="mission-item"><div class="mission-dot">🎯</div>Make AI-powered studying accessible to every student</li>
+          <li class="mission-item"><div class="mission-dot">📱</div>Mobile-first design that works on any device</li>
+          <li class="mission-item"><div class="mission-dot">🚀</div>Continuously improving with student feedback</li>
+          <li class="mission-item"><div class="mission-dot">❤️</div>Built with love for the Nigerian student community</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section section-alt" id="testimonials">
+  <div class="container">
+    <span class="eyebrow">Student Reviews</span>
+    <h2 class="section-title">What Students Are Saying</h2>
+    <p class="section-sub">Join thousands of students already studying smarter</p>
+    <div class="testi-grid">
+      <div class="testi-card reveal">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"CampusTutor AI summarized my entire semester notes in minutes. I passed my exams with distinction because of this tool!"</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:linear-gradient(135deg,#007AFF,#5ac8fa);">AO</div>
+          <div><div class="testi-name">Adaeze Okonkwo</div><div class="testi-role">200 Level, Computer Science · UNIBEN</div></div>
+        </div>
+      </div>
+      <div class="testi-card reveal">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"The flashcard feature is incredible. I flip through them before exams and always feel prepared. This changed my study game!"</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:linear-gradient(135deg,#34c759,#30d158);">KA</div>
+          <div><div class="testi-name">Kola Adeyemi</div><div class="testi-role">300 Level, Electrical Engineering · OAU</div></div>
+        </div>
+      </div>
+      <div class="testi-card reveal">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"I was struggling to understand my MTH 141 notes. The concept explainer broke it down so simply. Now I actually understand mathematics!"</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:linear-gradient(135deg,#af52de,#5e5ce6);">FI</div>
+          <div><div class="testi-name">Matthew Aliu</div><div class="testi-role">100 Level, Software Engineering · CUSTECH</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="section" id="contact">
+  <div class="container">
+    <span class="eyebrow">Get In Touch</span>
+    <h2 class="section-title">Contact & Support</h2>
+    <p class="section-sub">Have questions or feedback? We'd love to hear from you.</p>
+    <div class="contact-grid">
+      <div>
+        <div class="contact-info-item">
+          <div class="contact-info-icon" style="background:linear-gradient(135deg,rgba(0,122,255,0.15),rgba(90,200,250,0.1));">📧</div>
+          <div><div class="contact-info-label">Email</div><div class="contact-info-val">mattietechdev@gmail.com</div></div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-info-icon" style="background:linear-gradient(135deg,rgba(37,211,102,0.15),rgba(0,200,100,0.1));">📱</div>
+          <div><div class="contact-info-label">WhatsApp</div><div class="contact-info-val">+234 902 721 7568</div></div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-info-icon" style="background:linear-gradient(135deg,rgba(175,82,222,0.15),rgba(94,92,230,0.1));">🐦</div>
+          <div><div class="contact-info-label">Twitter/X</div><div class="contact-info-val">@MattieTech</div></div>
+        </div>
+        <div class="contact-info-item">
+          <div class="contact-info-icon" style="background:linear-gradient(135deg,rgba(255,149,0,0.15),rgba(255,204,0,0.1));">📍</div>
+          <div><div class="contact-info-label">Location</div><div class="contact-info-val">Abuja, Nigeria</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <h3 style="font-size:1.1rem;margin-bottom:18px;">Send a Message</h3>
+          <form id="contactForm">
+            <div class="form-group">
+              <label class="form-label">Your Name</label>
+              <input class="form-input" type="text" id="contactName" placeholder="e.g. Adaeze Okonkwo" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input class="form-input" type="email" id="contactEmail" placeholder="you@email.com" required/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Message</label>
+              <textarea class="form-textarea" id="contactMessage" placeholder="How can we help you?" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full" id="contactBtn">Send Message ✉️</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BANNER -->
+<section class="section section-alt" style="text-align:center;">
+  <div class="container">
+    <div style="background:linear-gradient(135deg,var(--blue),#5ac8fa,#af52de);border-radius:var(--r-2xl);padding:3px;max-width:700px;margin:0 auto;box-shadow:0 20px 60px rgba(0,122,255,0.25);">
+      <div style="background:var(--glass);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:calc(var(--r-2xl) - 3px);padding:52px 40px;text-align:center;">
+        <div style="font-size:2.5rem;margin-bottom:16px;">🎓</div>
+        <h2 style="font-size:2rem;margin-bottom:12px;letter-spacing:-0.02em;">Ready to Study Smarter?</h2>
+        <p style="color:var(--label3);margin-bottom:30px;font-size:1rem;">Join thousands of students already using CampusTutor AI — it's completely free.</p>
+        <a href="/pages/signup.html" class="btn btn-primary btn-lg">Get Started Free 🚀</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="brand" style="margin-bottom:10px;">
+        <div class="brand-icon">🎓</div>
+        Campus<span>Tutor</span> AI
+      </div>
+      <p>The AI-powered study assistant for university students. Upload notes, generate summaries, flashcards and revision questions instantly.</p>
+      <div class="social-links" style="margin-top:18px;">
+        <a href="https://facebook.com/mattietech" class="social-link" title="Facebook" target="_blank"><i class="fab fa-facebook-f"></i></a>
+        <a href="https://twitter.com/Mattie_Tech" class="social-link" title="Twitter/X" target="_blank"><svg class="social-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.514l-5.106-6.67-5.829 6.67H2.42l7.728-8.835L1.924 2.25h6.67l4.632 6.135L17.863 2.25h.381zm-1.106 17.611h1.829L5.016 4.119H3.04z"/></svg></a>
+        <a href="https://instagram.com/mattietechdev" class="social-link" title="Instagram" target="_blank"><i class="fab fa-instagram"></i></a>
+        <a href="https://linkedin.com/in/matthew-aliu-594982402" class="social-link" title="LinkedIn" target="_blank"><i class="fab fa-linkedin-in"></i></a>
+        <a href="https://tiktok.com/@mattietech" class="social-link" title="TikTok" target="_blank"><i class="fab fa-tiktok"></i></a>
+        <a href="https://youtube.com/@mattie_tech" class="social-link" title="YouTube" target="_blank"><i class="fab fa-youtube"></i></a>
+        <a href="https://threads.net/mattietechdev" class="social-link" title="Threads" target="_blank"><i class="fas fa-at"></i></a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Platform</h4>
+      <ul class="footer-links">
+        <li><a href="/pages/signup.html">Get Started</a></li>
+        <li><a href="/pages/login.html">Log In</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#about">About</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <ul class="footer-links">
+        <li><a href="#contact">Contact Support</a></li>
+        <li><a href="#how">How It Works</a></li>
+        <li><a href="#testimonials">Reviews</a></li>
+        <li><a href="#">FAQs</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <ul class="footer-links">
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a href="#">Cookie Policy</a></li>
+        <li><a href="#">Disclaimer</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-bottom-left">
+      <div>© 2026 CampusTutor AI · All Rights Reserved</div>
+      <div style="margin-top:4px;font-size:0.76rem;color:var(--label4);">Made with ❤️ for students everywhere</div>
+    </div>
+    <div class="footer-credit-badge">⚡ Developed & Maintained by MattieTech</div>
+  </div>
+</footer>
+
+<a href="https://whatsapp.com/channel/0029VbBYb3g84OmFIuejPl0g" class="whatsapp-fab" title="Chat on WhatsApp" target="_blank">💬</a>
+
+<script src="/js/api.js"></script>
+<script>
+redirectIfLoggedIn();
+// Theme
+const saved = localStorage.getItem('ct_theme') || 'light';
+document.documentElement.setAttribute('data-theme', saved);
+document.getElementById('themeBtn').textContent = saved === 'dark' ? '☀️' : '🌙';
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('ct_theme', next);
+  document.getElementById('themeBtn').textContent = next === 'dark' ? '☀️' : '🌙';
+});
+// Scroll reveal
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target); }});
+},{threshold:0.12});
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+// Contact form handler
+const contactForm = document.getElementById('contactForm');
+if (contactForm) {
+  contactForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const name = document.getElementById('contactName').value.trim();
+    const email = document.getElementById('contactEmail').value.trim();
+    const message = document.getElementById('contactMessage').value.trim();
+    const btn = document.getElementById('contactBtn');
+    
+    // Validate input
+    if (!name || !email || !message) {
+      showToast('Please fill in all fields.', 'error');
+      return;
+    }
+    
+    // Show loading state
+    const originalText = btn.textContent;
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+    
+    // Send the message
+    const { data, error } = await apiSendContactMessage(name, email, message);
+    
+    // Restore button
+    btn.textContent = originalText;
+    btn.disabled = false;
+    
+    if (error) {
+      showToast(`Error: ${error}`, 'error');
+    } else {
+      showToast('Message sent! We\'ll reply within 24 hours. ✅', 'success');
+      contactForm.reset();
+    }
+  });
+}
+</script>
+</body>
+</html>

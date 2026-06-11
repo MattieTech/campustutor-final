@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Admin Dashboard — CampusTutor AI</title>
+<link rel="stylesheet" href="/css/style.css"/>
+<style>
+/* ── Admin-specific overrides ── */
+:root {
+  --adm-sidebar-w: 240px;
+  --adm-red:   #ff3b30;
+  --adm-green: #34c759;
+  --adm-blue:  #007AFF;
+  --adm-amber: #ff9500;
+  --adm-purple:#af52de;
+}
+
+/* Layout */
+.adm-layout { display:grid; grid-template-columns:var(--adm-sidebar-w) 1fr; min-height:calc(100vh - var(--nav-h,60px)); }
+
+/* Sidebar */
+.adm-sidebar {
+  background:var(--bg3,rgba(242,242,247,0.6));
+  backdrop-filter:blur(20px) saturate(150%);
+  -webkit-backdrop-filter:blur(20px) saturate(150%);
+  border-right:0.5px solid var(--sep,rgba(60,60,67,.12));
+  padding:20px 12px;
+  position:sticky; top:var(--nav-h,60px);
+  height:calc(100vh - var(--nav-h,60px));
+  overflow-y:auto;
+  display:flex; flex-direction:column; gap:2px;
+}
+[data-theme="dark"] .adm-sidebar { background:rgba(28,28,30,.6); }
+
+.adm-sidebar-section {
+  font-size:.68rem; font-weight:800;
+  text-transform:uppercase; letter-spacing:.1em;
+  color:var(--label3); padding:12px 12px 6px;
+}
+
+.adm-nav-link {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 12px; border-radius:var(--r,16px);
+  color:var(--label2); font-size:.88rem; font-weight:500;
+  cursor:pointer; transition:all .15s; text-decoration:none;
+  background:none; border:none; width:100%; text-align:left;
+}
+.adm-nav-link:hover { background:rgba(118,118,128,.1); color:var(--label); }
+.adm-nav-link.active { background:var(--bg2,#fff); color:var(--blue,#007AFF); font-weight:700;
+  box-shadow:0 2px 8px rgba(0,0,0,.07); }
+
+/* Main */
+.adm-main { padding:28px 30px; overflow-y:auto; min-height:calc(100vh - var(--nav-h,60px)); }
+.adm-header { margin-bottom:24px; }
+.adm-header h1 { font-size:1.8rem; letter-spacing:-.02em; margin-bottom:3px; }
+.adm-header p  { color:var(--label3); font-size:.88rem; }
+
+/* Panels (hidden/shown by JS) */
+.adm-panel { display:none; }
+.adm-panel.active { display:block; animation:fadeUp .25s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(6px);} }
+
+/* Stat cards */
+.adm-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:28px; }
+.adm-stat {
+  background:var(--glass,rgba(255,255,255,.72));
+  backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border:0.5px solid var(--glass-b,rgba(255,255,255,.92));
+  border-radius:var(--r-lg,22px); padding:18px 16px;
+  box-shadow:var(--gshadow,0 8px 32px rgba(0,0,0,.09));
+  position:relative; overflow:hidden;
+}
+.adm-stat::before { content:''; position:absolute; top:0;left:0;right:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.8),transparent); }
+.adm-stat-icon { font-size:1.5rem; margin-bottom:10px; }
+.adm-stat-num  { font-size:1.9rem; font-weight:800; font-family:var(--font-ui,'Plus Jakarta Sans',sans-serif); line-height:1; margin-bottom:3px; }
+.adm-stat-label{ font-size:.75rem; color:var(--label3); font-weight:600; }
+
+/* Toolbar */
+.adm-toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:18px; }
+.adm-search {
+  flex:1; min-width:220px;
+  background:rgba(118,118,128,.08);
+  border:1.5px solid transparent;
+  border-radius:var(--r,16px); padding:10px 16px;
+  color:var(--label); font-family:var(--font-ui,'Plus Jakarta Sans',sans-serif);
+  font-size:.92rem; outline:none; transition:all .18s;
+}
+.adm-search:focus { background:var(--bg2,#fff); border-color:var(--blue,#007AFF);
+  box-shadow:0 0 0 4px rgba(0,122,255,.1); }
+.adm-filter {
+  background:rgba(118,118,128,.08); border:1.5px solid transparent;
+  border-radius:var(--r,16px); padding:10px 14px;
+  color:var(--label); font-family:var(--font-ui,'Plus Jakarta Sans',sans-serif);
+  font-size:.88rem; outline:none; cursor:pointer; transition:all .18s;
+}
+.adm-filter:focus { border-color:var(--blue,#007AFF); }
+
+/* User table */
+.adm-table-wrap { overflow-x:auto; border-radius:var(--r-lg,22px);
+  box-shadow:var(--gshadow,0 8px 32px rgba(0,0,0,.09));
+  background:var(--glass,rgba(255,255,255,.72));
+  backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border:0.5px solid var(--glass-b,rgba(255,255,255,.92)); }
+.adm-table { width:100%; border-collapse:collapse; font-size:.85rem; }
+.adm-table th {
+  padding:12px 16px; text-align:left;
+  font-size:.72rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:.07em; color:var(--label3);
+  border-bottom:0.5px solid var(--sep,rgba(60,60,67,.12));
+  background:rgba(118,118,128,.04);
+}
+.adm-table td { padding:12px 16px; border-bottom:0.5px solid var(--sep,rgba(60,60,67,.07));
+  vertical-align:middle; }
+.adm-table tr:last-child td { border-bottom:none; }
+.adm-table tr:hover td { background:rgba(118,118,128,.04); }
+
+/* Badges */
+.adm-badge {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:3px 10px; border-radius:999px;
+  font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+}
+.adm-badge-active  { background:rgba(52,199,89,.1);  color:var(--adm-green); }
+.adm-badge-banned  { background:rgba(255,59,48,.1);  color:var(--adm-red); }
+.adm-badge-admin   { background:rgba(175,82,222,.1); color:var(--adm-purple); }
+.adm-badge-user    { background:rgba(0,122,255,.1);  color:var(--adm-blue); }
+
+/* Action menu */
+.adm-action-wrap { position:relative; display:inline-block; }
+.adm-action-btn {
+  background:rgba(118,118,128,.1); border:none; border-radius:8px;
+  padding:6px 10px; cursor:pointer; font-size:1rem; color:var(--label2);
+  transition:background .15s;
+}
+.adm-action-btn:hover { background:rgba(118,118,128,.2); }
+.adm-dropdown {
+  display:none; position:absolute; right:0; top:calc(100% + 4px);
+  background:var(--bg2,#fff);
+  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+  border:0.5px solid var(--glass-b,rgba(255,255,255,.92));
+  border-radius:var(--r,16px); box-shadow:0 12px 40px rgba(0,0,0,.14);
+  min-width:180px; z-index:200; overflow:hidden;
+}
+.adm-dropdown.open { display:block; animation:fadeUp .15s ease; }
+.adm-dropdown-item {
+  display:flex; align-items:center; gap:10px;
+  padding:11px 16px; font-size:.87rem; font-weight:500;
+  color:var(--label2); cursor:pointer; border:none; background:none;
+  width:100%; text-align:left; transition:background .12s;
+}
+.adm-dropdown-item:hover { background:rgba(118,118,128,.07); color:var(--label); }
+.adm-dropdown-item.danger { color:var(--adm-red); }
+.adm-dropdown-item.danger:hover { background:rgba(255,59,48,.06); }
+.adm-dropdown-divider { height:0.5px; background:var(--sep); margin:4px 0; }
+
+/* Modal */
+.adm-overlay {
+  display:none; position:fixed; inset:0; z-index:800;
+  background:rgba(0,0,0,.5);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  align-items:center; justify-content:center; padding:20px;
+}
+.adm-overlay.open { display:flex; animation:overlayIn .2s ease; }
+@keyframes overlayIn { from{opacity:0;} }
+.adm-modal {
+  background:var(--glass,rgba(255,255,255,.9));
+  backdrop-filter:blur(40px) saturate(200%);
+  -webkit-backdrop-filter:blur(40px) saturate(200%);
+  border:0.5px solid var(--glass-b,rgba(255,255,255,.95));
+  border-radius:var(--r-2xl,36px); padding:32px;
+  width:100%; max-width:540px; max-height:88vh; overflow-y:auto;
+  box-shadow:0 24px 80px rgba(0,0,0,.18);
+  position:relative; animation:modalIn .25s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes modalIn { from{opacity:0;transform:scale(.94) translateY(12px);} }
+.adm-modal-close {
+  position:absolute; top:16px; right:16px;
+  background:rgba(118,118,128,.12); border:none; border-radius:50%;
+  width:32px; height:32px; cursor:pointer; font-size:1rem;
+  display:grid; place-items:center; color:var(--label2); transition:background .15s;
+}
+.adm-modal-close:hover { background:rgba(118,118,128,.22); }
+.adm-modal h2 { font-size:1.3rem; margin-bottom:4px; }
+.adm-modal-sub { font-size:.83rem; color:var(--label3); margin-bottom:22px; }
+
+/* User info block inside modal */
+.adm-user-info { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:22px; }
+.adm-info-item { background:rgba(118,118,128,.06); border-radius:var(--r,16px); padding:12px 14px; }
+.adm-info-label { font-size:.7rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:.06em; color:var(--label3); margin-bottom:4px; }
+.adm-info-val   { font-size:.88rem; font-weight:600; color:var(--label); word-break:break-all; }
+
+/* Activity list */
+.adm-activity-list { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+.adm-activity-item {
+  display:flex; gap:12px; align-items:flex-start;
+  padding:12px; background:rgba(118,118,128,.05);
+  border-radius:var(--r,16px);
+}
+.adm-activity-dot { width:8px; height:8px; border-radius:50%;
+  background:var(--blue,#007AFF); flex-shrink:0; margin-top:4px; }
+.adm-activity-action { font-size:.85rem; font-weight:600; color:var(--label); }
+.adm-activity-detail { font-size:.78rem; color:var(--label3); margin-top:2px; }
+.adm-activity-time   { font-size:.72rem; color:var(--label4); margin-top:2px; }
+
+/* Section heading inside panels */
+.adm-section-title { font-size:1.1rem; font-weight:700;
+  font-family:var(--font-ui,'Plus Jakarta Sans',sans-serif); margin-bottom:14px; }
+
+/* Empty / loading states */
+.adm-empty { text-align:center; padding:48px 24px; color:var(--label3); font-size:.9rem; }
+.adm-loading { display:flex; align-items:center; justify-content:center; gap:12px;
+  padding:40px; color:var(--label3); font-size:.9rem; }
+
+/* Files list styling */
+.adm-files-list { border:1px solid var(--sep); border-radius:var(--r,12px); overflow:hidden; }
+.adm-files-list > div:last-child { border-bottom:none; }
+
+/* Confirm dialog */
+.adm-confirm-form { display:flex; flex-direction:column; gap:14px; }
+.adm-confirm-form textarea, .adm-confirm-form input {
+  width:100%; background:rgba(118,118,128,.08);
+  border:1.5px solid transparent; border-radius:var(--r,16px);
+  padding:12px 14px; color:var(--label);
+  font-family:var(--font-ui,'Plus Jakarta Sans',sans-serif);
+  font-size:.92rem; outline:none; resize:vertical; transition:all .18s;
+}
+.adm-confirm-form textarea:focus,
+.adm-confirm-form input:focus {
+  background:var(--bg2,#fff); border-color:var(--blue,#007AFF);
+  box-shadow:0 0 0 4px rgba(0,122,255,.1);
+}
+.adm-confirm-btns { display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; }
+
+/* Responsive */
+@media(max-width:1200px){
+  :root{--adm-sidebar-w:200px;}
+  .adm-sidebar{padding:16px 8px;}
+  .adm-main{padding:24px 20px;}
+  .adm-stats{gap:12px;}
+  .adm-stat{padding:16px 14px;}
+  .adm-stat-num{font-size:1.6rem;}
+  .adm-toolbar{gap:8px;}
+}
+@media(max-width:900px){
+  :root{--adm-sidebar-w:180px;}
+  .adm-sidebar{width:var(--adm-sidebar-w);padding:14px 6px;}
+  .adm-nav-link{padding:8px 10px;font-size:.82rem;}
+  .adm-sidebar-section{font-size:.65rem;padding:10px 10px 4px;}
+  .adm-main{padding:20px 16px;}
+  .adm-header h1{font-size:1.5rem;}
+  .adm-header p{font-size:.8rem;}
+  .adm-stats{grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
+  .adm-stat{padding:14px 12px;}
+  .adm-stat-icon{font-size:1.2rem;margin-bottom:6px;}
+  .adm-stat-num{font-size:1.4rem;}
+  .adm-stat-label{font-size:.7rem;}
+  .adm-table{font-size:.8rem;}
+  .adm-table th,.adm-table td{padding:10px 12px;}
+}
+/* Tablets */
+@media(max-width:768px){
+  :root{--adm-sidebar-w:100%;--nav-h:52px;}
+  .adm-layout{grid-template-columns:1fr;}
+  .adm-sidebar{
+    position:fixed;
+    left:-100%;
+    top:var(--nav-h);
+    width:70vw;
+    max-width:240px;
+    height:calc(100vh - var(--nav-h));
+    z-index:500;
+    transition:left 0.3s ease;
+    box-shadow:2px 0 8px rgba(0,0,0,0.1);
+    padding:16px 12px;
+    overflow-y:auto;
+  }
+  .adm-sidebar.mobile-open{left:0;}
+  .adm-main{padding:16px 14px;}
+  .adm-header h1{font-size:1.3rem;}
+  .adm-stats{grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;}
+  .adm-stat{padding:12px 10px;}
+  .adm-stat-num{font-size:1.2rem;}
+  .adm-toolbar{flex-direction:column;gap:8px;}
+  .adm-search,.adm-filter{width:100%;}
+  .adm-table-wrap{overflow-x:auto;}
+  .adm-table{font-size:.75rem;}
+  .adm-table th,.adm-table td{padding:8px 10px;}
+  .adm-modal{max-width:90vw;padding:24px;}
+  .adm-user-info{grid-template-columns:1fr;}
+  .adm-confirm-btns{flex-wrap:wrap;}
+  .navbar{padding:0 12px;}
+  .brand{font-size:0.95rem;gap:6px;}
+  .brand-icon{width:28px;height:28px;font-size:13px;}
+}
+/* Small phones */
+@media(max-width:480px){
+  :root{--nav-h:48px;--r:12px;}
+  html{font-size:14px;}
+  .navbar{padding:0 8px;height:48px;}
+  .brand{font-size:0.9rem;}
+  .brand-icon{width:24px;height:24px;font-size:11px;}
+  .navbar-right{gap:2px;}
+  .theme-btn{width:28px;height:28px;font-size:12px;}
+  #adminName{font-size:.75rem;}
+  .pill-btn{padding:5px 10px;font-size:.7rem;}
+  .adm-main{padding:12px 10px;}
+  .adm-header{margin-bottom:16px;}
+  .adm-header h1{font-size:1.1rem;margin-bottom:2px;}
+  .adm-header p{font-size:.75rem;}
+  .adm-stats{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .adm-stat{padding:10px 8px;}
+  .adm-stat-icon{font-size:1rem;margin-bottom:4px;}
+  .adm-stat-num{font-size:1rem;}
+  .adm-stat-label{font-size:.65rem;}
+  .adm-section-title{font-size:0.95rem;margin-bottom:10px;}
+  .adm-toolbar{gap:6px;}
+  .adm-search{padding:8px 12px;font-size:.85rem;}
+  .adm-filter{padding:8px 10px;font-size:.8rem;}
+  .btn.btn-primary.btn-sm{padding:6px 12px;font-size:.75rem;}
+  .adm-table{font-size:.7rem;}
+  .adm-table th{font-size:.65rem;padding:6px 8px;}
+  .adm-table td{padding:6px 8px;}
+  .adm-table th:nth-child(n+4),.adm-table td:nth-child(n+4){display:none;}
+  .adm-badge{padding:2px 8px;font-size:.6rem;}
+  .adm-action-btn{padding:4px 8px;font-size:0.85rem;}
+  .adm-dropdown{min-width:150px;}
+  .adm-dropdown-item{padding:8px 12px;font-size:.8rem;}
+  .adm-modal{max-width:95vw;padding:16px;}
+  .adm-modal h2{font-size:1.1rem;}
+  .adm-modal-sub{font-size:.75rem;}
+  .adm-user-info{gap:8px;}
+  .adm-info-item{padding:8px 10px;}
+  .adm-info-label{font-size:.65rem;}
+  .adm-info-val{font-size:.8rem;}
+  .adm-confirm-form textarea,.adm-confirm-form input{padding:9px 11px;font-size:.85rem;}
+  .adm-activity-item{padding:8px;gap:8px;}
+  .adm-activity-dot{width:6px;height:6px;margin-top:3px;}
+  .adm-activity-action{font-size:.8rem;}
+  .adm-activity-detail{font-size:.7rem;}
+  .adm-activity-time{font-size:.65rem;}
+}
+/* Ultra-small phones */
+@media(max-width:360px){
+  html{font-size:13px;}
+  .navbar{padding:0 6px;}
+  .brand{font-size:0.85rem;}
+  .adm-stats{grid-template-columns:1fr;gap:6px;}
+  .adm-stat{padding:8px 6px;}
+  .adm-stat-icon{font-size:0.9rem;}
+  .adm-stat-num{font-size:0.9rem;}
+  .adm-table th:nth-child(n+3),.adm-table td:nth-child(n+3){display:none;}
+  .adm-action-btn{width:24px;height:24px;padding:2px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleAdminMobileMenu()">☰</button>
+  <a href="/" class="brand">
+    <div class="brand-icon">🎓</div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span>
+  </a>
+  <div class="navbar-right">
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+    <span id="adminName" style="font-size:.83rem;color:var(--label3);"></span>
+    <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop">Log Out</button>
+  </div>
+</nav>
+
+<div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="closeAdminMobileMenu()"></div>
+<nav class="mobile-menu" id="mobileMenu">
+  <button class="mobile-menu-item" onclick="showPanel('overview',this);closeAdminMobileMenu();">🏠 Overview</button>
+  <button class="mobile-menu-item" onclick="showPanel('users',this);closeAdminMobileMenu();">👥 Users</button>
+  <button class="mobile-menu-item" onclick="showPanel('documents',this);closeAdminMobileMenu();">📄 Documents</button>
+  <button class="mobile-menu-item" onclick="showPanel('analytics',this);closeAdminMobileMenu();">📊 Analytics</button>
+  <button class="mobile-menu-item" onclick="showPanel('activity',this);closeAdminMobileMenu();">📋 Activities</button>
+  <button class="mobile-menu-item logout" onclick="logout()">🚪 Logout</button>
+</nav>
+
+<!-- LAYOUT -->
+<div class="adm-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="adm-sidebar">
+    <div class="adm-sidebar-section">Dashboard</div>
+    <button class="adm-nav-link active" data-panel="overview" onclick="showPanel('overview',this)">
+      🏠 Overview
+    </button>
+
+    <div class="adm-sidebar-section" style="margin-top:8px;">Users</div>
+    <button class="adm-nav-link" data-panel="users" onclick="showPanel('users',this)">
+      👥 All Users
+    </button>
+
+    <div style="margin-top:auto;padding-top:12px;border-top:0.5px solid var(--sep);">
+      <a href="/pages/dashboard.html" class="adm-nav-link" style="font-size:.82rem;">
+        ← Back to App
+      </a>
+      <div style="font-size:.7rem;color:var(--label4);text-align:center;padding:10px 4px 0;">
+        ⚡ Developed by MattieTech
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="adm-main">
+
+    <!-- ── OVERVIEW PANEL ── -->
+    <div class="adm-panel active" id="panel-overview">
+      <div class="adm-header">
+        <h1>Admin Dashboard 🛡️</h1>
+        <p id="overviewSub">Loading platform statistics...</p>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="adm-stats" id="statsGrid">
+        <div class="adm-stat">
+          <div class="adm-stat-icon">👥</div>
+          <div class="adm-stat-num" id="st-total" style="color:var(--adm-blue);">—</div>
+          <div class="adm-stat-label">Total Users</div>
+        </div>
+        <div class="adm-stat">
+          <div class="adm-stat-icon">✅</div>
+          <div class="adm-stat-num" id="st-active" style="color:var(--adm-green);">—</div>
+          <div class="adm-stat-label">Active Users</div>
+        </div>
+        <div class="adm-stat">
+          <div class="adm-stat-icon">🚫</div>
+          <div class="adm-stat-num" id="st-banned" style="color:var(--adm-red);">—</div>
+          <div class="adm-stat-label">Banned Users</div>
+        </div>
+        <div class="adm-stat">
+          <div class="adm-stat-icon">📄</div>
+          <div class="adm-stat-num" id="st-docs" style="color:var(--adm-amber);">—</div>
+          <div class="adm-stat-label">Documents Uploaded</div>
+        </div>
+        <div class="adm-stat">
+          <div class="adm-stat-icon">🤖</div>
+          <div class="adm-stat-num" id="st-ai" style="color:var(--adm-purple);">—</div>
+          <div class="adm-stat-label">AI Generations</div>
+        </div>
+      </div>
+
+      <!-- Quick view of recent users -->
+      <div class="adm-section-title">Recent Signups</div>
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Joined</th>
+            </tr>
+          </thead>
+          <tbody id="recentUsersBody">
+            <tr><td colspan="5" class="adm-loading"><div class="spinner"></div> Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Recent user activities -->
+      <div class="adm-section-title" style="margin-top:28px;">Recent User Activities</div>
+      <div class="adm-activity-list" id="recentActivitiesContainer">
+        <div class="adm-loading"><div class="spinner"></div> Loading activities...</div>
+      </div>
+    </div>
+
+    <!-- ── USERS PANEL ── -->
+    <div class="adm-panel" id="panel-users">
+      <div class="adm-header">
+        <h1>User Management 👥</h1>
+        <p>Search, filter and manage all registered students and admins.</p>
+      </div>
+
+      <div class="adm-toolbar">
+        <input
+          type="search"
+          class="adm-search"
+          id="userSearch"
+          placeholder="🔍 Search by name or email..."
+          oninput="debouncedSearch()"
+        />
+        <select class="adm-filter" id="statusFilter" onchange="loadUsers()">
+          <option value="all">All Users</option>
+          <option value="active">Active Only</option>
+          <option value="banned">Banned Only</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="loadUsers()">Refresh</button>
+      </div>
+
+      <div style="font-size:.8rem;color:var(--label3);margin-bottom:10px;" id="userCountLabel"></div>
+
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Last Login</th>
+              <th>Joined</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody">
+            <tr><td colspan="6" class="adm-loading"><div class="spinner"></div> Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── USER DETAIL MODAL ── -->
+<div class="adm-overlay" id="userModal">
+  <div class="adm-modal" style="max-height: 90vh; overflow-y: auto;">
+    <button class="adm-modal-close" onclick="closeModal('userModal')">✕</button>
+    <h2 id="modalUserName">User Details</h2>
+    <div class="adm-modal-sub" id="modalUserEmail"></div>
+
+    <!-- A. USER INFORMATION -->
+    <div class="adm-user-info" id="modalUserInfo"></div>
+
+    <!-- B. QUICK ACTIONS -->
+    <div class="adm-section-title">⚡ Quick Actions</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;" id="modalActions"></div>
+
+    <!-- C. ACTIVITY TIMELINE (last 50 events) -->
+    <div class="adm-section-title">📊 Recent Activity
+      <span style="font-size:.75rem;color:var(--label3);font-weight:400;"> (last 50 events)</span>
+    </div>
+    <div id="modalActivity" class="adm-activity-list">
+      <div class="adm-loading"><div class="spinner"></div> Loading activity...</div>
+    </div>
+
+    <!-- D. AI INTERACTION HISTORY -->
+    <div class="adm-section-title" style="margin-top:28px;">🤖 AI Interaction History</div>
+    <div id="modalAIInteractions" class="adm-activity-list">
+      <div class="adm-loading"><div class="spinner"></div> Loading AI interactions...</div>
+    </div>
+
+    <!-- E. UPLOADED FILES SECTION -->
+    <div class="adm-section-title" style="margin-top:28px;">📁 Uploaded Files
+      <span style="font-size:.75rem;color:var(--label3);font-weight:400;" id="fileCountBadge"></span>
+    </div>
+    <div id="modalFiles" class="adm-files-list">
+      <div class="adm-loading"><div class="spinner"></div> Loading files...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CONFIRM / INPUT MODAL ── -->
+<div class="adm-overlay" id="confirmModal">
+  <div class="adm-modal" style="max-width:400px;">
+    <button class="adm-modal-close" onclick="closeModal('confirmModal')">✕</button>
+    <h2 id="confirmTitle"></h2>
+    <div class="adm-modal-sub" id="confirmSub"></div>
+    <div class="adm-confirm-form" id="confirmForm"></div>
+    <div class="adm-confirm-btns" style="margin-top:18px;" id="confirmBtns"></div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+// ── THEME ─────────────────────────────────────────────────────
+const savedTheme = localStorage.getItem('ct_theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+document.getElementById('themeBtn').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('ct_theme', next);
+  document.getElementById('themeBtn').textContent = next === 'dark' ? '☀️' : '🌙';
+});
+
+// ── GUARD ─────────────────────────────────────────────────────
+requireAdmin();
+const adminUser = getUser();
+if (adminUser) document.getElementById('adminName').textContent = `Admin: ${adminUser.fullName || adminUser.email}`;
+
+// ── PANEL SWITCHING ───────────────────────────────────────────
+function showPanel(name, btn) {
+  document.querySelectorAll('.adm-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.adm-nav-link').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+
+  if (name === 'users') loadUsers();
+  if (name === 'overview') loadStats();
+}
+
+// ── LOAD STATS ────────────────────────────────────────────────
+async function loadStats() {
+  const { data, error } = await apiAdminGetStats();
+  if (error) { 
+    console.error('❌ Stats error:', error);
+    document.getElementById('st-total').textContent  = '0';
+    document.getElementById('st-active').textContent = '0';
+    document.getElementById('st-banned').textContent = '0';
+    document.getElementById('st-docs').textContent   = '0';
+    document.getElementById('st-ai').textContent     = '0';
+    return; 
+  }
+
+  console.log('✅ Stats loaded:', data);
+  document.getElementById('st-total').textContent  = data.totalUsers || 0;
+  document.getElementById('st-active').textContent = data.activeUsers || 0;
+  document.getElementById('st-banned').textContent = data.bannedUsers || 0;
+  document.getElementById('st-docs').textContent   = data.totalDocuments || 0;
+  document.getElementById('st-ai').textContent     = data.totalAIGenerations || 0;
+  document.getElementById('overviewSub').textContent =
+    `Platform overview · Last updated ${new Date().toLocaleTimeString()}`;
+
+  // Load recent 5 users for the overview table
+  const { data: ud } = await apiAdminGetUsers('', 'all');
+  const tbody = document.getElementById('recentUsersBody');
+  if (!ud || !ud.users.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="adm-empty">No users yet.</td></tr>';
+  } else {
+    tbody.innerHTML = ud.users.slice(0, 5).map(u => `
+      <tr>
+        <td><strong>${esc(u.fullName)}</strong></td>
+        <td>${esc(u.email)}</td>
+        <td><span class="adm-badge adm-badge-${u.role}">${u.role}</span></td>
+        <td><span class="adm-badge adm-badge-${u.status}">${u.status}</span></td>
+        <td>${formatDate(u.createdAt)}</td>
+      </tr>`).join('');
+  }
+
+  // Load recent activities
+  const { data: actData } = await apiAdminGetRecentActivities(25);
+  const actDiv = document.getElementById('recentActivitiesContainer');
+  if (!actData || !actData.activities || !actData.activities.length) {
+    actDiv.innerHTML = '<div class="adm-empty">No recent activities.</div>';
+  } else {
+    actDiv.innerHTML = actData.activities.map(a => `
+      <div class="adm-activity-item">
+        <div class="adm-activity-dot"></div>
+        <div>
+          <div class="adm-activity-action">${escapeHtml(getActivityLabel(a.action))}</div>
+          <div class="adm-activity-detail">${escapeHtml(a.details || '')}</div>
+          <div class="adm-activity-time">${formatDateTime(a.created_at)}</div>
+        </div>
+      </div>`).join('');
+  }
+}
+
+function getActivityLabel(action) {
+  const labels = {
+    user_signup: '📝 User Registered',
+    user_login: '🔐 User Login',
+    upload_document: '📄 Document Uploaded',
+    ai_summarize: '📋 Summary Generated',
+    ai_explain: '💡 Concept Explained',
+    ai_questions: '❓ Questions Generated',
+    ai_flashcards: '🎴 Flashcards Created',
+    ban_user: '🚫 User Banned',
+    unban_user: '✅ User Unbanned',
+    delete_user: '🗑️ User Deleted',
+    reset_password: '🔑 Password Reset',
+    set_role: '👤 Role Changed'
+  };
+  return labels[action] || action;
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+loadStats(); // Run on page load
+
+// ── LOAD USERS ────────────────────────────────────────────────
+let searchTimeout;
+function debouncedSearch() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(loadUsers, 350);
+}
+
+async function loadUsers() {
+  const search = document.getElementById('userSearch').value.trim();
+  const status = document.getElementById('statusFilter').value;
+  const tbody  = document.getElementById('usersBody');
+  tbody.innerHTML = '<tr><td colspan="6" class="adm-loading"><div class="spinner"></div> Loading...</td></tr>';
+
+  const { data, error } = await apiAdminGetUsers(search, status === 'all' ? '' : status);
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="6" class="adm-empty">Failed to load users: ${esc(error)}</td></tr>`;
+    return;
+  }
+
+  document.getElementById('userCountLabel').textContent = `${data.total} user${data.total !== 1 ? 's' : ''} found`;
+
+  if (!data.users.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="adm-empty">No users match your search.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.users.map(u => `
+    <tr>
+      <td>
+        <div style="font-weight:700;font-size:.88rem;">${esc(u.fullName)}</div>
+        <div style="font-size:.76rem;color:var(--label3);">${esc(u.email)}</div>
+      </td>
+      <td><span class="adm-badge adm-badge-${u.role}">${u.role}</span></td>
+      <td><span class="adm-badge adm-badge-${u.status}">${u.status}</span></td>
+      <td style="font-size:.8rem;color:var(--label3);">${formatDateTime(u.lastLogin)}</td>
+      <td style="font-size:.8rem;color:var(--label3);">${formatDate(u.createdAt)}</td>
+      <td style="text-align:right;">
+        <div class="adm-action-wrap">
+          <button class="adm-action-btn" onclick="toggleDropdown('dd-${u.id}')">⋯</button>
+          <div class="adm-dropdown" id="dd-${u.id}">
+            <button class="adm-dropdown-item" onclick="openUserModal(${JSON.stringify(u).replace(/"/g,'&quot;')});closeAllDropdowns()">
+              👤 View Details
+            </button>
+            <div class="adm-dropdown-divider"></div>
+            ${u.status === 'banned'
+              ? `<button class="adm-dropdown-item" onclick="actionUnban('${u.id}','${esc(u.fullName)}');closeAllDropdowns()">✅ Unban User</button>`
+              : `<button class="adm-dropdown-item danger" onclick="actionBan('${u.id}','${esc(u.fullName)}');closeAllDropdowns()">🚫 Ban User</button>`
+            }
+            ${u.role === 'admin'
+              ? `<button class="adm-dropdown-item" onclick="actionSetRole('${u.id}','${esc(u.fullName)}','user');closeAllDropdowns()">⬇️ Remove Admin</button>`
+              : `<button class="adm-dropdown-item" onclick="actionSetRole('${u.id}','${esc(u.fullName)}','admin');closeAllDropdowns()">⬆️ Make Admin</button>`
+            }
+            <button class="adm-dropdown-item" onclick="actionResetPwd('${u.id}','${esc(u.fullName)}');closeAllDropdowns()">🔑 Reset Password</button>
+            <div class="adm-dropdown-divider"></div>
+            <button class="adm-dropdown-item danger" onclick="actionDelete('${u.id}','${esc(u.fullName)}');closeAllDropdowns()">🗑️ Delete User</button>
+          </div>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+// ── DROPDOWN HELPERS ──────────────────────────────────────────
+function toggleDropdown(id) {
+  const el = document.getElementById(id);
+  const isOpen = el.classList.contains('open');
+  closeAllDropdowns();
+  if (!isOpen) el.classList.add('open');
+}
+
+function closeAllDropdowns() {
+  document.querySelectorAll('.adm-dropdown.open').forEach(d => d.classList.remove('open'));
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('.adm-action-wrap')) closeAllDropdowns();
+});
+
+// ── USER DETAIL MODAL ─────────────────────────────────────────
+async function openUserModal(u) {
+  document.getElementById('modalUserName').textContent = u.fullName;
+  document.getElementById('modalUserEmail').textContent = u.email;
+
+  document.getElementById('modalUserInfo').innerHTML = `
+    <div class="adm-info-item">
+      <div class="adm-info-label">Role</div>
+      <div class="adm-info-val"><span class="adm-badge adm-badge-${u.role}">${u.role}</span></div>
+    </div>
+    <div class="adm-info-item">
+      <div class="adm-info-label">Status</div>
+      <div class="adm-info-val"><span class="adm-badge adm-badge-${u.status}">${u.status}</span></div>
+    </div>
+    <div class="adm-info-item">
+      <div class="adm-info-label">Joined</div>
+      <div class="adm-info-val">${formatDateTime(u.createdAt)}</div>
+    </div>
+    <div class="adm-info-item">
+      <div class="adm-info-label">Last Login</div>
+      <div class="adm-info-val">${formatDateTime(u.lastLogin)}</div>
+    </div>
+    ${u.bannedReason ? `
+    <div class="adm-info-item" style="grid-column:1/-1;">
+      <div class="adm-info-label">Ban Reason</div>
+      <div class="adm-info-val" style="color:var(--adm-red);">${esc(u.bannedReason)}</div>
+    </div>` : ''}
+  `;
+
+  document.getElementById('modalActions').innerHTML = `
+    ${u.status === 'banned'
+      ? `<button class="btn btn-glass btn-sm" onclick="actionUnban('${u.id}','${esc(u.fullName)}')">✅ Unban</button>`
+      : `<button class="btn btn-danger btn-sm" onclick="actionBan('${u.id}','${esc(u.fullName)}')">🚫 Ban</button>`
+    }
+    ${u.role === 'admin'
+      ? `<button class="btn btn-glass btn-sm" onclick="actionSetRole('${u.id}','${esc(u.fullName)}','user')">⬇️ Remove Admin</button>`
+      : `<button class="btn btn-glass btn-sm" onclick="actionSetRole('${u.id}','${esc(u.fullName)}','admin')">⬆️ Make Admin</button>`
+    }
+    <button class="btn btn-glass btn-sm" onclick="actionResetPwd('${u.id}','${esc(u.fullName)}')">🔑 Reset Password</button>
+    <button class="btn btn-danger btn-sm" onclick="actionDelete('${u.id}','${esc(u.fullName)}')">🗑️ Delete</button>
+  `;
+
+  openModal('userModal');
+
+  // ── LOAD ACTIVITY ─────────────────────────────────────────
+  const actDiv = document.getElementById('modalActivity');
+  actDiv.innerHTML = '<div class="adm-loading"><div class="spinner"></div> Loading...</div>';
+  const { data: actData, error: actError } = await apiAdminGetActivity(u.id);
+  if (actError || !actData.activities.length) {
+    actDiv.innerHTML = '<div class="adm-empty">No activity recorded yet.</div>';
+  } else {
+    actDiv.innerHTML = actData.activities.map(a => `
+      <div class="adm-activity-item">
+        <div class="adm-activity-dot"></div>
+        <div>
+          <div class="adm-activity-action">${actionLabel(a.action)}</div>
+          <div class="adm-activity-detail">${esc(a.details || '')}</div>
+          <div class="adm-activity-time">${formatDateTime(a.created_at)}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  // ── LOAD AI INTERACTIONS ─────────────────────────────────────
+  const aiDiv = document.getElementById('modalAIInteractions');
+  aiDiv.innerHTML = '<div class="adm-loading"><div class="spinner"></div> Loading...</div>';
+  const { data: aiData, error: aiError } = await apiAdminGetAIInteractions(u.id);
+  if (aiError || !aiData.interactions.length) {
+    aiDiv.innerHTML = '<div class="adm-empty">No AI interactions yet.</div>';
+  } else {
+    const typeEmoji = { summarize: '📋', explain: '💡', questions: '❓', flashcards: '🃏' };
+    aiDiv.innerHTML = aiData.interactions.map(i => `
+      <div class="adm-activity-item">
+        <div class="adm-activity-dot"></div>
+        <div>
+          <div class="adm-activity-action">${typeEmoji[i.type] || '🤖'} ${i.type.charAt(0).toUpperCase() + i.type.slice(1)}</div>
+          <div class="adm-activity-detail">${esc(i.details)}</div>
+          <div class="adm-activity-time">${formatDateTime(i.timestamp)}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  // ── LOAD UPLOADED FILES ──────────────────────────────────────
+  const filesDiv = document.getElementById('modalFiles');
+  filesDiv.innerHTML = '<div class="adm-loading"><div class="spinner"></div> Loading...</div>';
+  const { data: filesData, error: filesError } = await apiAdminGetUserFiles(u.id);
+  if (filesError || !filesData.files.length) {
+    filesDiv.innerHTML = '<div class="adm-empty">No files uploaded.</div>';
+    document.getElementById('fileCountBadge').textContent = '';
+  } else {
+    document.getElementById('fileCountBadge').textContent = `(${filesData.files.length} files)`;
+    filesDiv.innerHTML = filesData.files.map(f => `
+      <div style="display:grid;grid-template-columns:1fr auto;gap:12px;padding:12px;border-bottom:1px solid var(--sep);align-items:center;">
+        <div>
+          <div style="font-weight:500;color:var(--label);">${esc(f.name)}</div>
+          <div style="font-size:0.85rem;color:var(--label3);">
+            ${f.type.toUpperCase()} • ${f.pages || 0} pages • ${formatDateTime(f.uploadedAt)}
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-glass btn-xs" style="font-size:0.8rem;" onclick="alert('View feature coming soon')">👁️ View</button>
+          <button class="btn btn-glass btn-xs" style="font-size:0.8rem;" onclick="downloadUserFile('${f.id}','${esc(f.name)}')">⬇️ Download</button>
+        </div>
+      </div>`).join('');
+  }
+}
+
+async function downloadUserFile(fileId, fileName) {
+  try {
+    const token = getToken();
+    
+    if (!token) {
+      alert('⚠️ You must be logged in to download files');
+      return;
+    }
+
+    // Extract Supabase project ID from localStorage or use hardcoded value
+    // The project ID is typically stored in the auth context
+    // For production, you may want to store this during initialization
+    const SUPABASE_PROJECT_ID = 'ipwwtqfqlnhbkzgwjczf'; // Replace with your actual project ID
+    const BUCKET_NAME = 'uploaded-files';
+    
+    // Construct the download URL
+    const downloadUrl = `https://${SUPABASE_PROJECT_ID}.supabase.co/storage/v1/object/authenticated/${BUCKET_NAME}/${fileId}`;
+    
+    // Create a link element and trigger download with auth token
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.setAttribute('download', fileName);
+    link.setAttribute('target', '_blank');
+    
+    // Add authorization header by creating a new request
+    const response = await fetch(downloadUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': '*/*'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Download failed: ${response.statusText}`);
+    }
+    
+    // Create blob from response and download
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const downloadLink = document.createElement('a');
+    downloadLink.href = blobUrl;
+    downloadLink.setAttribute('download', fileName);
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    window.URL.revokeObjectURL(blobUrl);
+    
+  } catch (err) {
+    console.error('❌ Download error:', err);
+    alert('⚠️ Error downloading file: ' + err.message);
+  }
+}
+
+function actionLabel(action) {
+  const map = { 
+    ban_user:'User banned', 
+    unban_user:'User unbanned',
+    delete_user:'User deleted', 
+    reset_password:'Password reset',
+    set_role:'Role changed',
+    user_signup: '🎉 Account Created',
+    user_login: '🔓 Logged In',
+    user_logout: '🔒 Logged Out',
+    upload_document: '📄 Uploaded Document',
+    upload_image: '🖼️ Uploaded Image',
+    ai_summarize: '📋 Generated Summary',
+    ai_explain: '💡 Explanation Generated',
+    ai_questions: '❓ Questions Generated',
+    ai_flashcards: '🃏 Flashcards Generated'
+  };
+  return map[action] || action;
+}
+
+// ── MODAL OPEN/CLOSE ──────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.querySelectorAll('.adm-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); });
+});
+
+// ── CONFIRM MODAL BUILDER ─────────────────────────────────────
+function showConfirm({ title, sub, fields = [], danger = false, onConfirm }) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmSub').textContent = sub;
+
+  const formEl = document.getElementById('confirmForm');
+  formEl.innerHTML = fields.map(f => f.type === 'textarea'
+    ? `<textarea id="cf-${f.id}" placeholder="${esc(f.placeholder)}" rows="3"></textarea>`
+    : `<input id="cf-${f.id}" type="${f.type || 'text'}" placeholder="${esc(f.placeholder)}" />`
+  ).join('');
+
+  const btnsEl = document.getElementById('confirmBtns');
+  btnsEl.innerHTML = `
+    <button class="btn btn-glass btn-sm" onclick="closeModal('confirmModal')">Cancel</button>
+    <button class="btn ${danger ? 'btn-danger' : 'btn-primary'} btn-sm" id="confirmOkBtn">
+      ${danger ? '⚠️ Confirm' : '✅ Confirm'}
+    </button>`;
+
+  document.getElementById('confirmOkBtn').onclick = () => {
+    const values = {};
+    fields.forEach(f => { values[f.id] = document.getElementById('cf-' + f.id)?.value.trim(); });
+    onConfirm(values);
+  };
+
+  openModal('confirmModal');
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────
+function actionBan(userId, name) {
+  showConfirm({
+    title: `Ban ${name}`,
+    sub: 'The user will be immediately blocked from logging in.',
+    fields: [{ id: 'reason', type: 'textarea', placeholder: 'Reason for ban (required)...' }],
+    danger: true,
+    async onConfirm({ reason }) {
+      if (!reason) { showToast('A reason is required.', 'error'); return; }
+      closeModal('confirmModal');
+      const { error } = await apiAdminBanUser(userId, reason);
+      if (error) { showToast(error, 'error'); return; }
+      showToast(`${name} has been banned.`, 'success');
+      loadUsers(); loadStats(); closeModal('userModal');
+    }
+  });
+}
+
+function actionUnban(userId, name) {
+  showConfirm({
+    title: `Unban ${name}`,
+    sub: 'The user will regain access to their account.',
+    danger: false,
+    async onConfirm() {
+      closeModal('confirmModal');
+      const { error } = await apiAdminUnbanUser(userId);
+      if (error) { showToast(error, 'error'); return; }
+      showToast(`${name} has been unbanned.`, 'success');
+      loadUsers(); loadStats(); closeModal('userModal');
+    }
+  });
+}
+
+function actionDelete(userId, name) {
+  showConfirm({
+    title: `Delete ${name}`,
+    sub: 'This permanently deletes the account, all documents, and AI results. This CANNOT be undone.',
+    danger: true,
+    async onConfirm() {
+      closeModal('confirmModal');
+      const { error } = await apiAdminDeleteUser(userId);
+      if (error) { showToast(error, 'error'); return; }
+      showToast(`${name} has been deleted.`, 'info');
+      loadUsers(); loadStats(); closeModal('userModal');
+    }
+  });
+}
+
+function actionSetRole(userId, name, role) {
+  showConfirm({
+    title: role === 'admin' ? `Promote ${name}` : `Demote ${name}`,
+    sub: role === 'admin'
+      ? `${name} will have full admin access to this dashboard.`
+      : `${name} will lose admin access.`,
+    danger: role !== 'admin',
+    async onConfirm() {
+      closeModal('confirmModal');
+      const { error } = await apiAdminSetRole(userId, role);
+      if (error) { showToast(error, 'error'); return; }
+      showToast(`${name} is now a ${role}.`, 'success');
+      loadUsers(); closeModal('userModal');
+    }
+  });
+}
+
+function actionResetPwd(userId, name) {
+  showConfirm({
+    title: `Reset Password for ${name}`,
+    sub: 'Set a new temporary password for this user.',
+    fields: [{ id: 'pwd', type: 'password', placeholder: 'New password (min 6 characters)...' }],
+    danger: false,
+    async onConfirm({ pwd }) {
+      if (!pwd || pwd.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
+      closeModal('confirmModal');
+      const { error } = await apiAdminResetPassword(userId, pwd);
+      if (error) { showToast(error, 'error'); return; }
+      showToast(`Password reset for ${name}.`, 'success');
+    }
+  });
+}
+
+// ── UTILS ─────────────────────────────────────────────────────
+function esc(s) {
+  if (!s) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+// Mobile Menu Toggle for Admin
+function toggleAdminMobileMenu(){const m=document.getElementById('mobileMenu'),o=document.getElementById('mobileMenuOverlay'),s=document.querySelector('.adm-sidebar');m.classList.toggle('open');o.classList.toggle('open');s.classList.toggle('mobile-open');}
+function closeAdminMobileMenu(){const m=document.getElementById('mobileMenu'),o=document.getElementById('mobileMenuOverlay'),s=document.querySelector('.adm-sidebar');m.classList.remove('open');o.classList.remove('open');s.classList.remove('mobile-open');}
+</script>
+</body>
+</html>

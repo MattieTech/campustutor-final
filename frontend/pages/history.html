@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>History — CampusTutor AI</title>
+<link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+<nav class="navbar">
+  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">☰</button>
+  <a href="/" class="brand"><div class="brand-icon">🎓</div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span> <span class="brand-ai">AI</span></a>
+  <div class="navbar-right">
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+    <a href="/pages/dashboard.html" class="pill-btn">← Dashboard</a>
+    <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop">Log Out</button>
+  </div>
+</nav>
+
+<div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="closeMobileMenu()"></div>
+<nav class="mobile-menu" id="mobileMenu">
+  <a href="/pages/dashboard.html" class="mobile-menu-item" onclick="closeMobileMenu()">🏠 Dashboard</a>
+  <a href="/pages/upload.html" class="mobile-menu-item" onclick="closeMobileMenu()">📤 Uploads</a>
+  <a href="/pages/history.html" class="mobile-menu-item" onclick="closeMobileMenu()">📊 History</a>
+  <a href="/pages/dashboard.html#profile" class="mobile-menu-item" onclick="closeMobileMenu()">👤 Profile</a>
+  <button class="mobile-menu-item logout" onclick="logout()">🚪 Logout</button>
+</nav>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">Navigation</div>
+    <a href="/pages/dashboard.html" class="sidebar-link">🏠 Dashboard</a>
+    <a href="/pages/history.html" class="sidebar-link active">📊 History</a>
+    <a href="/pages/upload.html" class="sidebar-link">📤 Upload PDF</a>
+    <div class="sidebar-bottom"><div style="font-size:0.7rem;color:var(--label4);text-align:center;padding:8px;">⚡ Developed by MattieTech</div></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1>📊 Your Study History</h1>
+      <p>Track your learning journey, achievements, and progress.</p>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="totalXP" style="color:var(--purple);">0</div><div class="stat-label">Total XP</div></div>
+      <div class="stat-card"><div class="stat-num" id="currentLevel" style="color:var(--blue);">1</div><div class="stat-label">Current Level</div></div>
+      <div class="stat-card"><div class="stat-num" id="dayStreak" style="color:var(--orange);">0🔥</div><div class="stat-label">Day Streak</div></div>
+      <div class="stat-card"><div class="stat-num" id="totalDocs" style="color:var(--green);">0</div><div class="stat-label">Documents</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;border-bottom:1px solid var(--sep);padding-bottom:12px;">
+      <button class="tab-btn active" onclick="switchTab('activity')">📋 Activity</button>
+      <button class="tab-btn" onclick="switchTab('ai')">✨ AI Results</button>
+      <button class="tab-btn" onclick="switchTab('documents')">📄 Documents</button>
+      <button class="tab-btn" onclick="switchTab('achievements')">🏆 Achievements</button>
+      <button class="tab-btn" onclick="switchTab('xp')">⚡ XP History</button>
+    </div>
+
+    <!-- Activity Tab -->
+    <div id="activityTab" class="tab-content" style="display:block;">
+      <h2 style="font-size:1rem;margin-bottom:16px;font-weight:700;">Recent Activities</h2>
+      <div id="activityList" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div id="activityEmpty" style="display:none;text-align:center;padding:40px;color:var(--label3);">
+        <div style="font-size:3rem;margin-bottom:12px;">🌱</div>
+        <div>No activities yet. Start by uploading a document!</div>
+      </div>
+    </div>
+
+    <!-- AI Results Tab -->
+    <div id="aiTab" class="tab-content" style="display:none;">
+      <h2 style="font-size:1rem;margin-bottom:16px;font-weight:700;">Generated AI Content</h2>
+      <div id="aiResultsList" style="display:flex;flex-direction:column;gap:16px;"></div>
+      <div id="aiEmpty" style="display:none;text-align:center;padding:40px;color:var(--label3);">
+        <div style="font-size:3rem;margin-bottom:12px;">🤖</div>
+        <div>No AI-generated content yet. Generate summaries, flashcards, or questions from your documents!</div>
+        <a href="/pages/upload.html" class="btn btn-primary btn-sm" style="margin-top:16px;">Upload & Generate →</a>
+      </div>
+    </div>
+
+    <!-- Documents Tab -->
+    <div id="documentsTab" class="tab-content" style="display:none;">
+      <h2 style="font-size:1rem;margin-bottom:16px;font-weight:700;">Uploaded Documents</h2>
+      <div id="documentsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;"></div>
+      <div id="docsEmpty" style="display:none;text-align:center;padding:40px;color:var(--label3);">
+        <div style="font-size:3rem;margin-bottom:12px;">📂</div>
+        <div>No documents uploaded yet.</div>
+        <a href="/pages/upload.html" class="btn btn-primary btn-sm" style="margin-top:16px;">Upload Your First Document</a>
+      </div>
+    </div>
+
+    <!-- Achievements Tab -->
+    <div id="achievementsTab" class="tab-content" style="display:none;">
+      <h2 style="font-size:1rem;margin-bottom:16px;font-weight:700;">Achievements Earned</h2>
+      <div id="achievementsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;"></div>
+      <div id="achievementsEmpty" style="display:none;text-align:center;padding:40px;color:var(--label3);">
+        <div style="font-size:3rem;margin-bottom:12px;">🎯</div>
+        <div>No achievements unlocked yet. Keep studying!</div>
+      </div>
+    </div>
+
+    <!-- XP History Tab -->
+    <div id="xpTab" class="tab-content" style="display:none;">
+      <h2 style="font-size:1rem;margin-bottom:16px;font-weight:700;">XP Earning History</h2>
+      <div style="background:rgba(118,118,128,0.06);border-radius:var(--r-lg);padding:16px;margin-bottom:20px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div>
+            <div style="font-size:0.8rem;color:var(--label3);margin-bottom:4px;">XP to Next Level</div>
+            <div style="font-size:1.5rem;font-weight:700;" id="xpToNext">100</div>
+          </div>
+          <div>
+            <div style="font-size:0.8rem;color:var(--label3);margin-bottom:4px;">Lifetime XP</div>
+            <div style="font-size:1.5rem;font-weight:700;" id="lifetimeXP">0</div>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="xpProgressBar" style="width:0%"></div>
+        </div>
+      </div>
+      
+      <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:12px;">XP Breakdown</h3>
+      <div id="xpBreakdown" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+requireAuth();
+
+// Theme and Mobile Menu Init
+function initThemeToggle(){
+  const themeBtn = document.getElementById('themeBtn');
+  if(!themeBtn) return;
+  const t = localStorage.getItem('ct_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
+  themeBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const c = document.documentElement.getAttribute('data-theme');
+    const n = c === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', n);
+    localStorage.setItem('ct_theme', n);
+    themeBtn.textContent = n === 'dark' ? '☀️' : '🌙';
+  });
+}
+
+function initMobileMenu(){
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.querySelector('.sidebar');
+  if(!mobileMenuBtn || !sidebar) return;
+  
+  function updateMobileMenuVisibility(){
+    mobileMenuBtn.style.display = window.innerWidth <= 768 ? 'grid' : 'none';
+    if(window.innerWidth > 768) sidebar.classList.remove('mobile-open');
+  }
+  updateMobileMenuVisibility();
+  window.addEventListener('resize', updateMobileMenuVisibility);
+  
+  mobileMenuBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    sidebar.classList.toggle('mobile-open');
+    mobileMenuBtn.textContent = sidebar.classList.contains('mobile-open') ? '✕' : '☰';
+  });
+  
+  sidebar.querySelectorAll('a, button').forEach(el => {
+    el.addEventListener('click', () => {
+      sidebar.classList.remove('mobile-open');
+      mobileMenuBtn.textContent = '☰';
+    });
+  });
+}
+
+const t=localStorage.getItem('ct_theme')||'light';
+document.documentElement.setAttribute('data-theme',t);
+initThemeToggle();
+initMobileMenu();
+
+// Tab switching
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.style.display='none');
+  event.target.classList.add('active');
+  document.getElementById(tab+'Tab').style.display='block';
+}
+
+// Load all data
+const user=getUser();
+loadHistoryData();
+
+async function loadHistoryData(){
+  const userId=user?.id;
+  if(!userId) return;
+
+  // Get stats
+  const {data:stats,error:statsErr}=await apiGetUserStats(userId);
+  if(stats){
+    document.getElementById('totalXP').textContent=stats.xp||0;
+    document.getElementById('currentLevel').textContent=stats.level||1;
+    document.getElementById('dayStreak').textContent=(stats.streak||0)+'🔥';
+    document.getElementById('totalDocs').textContent=stats.documentsCount||0;
+    document.getElementById('xpToNext').textContent=stats.xpToNextLevel||100;
+    document.getElementById('lifetimeXP').textContent=stats.xp||0;
+    const percent=((stats.xp||0)%100)/100;
+    document.getElementById('xpProgressBar').style.width=(percent*100)+'%';
+  }
+
+  // Load activity
+  const {data:actData,error:actErr}=await apiGetActivity();
+  if(actData?.activities?.length>0){
+    const acts=actData.activities;
+    const actEmojis={
+      upload_document:'📤',upload_image:'📸',upload_video:'🎥',
+      ai_summarize:'📋',ai_explain:'💡',ai_questions:'📝',ai_flashcards:'🃏',
+      ai_quiz:'📖',download_summary:'⬇️',download_flashcards:'⬇️',
+      other:'✨'
+    };
+    document.getElementById('activityList').innerHTML=acts.map(a=>`
+      <div style="display:flex;gap:12px;padding:12px;background:rgba(118,118,128,.04);border-radius:var(--r);align-items:flex-start;">
+        <div style="font-size:1.2rem;flex-shrink:0;">${actEmojis[a.action]||actEmojis.other}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:0.85rem;font-weight:600;">${a.action.replace(/_/g,' ')}</div>
+          ${a.details?'<div style="font-size:0.78rem;color:var(--label3);margin-top:2px;">'+a.details+'</div>':''}
+          <div style="font-size:0.72rem;color:var(--label4);margin-top:2px;">${formatDateTime(a.created_at)}</div>
+        </div>
+      </div>`).join('');
+  }else{
+    document.getElementById('activityEmpty').style.display='block';
+  }
+
+  // Load AI results
+  const {data:aiData,error:aiErr}=await apiGetMyAIResults();
+  if(aiData?.results?.length>0){
+    const typeEmojis={summary:'📋',explanation:'💡',questions:'❓',flashcards:'🃏'};
+    const typeNames={summary:'Summary',explanation:'Explanation',questions:'Questions',flashcards:'Flashcards'};
+    const aiHTML=aiData.results.map(group=>`
+      <div style="background:var(--glass);border:0.5px solid var(--glass-b);border-radius:var(--r-lg);padding:16px;overflow:hidden;">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;">
+          <div>
+            <div style="font-size:0.88rem;font-weight:700;color:var(--label);">${esc(group.document_name)}</div>
+            <div style="font-size:0.72rem;color:var(--label3);margin-top:2px;">${formatDate(group.document_created_at)}</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${group.results.map(r=>`
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(118,118,128,.06);border-radius:var(--r);font-size:0.85rem;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span>${typeEmojis[r.type]||'✨'}</span>
+                <span style="font-weight:600;">${typeNames[r.type]||r.type}</span>
+              </div>
+              <div style="font-size:0.72rem;color:var(--label3);">${formatDateTime(r.created_at)}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+    document.getElementById('aiResultsList').innerHTML=aiHTML;
+  }else{
+    document.getElementById('aiEmpty').style.display='block';
+  }
+
+  // Load documents
+  const {data:docs,error:docsErr}=await apiGetMyDocs();
+  if(docs?.documents?.length>0){
+    document.getElementById('documentsList').innerHTML=docs.documents.map(d=>`
+      <div class="card" style="padding:12px;text-align:center;cursor:pointer;" onclick="openDoc('${d.id}','${esc(d.file_name)}')">
+        <div style="font-size:2rem;margin-bottom:8px;">📄</div>
+        <div style="font-size:0.8rem;font-weight:600;margin-bottom:4px;word-break:break-word;">${d.file_name.substring(0,30)}${d.file_name.length>30?'…':''}</div>
+        <div style="font-size:0.7rem;color:var(--label3);">${d.page_count||1} pages · ${formatDate(d.created_at)}</div>
+        <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%;" onclick="event.stopPropagation();openDoc('${d.id}','${esc(d.file_name)}')">Study 🤖</button>
+      </div>`).join('');
+  }else{
+    document.getElementById('docsEmpty').style.display='block';
+  }
+
+  // Load achievements
+  if(stats?.allAchievements?.length>0){
+    const unlockedKeys=stats.achievements||[];
+    document.getElementById('achievementsList').innerHTML=stats.allAchievements.map(a=>`
+      <div class="badge-card ${unlockedKeys.includes(a.key)?'':'locked'}" style="padding:16px;text-align:center;">
+        <div class="badge-icon" style="font-size:2rem;margin-bottom:8px;">${a.icon}</div>
+        <div class="badge-name" style="font-size:0.8rem;">${a.name}</div>
+        <div style="font-size:0.7rem;color:var(--label3);margin-top:4px;">${a.description}</div>
+      </div>`).join('');
+  }else{
+    document.getElementById('achievementsEmpty').style.display='block';
+  }
+
+  // XP Breakdown
+  document.getElementById('xpBreakdown').innerHTML=`
+    <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(0,122,255,0.1);border-radius:var(--r);">
+      <span>Upload PDF</span><span style="font-weight:700;">+25 XP</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(0,122,255,0.1);border-radius:var(--r);">
+      <span>Upload Image</span><span style="font-weight:700;">+20 XP</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(0,122,255,0.1);border-radius:var(--r);">
+      <span>Generate Summary</span><span style="font-weight:700;">+30 XP</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(0,122,255,0.1);border-radius:var(--r);">
+      <span>Generate Flashcards</span><span style="font-weight:700;">+40 XP</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(0,122,255,0.1);border-radius:var(--r);">
+      <span>Generate Questions</span><span style="font-weight:700;">+35 XP</span>
+    </div>
+  `;
+}
+
+// Helper functions
+function formatDateTime(d){
+  if(!d) return '';
+  const date=new Date(d);
+  const now=new Date();
+  const diff=now-date;
+  const mins=Math.floor(diff/60000);
+  const hours=Math.floor(diff/3600000);
+  const days=Math.floor(diff/86400000);
+  if(mins<1) return 'Just now';
+  if(mins<60) return mins+' min ago';
+  if(hours<24) return hours+' hr ago';
+  if(days<7) return days+' day'+( days>1?'s':'')+' ago';
+  return date.toLocaleDateString();
+}
+
+function formatDate(d){
+  if(!d) return '';
+  return new Date(d).toLocaleDateString();
+}
+
+function esc(s){
+  return (s||'').replace(/'/g,"\\'").replace(/"/g,'\\"');
+}
+
+function openDoc(id,name){
+  window.location.href=`/pages/study.html?docId=${id}&name=${encodeURIComponent(name)}`;
+}
+
+// Tab styling
+const style=document.createElement('style');
+style.textContent=`
+.tab-btn{background:none;border:none;padding:8px 16px;color:var(--label3);cursor:pointer;font-size:0.9rem;font-weight:600;border-bottom:2px solid transparent;transition:all 0.3s;}
+.tab-btn:hover{color:var(--label);}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
+.badge-card.locked{opacity:0.4;}
+`;
+document.head.appendChild(style);
+
+// Mobile Menu Toggle
+function toggleMobileMenu(){const m=document.getElementById('mobileMenu'),o=document.getElementById('mobileMenuOverlay');m.classList.toggle('open');o.classList.toggle('open');}
+function closeMobileMenu(){document.getElementById('mobileMenu').classList.remove('open');document.getElementById('mobileMenuOverlay').classList.remove('open');}
+</script>
+</body>
+</html>
