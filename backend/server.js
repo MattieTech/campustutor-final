@@ -15,6 +15,7 @@ const authRoutes    = require("./routes/auth");
 const uploadRoutes  = require("./routes/upload");
 const aiRoutes      = require("./routes/ai");
 const adminRoutes   = require("./routes/admin");   // ← admin panel API
+const contactRoutes = require("./routes/contact");
 
 const app = express();
 
@@ -41,17 +42,7 @@ app.use("/api/auth",   authRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/ai",     aiRoutes);
 app.use("/api/admin",  adminRoutes);   // protected by isAdmin() inside admin.js
-
-// Simple contact route (no auth required)
-app.post("/api/contact", (req, res) => {
-  const { name, email, message } = req.body;
-  if (!name || !email || !message) {
-    return res.status(400).json({ error: "All fields are required." });
-  }
-  // Log it server-side; integrate an email service here later
-  console.log(`📬 Contact form — ${name} <${email}>: ${message}`);
-  res.json({ message: "Message received. We'll get back to you soon!" });
-});
+app.use("/api/contact", contactRoutes);   // contact form submission handler
 
 // ── FRONTEND CATCH-ALL ────────────────────────────────────────
 app.get("/", (req, res) => {
