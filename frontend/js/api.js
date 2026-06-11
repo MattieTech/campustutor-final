@@ -2,7 +2,7 @@
 // js/api.js — CampusTutor AI Frontend API Helper
 // ============================================================
 
-const API_BASE = "";
+const API_BASE = "https://campustutor-backend.onrender.com";
 
 // ── AUTH HELPERS ──────────────────────────────────────────────
 function getToken()    { return localStorage.getItem("ct_token"); }
