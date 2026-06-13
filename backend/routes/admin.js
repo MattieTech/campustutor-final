@@ -21,6 +21,30 @@ const express = require("express");
 const router = express.Router();
 const supabase = require("../utils/supabase");
 
+// Helper: fetch ALL auth users from Supabase Admin API (handles pagination)
+async function getAllAuthUsers() {
+  const perPage = 100; // fetch 100 users per page (reasonable batch)
+  let page = 1;
+  const all = [];
+
+  while (true) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage });
+    if (error) {
+      // Surface the error so callers can fallback if needed
+      throw error;
+    }
+
+    const users = data?.users || [];
+    all.push(...users);
+
+    // If this page returned fewer than perPage users, we've reached the end
+    if (users.length < perPage) break;
+    page += 1;
+  }
+
+  return all;
+}
+
 // ── MIDDLEWARE: Verify JWT and require admin role ────────────
 async function isAdmin(req, res, next) {
   try {
@@ -83,14 +107,15 @@ router.get("/stats", isAdmin, async (req, res) => {
   try {
     // ── 1. GET USER COUNTS FROM SUPABASE AUTH ──────────────────────
     console.log("📊 Fetching user stats...");
-    const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
-    
-    if (authError) {
-      console.error("❌ Auth list error:", authError.message);
-      throw authError;
+    let allUsers = [];
+    try {
+      allUsers = await getAllAuthUsers();
+    } catch (authError) {
+      console.error("❌ Auth list error (pagination):", authError.message);
+      // Fall back to empty array; stats will still return other counts
+      allUsers = [];
     }
 
-    const allUsers = authData.users || [];
     const totalUsers = allUsers.length;
     const bannedUsers = allUsers.filter(u => u.app_metadata?.status === "banned").length;
     const activeUsers = totalUsers - bannedUsers;
@@ -251,15 +276,16 @@ router.get("/users", isAdmin, async (req, res) => {
       console.log("📝 Profiles table unavailable, using auth.users instead");
       
       // Fall back to listing auth users via admin API
-      const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (authError) {
-        console.error("Failed to fetch auth users:", authError.message);
+      let authUsers = [];
+      try {
+        authUsers = await getAllAuthUsers();
+      } catch (authError) {
+        console.error("Failed to fetch auth users (pagination):", authError.message);
         return res.status(500).json({ error: "Failed to fetch users." });
       }
 
       // Transform auth.users data to match expected format
-      users = (authData?.users || []).map(u => ({
+      users = (authUsers || []).map(u => ({
         id: u.id,
         email: u.email,
         full_name: u.user_metadata?.full_name || u.user_metadata?.name || "Unknown",
