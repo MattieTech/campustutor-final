@@ -455,15 +455,21 @@ async function explainConcept(){
     const docs=await apiGetMyDocs();
     if(!docs.data||docs.data.length===0){showToast('Upload a document first to use AI features','info');resultDiv.style.display='none';return;}
     const docId=docs.data[0].id;
+    console.log('Sending explain request:', {endpoint:'/api/ai/explain',documentId:docId,concept:concept});
     const response=await apiRequest('/api/ai/explain','POST',{documentId:docId,concept:concept});
+    console.log('Explain response:', response);
     if(response.error){
-      resultDiv.innerHTML=`<div style="color:var(--red);">⚠️ ${response.error}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:8px;">Close</button>`;
+      const errMsg=typeof response.error==='string'?response.error:'Request failed: '+JSON.stringify(response.error);
+      resultDiv.innerHTML=`<div style="color:var(--red);">⚠️ ${errMsg}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:8px;">Close</button>`;
+      console.error('API Error:', errMsg);
       return;
     }
-    resultDiv.innerHTML=`${response.data}<button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:12px;margin-left:0;">Close</button>`;
+    const explanation=response.data?.explanation||response.data?.result||response.data||'No explanation received';
+    resultDiv.innerHTML=`${explanation}<button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:12px;margin-left:0;">Close</button>`;
   }catch(err){
-    console.error('Explain error:',err);
-    resultDiv.innerHTML=`<div style="color:var(--red);">⚠️ Connection error. Please try again.</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:8px;">Close</button>`;
+    console.error('Explain error details:',err);
+    const errDetail=err.message||String(err);
+    resultDiv.innerHTML=`<div style="color:var(--red);">⚠️ ${errDetail}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:8px;">Close</button>`;
   }
 }
 </script>
