@@ -25,10 +25,20 @@ async function apiRequest(endpoint, method = "GET", body = null) {
     const options = { method, headers };
     if (body && method !== "GET") options.body = JSON.stringify(body);
 
-    const response = await fetch(`${API_BASE}${endpoint}`, options);
-    const data = await response.json();
+    const fullUrl = `${API_BASE}${endpoint}`;
+    console.log(`API: ${method} ${fullUrl}`);
+    const response = await fetch(fullUrl, options);
+    
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseErr) {
+      console.error("Failed to parse JSON response:", parseErr);
+      data = { error: "Server returned invalid response" };
+    }
 
     if (!response.ok) {
+      console.warn(`API Error ${response.status}:`, data);
       // Check if session expired (401 Unauthorized)
       if (response.status === 401) {
         console.warn("⏰ Session expired. Logging out...");
@@ -58,14 +68,14 @@ async function apiRequest(endpoint, method = "GET", body = null) {
       // Pass along the status code for better error handling (especially 429)
       return { 
         data: null, 
-        error: data.error || "Something went wrong.",
+        error: data.error || `Server error (${response.status})`,
         status: response.status
       };
     }
     return { data, error: null, status: response.status };
   } catch (err) {
-    console.error("API request failed:", err);
-    return { data: null, error: "Network error. Is the server running?", status: 0 };
+    console.error("API request network error:", err);
+    return { data: null, error: err.message || "Network error. Is the server running?", status: 0 };
   }
 }
 
