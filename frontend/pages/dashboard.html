@@ -93,7 +93,6 @@
           <input type="text" class="form-input" id="conceptInput" placeholder="e.g., Photosynthesis, Newton's Laws..." style="flex:1;min-width:200px;"/>
           <button onclick="explainConcept()" class="btn btn-primary" style="white-space:nowrap;">Study with AI</button>
         </div>
-        <div style="font-size:0.75rem;color:var(--label3);opacity:0.7;font-weight:500;letter-spacing:0.3px;">Send</div>
         <div id="conceptResult" style="display:none;margin-top:12px;padding:12px;background:rgba(118,118,128,.08);border-radius:var(--r,12px);color:var(--label);font-size:0.9rem;max-height:300px;overflow-y:auto;"></div>
       </div>
     </div>
@@ -456,7 +455,7 @@ async function explainConcept(){
     const docs=await apiGetMyDocs();
     if(!docs.data||docs.data.length===0){showToast('Upload a document first to use AI features','info');resultDiv.style.display='none';return;}
     const docId=docs.data[0].id;
-    const response=await apiRequest('/api/ai/explain',{documentId:docId,concept:concept},'POST');
+    const response=await apiRequest('/api/ai/explain','POST',{documentId:docId,concept:concept});
     if(response.error){
       resultDiv.innerHTML=`<div style="color:var(--red);">⚠️ ${response.error}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:8px;">Close</button>`;
       return;
