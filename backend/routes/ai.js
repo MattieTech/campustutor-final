@@ -144,21 +144,26 @@ router.post("/explain", authMiddleware, async (req, res) => {
   try {
     const { documentId, concept } = req.body;
 
-    if (!documentId || !concept) {
-      return res.status(400).json({ error: "documentId and concept are required." });
+    if (!concept) {
+      return res.status(400).json({ error: "concept is required." });
     }
 
-    const doc = await getDocumentText(documentId, req.user.id);
+    let doc = null;
+    let docContext = "";
+    
+    if (documentId) {
+      try {
+        doc = await getDocumentText(documentId, req.user.id);
+        docContext = `A student is studying the following lecture notes:\n---\n${doc.extracted_text}\n---\n\n`;
+      } catch (docErr) {
+        console.log("Document not found, proceeding without document context:", docErr.message);
+      }
+    }
 
     const prompt = `
 You are MattieTech AI, a patient university lecturer who explains things simply.
 
-A student is studying the following lecture notes:
----
-${doc.extracted_text}
----
-
-The student wants you to explain this concept in beginner-friendly terms: "${concept}"
+${docContext}The student wants you to explain this concept in beginner-friendly terms: "${concept}"
 
 IMPORTANT: Format ALL mathematical expressions using LaTeX.
 Use \\( ... \\) for inline math and \\[ ... \\] for display equations.
@@ -174,7 +179,7 @@ Please explain it like this:
 **Mathematical Expression (if applicable):**
 [Show the key equation(s) as a LaTeX display equation using \\[ ... \\]]
 
-**How it relates to the notes:** [Connect it back to what's in the lecture]
+**How it relates to the notes:** ${docContext ? "[Connect it back to what's in the lecture]" : "[General explanation without specific notes]"}
 
 **Quick Memory Trick:** [A tip to remember this concept]
 
@@ -182,10 +187,13 @@ Keep the language simple, warm, and encouraging.
     `.trim();
 
     const explanation = await askGemini(prompt);
-    await saveAIResult(documentId, req.user.id, "explanation", explanation);
     
-    // Log the activity with concept details
-    await logUserActivity(req.user.id, "ai_explain", `Asked: "${concept}" | Document: "${doc.file_name}"`);
+    if (doc && documentId) {
+      await saveAIResult(documentId, req.user.id, "explanation", explanation);
+      await logUserActivity(req.user.id, "ai_explain", `Asked: "${concept}" | Document: "${doc.file_name}"`);
+    } else {
+      await logUserActivity(req.user.id, "ai_explain", `Asked: "${concept}" | No document`);
+    }
     
     // Award XP
     try {

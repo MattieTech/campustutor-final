@@ -452,24 +452,35 @@ async function explainConcept(){
   resultDiv.style.display='block';
   
   try{
+    console.log('=== Starting explain concept ===');
     const docs=await apiGetMyDocs();
-    if(!docs.data||docs.data.length===0){showToast('Upload a document first to use AI features','info');resultDiv.style.display='none';return;}
-    const docId=docs.data[0].id;
-    console.log('Sending explain request:', {endpoint:'/api/ai/explain',documentId:docId,concept:concept});
+    console.log('Documents response:', docs);
+    
+    let docId=null;
+    if(docs.data && docs.data.length>0 && docs.data[0] && docs.data[0].id){
+      docId=docs.data[0].id;
+      console.log(`Using document: ${docId}`);
+    }else{
+      console.warn('No documents found, proceeding without document context');
+    }
+    
+    console.log(`Calling /api/ai/explain with docId=${docId}, concept="${concept}"`);
     const response=await apiRequest('/api/ai/explain','POST',{documentId:docId,concept:concept});
     console.log('Explain response:', response);
+    
     if(response.error){
-      const errMsg=typeof response.error==='string'?response.error:'Request failed: '+JSON.stringify(response.error);
+      const errMsg=response.error;
       resultDiv.innerHTML=`<div style="color:var(--red);">⚠️ ${errMsg}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:8px;">Close</button>`;
-      console.error('API Error:', errMsg);
+      console.error('API Error Response:', errMsg);
       return;
     }
+    
     const explanation=response.data?.explanation||response.data?.result||response.data||'No explanation received';
     resultDiv.innerHTML=`${explanation}<button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:12px;margin-left:0;">Close</button>`;
   }catch(err){
-    console.error('Explain error details:',err);
+    console.error('Explain function error:', err);
     const errDetail=err.message||String(err);
-    resultDiv.innerHTML=`<div style="color:var(--red);">⚠️ ${errDetail}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:8px;">Close</button>`;
+    resultDiv.innerHTML=`<div style="color:var(--red);">⚠️ Error: ${errDetail}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:8px;">Close</button>`;
   }
 }
 </script>
