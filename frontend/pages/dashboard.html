@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Dashboard — CampusTutor AI</title>
 <link rel="stylesheet" href="/css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
 <nav class="navbar">
@@ -494,6 +495,7 @@ async function explainConcept(){
     const explanation=response.data?.explanation||response.data?.result||response.data||'No explanation received';
     const formattedHtml=formatMarkdown(explanation);
     resultDiv.innerHTML=`<div style="line-height:1.6;">${formattedHtml}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:24px;display:inline-block;">Close</button>`;
+    if(window.MathJax){MathJax.typesetPromise().catch(err=>console.log('MathJax typeset error:',err));}
   }catch(err){
     console.error('Explain function error:', err);
     const errDetail=err.message||String(err);

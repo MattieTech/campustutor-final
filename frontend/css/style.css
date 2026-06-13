@@ -294,6 +294,9 @@ img{max-width:100%;display:block;}
 #conceptResult strong{font-weight:700;color:var(--brand-electric);}
 #conceptResult em{font-style:italic;color:var(--label2);}
 #conceptResult div[style*="monospace"]{line-height:1.5;}
+/* MATHJAX STYLING */
+#conceptResult .MathJax{font-family:'Cambria Math','Times New Roman',serif;font-style:italic;}
+#conceptResult .MathJax_CHTML{font-size:1.05em;line-height:1.6;}
 
 /* APP LAYOUT */
 .app-layout{display:grid;grid-template-columns:256px 1fr;min-height:calc(100vh - var(--nav-h));}
