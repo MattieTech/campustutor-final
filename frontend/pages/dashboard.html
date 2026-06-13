@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Dashboard — CampusTutor AI</title>
 <link rel="stylesheet" href="/css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
   window.MathJax = {
     tex: {
@@ -13,7 +14,6 @@
       processEscapes: true
     },
     options: {
-      ignoreHtmlClass: 'tex2jax_ignore',
       processHtmlClass: 'tex2jax_process'
     }
   };
@@ -458,40 +458,7 @@ function toggleMobileMenu(){const m=document.getElementById('mobileMenu'),o=docu
 function closeMobileMenu(){document.getElementById('mobileMenu').classList.remove('open');document.getElementById('mobileMenuOverlay').classList.remove('open');}
 
 // AI Assistant Functions
-function formatAIResponse(text){
-  if(!text)return'';
-  let processedText=text;
-  // Fix standalone display blocks: turn $$equation$$ into clean HTML wrapper divs
-  processedText=processedText.replace(/\$\$\s*([\s\S]*?)\s*\$\$/g,'<div class="math-block">$$\$1$$</div>');
-  // Fix inline math variables: safely convert single $x$ or $a$ blocks without eating normal spaces
-  processedText=processedText.replace(/(^|[^$\w])\$([a-zA-Z0-9^_+=\-\(\)\\/\\, ]+)\$([^$\w]|$)/g,'\$1\\(\$2\\)\$3');
-  // Fix common Gemini syntax leaks like raw unescaped LaTeX tags
-  processedText=processedText.replace(/\\nabla/g,'\\(\\nabla\\)');
-  processedText=processedText.replace(/\\phi/g,'\\(\\phi\\)');
-  processedText=processedText.replace(/\\Delta/g,'\\(\\Delta\\)');
-  processedText=processedText.replace(/\\alpha/g,'\\(\\alpha\\)');
-  processedText=processedText.replace(/\\beta/g,'\\(\\beta\\)');
-  processedText=processedText.replace(/\\frac/g,'\\(\\frac');
-  processedText=processedText.replace(/\\binom/g,'\\(\\binom');
-  processedText=processedText.replace(/\{([^}]+)\}\)/g,'{$1}\\)');
-  return processedText;
-}
-
-function formatMarkdown(text){
-  if(!text)return'';
-  let html=text
-    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
-    .replace(/##\s+(.+?)\n/g,'<h3 style="margin-top:16px;margin-bottom:8px;font-weight:700;font-size:1.05rem;">$1</h3>')
-    .replace(/##\s+(.+?)$/g,'<h3 style="margin-top:16px;margin-bottom:8px;font-weight:700;font-size:1.05rem;">$1</h3>')
-    .replace(/\\\(/g,'$')
-    .replace(/\\\)/g,'$')
-    .replace(/\\\[/g,'$$')
-    .replace(/\\\]/g,'$$')
-    .replace(/\n\n/g,'</p><p style="margin-bottom:12px;">')
-    .replace(/^/,'<p style="margin-bottom:12px;">')
-    .replace(/$/,'</p>');
-  return html;
-}
+// Using marked.js for markdown parsing and standard MathJax for math rendering
 
 async function explainConcept(){
   const concept=document.getElementById('conceptInput').value.trim();
@@ -525,10 +492,27 @@ async function explainConcept(){
     }
     
     const explanation=response.data?.explanation||response.data?.result||response.data||'No explanation received';
-    const processedText=formatAIResponse(explanation);
-    const formattedHtml=formatMarkdown(processedText);
-    resultDiv.innerHTML=`<div style="line-height:1.6;">${formattedHtml}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:24px;display:inline-block;">Close</button>`;
-    if(window.MathJax && typeof window.MathJax.typesetPromise==='function'){window.MathJax.typesetPromise().catch(err=>console.log('MathJax error:',err));}
+    
+    // Use marked.js to cleanly convert markdown to HTML
+    if(typeof marked!=='undefined'){
+      resultDiv.innerHTML=marked.parse(explanation);
+    }else{
+      resultDiv.innerHTML=`<div style="line-height:1.6;">${explanation}</div>`;
+    }
+    
+    // Add close button
+    const closeBtn=document.createElement('button');
+    closeBtn.className='btn btn-ghost btn-sm';
+    closeBtn.style.marginTop='24px';
+    closeBtn.style.display='inline-block';
+    closeBtn.textContent='Close';
+    closeBtn.onclick=()=>document.getElementById('conceptResult').style.display='none';
+    resultDiv.appendChild(closeBtn);
+    
+    // Force MathJax to process the rendered HTML
+    if(window.MathJax&&typeof window.MathJax.typesetPromise==='function'){
+      window.MathJax.typesetPromise([resultDiv]).catch(err=>console.log('MathJax error:',err));
+    }
   }catch(err){
     console.error('Explain function error:', err);
     const errDetail=err.message||String(err);
