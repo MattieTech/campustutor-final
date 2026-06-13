@@ -89,11 +89,11 @@
             <div style="font-size:0.8rem;color:var(--label3);">Ask the AI to explain any topic or concept instantly</div>
           </div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <input type="text" class="form-input" id="conceptInput" placeholder="e.g., Photosynthesis, Newton's Laws..." style="flex:1;min-width:200px;margin-bottom:8px;"/>
-          <button onclick="explainConcept()" class="btn btn-primary" style="white-space:nowrap;">🤖 Explain</button>
-          <button onclick="openAIChat()" class="btn btn-glass" style="white-space:nowrap;">💬 Chat Live with AI</button>
+        <div style="display:flex;gap:8px;margin-bottom:6px;">
+          <input type="text" class="form-input" id="conceptInput" placeholder="e.g., Photosynthesis, Newton's Laws..." style="flex:1;min-width:200px;"/>
+          <button onclick="explainConcept()" class="btn btn-primary" style="white-space:nowrap;">Study with AI</button>
         </div>
+        <div style="font-size:0.75rem;color:var(--label3);opacity:0.7;font-weight:500;letter-spacing:0.3px;">Send</div>
         <div id="conceptResult" style="display:none;margin-top:12px;padding:12px;background:rgba(118,118,128,.08);border-radius:var(--r,12px);color:var(--label);font-size:0.9rem;max-height:300px;overflow-y:auto;"></div>
       </div>
     </div>
@@ -445,18 +445,27 @@ function toggleMobileMenu(){const m=document.getElementById('mobileMenu'),o=docu
 function closeMobileMenu(){document.getElementById('mobileMenu').classList.remove('open');document.getElementById('mobileMenuOverlay').classList.remove('open');}
 
 // AI Assistant Functions
-function explainConcept(){
+async function explainConcept(){
   const concept=document.getElementById('conceptInput').value.trim();
   if(!concept){showToast('Please enter a concept to explain','error');return;}
   const resultDiv=document.getElementById('conceptResult');
-  resultDiv.innerHTML='<div style="text-align:center;color:var(--label3);">✨ Thinking...</div>';
+  resultDiv.innerHTML='<div style="text-align:center;color:var(--label3);">🧠 Thinking...</div>';
   resultDiv.style.display='block';
-  setTimeout(()=>{
-    resultDiv.innerHTML=`<strong>Explaining: ${concept}</strong><br><br>In CampusTutor AI, the "Explain a Concept" feature would connect to your Gemini API to provide an instant, student-friendly explanation. Upload a document first to unlock AI-powered learning with full context!<br><br><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:8px;">Close</button>`;
-  },1500);
-}
-function openAIChat(){
-  showToast('💬 Live AI Chat coming soon! You can already upload a PDF and use the Study section for instant AI assistance.','info');
+  
+  try{
+    const docs=await apiGetMyDocs();
+    if(!docs.data||docs.data.length===0){showToast('Upload a document first to use AI features','info');resultDiv.style.display='none';return;}
+    const docId=docs.data[0].id;
+    const response=await apiRequest('/api/ai/explain',{documentId:docId,concept:concept},'POST');
+    if(response.error){
+      resultDiv.innerHTML=`<div style="color:var(--red);">⚠️ ${response.error}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:8px;">Close</button>`;
+      return;
+    }
+    resultDiv.innerHTML=`${response.data}<button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:12px;margin-left:0;">Close</button>`;
+  }catch(err){
+    console.error('Explain error:',err);
+    resultDiv.innerHTML=`<div style="color:var(--red);">⚠️ Connection error. Please try again.</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:8px;">Close</button>`;
+  }
 }
 </script>
 </body>
