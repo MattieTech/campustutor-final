@@ -535,6 +535,58 @@ async function explainConcept(){
     resultDiv.innerHTML=`<div style="color:var(--red);">⚠️ Error: ${errDetail}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:24px;display:inline-block;">Close</button>`;
   }
 }
+
+// ── ANNOUNCEMENT MODAL ────────────────────────────────────────
+function initAnnouncementModal(){
+  const overlay = document.getElementById('announcementOverlay');
+  const dismissBtn = document.getElementById('announcementDismiss');
+  const joinBtn = document.getElementById('announcementJoin');
+  
+  if(!overlay || !dismissBtn || !joinBtn){
+    console.warn('⚠️ Announcement modal elements not found');
+    return;
+  }
+  
+  // Show modal after 1.5 seconds
+  setTimeout(() => {
+    overlay.classList.add('show');
+  }, 1500);
+  
+  // Handle dismiss button
+  dismissBtn.addEventListener('click', () => {
+    overlay.classList.remove('show');
+  });
+  
+  // Handle join button - opens WhatsApp link in new tab
+  joinBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.open('https://whatsapp.com/channel/0029VbBYb3g84OmFIuejPl0g', '_blank');
+    overlay.classList.remove('show');
+  });
+  
+  // Close modal if clicking outside (on overlay)
+  overlay.addEventListener('click', (e) => {
+    if(e.target === overlay){
+      overlay.classList.remove('show');
+    }
+  });
+}
+
+// Initialize modal when page loads
+document.addEventListener('DOMContentLoaded', initAnnouncementModal);
 </script>
+
+<!-- ANNOUNCEMENT MODAL -->
+<div class="announcement-overlay" id="announcementOverlay">
+  <div class="announcement-modal">
+    <div class="announcement-header">📢 Important Announcement!</div>
+    <div class="announcement-text">To stay updated with the latest improvements, new feature releases, and critical announcements for CampusTutor AI, join our official WhatsApp community managed by MattieTech!</div>
+    <div class="announcement-buttons">
+      <button class="announcement-btn announcement-btn-primary" id="announcementJoin">🟢 Join WhatsApp Updates</button>
+      <button class="announcement-btn announcement-btn-dismiss" id="announcementDismiss">Close</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
