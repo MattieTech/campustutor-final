@@ -288,6 +288,13 @@ img{max-width:100%;display:block;}
 [data-theme="dark"] .alert-error{color:#ff6b6b;}
 [data-theme="dark"] .alert-success{color:#6ee7b7;}
 
+/* AI RESULT FORMATTING */
+#conceptResult p{margin-bottom:12px;line-height:1.6;}
+#conceptResult h3{margin-top:16px;margin-bottom:8px;font-weight:700;font-size:1.05rem;}
+#conceptResult strong{font-weight:700;color:var(--brand-electric);}
+#conceptResult em{font-style:italic;color:var(--label2);}
+#conceptResult div[style*="monospace"]{line-height:1.5;}
+
 /* APP LAYOUT */
 .app-layout{display:grid;grid-template-columns:256px 1fr;min-height:calc(100vh - var(--nav-h));}
 

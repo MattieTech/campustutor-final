@@ -93,7 +93,7 @@
           <input type="text" class="form-input" id="conceptInput" placeholder="e.g., Photosynthesis, Newton's Laws..." style="flex:1;min-width:200px;"/>
           <button onclick="explainConcept()" class="btn btn-primary" style="white-space:nowrap;">Send</button>
         </div>
-        <div id="conceptResult" style="display:none;margin-top:12px;padding:12px;background:rgba(118,118,128,.08);border-radius:var(--r,12px);color:var(--label);font-size:0.9rem;max-height:300px;overflow-y:auto;"></div>
+        <div id="conceptResult" style="display:none;margin-top:12px;padding:16px;background:rgba(118,118,128,.08);border-radius:var(--r,12px);color:var(--label);font-size:0.9rem;max-height:400px;overflow-y:auto;line-height:1.6;"></div>
       </div>
     </div>
 
@@ -444,6 +444,22 @@ function toggleMobileMenu(){const m=document.getElementById('mobileMenu'),o=docu
 function closeMobileMenu(){document.getElementById('mobileMenu').classList.remove('open');document.getElementById('mobileMenuOverlay').classList.remove('open');}
 
 // AI Assistant Functions
+function formatMarkdown(text){
+  if(!text)return'';
+  let html=text
+    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    .replace(/##\s+(.+?)\n/g,'<h3 style="margin-top:16px;margin-bottom:8px;font-weight:700;font-size:1.05rem;">$1</h3>')
+    .replace(/##\s+(.+?)$/g,'<h3 style="margin-top:16px;margin-bottom:8px;font-weight:700;font-size:1.05rem;">$1</h3>')
+    .replace(/\\\(/g,'<em style="font-style:italic;">')
+    .replace(/\\\)/g,'</em>')
+    .replace(/\\\[/g,'<div style="background:rgba(118,118,128,.05);padding:8px;border-radius:6px;margin:8px 0;font-family:monospace;">')
+    .replace(/\\\]/g,'</div>')
+    .replace(/\n\n/g,'</p><p style="margin-bottom:12px;">')
+    .replace(/^/,'<p style="margin-bottom:12px;">')
+    .replace(/$/,'</p>');
+  return html;
+}
+
 async function explainConcept(){
   const concept=document.getElementById('conceptInput').value.trim();
   if(!concept){showToast('Please enter a concept to explain','error');return;}
@@ -470,17 +486,18 @@ async function explainConcept(){
     
     if(response.error){
       const errMsg=response.error;
-      resultDiv.innerHTML=`<div style="color:var(--red);">⚠️ ${errMsg}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:8px;">Close</button>`;
+      resultDiv.innerHTML=`<div style="color:var(--red);">⚠️ ${errMsg}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:24px;display:inline-block;">Close</button>`;
       console.error('API Error Response:', errMsg);
       return;
     }
     
     const explanation=response.data?.explanation||response.data?.result||response.data||'No explanation received';
-    resultDiv.innerHTML=`${explanation}<button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:12px;margin-left:0;">Close</button>`;
+    const formattedHtml=formatMarkdown(explanation);
+    resultDiv.innerHTML=`<div style="line-height:1.6;">${formattedHtml}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:24px;display:inline-block;">Close</button>`;
   }catch(err){
     console.error('Explain function error:', err);
     const errDetail=err.message||String(err);
-    resultDiv.innerHTML=`<div style="color:var(--red);">⚠️ Error: ${errDetail}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:8px;">Close</button>`;
+    resultDiv.innerHTML=`<div style="color:var(--red);">⚠️ Error: ${errDetail}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:24px;display:inline-block;">Close</button>`;
   }
 }
 </script>
