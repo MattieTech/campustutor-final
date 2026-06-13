@@ -445,16 +445,27 @@ function toggleMobileMenu(){const m=document.getElementById('mobileMenu'),o=docu
 function closeMobileMenu(){document.getElementById('mobileMenu').classList.remove('open');document.getElementById('mobileMenuOverlay').classList.remove('open');}
 
 // AI Assistant Functions
+function wrapMathEquations(text){
+  if(!text)return'';
+  // Wrap lines containing ^ (exponents) or = (equations) in $$ $$
+  // This pattern detects mathematical expressions and wraps them
+  let wrapped=text
+    .replace(/([a-zA-Z0-9\s\+\-\*\/\(\)]{0,}[a-zA-Z]\^[\d\w]{1,}[a-zA-Z0-9\s\+\-\*\/\(\)]{0,})/g,'$$\$1$$')
+    .replace(/([a-zA-Z0-9\+\-\*\/\s]{0,}=[a-zA-Z0-9\+\-\*\/\(\)\s^]{1,})/g,'$$\$1$$')
+    .replace(/(\d+\/\d+|\d+\.\d+[a-zA-Z]|\w+\^{\d+})/g,'$$\$1$$');
+  return wrapped;
+}
+
 function formatMarkdown(text){
   if(!text)return'';
   let html=text
     .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
     .replace(/##\s+(.+?)\n/g,'<h3 style="margin-top:16px;margin-bottom:8px;font-weight:700;font-size:1.05rem;">$1</h3>')
     .replace(/##\s+(.+?)$/g,'<h3 style="margin-top:16px;margin-bottom:8px;font-weight:700;font-size:1.05rem;">$1</h3>')
-    .replace(/\\\(/g,'<em style="font-style:italic;">')
-    .replace(/\\\)/g,'</em>')
-    .replace(/\\\[/g,'<div style="background:rgba(118,118,128,.05);padding:8px;border-radius:6px;margin:8px 0;font-family:monospace;">')
-    .replace(/\\\]/g,'</div>')
+    .replace(/\\\(/g,'$')
+    .replace(/\\\)/g,'$')
+    .replace(/\\\[/g,'$$')
+    .replace(/\\\]/g,'$$')
     .replace(/\n\n/g,'</p><p style="margin-bottom:12px;">')
     .replace(/^/,'<p style="margin-bottom:12px;">')
     .replace(/$/,'</p>');
@@ -493,7 +504,8 @@ async function explainConcept(){
     }
     
     const explanation=response.data?.explanation||response.data?.result||response.data||'No explanation received';
-    const formattedHtml=formatMarkdown(explanation);
+    const wrappedMath=wrapMathEquations(explanation);
+    const formattedHtml=formatMarkdown(wrappedMath);
     resultDiv.innerHTML=`<div style="line-height:1.6;">${formattedHtml}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:24px;display:inline-block;">Close</button>`;
     if(window.MathJax){MathJax.typesetPromise().catch(err=>console.log('MathJax typeset error:',err));}
   }catch(err){
