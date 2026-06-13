@@ -265,7 +265,8 @@ router.get("/users", isAdmin, async (req, res) => {
       const { data: profileUsers, error } = await supabase
         .from("profiles")
         .select("id, email, full_name, role, status, created_at, last_login, banned_reason, banned_at")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(0, 999);  // Explicitly fetch up to 1000 records (bypasses default limit)
 
       if (!error && profileUsers && profileUsers.length > 0) {
         users = profileUsers;
