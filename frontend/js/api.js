@@ -29,6 +29,20 @@ async function apiRequest(endpoint, method = "GET", body = null) {
     const data = await response.json();
 
     if (!response.ok) {
+      // Check if session expired (401 Unauthorized)
+      if (response.status === 401) {
+        console.warn("⏰ Session expired. Logging out...");
+        localStorage.removeItem("ct_token");
+        localStorage.removeItem("ct_user");
+        window.location.href = "/pages/login.html?status=expired";
+        return { 
+          data: null, 
+          error: "Your session has expired. Please log in again.",
+          status: response.status,
+          expired: true
+        };
+      }
+      
       // Check if user was banned (403 with banned flag)
       if (response.status === 403 && data.banned) {
         console.warn("⛔ User account has been banned!");

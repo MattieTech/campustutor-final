@@ -18,6 +18,7 @@
     <h1><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></h1>
     <p>Welcome back! Log in to continue.</p>
   </div>
+  <div id="statusAlert" style="display:none;padding:12px;border-radius:var(--r,12px);background:rgba(175,82,222,.1);border:1px solid rgba(175,82,222,.3);color:#af52de;margin-bottom:16px;text-align:center;font-size:0.9rem;font-weight:500;">👉 Your session has expired. Please log in again! 🔒</div>
   <div class="alert alert-error" id="errMsg"></div>
   <form id="loginForm">
     <div class="form-group">
@@ -48,6 +49,8 @@ document.getElementById('themeBtn').addEventListener('click',()=>{
   document.getElementById('themeBtn').textContent=n==='dark'?'☀️':'🌙';
 });
 redirectIfLoggedIn();
+const params=new URLSearchParams(window.location.search);
+if(params.get('status')==='expired'){document.getElementById('statusAlert').style.display='block';}
 document.getElementById('loginForm').addEventListener('submit',async(e)=>{
   e.preventDefault();
   const err=document.getElementById('errMsg');
