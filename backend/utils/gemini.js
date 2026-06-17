@@ -11,6 +11,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 if (!GEMINI_API_KEY) {
   console.error("❌ Missing GEMINI_API_KEY in your .env file!");
@@ -18,7 +19,7 @@ if (!GEMINI_API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // ── SYSTEM PROMPT ─────────────────────────────────────────────
 // This is prepended to every single request. It controls:
@@ -63,30 +64,78 @@ GENERAL RULES:
 - Explain concepts step by step, especially for mathematics and science.
 `.trim();
 
-// ── askGemini ─────────────────────────────────────────────────
-// Sends a prompt to Gemini with the system prompt prepended.
-// The system prompt is injected as part of the user turn because
-// Gemini 1.5 Flash does not support a separate systemInstruction
-// in the basic generateContent API on the free tier.
-async function askGemini(prompt) {
+// ── askOpenRouter ─────────────────────────────────────────────
+// Helper function to call OpenRouter free models as backup
+async function askOpenRouter(modelId, prompt) {
   try {
-    const fullPrompt = `${SYSTEM_PROMPT}\n\n---\n\n${prompt}`;
-
-    const result = await model.generateContent(fullPrompt);
-    const text = result.response.text();
-    return text;
-  } catch (error) {
-    console.error("❌ Gemini API error:", {
-      message: error.message,
-      status: error.status,
-      details: error.details || error,
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "HTTP-Referer": process.env.FRONTEND_URL || "http://localhost:3000",
+        "X-Title": "CampusTutor AI",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: modelId,
+        messages: [{ role: "user", content: prompt }],
+      }),
     });
 
-    // Re-throw with status preserved so routes can check for 429
-    const err = new Error(`AI service failed: ${error.message}`);
-    err.status = error.status;
-    err.originalError = error;
-    throw err;
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error?.message || `OpenRouter error: ${response.status}`);
+    }
+    return data.choices[0].message.content;
+  } catch (error) {
+    throw error;
+  }
+}
+
+// ── askGemini ─────────────────────────────────────────────────
+// Sends a prompt to Gemini with the system prompt prepended.
+// Implements a Multi-AI Fallback Chain using OpenRouter free models.
+async function askGemini(prompt) {
+  const fullPrompt = `${SYSTEM_PROMPT}\n\n---\n\n${prompt}`;
+
+  try {
+    // 1. PRIMARY CORE ATTEMPT: Google Gemini
+    console.log("🤖 Attempting Primary Core AI (MattieTech AI Framework)...");
+    const result = await model.generateContent(fullPrompt);
+    return result.response.text();
+  } catch (geminiError) {
+    console.warn("⚠️ Primary core busy, initiating MattieTech AI Backup Chain:", geminiError.message);
+
+    if (!OPENROUTER_API_KEY) {
+      console.error("❌ OPENROUTER_API_KEY is missing. Fallback chain aborted.");
+      throw geminiError;
+    }
+
+    // Ordered array of free backup models from OpenRouter
+    const fallbackChain = [
+      "openai/gpt-oss-120b:free",         // Layer 1: OpenAI Free Variant
+      "meta-llama/llama-4-maverick:free", // Layer 2: Llama/Claude Alternative
+      "deepseek/deepseek-r1:free",        // Layer 3: DeepSeek Reasoning
+      "qwen/qwen-2.5-72b-instruct:free"   // Layer 4: Alibaba Qwen
+    ];
+
+    for (let i = 0; i < fallbackChain.length; i++) {
+      const modelId = fallbackChain[i];
+      try {
+        console.log(`🔄 Attempting Route Layer ${i + 1}: ${modelId}...`);
+        const text = await askOpenRouter(modelId, fullPrompt);
+        
+        console.log(`✅ Server routing successful using layer ${i + 1}`);
+        return text;
+      } catch (fallbackError) {
+        console.warn(`⚠️ Backup Layer ${i + 1} (${modelId}) structural retry:`, fallbackError.message);
+        
+        // If all models fail, we throw a final error for the route handler
+        if (i === fallbackChain.length - 1) {
+          throw new Error("All system routes are currently busy. Please try again in a few seconds.");
+        }
+      }
+    }
   }
 }
 
