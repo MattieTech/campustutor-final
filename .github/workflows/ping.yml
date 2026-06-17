@@ -1,0 +1,16 @@
+
+name: Render Keep-Alive Ping
+
+on:
+  schedule:
+    - cron: '*/10 * * * *' 
+  workflow_dispatch:        
+
+jobs:
+  ping-website:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send Keep-Alive Ping
+        
+        run: curl -I https://campustutor-backend.onrender.com
