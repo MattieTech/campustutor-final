@@ -18,6 +18,28 @@
     }
   };
 </script>
+<style>
+  /* ── INTERACTIVE QUIZ ENGINE STYLES ── */
+  .quiz-engine-workspace { margin-top: 24px; padding: 24px; background: var(--bg2); border-radius: var(--r-lg); border: 1px solid var(--sep); }
+  .quiz-section h3 { font-size: 1rem; font-weight: 700; margin: 24px 0 12px; color: var(--blue); }
+  .quiz-question-card { background: var(--glass); border: 1px solid var(--glass-b); border-radius: var(--r); margin-bottom: 16px; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+  .quiz-question-card:hover { transform: translateY(-2px); box-shadow: var(--gshadow); }
+  .quiz-prompt { font-size: 0.95rem; margin-bottom: 12px; line-height: 1.5; font-weight: 600; }
+  .quiz-options-grid { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-option-label { display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(118,118,128,0.05); border-radius: var(--r); cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
+  .quiz-option-label:hover { background: rgba(0,122,255,0.08); }
+  .quiz-option-label input[type="radio"] { width: 18px; height: 18px; accent-color: var(--blue); margin: 0; }
+  .option-indicator { font-weight: 700; color: var(--blue); min-width: 20px; }
+  .quiz-text-input { width: 100%; min-height: 120px; padding: 12px; border-radius: var(--r); border: 1px solid var(--sep); background: var(--bg); color: var(--label); font-family: inherit; font-size: 0.92rem; resize: vertical; }
+  
+  /* ── PERFORMANCE FEEDBACK MODAL ── */
+  .performance-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .performance-card { max-width: 480px; width: 100%; border-radius: var(--r-2xl); box-shadow: 0 24px 80px rgba(0,0,0,0.4); overflow: hidden; }
+  .score-circle { width: 110px; height: 110px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem; font-weight: 800; color: white; }
+  .perf-high { background: linear-gradient(135deg, #34c759, #248a3d); box-shadow: 0 0 30px rgba(52,199,89,0.4); }
+  .perf-mid { background: linear-gradient(135deg, #007aff, #005bb7); box-shadow: 0 0 30px rgba(0,122,255,0.4); }
+  .perf-low { background: linear-gradient(135deg, #ff3b30, #b72a22); box-shadow: 0 0 30px rgba(255,59,48,0.4); }
+</style>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
@@ -66,7 +88,6 @@
       <p>Your study hub — track progress, manage documents, stay motivated.</p>
     </div>
 
-    <!-- Quick Upload Buttons -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
       <a href="/pages/upload.html" class="btn btn-primary btn-lg" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-weight:700;">
         📄 Upload PDF
@@ -76,7 +97,6 @@
       </a>
     </div>
 
-    <!-- XP Bar -->
     <div class="xp-bar-wrap">
       <div class="xp-row">
         <div class="xp-level">⚡ Level <span id="xpLevel">1</span> — Rising Scholar</div>
@@ -85,7 +105,6 @@
       <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
     </div>
 
-    <!-- Stats -->
     <div class="stats-row">
       <div class="stat-card"><div class="stat-num" id="statDocs" style="color:var(--blue);">—</div><div class="stat-label">Documents</div></div>
       <div class="stat-card"><div class="stat-num" id="statStreak" style="color:var(--orange);">0🔥</div><div class="stat-label">Day Streak</div></div>
@@ -93,7 +112,6 @@
       <div class="stat-card"><div class="stat-num" style="color:var(--green);">Free</div><div class="stat-label">Plan</div></div>
     </div>
 
-    <!-- AI Assistant -->
     <div class="card liquid-glass-card" style="margin-bottom:24px;">
       <div class="card-body">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
@@ -111,7 +129,8 @@
       </div>
     </div>
 
-    <!-- Daily Challenge -->
+    <div id="quizWorkspace" style="display:none; margin-bottom: 24px;"></div>
+
     <div class="card liquid-glass-card" style="margin-bottom:24px;">
       <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
         <div>
@@ -130,7 +149,6 @@
       </div>
     </div>
 
-    <!-- Achievements -->
     <div style="margin-bottom:28px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
         <h2 style="font-size:1.1rem;font-family:var(--font-ui);font-weight:700;">🏆 Achievements</h2>
@@ -139,13 +157,12 @@
       <div class="badges-grid" id="badgesGrid"></div>
     </div>
 
-    <!-- Activity Log -->
     <div style="margin-bottom:28px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
         <h2 style="font-size:1.1rem;font-family:var(--font-ui);font-weight:700;">📊 Your Activity</h2>
         <span class="badge badge-blue" id="activityCount">0 actions</span>
       </div>
-      <div id="activityEmpty" style="display:none;" class="empty-state" style="margin: 0; padding: 0;">
+      <div id="activityEmpty" style="display:none;" class="empty-state">
         <div style="text-align:center; padding:20px; color:var(--label3); font-size:0.85rem;">
           No activity yet. Start by uploading a document or generating AI content!
         </div>
@@ -162,7 +179,6 @@
       </div>
     </div>
 
-    <!-- Documents -->
     <div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <h2 style="font-size:1.1rem;font-family:var(--font-ui);font-weight:700;">📄 Your Documents</h2>
@@ -179,8 +195,7 @@
   </main>
 </div>
 
-<!-- Pomodoro Modal (fixed-position simulation using a sticky overlay) -->
-<div id="pomoOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);z-index:800;display:none;align-items:center;justify-content:center;">
+<div id="pomoOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);z-index:800;align-items:center;justify-content:center;">
   <div class="card" style="max-width:320px;width:100%;margin:20px;">
     <div class="card-body" style="text-align:center;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
@@ -251,18 +266,15 @@ function initMobileMenu(){
     }
   }
   
-  // Initialize
   updateMobileMenuVisibility();
   window.addEventListener('resize', updateMobileMenuVisibility);
   
-  // Toggle menu on button click
   mobileMenuBtn.addEventListener('click', (e) => {
     e.preventDefault();
     sidebar.classList.toggle('mobile-open');
     mobileMenuBtn.textContent = sidebar.classList.contains('mobile-open') ? '✕' : '☰';
   });
   
-  // Close menu when clicking a link
   sidebar.querySelectorAll('a, button').forEach(el => {
     if(el.tagName === 'A' || el.onclick){
       el.addEventListener('click', () => {
@@ -285,7 +297,6 @@ if(user && user.fullName){
   document.getElementById('welcomeMsg').textContent=`Welcome back, ${firstName} 🎓`;
 }
 
-// Load user stats from backend
 loadUserStats();
 async function loadUserStats(){
   const userId = user?.id;
@@ -295,12 +306,10 @@ async function loadUserStats(){
   
   if(error){
     console.log('Note: Could not load stats from backend, using localStorage');
-    // Fallback to localStorage for backwards compatibility
     loadStatsFromLocalStorage();
     return;
   }
   
-  // Display stats from backend
   document.getElementById('xpLevel').textContent=stats.level||1;
   document.getElementById('xpCur').textContent=(stats.xp%100)||0;
   document.getElementById('xpMax').textContent=100;
@@ -310,7 +319,6 @@ async function loadUserStats(){
   document.getElementById('statDocs').textContent=stats.documentsCount||0;
   document.getElementById('activityCount').textContent=(stats.activityCount||0)+' actions';
   
-  // Display achievements
   const allBadges=stats.allAchievements.map(a=>({
     icon:a.icon,
     name:a.name,
@@ -325,7 +333,6 @@ async function loadUserStats(){
     </div>`).join('');
 }
 
-// Fallback: Load user stats from localStorage
 function loadStatsFromLocalStorage(){
   const xp = parseInt(localStorage.getItem('ct_xp')||'0');
   const level = Math.floor(xp/100)+1;
@@ -336,11 +343,9 @@ function loadStatsFromLocalStorage(){
   document.getElementById('xpFill').style.width=pct+'%';
   document.getElementById('statXP').textContent=xp;
 
-  // Streak
   const streak=parseInt(localStorage.getItem('ct_streak')||'0');
   document.getElementById('statStreak').textContent=streak+'🔥';
 
-  // Achievements
   const allBadges=[
     {icon:'🚀',name:'First Upload',key:'first_upload'},
     {icon:'📋',name:'Summarizer',key:'first_summary'},
@@ -358,7 +363,6 @@ function loadStatsFromLocalStorage(){
     </div>`).join('');
 }
 
-// Load docs
 loadDocs();
 async function loadDocs(){
   const{data,error}=await apiGetMyDocs();
@@ -385,7 +389,6 @@ async function loadDocs(){
     <a href="/pages/study.html?docId=${d.id}&name=${encodeURIComponent(d.file_name)}" class="sidebar-link" style="font-size:0.82rem;padding:8px 12px;">📄 ${d.file_name.length>22?d.file_name.substring(0,22)+'…':d.file_name}</a>`).join('');
 }
 
-// Load activity
 loadActivity();
 async function loadActivity(){
   document.getElementById('activityLoading').style.display='block';
@@ -457,21 +460,111 @@ function awardXP(pts){const cur=parseInt(localStorage.getItem('ct_xp')||'0');loc
 function toggleMobileMenu(){const m=document.getElementById('mobileMenu'),o=document.getElementById('mobileMenuOverlay');m.classList.toggle('open');o.classList.toggle('open');}
 function closeMobileMenu(){document.getElementById('mobileMenu').classList.remove('open');document.getElementById('mobileMenuOverlay').classList.remove('open');}
 
-// AI Assistant Functions
-// Using marked.js for markdown parsing while preserving LaTeX math expressions
+// ── INTERACTIVE QUIZ ENGINE RENDERER ──────────────────────────
+async function renderMattieQuiz(quizData) {
+  const container = document.getElementById('quizWorkspace');
+  if (!quizData || !container) return;
 
-// Extract math expressions and replace with placeholders
+  let html = `<div class="quiz-engine-workspace result-anim">`;
+  html += `<h2 style="font-size:1.2rem;font-weight:800;margin-bottom:8px;">📝 Academic Performance Evaluation</h2>`;
+  html += `<p style="font-size:0.85rem;color:var(--label3);margin-bottom:24px;">Complete the following synthesis assessment based on your study material.</p>`;
+  
+  // 1. Render Interactive Multiple Choice Questions
+  if (quizData.mcqs && quizData.mcqs.length > 0) {
+    html += `<div class="quiz-section"><h3>Multiple Choice Section</h3>`;
+    quizData.mcqs.forEach((q, idx) => {
+      html += `
+        <div class="quiz-question-card card mb-3">
+          <div class="card-body">
+            <p class="quiz-prompt">Q${idx + 1}: ${q.question}</p>
+            <div class="quiz-options-grid">
+              ${Object.entries(q.options).map(([key, text]) => `
+                <label class="quiz-option-label">
+                  <input type="radio" name="mcq-${idx}" value="${key}" data-correct="${q.correctAnswer}">
+                  <span class="option-indicator">${key}</span> ${text}
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // 2. Short Answer & Essay Workspaces
+  const writtenPool = [...(quizData.shortAnswer || []), ...(quizData.essays || [])];
+  if (writtenPool.length > 0) {
+    html += `<div class="quiz-section"><h3>Deep Conceptual Breakdown</h3>`;
+    writtenPool.forEach((q, idx) => {
+      html += `
+        <div class="quiz-question-card card mb-3">
+          <div class="card-body">
+            <p class="quiz-prompt">Analytical Q${idx + 1}: ${q.question}</p>
+            <textarea class="quiz-text-input form-control" placeholder="Type your academic response here..."></textarea>
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // 3. Submit Evaluation Control
+  html += `<button id="submit-mattie-quiz" class="btn btn-primary w-100 mt-4 btn-lg">Submit Assessment</button>`;
+  html += `</div>`;
+
+  container.innerHTML = html;
+  container.style.display = 'block';
+  container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // 4. Performance click listener
+  document.getElementById('submit-mattie-quiz').addEventListener('click', () => {
+    let score = 0;
+    let totalMCQs = quizData.mcqs ? quizData.mcqs.length : 0;
+
+    if (totalMCQs > 0) {
+      quizData.mcqs.forEach((q, idx) => {
+        const selected = document.querySelector(`input[name="mcq-${idx}"]:checked`);
+        if (selected && selected.value === selected.getAttribute('data-correct')) score++;
+      });
+    }
+
+    const percentage = totalMCQs > 0 ? Math.round((score / totalMCQs) * 100) : 100;
+    
+    const feedback = percentage >= 70 ? "Outstanding Academic Performance! 🔥 — Engineered by MattieTech" :
+                     percentage >= 50 ? "Good Core Comprehension — Keep reviewing! 📚 — Engineered by MattieTech" :
+                     "Needs Improvement. Let's re-study the source material together! 💪 — Engineered by MattieTech";
+
+    showPerformanceBanner(percentage, feedback);
+  });
+
+  if (window.MathJax) window.MathJax.typesetPromise([container]);
+}
+
+function showPerformanceBanner(score, message) {
+  const badge = score >= 70 ? "perf-high" : score >= 50 ? "perf-mid" : "perf-low";
+  const modalHTML = `
+    <div class="performance-modal-overlay result-anim">
+      <div class="performance-card card liquid-glass-card">
+        <div class="card-body" style="text-align:center; padding:48px 32px;">
+          <div class="score-circle ${badge}">${score}%</div>
+          <h2 style="font-weight:800; font-size:1.5rem; margin-bottom:12px;">Evaluation Complete</h2>
+          <p style="font-size:1.1rem; line-height:1.6; color:var(--label2); margin-bottom:32px;">${message}</p>
+          <button onclick="this.closest('.performance-modal-overlay').remove()" class="btn btn-primary btn-lg w-100">Continue Learning</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+// AI Assistant Functions
 function extractMath(text) {
   const mathPlaceholders = [];
   let counter = 0;
   
-  // Extract display math ($$...$$)
   let processed = text.replace(/\$\$\s*([\s\S]*?)\s*\$\$/g, (match) => {
     mathPlaceholders.push(match);
     return `__MATH_${counter++}__`;
   });
   
-  // Extract inline math ($...$)
   processed = processed.replace(/\$([^\$\n]+)\$/g, (match) => {
     mathPlaceholders.push(match);
     return `__MATH_${counter++}__`;
@@ -480,7 +573,6 @@ function extractMath(text) {
   return { text: processed, placeholders: mathPlaceholders };
 }
 
-// Restore math expressions from placeholders
 function restoreMath(html, placeholders) {
   let result = html;
   placeholders.forEach((math, index) => {
@@ -489,7 +581,6 @@ function restoreMath(html, placeholders) {
   return result;
 }
 
-// Parse with markdown while preserving math
 function parseWithMath(text) {
   if(typeof marked === 'undefined') return text;
   
@@ -533,11 +624,9 @@ async function explainConcept(){
     
     const explanation=response.data?.explanation||response.data?.result||response.data||'No explanation received';
     
-    // Parse markdown while preserving and protecting math expressions
     const htmlContent = parseWithMath(explanation);
     resultDiv.innerHTML = htmlContent;
     
-    // Add close button
     const closeBtn=document.createElement('button');
     closeBtn.className='btn btn-ghost btn-sm';
     closeBtn.style.marginTop='24px';
@@ -546,7 +635,6 @@ async function explainConcept(){
     closeBtn.onclick=()=>document.getElementById('conceptResult').style.display='none';
     resultDiv.appendChild(closeBtn);
     
-    // Force MathJax to process the rendered HTML with proper math rendering
     if(window.MathJax&&typeof window.MathJax.typesetPromise==='function'){
       window.MathJax.typesetPromise([resultDiv]).catch(err=>console.log('MathJax error:',err));
     }
@@ -568,24 +656,20 @@ function initAnnouncementModal(){
     return;
   }
   
-  // Show modal after 1.5 seconds
   setTimeout(() => {
     overlay.classList.add('show');
   }, 1500);
   
-  // Handle dismiss button
   dismissBtn.addEventListener('click', () => {
     overlay.classList.remove('show');
   });
   
-  // Handle join button - opens WhatsApp link in new tab
   joinBtn.addEventListener('click', (e) => {
     e.preventDefault();
     window.open('https://chat.whatsapp.com/CNlccvf5Eue6ZvE4Pz3JGX', '_blank');
     overlay.classList.remove('show');
   });
   
-  // Close modal if clicking outside (on overlay)
   overlay.addEventListener('click', (e) => {
     if(e.target === overlay){
       overlay.classList.remove('show');
@@ -593,11 +677,9 @@ function initAnnouncementModal(){
   });
 }
 
-// Initialize modal when page loads
 document.addEventListener('DOMContentLoaded', initAnnouncementModal);
 </script>
 
-<!-- ANNOUNCEMENT MODAL -->
 <div class="announcement-overlay" id="announcementOverlay">
   <div class="announcement-modal">
     <div class="announcement-header">📢 Important Announcement!</div>
