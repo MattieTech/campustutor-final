@@ -458,7 +458,47 @@ function toggleMobileMenu(){const m=document.getElementById('mobileMenu'),o=docu
 function closeMobileMenu(){document.getElementById('mobileMenu').classList.remove('open');document.getElementById('mobileMenuOverlay').classList.remove('open');}
 
 // AI Assistant Functions
-// Using marked.js for markdown parsing and standard MathJax for math rendering
+// Using marked.js for markdown parsing while preserving LaTeX math expressions
+
+// Extract math expressions and replace with placeholders
+function extractMath(text) {
+  const mathPlaceholders = [];
+  let counter = 0;
+  
+  // Extract display math ($$...$$)
+  let processed = text.replace(/\$\$\s*([\s\S]*?)\s*\$\$/g, (match) => {
+    mathPlaceholders.push(match);
+    return `__MATH_${counter++}__`;
+  });
+  
+  // Extract inline math ($...$)
+  processed = processed.replace(/\$([^\$\n]+)\$/g, (match) => {
+    mathPlaceholders.push(match);
+    return `__MATH_${counter++}__`;
+  });
+  
+  return { text: processed, placeholders: mathPlaceholders };
+}
+
+// Restore math expressions from placeholders
+function restoreMath(html, placeholders) {
+  let result = html;
+  placeholders.forEach((math, index) => {
+    result = result.replace(`__MATH_${index}__`, math);
+  });
+  return result;
+}
+
+// Parse with markdown while preserving math
+function parseWithMath(text) {
+  if(typeof marked === 'undefined') return text;
+  
+  const { text: textWithPlaceholders, placeholders } = extractMath(text);
+  const htmlWithPlaceholders = marked.parse(textWithPlaceholders);
+  const htmlWithMath = restoreMath(htmlWithPlaceholders, placeholders);
+  
+  return htmlWithMath;
+}
 
 async function explainConcept(){
   const concept=document.getElementById('conceptInput').value.trim();
@@ -493,12 +533,9 @@ async function explainConcept(){
     
     const explanation=response.data?.explanation||response.data?.result||response.data||'No explanation received';
     
-    // Use marked.js to cleanly convert markdown to HTML
-    if(typeof marked!=='undefined'){
-      resultDiv.innerHTML=marked.parse(explanation);
-    }else{
-      resultDiv.innerHTML=`<div style="line-height:1.6;">${explanation}</div>`;
-    }
+    // Parse markdown while preserving and protecting math expressions
+    const htmlContent = parseWithMath(explanation);
+    resultDiv.innerHTML = htmlContent;
     
     // Add close button
     const closeBtn=document.createElement('button');
@@ -509,7 +546,7 @@ async function explainConcept(){
     closeBtn.onclick=()=>document.getElementById('conceptResult').style.display='none';
     resultDiv.appendChild(closeBtn);
     
-    // Force MathJax to process the rendered HTML
+    // Force MathJax to process the rendered HTML with proper math rendering
     if(window.MathJax&&typeof window.MathJax.typesetPromise==='function'){
       window.MathJax.typesetPromise([resultDiv]).catch(err=>console.log('MathJax error:',err));
     }

@@ -24,7 +24,7 @@ const { awardXP, updateStreak } = require("../utils/xp");
 async function getDocumentText(documentId, userId) {
   const { data, error } = await supabase
     .from("documents")
-    .select("extracted_text, file_name")
+    .select("extracted_text, file_name, page_count")
     .eq("id", documentId)
     .eq("user_id", userId)
     .single();
@@ -88,30 +88,33 @@ router.post("/summarize", authMiddleware, async (req, res) => {
     }
 
     const doc = await getDocumentText(documentId, req.user.id);
+    const pageCount = doc.page_count || 1;
+    const isLarge = pageCount > 10;
 
     const prompt = `
-You are MattieTech AI, a helpful study assistant for university students.
+You are CampusTutor AI, a premium academic assistant.
 
-Here are lecture notes from a student's PDF:
+Lecture notes from "${doc.file_name}" (${pageCount} pages):
 ---
 ${doc.extracted_text}
 ---
 
-Please provide a clear, well-structured SUMMARY of these notes.
+Requirement: ${isLarge 
+      ? "Generate an extensive, comprehensive deep-dive document layout broken down by textbook-style chapters and subsections. The summary must be massive and thorough, covering every technical detail and conceptual nuance within the document context." 
+      : "Provide a concise, targeted core summary focusing on the absolute essentials and high-level takeaways."}
 
-IMPORTANT: Format ALL mathematical expressions using LaTeX.
-Use \\( ... \\) for inline math and \\[ ... \\] for display equations.
+IMPORTANT: Format ALL mathematical expressions using LaTeX ($ for inline, $$ for block).
 
 Format your response like this:
 ## 📋 Summary of "${doc.file_name}"
 
 **Main Topic:** [1-sentence overview]
 
-**Key Points:**
+${isLarge ? "### Comprehensive Breakdown" : "**Key Points:**"}
 - [Point 1]
 - [Point 2]
 - [Point 3]
-(continue for all major points; use LaTeX for any maths)
+(Scale output to document depth; use LaTeX for any maths)
 
 **Core Takeaway:** [2-3 sentences on what this is really about]
 
@@ -161,13 +164,12 @@ router.post("/explain", authMiddleware, async (req, res) => {
     }
 
     const prompt = `
-You are MattieTech AI, a patient university lecturer who explains things simply.
+You are CampusTutor AI, a patient university lecturer who explains things simply.
 
 ${docContext}The student wants you to explain this concept in beginner-friendly terms: "${concept}"
 
 IMPORTANT: Format ALL mathematical expressions using LaTeX.
-Use \\( ... \\) for inline math and \\[ ... \\] for display equations.
-Never write math as plain text (no "sqrt(x)", no "x^2" — always use LaTeX).
+Use $ for inline math and $$ for display equations.
 
 Please explain it like this:
 ## 💡 Explaining: "${concept}"
@@ -219,72 +221,86 @@ router.post("/questions", authMiddleware, async (req, res) => {
     }
 
     const doc = await getDocumentText(documentId, req.user.id);
+    const pageCount = doc.page_count || 1;
+    const isLarge = pageCount > 10;
+
+    // Dynamic Scaling Volume
+    const mcqCount = isLarge ? "30 to 50" : "5 to 8";
+    const shortCount = isLarge ? "20 to 30" : "3 to 5";
+    const essayCount = isLarge ? "10 to 15" : "2 to 3";
 
     const prompt = `
-You are MattieTech AI, a university exam setter creating revision questions.
+You are CampusTutor AI, a university exam setter creating a massive review pool.
 
-Based on these lecture notes:
+Based on these lecture notes (${pageCount} pages):
 ---
 ${doc.extracted_text}
 ---
 
-Generate 10 revision questions to help a student prepare for exams.
+Generate a comprehensive revision quiz scaled to the document size.
+Required Volumes:
+- Multiple Choice Questions (MCQs): ${mcqCount} (Include 4 distinct options A, B, C, D)
+- Short Answer Questions: ${shortCount} (Include detailed grading criteria)
+- Essay Questions: ${essayCount} (Broad synthesis questions)
 
-IMPORTANT: Format ALL mathematical expressions using LaTeX.
-Use \\( ... \\) for inline math and \\[ ... \\] for display equations.
-For example, write \\( x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} \\) not (-b +/- sqrt(b^2-4ac))/2a.
+IMPORTANT: Format ALL mathematical expressions using LaTeX ($ for inline, $$ for block).
 
-Mix these question types:
-- 3 multiple choice questions (4 options each, mark the correct answer)
-- 4 short answer questions (1-3 sentences expected)
-- 3 essay/long answer questions (paragraph expected)
+You MUST return the output as a valid JSON object only. No markdown code blocks.
+JSON Structure:
+{
+  "mcqs": [
+    {
+      "question": "...",
+      "options": {"A": "...", "B": "...", "C": "...", "D": "..."},
+      "correctAnswer": "A",
+      "explanation": "..."
+    }
+  ],
+  "shortAnswer": [
+    {
+      "question": "...",
+      "modelAnswer": "...",
+      "gradingCriteria": "..."
+    }
+  ],
+  "essays": [
+    {
+      "question": "...",
+      "keyPoints": ["Point 1", "Point 2"]
+    }
+  ]
+}`.trim();
 
-Format:
-## 📝 Revision Questions
+    const rawResponse = await askGemini(prompt);
+    let questionsData;
 
-### Multiple Choice
+    try {
+      let cleaned = rawResponse.replace(/```[\s\S]*?```/g, "").replace(/^```/gm, "").trim();
+      const startIdx = cleaned.indexOf('{');
+      const endIdx = cleaned.lastIndexOf('}');
+      
+      if (startIdx === -1 || endIdx === -1) throw new Error("No JSON found");
+      questionsData = JSON.parse(cleaned.substring(startIdx, endIdx + 1));
+    } catch (parseErr) {
+      console.error("❌ Questions parsing error:", parseErr.message);
+      return res.status(500).json({ error: "Failed to generate structured quiz data." });
+    }
 
-**Q1.** [Question — use LaTeX for any maths]
-A) [Option]
-B) [Option]
-C) [Option]
-D) [Option]
-✅ **Answer: [Letter]** — [Brief reason]
-
-(repeat for Q2, Q3)
-
-### Short Answer Questions
-
-**Q4.** [Question]
-💬 *Model Answer:* [Answer — use LaTeX for maths]
-
-(repeat for Q5–Q7)
-
-### Essay Questions
-
-**Q8.** [Question]
-💬 *Key Points to Cover:* [Bullet points]
-
-(repeat for Q9–Q10)
-
-Make questions progressively harder. Focus on understanding, not memorization.
-    `.trim();
-
-    const questions = await askGemini(prompt);
-    await saveAIResult(documentId, req.user.id, "questions", questions);
+    await saveAIResult(documentId, req.user.id, "questions", JSON.stringify(questionsData));
     
     // Log the activity with detailed info
-    await logUserActivity(req.user.id, "ai_questions", `Generated revision questions | Document: "${doc.file_name}"`);
+    await logUserActivity(req.user.id, "ai_questions", `Generated ${mcqCount} MCQs and ${shortCount} Short Answer questions | Document: "${doc.file_name}"`);
     
     // Award XP
     try {
-      await awardXP(req.user.id, "ai_questions", { document: doc.file_name });
+      const totalQ = (questionsData.mcqs?.length || 0) + (questionsData.shortAnswer?.length || 0) + (questionsData.essays?.length || 0);
+      await awardXP(req.user.id, "ai_questions", { document: doc.file_name, count: totalQ });
       await updateStreak(req.user.id);
     } catch (xpErr) {
       console.log("Note: Could not award XP:", xpErr.message);
     }
     
-    res.json({ questions });
+    res.json({ questions: questionsData });
   } catch (err) {
     console.error("Questions error:", err.message);
     handleAIError(err, res);
@@ -300,23 +316,24 @@ router.post("/flashcards", authMiddleware, async (req, res) => {
     }
 
     const doc = await getDocumentText(documentId, req.user.id);
+    const pageCount = doc.page_count || 1;
+    const targetCount = pageCount > 10 ? "50 to 100" : "10 to 15";
 
-    const prompt = `Create 10 study flashcards from this text. Return ONLY a JSON array - no markdown, no code blocks, no explanation.
+    const prompt = `Create exactly ${targetCount} high-yield study flashcards from this text covering all complex terminologies. Return ONLY a JSON array - no markdown, no code blocks.
 
 Text to extract from:
 ---
-${doc.extracted_text.substring(0, 3000)}
+${doc.extracted_text}
 ---
 
 Return valid JSON array ONLY (start with [ end with ]):
 [{"id":1,"front":"Question?","back":"Answer","category":"Topic"},{"id":2,"front":"Question?","back":"Answer","category":"Topic"}]
 
 Rules:
-- 10 flashcards with id (1-10), front (question/term), back (answer), category (topic name)
+- Generate exactly ${targetCount} flashcards with id, front, back, category
 - IMPORTANT: Format ALL mathematical expressions using LaTeX delimiters
-  * Use \\( ... \\) for inline math (e.g., the derivative is \\( \\frac{dy}{dx} \\))
-  * Use \\[ ... \\] for display/standalone equations
-  * Examples: \\( x^2 \\), \\( \\sin(x) \\), \\( \\sqrt{a} \\), \\( \\frac{a}{b} \\)
+  * Use $ for inline math
+  * Use $$ for display/standalone equations
 - Never write math as plain text: always use LaTeX notation
 - Keep answers concise and clear
 - Valid JSON format only
@@ -399,7 +416,7 @@ router.get("/results/:documentId", authMiddleware, async (req, res) => {
     const resultsMap = {};
     (results || []).forEach((r) => {
       resultsMap[r.result_type] =
-        r.result_type === "flashcards" ? JSON.parse(r.content) : r.content;
+        ["flashcards", "questions"].includes(r.result_type) ? JSON.parse(r.content) : r.content;
     });
 
     res.json({ results: resultsMap });
@@ -428,11 +445,8 @@ router.get("/download/summary/:documentId/txt", authMiddleware, async (req, res)
 
     // Convert LaTeX to text-friendly format
     const content = result.content
-      .replace(/\\\(/g, "[MATH: ")
-      .replace(/\\\)/g, "]")
-      .replace(/\\\[/g, "\n[EQUATION]\n")
-      .replace(/\\\]/g, "\n[/EQUATION]\n")
-      .replace(/<[^>]*>/g, "");
+      .replace(/\$/g, "[MATH]")
+      .replace(/\$\$/g, "\n[EQUATION]\n");
 
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Content-Disposition", "attachment; filename=summary.txt");
@@ -497,13 +511,34 @@ router.get("/download/questions/:documentId/txt", authMiddleware, async (req, re
       return res.status(404).json({ error: "Questions not found." });
     }
 
+    let textOutput = "";
+    try {
+      const quiz = JSON.parse(result.content);
+      textOutput = "## 📝 REVISION QUIZ POOL\n\n";
+      
+      if (quiz.mcqs) {
+        textOutput += "### MULTIPLE CHOICE QUESTIONS\n";
+        quiz.mcqs.forEach((q, i) => {
+          textOutput += `Q${i+1}: ${q.question}\n`;
+          Object.entries(q.options).forEach(([k, v]) => textOutput += `   ${k}) ${v}\n`);
+          textOutput += `Correct Answer: ${q.correctAnswer}\n\n`;
+        });
+      }
+      
+      if (quiz.shortAnswer) {
+        textOutput += "\n### SHORT ANSWER QUESTIONS\n";
+        quiz.shortAnswer.forEach((q, i) => {
+          textOutput += `Q${i+1}: ${q.question}\nModel Answer: ${q.modelAnswer}\nGrading Criteria: ${q.gradingCriteria}\n\n`;
+        });
+      }
+    } catch (e) {
+      textOutput = result.content;
+    }
+
     // Convert LaTeX to text-friendly format
-    const content = result.content
-      .replace(/\\\(/g, "[MATH: ")
-      .replace(/\\\)/g, "]")
-      .replace(/\\\[/g, "\n[EQUATION]\n")
-      .replace(/\\\]/g, "\n[/EQUATION]\n")
-      .replace(/<[^>]*>/g, "");
+    const content = textOutput
+      .replace(/\$/g, "[MATH]")
+      .replace(/\$\$/g, "\n[EQUATION]\n");
 
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Content-Disposition", "attachment; filename=questions.txt");
