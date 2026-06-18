@@ -269,26 +269,96 @@ function resolveQuizTargetContainer(preferredContainer = null) {
     || document.getElementById('resultsArea');
 }
 
+async function regenerateFreshQuiz() {
+  const documentId = window.currentQuizDocumentId;
+  const targetContainer = resolveQuizTargetContainer();
+
+  if (!documentId) {
+    showToast('No active document is available for quiz regeneration.', 'error');
+    return;
+  }
+
+  if (targetContainer) {
+    targetContainer.innerHTML = '';
+    targetContainer.style.display = 'block';
+  }
+
+  window.mattieQuizState = null;
+
+  const response = await apiGenerateQuestions(documentId);
+  if (response.error) {
+    showToast(response.error, 'error');
+    return;
+  }
+
+  if (!targetContainer) {
+    showToast('Quiz container not available for regeneration.', 'error');
+    return;
+  }
+
+  window.quizTargetContainer = targetContainer;
+  renderStudyContent(response.data, targetContainer, documentId);
+}
+
 window.showPerformanceBanner = function(score, message) {
-  const badge = score >= 70 ? "perf-high" : score >= 50 ? "perf-mid" : "perf-low";
+  const badge = score >= 70 ? "perf-high" : score >= 40 ? "perf-mid" : "perf-low";
+  const theme = badge === "perf-high"
+    ? {
+        overlay: "rgba(26, 83, 51, 0.68)",
+        card: "linear-gradient(180deg, rgba(14, 80, 42, 0.96), rgba(7, 45, 27, 0.98))",
+        circle: "linear-gradient(135deg, #34d058, #18823b)",
+        shadow: "0 0 30px rgba(52, 208, 88, 0.35)",
+      }
+    : badge === "perf-mid"
+      ? {
+          overlay: "rgba(122, 64, 7, 0.68)",
+          card: "linear-gradient(180deg, rgba(122, 64, 7, 0.96), rgba(68, 34, 4, 0.98))",
+          circle: "linear-gradient(135deg, #ffb020, #d97806)",
+          shadow: "0 0 30px rgba(255, 176, 32, 0.36)",
+        }
+      : {
+          overlay: "rgba(113, 18, 31, 0.72)",
+          card: "linear-gradient(180deg, rgba(113, 18, 31, 0.96), rgba(64, 7, 15, 0.98))",
+          circle: "linear-gradient(135deg, #ff5a66, #c81f3c)",
+          shadow: "0 0 30px rgba(255, 90, 102, 0.34)",
+        };
   const modalHTML = `
-    <div class="performance-modal-overlay result-anim">
-      <div class="performance-card card liquid-glass-card">
+    <div class="performance-modal-overlay result-anim ${badge}" style="background:${theme.overlay};">
+      <div class="performance-card card liquid-glass-card ${badge}" style="background:${theme.card};">
         <div class="card-body" style="text-align:center; padding:48px 32px;">
-          <div class="score-circle ${badge}">${score}%</div>
+          <div class="score-circle ${badge}" style="background:${theme.circle}; box-shadow:${theme.shadow};">${score}%</div>
           <h2 style="font-weight:800; font-size:1.5rem; margin-bottom:12px;">Evaluation Complete</h2>
           <p style="font-size:1.1rem; line-height:1.6; color:var(--label2); margin-bottom:32px;">${message}</p>
-          <button onclick="this.closest('.performance-modal-overlay').remove()" class="btn btn-primary btn-lg w-100">Continue Learning</button>
+          <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+            <button type="button" onclick="this.closest('.performance-modal-overlay').remove()" class="btn btn-primary btn-lg">Continue Learning</button>
+            <button type="button" id="mattie-refresh-quiz-btn" class="btn btn-secondary">🔄 Generate Fresh Quiz</button>
+          </div>
         </div>
       </div>
     </div>`;
   document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+  const refreshButton = document.getElementById('mattie-refresh-quiz-btn');
+  if (refreshButton) {
+    refreshButton.addEventListener('click', async () => {
+      const overlay = refreshButton.closest('.performance-modal-overlay');
+      if (overlay) {
+        overlay.remove();
+      }
+      window.mattieQuizState = null;
+      await regenerateFreshQuiz();
+    });
+  }
 };
 
 if (typeof window.renderMattieQuiz !== "function") {
-  window.renderMattieQuiz = async function(quizData, preferredContainer = null) {
+  window.renderMattieQuiz = async function(quizData, preferredContainer = null, documentId = null) {
     const container = resolveQuizTargetContainer(preferredContainer);
     if (!quizData || !container) return;
+
+    if (documentId) {
+      window.currentQuizDocumentId = documentId;
+    }
 
     const quizItems = [];
     (quizData.mcqs || []).forEach((question, index) => {
@@ -313,21 +383,23 @@ if (typeof window.renderMattieQuiz !== "function") {
       return;
     }
 
-    let currentQuestionIndex = 0;
-    const answerStore = {};
+    const quizState = window.mattieQuizState = {
+      currentQuestionIndex: 0,
+      answerStore: {},
+    };
 
     const syncCurrentAnswer = () => {
-      const currentItem = quizItems[currentQuestionIndex];
+      const currentItem = quizItems[quizState.currentQuestionIndex];
       if (!currentItem) return;
 
       if (currentItem.type === "mcq") {
         const selected = container.querySelector('input[name="quiz-answer"]:checked');
         if (selected) {
-          answerStore[currentQuestionIndex] = selected.value;
+          quizState.answerStore[quizState.currentQuestionIndex] = selected.value;
         }
       } else {
         const responseField = container.querySelector(".quiz-text-input");
-        answerStore[currentQuestionIndex] = responseField ? responseField.value : "";
+        quizState.answerStore[quizState.currentQuestionIndex] = responseField ? responseField.value : "";
       }
     };
 
@@ -345,7 +417,7 @@ if (typeof window.renderMattieQuiz !== "function") {
       let completedAnswers = 0;
 
       quizItems.forEach((item, index) => {
-        const storedValue = answerStore[index];
+        const storedValue = quizState.answerStore[index];
         const hasAnswer = typeof storedValue === 'string' && storedValue.trim().length > 0;
 
         if (item.type === 'mcq') {
@@ -363,19 +435,19 @@ if (typeof window.renderMattieQuiz !== "function") {
         : Math.round((completedAnswers / quizItems.length) * 100);
 
       const feedback = percentage >= 70 ? "Outstanding Academic Performance! 🔥 — Engineered by MattieTech" :
-                       percentage >= 50 ? "Good Core Comprehension — Keep reviewing! 📚 — Engineered by MattieTech" :
+               percentage >= 40 ? "Good Core Comprehension — Keep reviewing! 📚 — Engineered by MattieTech" :
                        "Needs Improvement. Let's re-study the source material together! 💪 — Engineered by MattieTech";
 
       window.showPerformanceBanner(percentage, feedback);
     };
 
     const renderQuestion = () => {
-      const currentItem = quizItems[currentQuestionIndex];
-      const isFirstQuestion = currentQuestionIndex === 0;
-      const isLastQuestion = currentQuestionIndex === quizItems.length - 1;
-      const questionNumber = currentQuestionIndex + 1;
+      const currentItem = quizItems[quizState.currentQuestionIndex];
+      const isFirstQuestion = quizState.currentQuestionIndex === 0;
+      const isLastQuestion = quizState.currentQuestionIndex === quizItems.length - 1;
+      const questionNumber = quizState.currentQuestionIndex + 1;
       const progressPercent = Math.round((questionNumber / quizItems.length) * 100);
-      const storedAnswer = answerStore[currentQuestionIndex] || "";
+      const storedAnswer = quizState.answerStore[quizState.currentQuestionIndex] || "";
 
       let optionsHTML = "";
       if (currentItem.type === "mcq") {
@@ -435,14 +507,14 @@ if (typeof window.renderMattieQuiz !== "function") {
       if (currentItem.type === "mcq") {
         container.querySelectorAll('input[name="quiz-answer"]').forEach((input) => {
           input.addEventListener("change", () => {
-            answerStore[currentQuestionIndex] = input.value;
+            quizState.answerStore[quizState.currentQuestionIndex] = input.value;
           });
         });
       } else {
         const responseField = container.querySelector(".quiz-text-input");
         if (responseField) {
           responseField.addEventListener("input", (event) => {
-            answerStore[currentQuestionIndex] = event.target.value;
+            quizState.answerStore[quizState.currentQuestionIndex] = event.target.value;
           });
         }
       }
@@ -455,7 +527,7 @@ if (typeof window.renderMattieQuiz !== "function") {
         prevButton.addEventListener('click', (event) => {
           event.preventDefault();
           syncCurrentAnswer();
-          currentQuestionIndex = Math.max(0, currentQuestionIndex - 1);
+          quizState.currentQuestionIndex = Math.max(0, quizState.currentQuestionIndex - 1);
           renderQuestion();
         });
       }
@@ -464,7 +536,7 @@ if (typeof window.renderMattieQuiz !== "function") {
         nextButton.addEventListener('click', (event) => {
           event.preventDefault();
           syncCurrentAnswer();
-          currentQuestionIndex = Math.min(quizItems.length - 1, currentQuestionIndex + 1);
+          quizState.currentQuestionIndex = Math.min(quizItems.length - 1, quizState.currentQuestionIndex + 1);
           renderQuestion();
         });
       }
@@ -472,6 +544,8 @@ if (typeof window.renderMattieQuiz !== "function") {
       if (submitButton) {
         submitButton.addEventListener('click', (event) => {
           event.preventDefault();
+          container.style.display = 'none';
+          container.innerHTML = '';
           submitCurrentQuiz();
         });
       }
@@ -483,8 +557,12 @@ if (typeof window.renderMattieQuiz !== "function") {
   };
 }
 
-function renderStudyContent(data, container) {
+function renderStudyContent(data, container, documentId = null) {
   if (!data || !container) return;
+
+  if (documentId) {
+    window.currentQuizDocumentId = documentId;
+  }
 
   // Ensure the target container is active and visible
   container.style.display = 'block';
@@ -497,7 +575,7 @@ function renderStudyContent(data, container) {
       container.innerHTML = ""; // Clear loader text
       // Force the quiz to render inside the ACTIVE page container passed from study.html
       window.quizTargetContainer = container; 
-      renderMattieQuiz(quizPayload, container);
+      renderMattieQuiz(quizPayload, container, window.currentQuizDocumentId || null);
       return;
     }
     container.innerHTML = `<div class="error">Quiz renderer not available.</div>`;
@@ -511,7 +589,7 @@ function renderStudyContent(data, container) {
       container.innerHTML = ""; // Clear loader text
       // Force the quiz to render inside the ACTIVE page container passed from study.html
       window.quizTargetContainer = container; 
-      renderMattieQuiz(data, container);
+      renderMattieQuiz(data, container, window.currentQuizDocumentId || null);
     } else {
       container.innerHTML = `<div class="error">Quiz renderer not found.</div>`;
     }

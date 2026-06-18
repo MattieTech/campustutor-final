@@ -36,9 +36,15 @@
   .performance-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .performance-card { max-width: 480px; width: 100%; border-radius: var(--r-2xl); box-shadow: 0 24px 80px rgba(0,0,0,0.4); overflow: hidden; }
   .score-circle { width: 110px; height: 110px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem; font-weight: 800; color: white; }
-  .perf-high { background: linear-gradient(135deg, #34c759, #248a3d); box-shadow: 0 0 30px rgba(52,199,89,0.4); }
-  .perf-mid { background: linear-gradient(135deg, #007aff, #005bb7); box-shadow: 0 0 30px rgba(0,122,255,0.4); }
-  .perf-low { background: linear-gradient(135deg, #ff3b30, #b72a22); box-shadow: 0 0 30px rgba(255,59,48,0.4); }
+  .performance-modal-overlay.perf-high { background: rgba(26, 83, 51, 0.68); }
+  .performance-modal-overlay.perf-mid { background: rgba(122, 64, 7, 0.68); }
+  .performance-modal-overlay.perf-low { background: rgba(113, 18, 31, 0.72); }
+  .performance-card.perf-high { background: linear-gradient(180deg, rgba(14, 80, 42, 0.96), rgba(7, 45, 27, 0.98)); }
+  .performance-card.perf-mid { background: linear-gradient(180deg, rgba(122, 64, 7, 0.96), rgba(68, 34, 4, 0.98)); }
+  .performance-card.perf-low { background: linear-gradient(180deg, rgba(113, 18, 31, 0.96), rgba(64, 7, 15, 0.98)); }
+  .score-circle.perf-high { background: linear-gradient(135deg, #34d058, #18823b); box-shadow: 0 0 30px rgba(52,208,88,0.35); }
+  .score-circle.perf-mid { background: linear-gradient(135deg, #ffb020, #d97806); box-shadow: 0 0 30px rgba(255,176,32,0.36); }
+  .score-circle.perf-low { background: linear-gradient(135deg, #ff5a66, #c81f3c); box-shadow: 0 0 30px rgba(255,90,102,0.34); }
 </style>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
@@ -488,21 +494,23 @@ async function renderMattieQuiz(quizData) {
     return;
   }
 
-  let currentQuestionIndex = 0;
-  const answerStore = {};
+  const quizState = window.mattieQuizState = {
+    currentQuestionIndex: 0,
+    answerStore: {},
+  };
 
   const syncCurrentAnswer = () => {
-    const currentItem = quizItems[currentQuestionIndex];
+    const currentItem = quizItems[quizState.currentQuestionIndex];
     if (!currentItem) return;
 
     if (currentItem.type === 'mcq') {
       const selected = container.querySelector('input[name="quiz-answer"]:checked');
       if (selected) {
-        answerStore[currentQuestionIndex] = selected.value;
+        quizState.answerStore[quizState.currentQuestionIndex] = selected.value;
       }
     } else {
       const responseField = container.querySelector('.quiz-text-input');
-      answerStore[currentQuestionIndex] = responseField ? responseField.value : '';
+      quizState.answerStore[quizState.currentQuestionIndex] = responseField ? responseField.value : '';
     }
   };
 
@@ -520,7 +528,7 @@ async function renderMattieQuiz(quizData) {
     let completedAnswers = 0;
 
     quizItems.forEach((item, index) => {
-      const storedValue = answerStore[index];
+      const storedValue = quizState.answerStore[index];
       const hasAnswer = typeof storedValue === 'string' && storedValue.trim().length > 0;
 
       if (item.type === 'mcq') {
@@ -536,19 +544,19 @@ async function renderMattieQuiz(quizData) {
     const percentage = scoredQuestions > 0 ? Math.round((correctAnswers / scoredQuestions) * 100) : Math.round((completedAnswers / quizItems.length) * 100);
 
     const feedback = percentage >= 70 ? "Outstanding Academic Performance! 🔥 — Engineered by MattieTech" :
-                     percentage >= 50 ? "Good Core Comprehension — Keep reviewing! 📚 — Engineered by MattieTech" :
+             percentage >= 40 ? "Good Core Comprehension — Keep reviewing! 📚 — Engineered by MattieTech" :
                      "Needs Improvement. Let's re-study the source material together! 💪 — Engineered by MattieTech";
 
     window.showPerformanceBanner(percentage, feedback);
   };
 
   const renderQuestion = () => {
-    const currentItem = quizItems[currentQuestionIndex];
-    const isFirstQuestion = currentQuestionIndex === 0;
-    const isLastQuestion = currentQuestionIndex === quizItems.length - 1;
-    const questionNumber = currentQuestionIndex + 1;
+    const currentItem = quizItems[quizState.currentQuestionIndex];
+    const isFirstQuestion = quizState.currentQuestionIndex === 0;
+    const isLastQuestion = quizState.currentQuestionIndex === quizItems.length - 1;
+    const questionNumber = quizState.currentQuestionIndex + 1;
     const progressPercent = Math.round((questionNumber / quizItems.length) * 100);
-    const storedAnswer = answerStore[currentQuestionIndex] || '';
+    const storedAnswer = quizState.answerStore[quizState.currentQuestionIndex] || '';
 
     let optionsHTML = '';
     if (currentItem.type === 'mcq') {
@@ -608,14 +616,14 @@ async function renderMattieQuiz(quizData) {
     if (currentItem.type === 'mcq') {
       container.querySelectorAll('input[name="quiz-answer"]').forEach((input) => {
         input.addEventListener('change', () => {
-          answerStore[currentQuestionIndex] = input.value;
+          quizState.answerStore[quizState.currentQuestionIndex] = input.value;
         });
       });
     } else {
       const responseField = container.querySelector('.quiz-text-input');
       if (responseField) {
         responseField.addEventListener('input', (event) => {
-          answerStore[currentQuestionIndex] = event.target.value;
+          quizState.answerStore[quizState.currentQuestionIndex] = event.target.value;
         });
       }
     }
@@ -628,7 +636,7 @@ async function renderMattieQuiz(quizData) {
         prevButton.addEventListener('click', (event) => {
           event.preventDefault();
           syncCurrentAnswer();
-          currentQuestionIndex = Math.max(0, currentQuestionIndex - 1);
+          quizState.currentQuestionIndex = Math.max(0, quizState.currentQuestionIndex - 1);
           renderQuestion();
         });
       }
@@ -637,7 +645,7 @@ async function renderMattieQuiz(quizData) {
         nextButton.addEventListener('click', (event) => {
           event.preventDefault();
           syncCurrentAnswer();
-          currentQuestionIndex = Math.min(quizItems.length - 1, currentQuestionIndex + 1);
+          quizState.currentQuestionIndex = Math.min(quizItems.length - 1, quizState.currentQuestionIndex + 1);
           renderQuestion();
         });
       }
@@ -645,6 +653,8 @@ async function renderMattieQuiz(quizData) {
       if (submitButton) {
         submitButton.addEventListener('click', (event) => {
           event.preventDefault();
+          container.style.display = 'none';
+          container.innerHTML = '';
           submitCurrentQuiz();
         });
       }

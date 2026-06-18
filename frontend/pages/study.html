@@ -220,6 +220,7 @@ initMobileMenu();
 const params  = new URLSearchParams(window.location.search);
 const docId   = params.get('docId');
 const docName = params.get('name') || 'Document';
+window.currentQuizDocumentId = docId;
 
 if (!docId) {
   showToast('No document selected.', 'error');

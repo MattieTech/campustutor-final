@@ -221,10 +221,19 @@ router.post("/questions", authMiddleware, async (req, res) => {
     const doc = await getDocumentText(documentId, req.user.id);
     const pageCount = doc.page_count || 1;
 
-    // Optimized batch limits for performance and stability
-    const mcqCount = "15";
-    const shortCount = "5";
-    const essayCount = "2";
+    let mcqCount = "15";
+    let shortCount = "3";
+    let essayCount = "0";
+
+    if (pageCount > 5 && pageCount <= 15) {
+      mcqCount = "30";
+      shortCount = "5";
+      essayCount = "0";
+    } else if (pageCount > 15) {
+      mcqCount = "40";
+      shortCount = "8";
+      essayCount = "2";
+    }
 
     const prompt = `
 You are CampusTutor AI, a university exam setter creating a revision quiz pool.
@@ -235,6 +244,7 @@ ${doc.extracted_text}
 ---
 
 Generate a high-yield interactive revision quiz.
+Ensure your questions are selected randomly from different sections of the text context so that subsequent attempts yield fresh variations.
 Required Volumes:
 - Multiple Choice Questions (MCQs): ${mcqCount} (Include 4 distinct options A, B, C, D)
 - Short Answer Questions: ${shortCount} (Include detailed grading criteria)
