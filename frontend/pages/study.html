@@ -479,7 +479,12 @@ function activateTab(key) {
   const tabEl   = document.getElementById('tab-' + key);
   const panelEl = document.getElementById('panel-' + key);
   if (tabEl)   tabEl.classList.add('active');
-  if (panelEl) panelEl.classList.add('active');
+  if (panelEl) {
+    panelEl.classList.add('active');
+    panelEl.style.display = 'block';
+    panelEl.style.visibility = 'visible';
+    panelEl.style.opacity = '1';
+  }
 
   document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }

@@ -260,6 +260,90 @@ function formatDateTime(isoString) {
 // ── CONTENT DISPATCHER ────────────────────────────────────────
 // Routes AI content to the correct renderer based on data type.
 // Use this in study.html instead of calling markdownToHTML directly.
+function resolveQuizTargetContainer(preferredContainer = null) {
+  return preferredContainer
+    || window.quizTargetContainer
+    || document.getElementById('tabContent')
+    || document.getElementById('quizWorkspace')
+    || document.getElementById('study-output')
+    || document.getElementById('resultsArea');
+}
+
+if (typeof window.renderMattieQuiz !== "function") {
+  window.renderMattieQuiz = async function(quizData, preferredContainer = null) {
+    const container = resolveQuizTargetContainer(preferredContainer);
+    if (!quizData || !container) return;
+
+    let html = `<div class="quiz-engine-workspace result-anim">`;
+    html += `<h2 style="font-size:1.2rem;font-weight:800;margin-bottom:8px;">📝 Academic Performance Evaluation</h2>`;
+    html += `<p style="font-size:0.85rem;color:var(--label3);margin-bottom:24px;">Complete the following synthesis assessment based on your study material.</p>`;
+
+    if (quizData.mcqs && quizData.mcqs.length > 0) {
+      html += `<div class="quiz-section"><h3>Multiple Choice Section</h3>`;
+      quizData.mcqs.forEach((q, idx) => {
+        html += `
+          <div class="quiz-question-card card mb-3">
+            <div class="card-body">
+              <p class="quiz-prompt">Q${idx + 1}: ${q.question}</p>
+              <div class="quiz-options-grid">
+                ${Object.entries(q.options).map(([key, text]) => `
+                  <label class="quiz-option-label">
+                    <input type="radio" name="mcq-${idx}" value="${key}" data-correct="${q.correctAnswer}">
+                    <span class="option-indicator">${key}</span> ${text}
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+          </div>`;
+      });
+      html += `</div>`;
+    }
+
+    const writtenPool = [...(quizData.shortAnswer || []), ...(quizData.essays || [])];
+    if (writtenPool.length > 0) {
+      html += `<div class="quiz-section"><h3>Deep Conceptual Breakdown</h3>`;
+      writtenPool.forEach((q, idx) => {
+        html += `
+          <div class="quiz-question-card card mb-3">
+            <div class="card-body">
+              <p class="quiz-prompt">Analytical Q${idx + 1}: ${q.question}</p>
+              <textarea class="quiz-text-input form-control" placeholder="Type your academic response here..."></textarea>
+            </div>
+          </div>`;
+      });
+      html += `</div>`;
+    }
+
+    html += `<button id="submit-mattie-quiz" class="btn btn-primary w-100 mt-4 btn-lg">Submit Assessment</button>`;
+    html += `</div>`;
+
+    container.innerHTML = html;
+    container.style.display = 'block';
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    document.getElementById('submit-mattie-quiz').addEventListener('click', () => {
+      let score = 0;
+      const totalMCQs = quizData.mcqs ? quizData.mcqs.length : 0;
+
+      if (totalMCQs > 0) {
+        quizData.mcqs.forEach((q, idx) => {
+          const selected = document.querySelector(`input[name="mcq-${idx}"]:checked`);
+          if (selected && selected.value === selected.getAttribute('data-correct')) score++;
+        });
+      }
+
+      const percentage = totalMCQs > 0 ? Math.round((score / totalMCQs) * 100) : 100;
+      const feedback = percentage >= 70 ? "Outstanding Academic Performance! 🔥 — Engineered by MattieTech" :
+                       percentage >= 50 ? "Good Core Comprehension — Keep reviewing! 📚 — Engineered by MattieTech" :
+                       "Needs Improvement. Let's re-study the source material together! 💪 — Engineered by MattieTech";
+
+      showPerformanceBanner(percentage, feedback);
+    });
+
+    if (window.MathJax) window.MathJax.typesetPromise([container]);
+  };
+}
+
 function renderStudyContent(data, container) {
   if (!data || !container) return;
 
@@ -274,9 +358,11 @@ function renderStudyContent(data, container) {
       container.innerHTML = ""; // Clear loader text
       // Force the quiz to render inside the ACTIVE page container passed from study.html
       window.quizTargetContainer = container; 
-      renderMattieQuiz(quizPayload);
+      renderMattieQuiz(quizPayload, container);
       return;
     }
+    container.innerHTML = `<div class="error">Quiz renderer not available.</div>`;
+    return;
   }
 
   // Handle direct structured objects or flashcards
@@ -286,7 +372,7 @@ function renderStudyContent(data, container) {
       container.innerHTML = ""; // Clear loader text
       // Force the quiz to render inside the ACTIVE page container passed from study.html
       window.quizTargetContainer = container; 
-      renderMattieQuiz(data);
+      renderMattieQuiz(data, container);
     } else {
       container.innerHTML = `<div class="error">Quiz renderer not found.</div>`;
     }

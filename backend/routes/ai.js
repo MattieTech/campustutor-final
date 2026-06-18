@@ -66,6 +66,11 @@ async function logUserActivity(userId, action, details) {
 
 // Helper: Handle API errors with user-friendly messages
 function handleAIError(err, res) {
+  if (err.message?.includes("busy") || err.message?.includes("routes")) {
+    return res.status(503).json({
+      error: "📚 CampusTutor AI is grading a rush of papers right now! Please wait a few seconds and try generating your questions again.",
+    });
+  }
   if (err.status === 429 || err.message?.includes("quota")) {
     return res.status(429).json({
       error: "🤔 CampusTutor AI is thinking a bit too hard right now! Please wait a moment before trying your next question.",

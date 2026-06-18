@@ -462,7 +462,7 @@ function closeMobileMenu(){document.getElementById('mobileMenu').classList.remov
 
 // ── INTERACTIVE QUIZ ENGINE RENDERER ──────────────────────────
 async function renderMattieQuiz(quizData) {
-  const container = window.quizTargetContainer || document.getElementById('quizWorkspace');
+  const container = window.quizTargetContainer || document.getElementById('tabContent') || document.getElementById('quizWorkspace') || document.getElementById('study-output') || document.getElementById('resultsArea');
   if (!quizData || !container) return;
 
   let html = `<div class="quiz-engine-workspace result-anim">`;
