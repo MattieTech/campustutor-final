@@ -506,6 +506,58 @@ async function renderMattieQuiz(quizData) {
     }
   };
 
+  const handleQuizAction = (event) => {
+    const actionButton = event.target.closest('#quiz-prev-btn, #quiz-next-btn, #submit-mattie-quiz');
+    if (!actionButton) return;
+
+    event.preventDefault();
+    syncCurrentAnswer();
+
+    if (actionButton.id === 'quiz-prev-btn') {
+      currentQuestionIndex = Math.max(0, currentQuestionIndex - 1);
+      renderQuestion();
+      return;
+    }
+
+    if (actionButton.id === 'quiz-next-btn') {
+      currentQuestionIndex = Math.min(quizItems.length - 1, currentQuestionIndex + 1);
+      renderQuestion();
+      return;
+    }
+
+    let correctAnswers = 0;
+    let scoredQuestions = 0;
+    let completedAnswers = 0;
+
+    quizItems.forEach((item, index) => {
+      const storedValue = answerStore[index];
+      const hasAnswer = typeof storedValue === 'string' && storedValue.trim().length > 0;
+
+      if (item.type === 'mcq') {
+        scoredQuestions++;
+        if (hasAnswer && storedValue === item.question.correctAnswer) {
+          correctAnswers++;
+        }
+      } else if (hasAnswer) {
+        completedAnswers++;
+      }
+    });
+
+    const percentage = scoredQuestions > 0 ? Math.round((correctAnswers / scoredQuestions) * 100) : Math.round((completedAnswers / quizItems.length) * 100);
+
+    const feedback = percentage >= 70 ? "Outstanding Academic Performance! 🔥 — Engineered by MattieTech" :
+                     percentage >= 50 ? "Good Core Comprehension — Keep reviewing! 📚 — Engineered by MattieTech" :
+                     "Needs Improvement. Let's re-study the source material together! 💪 — Engineered by MattieTech";
+
+    window.showPerformanceBanner(percentage, feedback);
+  };
+
+  const typesetQuizMath = () => {
+    if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+      window.MathJax.typesetPromise();
+    }
+  };
+
   const renderQuestion = () => {
     const currentItem = quizItems[currentQuestionIndex];
     const isFirstQuestion = currentQuestionIndex === 0;
@@ -557,9 +609,9 @@ async function renderMattieQuiz(quizData) {
               ${optionsHTML}
             </div>
             <div style="display:flex; gap:12px; justify-content:space-between; margin-top:24px; flex-wrap:wrap;">
-              <button id="quiz-prev-btn" class="btn btn-secondary" ${isFirstQuestion ? 'disabled' : ''} style="min-width:120px;">Prev</button>
+              <button type="button" id="quiz-prev-btn" class="btn btn-secondary" ${isFirstQuestion ? 'disabled' : ''} style="min-width:120px;">Prev</button>
               <div style="display:flex; gap:12px; margin-left:auto; flex-wrap:wrap;">
-                ${isLastQuestion ? `<button id="submit-mattie-quiz" class="btn btn-primary btn-lg" style="min-width:190px;">Submit Assessment</button>` : `<button id="quiz-next-btn" class="btn btn-primary btn-lg" style="min-width:120px;">Next</button>`}
+                ${isLastQuestion ? `<button type="button" id="submit-mattie-quiz" class="btn btn-primary btn-lg" style="min-width:190px;">Submit Assessment</button>` : `<button type="button" id="quiz-next-btn" class="btn btn-primary btn-lg" style="min-width:120px;">Next</button>`}
               </div>
             </div>
           </div>
@@ -568,6 +620,8 @@ async function renderMattieQuiz(quizData) {
 
     container.style.display = 'block';
     container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      container.onclick = handleQuizAction;
 
     if (currentItem.type === 'mcq') {
       container.querySelectorAll('input[name="quiz-answer"]').forEach((input) => {
@@ -584,59 +638,7 @@ async function renderMattieQuiz(quizData) {
       }
     }
 
-    const prevButton = container.querySelector('#quiz-prev-btn');
-    const nextButton = container.querySelector('#quiz-next-btn');
-    const submitButton = container.querySelector('#submit-mattie-quiz');
-
-    if (prevButton) {
-      prevButton.addEventListener('click', () => {
-        syncCurrentAnswer();
-        currentQuestionIndex = Math.max(0, currentQuestionIndex - 1);
-        renderQuestion();
-      });
-    }
-
-    if (nextButton) {
-      nextButton.addEventListener('click', () => {
-        syncCurrentAnswer();
-        currentQuestionIndex = Math.min(quizItems.length - 1, currentQuestionIndex + 1);
-        renderQuestion();
-      });
-    }
-
-    if (submitButton) {
-      submitButton.addEventListener('click', () => {
-        syncCurrentAnswer();
-
-        let correctAnswers = 0;
-        let scoredQuestions = 0;
-        let completedAnswers = 0;
-
-        quizItems.forEach((item, index) => {
-          const storedValue = answerStore[index];
-          const hasAnswer = typeof storedValue === 'string' && storedValue.trim().length > 0;
-
-          if (item.type === 'mcq') {
-            scoredQuestions++;
-            if (hasAnswer && storedValue === item.question.correctAnswer) {
-              correctAnswers++;
-            }
-          } else if (hasAnswer) {
-            completedAnswers++;
-          }
-        });
-
-        const percentage = scoredQuestions > 0 ? Math.round((correctAnswers / scoredQuestions) * 100) : Math.round((completedAnswers / quizItems.length) * 100);
-
-        const feedback = percentage >= 70 ? "Outstanding Academic Performance! 🔥 — Engineered by MattieTech" :
-                         percentage >= 50 ? "Good Core Comprehension — Keep reviewing! 📚 — Engineered by MattieTech" :
-                         "Needs Improvement. Let's re-study the source material together! 💪 — Engineered by MattieTech";
-
-        window.showPerformanceBanner(percentage, feedback);
-      });
-    }
-
-    if (window.MathJax) window.MathJax.typesetPromise([container]);
+      typesetQuizMath();
   };
 
   renderQuestion();
