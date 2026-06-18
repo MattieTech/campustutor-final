@@ -269,78 +269,204 @@ function resolveQuizTargetContainer(preferredContainer = null) {
     || document.getElementById('resultsArea');
 }
 
+window.showPerformanceBanner = function(score, message) {
+  const badge = score >= 70 ? "perf-high" : score >= 50 ? "perf-mid" : "perf-low";
+  const modalHTML = `
+    <div class="performance-modal-overlay result-anim">
+      <div class="performance-card card liquid-glass-card">
+        <div class="card-body" style="text-align:center; padding:48px 32px;">
+          <div class="score-circle ${badge}">${score}%</div>
+          <h2 style="font-weight:800; font-size:1.5rem; margin-bottom:12px;">Evaluation Complete</h2>
+          <p style="font-size:1.1rem; line-height:1.6; color:var(--label2); margin-bottom:32px;">${message}</p>
+          <button onclick="this.closest('.performance-modal-overlay').remove()" class="btn btn-primary btn-lg w-100">Continue Learning</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+};
+
 if (typeof window.renderMattieQuiz !== "function") {
   window.renderMattieQuiz = async function(quizData, preferredContainer = null) {
     const container = resolveQuizTargetContainer(preferredContainer);
     if (!quizData || !container) return;
 
-    let html = `<div class="quiz-engine-workspace result-anim">`;
-    html += `<h2 style="font-size:1.2rem;font-weight:800;margin-bottom:8px;">📝 Academic Performance Evaluation</h2>`;
-    html += `<p style="font-size:0.85rem;color:var(--label3);margin-bottom:24px;">Complete the following synthesis assessment based on your study material.</p>`;
-
-    if (quizData.mcqs && quizData.mcqs.length > 0) {
-      html += `<div class="quiz-section"><h3>Multiple Choice Section</h3>`;
-      quizData.mcqs.forEach((q, idx) => {
-        html += `
-          <div class="quiz-question-card card mb-3">
-            <div class="card-body">
-              <p class="quiz-prompt">Q${idx + 1}: ${q.question}</p>
-              <div class="quiz-options-grid">
-                ${Object.entries(q.options).map(([key, text]) => `
-                  <label class="quiz-option-label">
-                    <input type="radio" name="mcq-${idx}" value="${key}" data-correct="${q.correctAnswer}">
-                    <span class="option-indicator">${key}</span> ${text}
-                  </label>
-                `).join('')}
-              </div>
-            </div>
-          </div>`;
+    const quizItems = [];
+    (quizData.mcqs || []).forEach((question, index) => {
+      quizItems.push({
+        type: "mcq",
+        prompt: `Q${index + 1}: ${question.question}`,
+        question,
       });
-      html += `</div>`;
-    }
+    });
 
     const writtenPool = [...(quizData.shortAnswer || []), ...(quizData.essays || [])];
-    if (writtenPool.length > 0) {
-      html += `<div class="quiz-section"><h3>Deep Conceptual Breakdown</h3>`;
-      writtenPool.forEach((q, idx) => {
-        html += `
-          <div class="quiz-question-card card mb-3">
-            <div class="card-body">
-              <p class="quiz-prompt">Analytical Q${idx + 1}: ${q.question}</p>
-              <textarea class="quiz-text-input form-control" placeholder="Type your academic response here..."></textarea>
-            </div>
-          </div>`;
+    writtenPool.forEach((question, index) => {
+      quizItems.push({
+        type: "written",
+        prompt: `Analytical Q${index + 1}: ${question.question}`,
+        question,
       });
-      html += `</div>`;
+    });
+
+    if (quizItems.length === 0) {
+      container.innerHTML = `<div class="quiz-engine-workspace result-anim"><div class="card"><div class="card-body">No quiz questions were provided.</div></div></div>`;
+      return;
     }
 
-    html += `<button id="submit-mattie-quiz" class="btn btn-primary w-100 mt-4 btn-lg">Submit Assessment</button>`;
-    html += `</div>`;
+    let currentQuestionIndex = 0;
+    const answerStore = {};
 
-    container.innerHTML = html;
-    container.style.display = 'block';
-    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const syncCurrentAnswer = () => {
+      const currentItem = quizItems[currentQuestionIndex];
+      if (!currentItem) return;
 
-    document.getElementById('submit-mattie-quiz').addEventListener('click', () => {
-      let score = 0;
-      const totalMCQs = quizData.mcqs ? quizData.mcqs.length : 0;
+      if (currentItem.type === "mcq") {
+        const selected = container.querySelector('input[name="quiz-answer"]:checked');
+        if (selected) {
+          answerStore[currentQuestionIndex] = selected.value;
+        }
+      } else {
+        const responseField = container.querySelector(".quiz-text-input");
+        answerStore[currentQuestionIndex] = responseField ? responseField.value : "";
+      }
+    };
 
-      if (totalMCQs > 0) {
-        quizData.mcqs.forEach((q, idx) => {
-          const selected = document.querySelector(`input[name="mcq-${idx}"]:checked`);
-          if (selected && selected.value === selected.getAttribute('data-correct')) score++;
+    const renderQuestion = () => {
+      const currentItem = quizItems[currentQuestionIndex];
+      const isFirstQuestion = currentQuestionIndex === 0;
+      const isLastQuestion = currentQuestionIndex === quizItems.length - 1;
+      const questionNumber = currentQuestionIndex + 1;
+      const progressPercent = Math.round((questionNumber / quizItems.length) * 100);
+      const storedAnswer = answerStore[currentQuestionIndex] || "";
+
+      let optionsHTML = "";
+      if (currentItem.type === "mcq") {
+        const optionKeys = ["A", "B", "C", "D"];
+        optionsHTML = `
+          <div class="quiz-options-grid" style="display:flex; flex-direction:column; gap:12px; margin-top:18px;">
+            ${optionKeys
+              .filter((key) => currentItem.question.options && Object.prototype.hasOwnProperty.call(currentItem.question.options, key))
+              .map((key) => {
+                const optionText = currentItem.question.options[key];
+                const isChecked = storedAnswer === key ? "checked" : "";
+                return `
+                  <label class="quiz-option-label" style="display:flex; align-items:flex-start; gap:14px; padding:16px 18px; border-radius:18px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); cursor:pointer; transition:transform .18s ease, border-color .18s ease, background .18s ease;">
+                    <input type="radio" name="quiz-answer" value="${key}" data-correct="${currentItem.question.correctAnswer}" ${isChecked} style="margin-top:3px; flex:0 0 auto;">
+                    <span class="option-indicator" style="display:inline-flex; align-items:center; justify-content:center; min-width:34px; height:34px; border-radius:999px; font-weight:800; background:rgba(255,255,255,0.10);">${key}</span>
+                    <span style="display:block; line-height:1.5;">${optionText}</span>
+                  </label>`;
+              })
+              .join("")}
+          </div>`;
+      } else {
+        optionsHTML = `
+          <textarea class="quiz-text-input form-control" placeholder="Type your academic response here..." style="min-height:220px; margin-top:18px; resize:vertical;">${storedAnswer}</textarea>`;
+      }
+
+      container.innerHTML = `
+        <div class="quiz-engine-workspace result-anim" style="max-width:860px; margin:0 auto;">
+          <div class="card liquid-glass-card" style="border-radius:28px; overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,0.22);">
+            <div class="card-body" style="padding:28px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; flex-wrap:wrap;">
+                <div>
+                  <h2 style="font-size:1.2rem; font-weight:800; margin-bottom:6px;">📝 Academic Performance Evaluation</h2>
+                  <p style="font-size:0.88rem; color:var(--label3); margin:0;">Question ${questionNumber} of ${quizItems.length}</p>
+                </div>
+                <div style="min-width:180px; text-align:right; color:var(--label3); font-size:0.82rem;">${progressPercent}% complete</div>
+              </div>
+              <div style="height:10px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden; margin-bottom:24px;">
+                <div style="height:100%; width:${progressPercent}%; border-radius:999px; background:linear-gradient(90deg, #76c8ff, #5b8cff); transition:width .25s ease;"></div>
+              </div>
+              <div class="quiz-question-card" style="padding:24px; border-radius:24px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);">
+                <p class="quiz-prompt" style="font-size:1.05rem; font-weight:700; margin-bottom:12px;">${currentItem.prompt}</p>
+                ${optionsHTML}
+              </div>
+              <div style="display:flex; gap:12px; justify-content:space-between; margin-top:24px; flex-wrap:wrap;">
+                <button id="quiz-prev-btn" class="btn btn-secondary" ${isFirstQuestion ? "disabled" : ""} style="min-width:120px;">Prev</button>
+                <div style="display:flex; gap:12px; margin-left:auto; flex-wrap:wrap;">
+                  ${isLastQuestion ? `<button id="submit-mattie-quiz" class="btn btn-primary btn-lg" style="min-width:190px;">Submit Assessment</button>` : `<button id="quiz-next-btn" class="btn btn-primary btn-lg" style="min-width:120px;">Next</button>`}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      container.style.display = 'block';
+      container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      if (currentItem.type === "mcq") {
+        container.querySelectorAll('input[name="quiz-answer"]').forEach((input) => {
+          input.addEventListener("change", () => {
+            answerStore[currentQuestionIndex] = input.value;
+          });
+        });
+      } else {
+        const responseField = container.querySelector(".quiz-text-input");
+        if (responseField) {
+          responseField.addEventListener("input", (event) => {
+            answerStore[currentQuestionIndex] = event.target.value;
+          });
+        }
+      }
+
+      const prevButton = container.querySelector("#quiz-prev-btn");
+      const nextButton = container.querySelector("#quiz-next-btn");
+      const submitButton = container.querySelector("#submit-mattie-quiz");
+
+      if (prevButton) {
+        prevButton.addEventListener("click", () => {
+          syncCurrentAnswer();
+          currentQuestionIndex = Math.max(0, currentQuestionIndex - 1);
+          renderQuestion();
         });
       }
 
-      const percentage = totalMCQs > 0 ? Math.round((score / totalMCQs) * 100) : 100;
-      const feedback = percentage >= 70 ? "Outstanding Academic Performance! 🔥 — Engineered by MattieTech" :
-                       percentage >= 50 ? "Good Core Comprehension — Keep reviewing! 📚 — Engineered by MattieTech" :
-                       "Needs Improvement. Let's re-study the source material together! 💪 — Engineered by MattieTech";
+      if (nextButton) {
+        nextButton.addEventListener("click", () => {
+          syncCurrentAnswer();
+          currentQuestionIndex = Math.min(quizItems.length - 1, currentQuestionIndex + 1);
+          renderQuestion();
+        });
+      }
 
-      showPerformanceBanner(percentage, feedback);
-    });
+      if (submitButton) {
+        submitButton.addEventListener("click", () => {
+          syncCurrentAnswer();
 
-    if (window.MathJax) window.MathJax.typesetPromise([container]);
+          let correctAnswers = 0;
+          let scoredQuestions = 0;
+          let completedAnswers = 0;
+
+          quizItems.forEach((item, index) => {
+            const storedValue = answerStore[index];
+            const hasAnswer = typeof storedValue === "string" && storedValue.trim().length > 0;
+
+            if (item.type === "mcq") {
+              scoredQuestions++;
+              if (hasAnswer && storedValue === item.question.correctAnswer) {
+                correctAnswers++;
+              }
+            } else if (hasAnswer) {
+              completedAnswers++;
+            }
+          });
+
+          const percentage = scoredQuestions > 0
+            ? Math.round((correctAnswers / scoredQuestions) * 100)
+            : Math.round((completedAnswers / quizItems.length) * 100);
+
+          const feedback = percentage >= 70 ? "Outstanding Academic Performance! 🔥 — Engineered by MattieTech" :
+                           percentage >= 50 ? "Good Core Comprehension — Keep reviewing! 📚 — Engineered by MattieTech" :
+                           "Needs Improvement. Let's re-study the source material together! 💪 — Engineered by MattieTech";
+
+          window.showPerformanceBanner(percentage, feedback);
+        });
+      }
+
+      if (window.MathJax) window.MathJax.typesetPromise([container]);
+    };
+
+    renderQuestion();
   };
 }
 
