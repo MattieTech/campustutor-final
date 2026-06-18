@@ -257,11 +257,30 @@ function formatDateTime(isoString) {
   });
 }
 
+// ── CONTENT DISPATCHER ────────────────────────────────────────
+// Routes AI content to the correct renderer based on data type.
+// Use this in study.html instead of calling markdownToHTML directly.
+function renderStudyContent(data, container) {
+  if (!data || !container) return;
+
+  // If it's a structured quiz object (MCQs, Short Answers, Essays)
+  if (typeof data === "object" && (data.mcqs || data.shortAnswer || data.flashcards)) {
+    console.log("Rendering structured quiz/flashcard data...");
+    if (typeof renderMattieQuiz === "function") {
+      renderMattieQuiz(data);
+    } else {
+      container.innerHTML = `<div class="error">Quiz renderer not found.</div>`;
+    }
+  } else {
+    // It's a standard text string (Summary or Explanation)
+    container.innerHTML = markdownToHTML(data);
+    renderMath(container);
+  }
+}
+
 // ── MARKDOWN → HTML ───────────────────────────────────────────
-// Converts markdown to HTML. Math delimiters \( \) and \[ \] are
-// preserved as-is — renderMath() will process them separately.
 function markdownToHTML(text) {
-  if (!text) return "";
+  if (!text || typeof text !== "string") return "";
 
   // Protect LaTeX math blocks from being mangled by markdown parsing.
   // We replace them with placeholders, process markdown, then restore.
