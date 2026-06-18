@@ -29,6 +29,7 @@ const pdfParse = require("pdf-parse"); // Extracts text from PDFs
 const supabase = require("../utils/supabase");
 const authMiddleware = require("../middleware/authMiddleware");
 const { awardXP, updateStreak } = require("../utils/xp");
+const { warmDocumentStudyAssets } = require("./ai");
 
 // ── MULTER CONFIGURATION ──────────────────────────────────────
 // Multer handles multipart/form-data (the format used for file uploads)
@@ -176,28 +177,10 @@ router.post("/pdf", authMiddleware, upload.single("pdf"), async (req, res) => {
         .json({ error: "Failed to save document to database." });
     }
 
-    // ── STEP 4: Log user activity ─────────────────────────────
-    try {
-      await supabase.from("user_activity").insert({
-        user_id: userId,
-        action: "upload_document",
-        details: `Uploaded PDF "${fileName}" (${pageCount} pages)`,
-        created_at: new Date().toISOString(),
-      });
-    } catch (activityErr) {
-      console.log("Note: Could not log activity:", activityErr.message);
-    }
-
-    // ── STEP 4B: Award XP and update streak ───────────────────
-    try {
-      await awardXP(userId, "upload_pdf", { fileName, pageCount });
-      await updateStreak(userId);
-    } catch (xpErr) {
-      console.log("Note: Could not award XP:", xpErr.message);
-    }
-
-    // ── STEP 5: Return success with document data ─────────────
+    // ── STEP 4: Return success immediately ────────────────────
     res.json({
+      success: true,
+      documentId: document.id,
       message: "PDF uploaded and processed successfully!",
       document: {
         id: document.id,
@@ -208,6 +191,28 @@ router.post("/pdf", authMiddleware, upload.single("pdf"), async (req, res) => {
         textLength: truncatedText.length,
         extractedText: truncatedText, // Send text back so frontend can display it
       },
+    });
+
+    setImmediate(() => {
+      supabase.from("user_activity").insert({
+        user_id: userId,
+        action: "upload_document",
+        details: `Uploaded PDF "${fileName}" (${pageCount} pages)`,
+        created_at: new Date().toISOString(),
+      }).catch((activityErr) => {
+        console.log("Note: Could not log activity:", activityErr.message);
+      });
+
+      Promise.allSettled([
+        awardXP(userId, "upload_pdf", { fileName, pageCount }),
+        updateStreak(userId),
+      ]).catch((xpErr) => {
+        console.log("Note: Could not award XP:", xpErr.message);
+      });
+
+      warmDocumentStudyAssets(document.id, userId).catch((err) => {
+        console.log("Note: Background study asset warmup failed:", err.message);
+      });
     });
   } catch (err) {
     console.error("Upload error:", err.message);
@@ -278,28 +283,10 @@ router.post(
           .json({ error: "Failed to save image to database." });
       }
 
-      // ── STEP 4: Log user activity ─────────────────────────────
-      try {
-        await supabase.from("user_activity").insert({
-          user_id: userId,
-          action: "upload_image",
-          details: `Uploaded image "${fileName}" (${req.file.mimetype})`,
-          created_at: new Date().toISOString(),
-        });
-      } catch (activityErr) {
-        console.log("Note: Could not log activity:", activityErr.message);
-      }
-
-      // ── STEP 4B: Award XP and update streak ───────────────────
-      try {
-        await awardXP(userId, "upload_image", { fileName });
-        await updateStreak(userId);
-      } catch (xpErr) {
-        console.log("Note: Could not award XP:", xpErr.message);
-      }
-
-      // ── STEP 5: Return success with document data ─────────────
+      // ── STEP 4: Return success immediately ────────────────────
       res.json({
+        success: true,
+        documentId: document.id,
         message: "Image uploaded successfully!",
         document: {
           id: document.id,
@@ -310,6 +297,28 @@ router.post(
           size: req.file.size,
           base64: base64Image, // Include base64 for AI analysis if needed
         },
+      });
+
+      setImmediate(() => {
+        supabase.from("user_activity").insert({
+          user_id: userId,
+          action: "upload_image",
+          details: `Uploaded image "${fileName}" (${req.file.mimetype})`,
+          created_at: new Date().toISOString(),
+        }).catch((activityErr) => {
+          console.log("Note: Could not log activity:", activityErr.message);
+        });
+
+        Promise.allSettled([
+          awardXP(userId, "upload_image", { fileName }),
+          updateStreak(userId),
+        ]).catch((xpErr) => {
+          console.log("Note: Could not award XP:", xpErr.message);
+        });
+
+        warmDocumentStudyAssets(document.id, userId).catch((err) => {
+          console.log("Note: Background study asset warmup failed:", err.message);
+        });
       });
     } catch (err) {
       console.error("Image upload error:", err.message);

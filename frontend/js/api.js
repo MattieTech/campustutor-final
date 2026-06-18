@@ -135,7 +135,108 @@ async function apiSummarize(documentId)           { return apiRequest("/api/ai/s
 async function apiExplain(documentId, concept)    { return apiRequest("/api/ai/explain", "POST", { documentId, concept }); }
 async function apiGenerateQuestions(documentId)   { return apiRequest("/api/ai/questions", "POST", { documentId }); }
 async function apiGenerateFlashcards(documentId)  { return apiRequest("/api/ai/flashcards", "POST", { documentId }); }
-async function apiGetResults(documentId)          { return apiRequest(`/api/ai/results/${documentId}`); }
+window.studyAssetCache = window.studyAssetCache || {};
+
+function setStudyAssetCache(documentId, results) {
+  if (!documentId || !results) return;
+  window.studyAssetCache[documentId] = {
+    ...(window.studyAssetCache[documentId] || {}),
+    ...(results || {}),
+  };
+}
+
+function getStudyAssetCache(documentId) {
+  return documentId ? (window.studyAssetCache[documentId] || null) : null;
+}
+
+async function fetchAndCacheAIResults(documentId, options = {}) {
+  if (!options.forceRefresh) {
+    const cachedResults = getStudyAssetCache(documentId);
+    if (cachedResults) {
+      return { data: { results: cachedResults }, error: null, status: 200, cached: true };
+    }
+  }
+
+  const result = await apiRequest(`/api/ai/results/${documentId}`);
+  if (result.data?.results) {
+    setStudyAssetCache(documentId, result.data.results);
+  }
+  return result;
+}
+
+function buildPolishingLoaderHTML(message) {
+  return `
+    <div class="quiz-engine-workspace result-anim" style="display:flex; align-items:center; justify-content:center; min-height:220px;">
+      <div class="card liquid-glass-card" style="max-width:520px; width:100%; padding:28px; text-align:center; border-radius:24px;">
+        <div style="width:44px; height:44px; margin:0 auto 16px; border-radius:50%; border:4px solid rgba(0,0,0,0.08); border-top-color:#5b8cff; animation:ctSpin 0.8s linear infinite;"></div>
+        <p style="font-weight:700; margin:0 0 8px;">CampusTutor AI is polishing your study assets in the background. Ready in just a few seconds...</p>
+        <p style="margin:0; color:var(--label3);">${message || "Please keep this tab open..."}</p>
+      </div>
+    </div>`;
+}
+
+function buildQuizGenerationLoaderHTML() {
+  return `
+    <div class="quiz-engine-workspace result-anim" style="display:flex; align-items:center; justify-content:center; min-height:260px;">
+      <div class="card liquid-glass-card" style="max-width:620px; width:100%; padding:30px; text-align:center; border-radius:24px;">
+        <div style="width:48px; height:48px; margin:0 auto 18px; border-radius:50%; border:4px solid rgba(0,0,0,0.08); border-top-color:#ff9f43; animation:ctSpin 0.8s linear infinite;"></div>
+        <p style="font-weight:800; margin:0 0 10px;">🔄 Generating Questions... Please wait 1-2 minutes.</p>
+        <p style="margin:0; color:var(--label3);">CampusTutor AI is crafting a high-yield interactive exam pool. Deep analysis extraction takes about 1-2 minutes. Please keep this tab open...</p>
+      </div>
+    </div>`;
+}
+
+window.getCachedAIResults = getStudyAssetCache;
+window.setCachedAIResults = setStudyAssetCache;
+window.fetchAndCacheAIResults = fetchAndCacheAIResults;
+window.buildPolishingLoaderHTML = buildPolishingLoaderHTML;
+window.buildQuizGenerationLoaderHTML = buildQuizGenerationLoaderHTML;
+
+async function apiGetResults(documentId, options = {}) {
+  return fetchAndCacheAIResults(documentId, options);
+}
+
+function renderQuizCorrections(reviewData) {
+  if (!reviewData || !Array.isArray(reviewData.quizItems) || !reviewData.quizItems.length) {
+    return '<div style="padding:16px 0;color:#666;">No correction data is available for this quiz yet.</div>';
+  }
+
+  const escapeHTML = (value) => String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+  const renderAnswerLine = (label, value, tone = 'neutral') => {
+    const background = tone === 'good' ? 'rgba(46,213,115,0.12)' : tone === 'bad' ? 'rgba(255,77,77,0.12)' : 'rgba(0,0,0,0.04)';
+    const color = tone === 'good' ? '#1f8a4c' : tone === 'bad' ? '#d63031' : '#444';
+    return `<div style="padding:10px 12px;border-radius:14px;background:${background};color:${color};margin-top:8px;"><strong>${label}:</strong> ${value}</div>`;
+  };
+
+  return reviewData.quizItems.map((item, index) => {
+    const storedValue = reviewData.answerStore?.[index];
+    const isMcq = item.type === 'mcq';
+    const correctAnswer = isMcq ? item.question.correctAnswer : (item.question.modelAnswer || (Array.isArray(item.question.keyPoints) ? item.question.keyPoints.join('; ') : item.question.gradingCriteria || ''));
+    const explanation = isMcq
+      ? (item.question.explanation || item.question.gradingCriteria || 'Review this answer against the lecture notes.')
+      : (item.question.gradingCriteria || item.question.modelAnswer || item.question.keyPoints?.join('; ') || 'Review this answer against the lecture notes.');
+    const selectedTone = isMcq && storedValue !== correctAnswer ? 'bad' : 'good';
+
+    return `
+      <section style="padding:18px;border:1px solid rgba(0,0,0,0.08);border-radius:18px;background:rgba(255,255,255,0.72);box-shadow:0 8px 24px rgba(0,0,0,0.04);display:grid;gap:10px;">
+        <div style="font-weight:800;font-size:0.98rem;line-height:1.5;">${item.prompt || `Question ${index + 1}`}</div>
+        <div style="font-size:0.82rem;color:#666;">${isMcq ? 'Multiple Choice' : 'Written Response'}</div>
+        ${isMcq ? renderAnswerLine('Your Answer', escapeHTML(storedValue || 'No answer selected'), storedValue === correctAnswer ? 'good' : 'bad') : renderAnswerLine('Your Response', escapeHTML(storedValue || 'No response submitted'), storedValue ? 'neutral' : 'bad')}
+        ${renderAnswerLine('Correct Answer', escapeHTML(correctAnswer || 'N/A'), 'good')}
+        <div style="padding:12px 14px;border-radius:14px;background:rgba(0,0,0,0.03);color:#333;line-height:1.6;">
+          <strong>Explanation:</strong> ${escapeHTML(explanation)}
+        </div>
+      </section>
+    `;
+  }).join('');
+}
+window.renderQuizCorrections = renderQuizCorrections;
 // ── DOWNLOADS ──────────────────────────────────────────────
 // Download generated content as files (TXT, CSV)
 function downloadFile(url, filename) {
@@ -302,51 +403,54 @@ async function regenerateFreshQuiz() {
 
 window.showPerformanceBanner = function(score, message) {
   const badge = score >= 70 ? "perf-high" : score >= 40 ? "perf-mid" : "perf-low";
-  const theme = badge === "perf-high"
-    ? {
-        overlay: "rgba(26, 83, 51, 0.68)",
-        card: "linear-gradient(180deg, rgba(14, 80, 42, 0.96), rgba(7, 45, 27, 0.98))",
-        circle: "linear-gradient(135deg, #34d058, #18823b)",
-        shadow: "0 0 30px rgba(52, 208, 88, 0.35)",
-      }
-    : badge === "perf-mid"
-      ? {
-          overlay: "rgba(122, 64, 7, 0.68)",
-          card: "linear-gradient(180deg, rgba(122, 64, 7, 0.96), rgba(68, 34, 4, 0.98))",
-          circle: "linear-gradient(135deg, #ffb020, #d97806)",
-          shadow: "0 0 30px rgba(255, 176, 32, 0.36)",
-        }
-      : {
-          overlay: "rgba(113, 18, 31, 0.72)",
-          card: "linear-gradient(180deg, rgba(113, 18, 31, 0.96), rgba(64, 7, 15, 0.98))",
-          circle: "linear-gradient(135deg, #ff5a66, #c81f3c)",
-          shadow: "0 0 30px rgba(255, 90, 102, 0.34)",
-        };
+  const scoreColor = badge === "perf-high" ? "#2ed573" : badge === "perf-mid" ? "#ff9f43" : "#ff4d4d";
   const modalHTML = `
-    <div class="performance-modal-overlay result-anim ${badge}" style="background:${theme.overlay};">
-      <div class="performance-card card liquid-glass-card ${badge}" style="background:${theme.card};">
-        <div class="card-body" style="text-align:center; padding:48px 32px;">
-          <div class="score-circle ${badge}" style="background:${theme.circle}; box-shadow:${theme.shadow};">${score}%</div>
-          <h2 style="font-weight:800; font-size:1.5rem; margin-bottom:12px;">Evaluation Complete</h2>
-          <p style="font-size:1.1rem; line-height:1.6; color:var(--label2); margin-bottom:32px;">${message}</p>
-          <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+    <div class="performance-modal-overlay result-anim ${badge}" style="background:rgba(15,23,42,0.18);backdrop-filter:blur(16px);padding:24px;">
+      <div class="performance-card card liquid-glass-card ${badge}" style="background:rgba(255,255,255,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.05);color:#333;min-height:350px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:48px 32px;max-width:820px;width:min(92vw,820px);">
+        <div class="card-body" style="width:100%;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:0;">
+          <div class="score-circle ${badge}" style="background:transparent;color:${scoreColor};box-shadow:none;border:2px solid ${scoreColor};display:flex;align-items:center;justify-content:center;min-width:112px;min-height:112px;">${score}%</div>
+          <h2 style="font-weight:900;font-size:1.7rem;margin:0;color:${scoreColor};">Evaluation Complete</h2>
+          <p style="font-size:1.08rem;line-height:1.7;color:#333;margin:0;max-width:680px;">${message}</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
             <button type="button" onclick="this.closest('.performance-modal-overlay').remove()" class="btn btn-primary btn-lg">Continue Learning</button>
+            <button type="button" id="mattie-review-answers-btn" class="btn btn-info">🔍 Review Corrections</button>
             <button type="button" id="mattie-refresh-quiz-btn" class="btn btn-secondary">🔄 Generate Fresh Quiz</button>
+          </div>
+          <div id="mattie-review-panel" style="width:100%;max-height:0;opacity:0;overflow:hidden;transition:max-height .45s ease,opacity .35s ease;margin-top:8px;">
+            <div id="mattie-review-content" style="display:grid;gap:14px;padding-top:16px;text-align:left;"></div>
           </div>
         </div>
       </div>
     </div>`;
   document.body.insertAdjacentHTML('beforeend', modalHTML);
 
+  const reviewButton = document.getElementById('mattie-review-answers-btn');
   const refreshButton = document.getElementById('mattie-refresh-quiz-btn');
+  const reviewPanel = document.getElementById('mattie-review-panel');
+  const reviewContent = document.getElementById('mattie-review-content');
+
+  if (reviewButton && reviewPanel && reviewContent) {
+    reviewButton.addEventListener('click', () => {
+      const reviewData = window.mattieLatestReview;
+      reviewContent.innerHTML = renderQuizCorrections(reviewData);
+      reviewPanel.style.maxHeight = `${Math.max(720, reviewContent.scrollHeight + 48)}px`;
+      reviewPanel.style.opacity = '1';
+      if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+        window.MathJax.typesetPromise([reviewContent]).catch(() => {});
+      }
+    });
+  }
+
   if (refreshButton) {
     refreshButton.addEventListener('click', async () => {
+      refreshButton.disabled = true;
+      refreshButton.textContent = '🔄 Generating Questions... Please wait 1-2 minutes.';
+      window.mattieQuizState = null;
+      await regenerateFreshQuiz();
       const overlay = refreshButton.closest('.performance-modal-overlay');
       if (overlay) {
         overlay.remove();
       }
-      window.mattieQuizState = null;
-      await regenerateFreshQuiz();
     });
   }
 };
@@ -437,6 +541,11 @@ if (typeof window.renderMattieQuiz !== "function") {
       const feedback = percentage >= 70 ? "Outstanding Academic Performance! 🔥 — Engineered by MattieTech" :
                percentage >= 40 ? "Good Core Comprehension — Keep reviewing! 📚 — Engineered by MattieTech" :
                        "Needs Improvement. Let's re-study the source material together! 💪 — Engineered by MattieTech";
+
+        window.mattieLatestReview = {
+          quizItems,
+          answerStore: { ...quizState.answerStore },
+        };
 
       window.showPerformanceBanner(percentage, feedback);
     };
@@ -564,8 +673,12 @@ function renderStudyContent(data, container, documentId = null) {
     window.currentQuizDocumentId = documentId;
   }
 
-  // Ensure the target container is active and visible
   container.style.display = 'block';
+
+  if (data && typeof data === "object" && data.__html) {
+    container.innerHTML = data.__html;
+    return;
+  }
 
   // Check if data.questions exists (nested structure from backend)
   if (data && typeof data === "object" && data.questions) {

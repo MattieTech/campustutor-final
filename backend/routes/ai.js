@@ -50,6 +50,249 @@ async function saveAIResult(documentId, userId, resultType, content) {
   );
 }
 
+function buildSummaryPrompt(doc) {
+  return `
+You are CampusTutor AI, a premium academic assistant.
+
+Lecture notes from "${doc.file_name}":
+---
+${doc.extracted_text}
+---
+Requirement: Generate a tightly packed, core textbook-style overview using high-density markdown headings. Focus on structural hierarchy and conceptual density. Avoid long-form rambling; use precise, technical language and subsection headers to categorize information.
+
+IMPORTANT: Format ALL mathematical expressions using LaTeX ($ for inline, $$ for block).
+
+Format your response like this:
+## 📋 Summary of "${doc.file_name}"
+
+**Main Topic:** [1-sentence overview]
+
+### 📖 Core Technical Overview
+[Use high-density headings (###, ####) and bullet points to break down the material textbook-style. Cover every key technical nuance briefly.]
+
+**Core Takeaway:** [2-3 sentences on what this is really about]
+
+Use simple English. Assume the reader is a first-year university student.
+    `.trim();
+}
+
+function buildQuestionsPrompt(doc, pageCount) {
+  let mcqCount = "15";
+  let shortCount = "3";
+  let essayCount = "0";
+
+  if (pageCount > 5 && pageCount <= 15) {
+    mcqCount = "30";
+    shortCount = "5";
+    essayCount = "0";
+  } else if (pageCount > 15) {
+    mcqCount = "40";
+    shortCount = "8";
+    essayCount = "2";
+  }
+
+  const prompt = `
+You are CampusTutor AI, a university exam setter creating a revision quiz pool.
+
+Based on these lecture notes (${pageCount} pages):
+---
+${doc.extracted_text}
+---
+
+Generate a high-yield interactive revision quiz.
+Ensure your questions are selected randomly from different sections of the text context so that subsequent attempts yield fresh variations.
+Required Volumes:
+- Multiple Choice Questions (MCQs): ${mcqCount} (Include 4 distinct options A, B, C, D)
+- Short Answer Questions: ${shortCount} (Include detailed grading criteria)
+- Essay Questions: ${essayCount} (Broad synthesis questions)
+
+IMPORTANT: Format ALL mathematical expressions using LaTeX ($ for inline, $$ for block).
+
+You MUST return the output as a valid JSON object only. No markdown code blocks.
+JSON Structure:
+{
+  "mcqs": [
+    {
+      "question": "...",
+      "options": {"A": "...", "B": "...", "C": "...", "D": "..."},
+      "correctAnswer": "A",
+      "explanation": "..."
+    }
+  ],
+  "shortAnswer": [
+    {
+      "question": "...",
+      "modelAnswer": "...",
+      "gradingCriteria": "..."
+    }
+  ],
+  "essays": [
+    {
+      "question": "...",
+      "keyPoints": ["Point 1", "Point 2"]
+    }
+  ]
+}`.trim();
+
+  return { prompt, mcqCount, shortCount, essayCount };
+}
+
+function buildFlashcardsPrompt(doc) {
+  const targetCount = "20";
+  const prompt = `Create exactly ${targetCount} high-yield, conceptually dense study flashcards from this text covering all complex terminologies. Return ONLY a JSON array - no markdown, no code blocks.
+
+Text to extract from:
+---
+${doc.extracted_text}
+---
+
+Return valid JSON array ONLY (start with [ end with ]):
+[{"id":1,"front":"Question?","back":"Answer","category":"Topic"},{"id":2,"front":"Question?","back":"Answer","category":"Topic"}]
+
+Rules:
+- Generate exactly ${targetCount} flashcards with id, front, back, category
+- IMPORTANT: Format ALL mathematical expressions using LaTeX delimiters
+  * Use $ for inline math
+  * Use $$ for display/standalone equations
+- Never write math as plain text: always use LaTeX notation
+- Keep answers concise and clear
+- Valid JSON format only
+
+Generate:`.trim();
+
+  return { prompt, targetCount };
+}
+
+async function generateSummaryForDocument(documentId, userId, options = {}) {
+  const { persist = true, log = true, award = true } = options;
+  const doc = await getDocumentText(documentId, userId);
+  const prompt = buildSummaryPrompt(doc);
+  const summary = await askGemini(prompt);
+
+  if (persist) {
+    await saveAIResult(documentId, userId, "summary", summary);
+  }
+
+  if (log) {
+    await logUserActivity(userId, "ai_summarize", `Generated summary | Document: "${doc.file_name}"`);
+  }
+
+  if (award) {
+    try {
+      await awardXP(userId, "ai_summarize", { document: doc.file_name });
+      await updateStreak(userId);
+    } catch (xpErr) {
+      console.log("Note: Could not award XP:", xpErr.message);
+    }
+  }
+
+  return { summary, doc };
+}
+
+async function generateQuestionsForDocument(documentId, userId, options = {}) {
+  const { persist = true, log = true, award = true } = options;
+  const doc = await getDocumentText(documentId, userId);
+  const pageCount = doc.page_count || 1;
+  const { prompt, mcqCount, shortCount, essayCount } = buildQuestionsPrompt(doc, pageCount);
+  const rawResponse = await askGemini(prompt);
+
+  let questionsData;
+  try {
+    const cleaned = rawResponse.replace(/```[\s\S]*?```/g, "").replace(/^```/gm, "").trim();
+    const startIdx = cleaned.indexOf('{');
+    const endIdx = cleaned.lastIndexOf('}');
+
+    if (startIdx === -1 || endIdx === -1) throw new Error("No JSON found");
+    questionsData = JSON.parse(cleaned.substring(startIdx, endIdx + 1));
+  } catch (parseErr) {
+    console.error("❌ Questions parsing error:", parseErr.message);
+    throw new Error("Failed to generate structured quiz data.");
+  }
+
+  if (persist) {
+    await saveAIResult(documentId, userId, "questions", JSON.stringify(questionsData));
+  }
+
+  if (log) {
+    await logUserActivity(userId, "ai_questions", `Generated ${mcqCount} MCQs and ${shortCount} Short Answer questions | Document: "${doc.file_name}"`);
+  }
+
+  if (award) {
+    try {
+      const totalQ = (questionsData.mcqs?.length || 0) + (questionsData.shortAnswer?.length || 0) + (questionsData.essays?.length || 0);
+      await awardXP(userId, "ai_questions", { document: doc.file_name, count: totalQ });
+      await updateStreak(userId);
+    } catch (xpErr) {
+      console.log("Note: Could not award XP:", xpErr.message);
+    }
+  }
+
+  return { questionsData, doc };
+}
+
+async function generateFlashcardsForDocument(documentId, userId, options = {}) {
+  const { persist = true, log = true, award = true } = options;
+  const doc = await getDocumentText(documentId, userId);
+  const { prompt } = buildFlashcardsPrompt(doc);
+  const rawResponse = await askGemini(prompt);
+
+  let flashcards;
+  try {
+    let cleaned = rawResponse.replace(/```[\s\S]*?```/g, "").replace(/^```/gm, "").trim();
+    const startIdx = cleaned.indexOf('[');
+    const endIdx = cleaned.lastIndexOf(']');
+
+    if (startIdx === -1 || endIdx === -1) {
+      throw new Error("No JSON array found");
+    }
+
+    const jsonString = cleaned.substring(startIdx, endIdx + 1);
+    flashcards = JSON.parse(jsonString);
+
+    if (!Array.isArray(flashcards) || flashcards.length === 0) {
+      throw new Error("Empty or invalid array");
+    }
+
+    flashcards = flashcards.map((card, idx) => ({
+      id: card.id || idx + 1,
+      front: String(card.front || "").trim().substring(0, 200),
+      back: String(card.back || "").trim().substring(0, 500),
+      category: String(card.category || "General").trim(),
+    }));
+  } catch (parseErr) {
+    console.error("❌ Flashcards error:", parseErr.message);
+    console.error("Response preview:", rawResponse.substring(0, 400));
+    throw new Error("Could not parse flashcards. Please try again with a different document.");
+  }
+
+  if (persist) {
+    await saveAIResult(documentId, userId, "flashcards", JSON.stringify(flashcards));
+  }
+
+  if (log) {
+    await logUserActivity(userId, "ai_flashcards", `Generated ${flashcards.length} flashcards | Document: "${doc.file_name}"`);
+  }
+
+  if (award) {
+    try {
+      await awardXP(userId, "ai_flashcards", { document: doc.file_name, count: flashcards.length });
+      await updateStreak(userId);
+    } catch (xpErr) {
+      console.log("Note: Could not award XP:", xpErr.message);
+    }
+  }
+
+  return { flashcards, doc };
+}
+
+async function warmDocumentStudyAssets(documentId, userId) {
+  return Promise.allSettled([
+    generateSummaryForDocument(documentId, userId, { persist: true, log: false, award: false }),
+    generateFlashcardsForDocument(documentId, userId, { persist: true, log: false, award: false }),
+    generateQuestionsForDocument(documentId, userId, { persist: true, log: false, award: false }),
+  ]);
+}
+
 // Helper: Log user activity
 async function logUserActivity(userId, action, details) {
   try {
@@ -92,47 +335,7 @@ router.post("/summarize", authMiddleware, async (req, res) => {
       return res.status(400).json({ error: "documentId is required." });
     }
 
-    const doc = await getDocumentText(documentId, req.user.id);
-    const pageCount = doc.page_count || 1;
-
-    const prompt = `
-You are CampusTutor AI, a premium academic assistant.
-
-Lecture notes from "${doc.file_name}":
----
-${doc.extracted_text}
----
-Requirement: Generate a tightly packed, core textbook-style overview using high-density markdown headings. Focus on structural hierarchy and conceptual density. Avoid long-form rambling; use precise, technical language and subsection headers to categorize information.
-
-IMPORTANT: Format ALL mathematical expressions using LaTeX ($ for inline, $$ for block).
-
-Format your response like this:
-## 📋 Summary of "${doc.file_name}"
-
-**Main Topic:** [1-sentence overview]
-
-### 📖 Core Technical Overview
-[Use high-density headings (###, ####) and bullet points to break down the material textbook-style. Cover every key technical nuance briefly.]
-
-**Core Takeaway:** [2-3 sentences on what this is really about]
-
-Use simple English. Assume the reader is a first-year university student.
-    `.trim();
-
-    const summary = await askGemini(prompt);
-    await saveAIResult(documentId, req.user.id, "summary", summary);
-    
-    // Log the activity with detailed info
-    await logUserActivity(req.user.id, "ai_summarize", `Generated summary | Document: "${doc.file_name}"`);
-    
-    // Award XP
-    try {
-      await awardXP(req.user.id, "ai_summarize", { document: doc.file_name });
-      await updateStreak(req.user.id);
-    } catch (xpErr) {
-      console.log("Note: Could not award XP:", xpErr.message);
-    }
-    
+    const { summary } = await generateSummaryForDocument(documentId, req.user.id);
     res.json({ summary });
   } catch (err) {
     console.error("Summarize error:", err.message);
@@ -218,95 +421,7 @@ router.post("/questions", authMiddleware, async (req, res) => {
       return res.status(400).json({ error: "documentId is required." });
     }
 
-    const doc = await getDocumentText(documentId, req.user.id);
-    const pageCount = doc.page_count || 1;
-
-    let mcqCount = "15";
-    let shortCount = "3";
-    let essayCount = "0";
-
-    if (pageCount > 5 && pageCount <= 15) {
-      mcqCount = "30";
-      shortCount = "5";
-      essayCount = "0";
-    } else if (pageCount > 15) {
-      mcqCount = "40";
-      shortCount = "8";
-      essayCount = "2";
-    }
-
-    const prompt = `
-You are CampusTutor AI, a university exam setter creating a revision quiz pool.
-
-Based on these lecture notes (${pageCount} pages):
----
-${doc.extracted_text}
----
-
-Generate a high-yield interactive revision quiz.
-Ensure your questions are selected randomly from different sections of the text context so that subsequent attempts yield fresh variations.
-Required Volumes:
-- Multiple Choice Questions (MCQs): ${mcqCount} (Include 4 distinct options A, B, C, D)
-- Short Answer Questions: ${shortCount} (Include detailed grading criteria)
-- Essay Questions: ${essayCount} (Broad synthesis questions)
-
-IMPORTANT: Format ALL mathematical expressions using LaTeX ($ for inline, $$ for block).
-
-You MUST return the output as a valid JSON object only. No markdown code blocks.
-JSON Structure:
-{
-  "mcqs": [
-    {
-      "question": "...",
-      "options": {"A": "...", "B": "...", "C": "...", "D": "..."},
-      "correctAnswer": "A",
-      "explanation": "..."
-    }
-  ],
-  "shortAnswer": [
-    {
-      "question": "...",
-      "modelAnswer": "...",
-      "gradingCriteria": "..."
-    }
-  ],
-  "essays": [
-    {
-      "question": "...",
-      "keyPoints": ["Point 1", "Point 2"]
-    }
-  ]
-}`.trim();
-
-    const rawResponse = await askGemini(prompt);
-    let questionsData;
-
-    try {
-      let cleaned = rawResponse.replace(/```[\s\S]*?```/g, "").replace(/^```/gm, "").trim();
-      const startIdx = cleaned.indexOf('{');
-      const endIdx = cleaned.lastIndexOf('}');
-      
-      if (startIdx === -1 || endIdx === -1) throw new Error("No JSON found");
-      questionsData = JSON.parse(cleaned.substring(startIdx, endIdx + 1));
-    } catch (parseErr) {
-      console.error("❌ Questions parsing error:", parseErr.message);
-      return res.status(500).json({ error: "Failed to generate structured quiz data." });
-    }
-
-    await saveAIResult(documentId, req.user.id, "questions", JSON.stringify(questionsData));
-    
-    // Log the activity with detailed info
-    await logUserActivity(req.user.id, "ai_questions", `Generated ${mcqCount} MCQs and ${shortCount} Short Answer questions | Document: "${doc.file_name}"`);
-    
-    // Award XP
-    try {
-      const totalQ = (questionsData.mcqs?.length || 0) + (questionsData.shortAnswer?.length || 0) + (questionsData.essays?.length || 0);
-      await awardXP(req.user.id, "ai_questions", { document: doc.file_name, count: totalQ });
-      await updateStreak(req.user.id);
-    } catch (xpErr) {
-      console.log("Note: Could not award XP:", xpErr.message);
-    }
-    
+    const { questionsData } = await generateQuestionsForDocument(documentId, req.user.id);
     res.json({ questions: questionsData });
   } catch (err) {
     console.error("Questions error:", err.message);
@@ -322,83 +437,7 @@ router.post("/flashcards", authMiddleware, async (req, res) => {
       return res.status(400).json({ error: "documentId is required." });
     }
 
-    const doc = await getDocumentText(documentId, req.user.id);
-    const targetCount = "20"; // Capped for high-yield speed
-
-    const prompt = `Create exactly ${targetCount} high-yield, conceptually dense study flashcards from this text covering all complex terminologies. Return ONLY a JSON array - no markdown, no code blocks.
-
-Text to extract from:
----
-${doc.extracted_text}
----
-
-Return valid JSON array ONLY (start with [ end with ]):
-[{"id":1,"front":"Question?","back":"Answer","category":"Topic"},{"id":2,"front":"Question?","back":"Answer","category":"Topic"}]
-
-Rules:
-- Generate exactly ${targetCount} flashcards with id, front, back, category
-- IMPORTANT: Format ALL mathematical expressions using LaTeX delimiters
-  * Use $ for inline math
-  * Use $$ for display/standalone equations
-- Never write math as plain text: always use LaTeX notation
-- Keep answers concise and clear
-- Valid JSON format only
-
-Generate:`.trim();
-
-    const rawResponse = await askGemini(prompt);
-
-    let flashcards;
-    try {
-      // Remove markdown and extract JSON
-      let cleaned = rawResponse
-        .replace(/```[\s\S]*?```/g, "")  // Remove code blocks
-        .replace(/^```/gm, "")            // Remove stray backticks
-        .trim();
-
-      const startIdx = cleaned.indexOf('[');
-      const endIdx = cleaned.lastIndexOf(']');
-      
-      if (startIdx === -1 || endIdx === -1) {
-        throw new Error("No JSON array found");
-      }
-
-      const jsonString = cleaned.substring(startIdx, endIdx + 1);
-      flashcards = JSON.parse(jsonString);
-
-      if (!Array.isArray(flashcards) || flashcards.length === 0) {
-        throw new Error("Empty or invalid array");
-      }
-
-      // Normalize flashcard data
-      flashcards = flashcards.map((card, idx) => ({
-        id: card.id || idx + 1,
-        front: String(card.front || "").trim().substring(0, 200),
-        back: String(card.back || "").trim().substring(0, 500),
-        category: String(card.category || "General").trim(),
-      }));
-
-    } catch (parseErr) {
-      console.error("❌ Flashcards error:", parseErr.message);
-      console.error("Response preview:", rawResponse.substring(0, 400));
-      return res.status(500).json({
-        error: "Could not parse flashcards. Please try again with a different document.",
-      });
-    }
-
-    await saveAIResult(documentId, req.user.id, "flashcards", JSON.stringify(flashcards));
-    
-    // Log the activity with detailed info
-    await logUserActivity(req.user.id, "ai_flashcards", `Generated ${flashcards.length} flashcards | Document: "${doc.file_name}"`);
-    
-    // Award XP
-    try {
-      await awardXP(req.user.id, "ai_flashcards", { document: doc.file_name, count: flashcards.length });
-      await updateStreak(req.user.id);
-    } catch (xpErr) {
-      console.log("Note: Could not award XP:", xpErr.message);
-    }
-    
+    const { flashcards } = await generateFlashcardsForDocument(documentId, req.user.id);
     res.json({ flashcards });
   } catch (err) {
     console.error("Flashcards error:", err.message);
@@ -592,3 +631,7 @@ router.get("/download/explanation/:documentId/txt", authMiddleware, async (req, 
 });
 
 module.exports = router;
+module.exports.generateSummaryForDocument = generateSummaryForDocument;
+module.exports.generateQuestionsForDocument = generateQuestionsForDocument;
+module.exports.generateFlashcardsForDocument = generateFlashcardsForDocument;
+module.exports.warmDocumentStudyAssets = warmDocumentStudyAssets;

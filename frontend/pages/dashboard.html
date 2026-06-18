@@ -547,6 +547,11 @@ async function renderMattieQuiz(quizData) {
              percentage >= 40 ? "Good Core Comprehension — Keep reviewing! 📚 — Engineered by MattieTech" :
                      "Needs Improvement. Let's re-study the source material together! 💪 — Engineered by MattieTech";
 
+    window.mattieLatestReview = {
+      quizItems,
+      answerStore: { ...quizState.answerStore },
+    };
+
     window.showPerformanceBanner(percentage, feedback);
   };
 
