@@ -331,24 +331,14 @@ if (typeof window.renderMattieQuiz !== "function") {
       }
     };
 
-    const handleQuizAction = (event) => {
-      const actionButton = event.target.closest('#quiz-prev-btn, #quiz-next-btn, #submit-mattie-quiz');
-      if (!actionButton) return;
+    const typesetQuizMath = () => {
+      if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+        window.MathJax.typesetPromise();
+      }
+    };
 
-      event.preventDefault();
+    const submitCurrentQuiz = () => {
       syncCurrentAnswer();
-
-      if (actionButton.id === 'quiz-prev-btn') {
-        currentQuestionIndex = Math.max(0, currentQuestionIndex - 1);
-        renderQuestion();
-        return;
-      }
-
-      if (actionButton.id === 'quiz-next-btn') {
-        currentQuestionIndex = Math.min(quizItems.length - 1, currentQuestionIndex + 1);
-        renderQuestion();
-        return;
-      }
 
       let correctAnswers = 0;
       let scoredQuestions = 0;
@@ -377,12 +367,6 @@ if (typeof window.renderMattieQuiz !== "function") {
                        "Needs Improvement. Let's re-study the source material together! 💪 — Engineered by MattieTech";
 
       window.showPerformanceBanner(percentage, feedback);
-    };
-
-    const typesetQuizMath = () => {
-      if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
-        window.MathJax.typesetPromise();
-      }
     };
 
     const renderQuestion = () => {
@@ -448,8 +432,6 @@ if (typeof window.renderMattieQuiz !== "function") {
       container.style.display = 'block';
       container.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-        container.onclick = handleQuizAction;
-
       if (currentItem.type === "mcq") {
         container.querySelectorAll('input[name="quiz-answer"]').forEach((input) => {
           input.addEventListener("change", () => {
@@ -463,6 +445,35 @@ if (typeof window.renderMattieQuiz !== "function") {
             answerStore[currentQuestionIndex] = event.target.value;
           });
         }
+      }
+
+      const prevButton = container.querySelector('#quiz-prev-btn');
+      const nextButton = container.querySelector('#quiz-next-btn');
+      const submitButton = container.querySelector('#submit-mattie-quiz');
+
+      if (prevButton) {
+        prevButton.addEventListener('click', (event) => {
+          event.preventDefault();
+          syncCurrentAnswer();
+          currentQuestionIndex = Math.max(0, currentQuestionIndex - 1);
+          renderQuestion();
+        });
+      }
+
+      if (nextButton) {
+        nextButton.addEventListener('click', (event) => {
+          event.preventDefault();
+          syncCurrentAnswer();
+          currentQuestionIndex = Math.min(quizItems.length - 1, currentQuestionIndex + 1);
+          renderQuestion();
+        });
+      }
+
+      if (submitButton) {
+        submitButton.addEventListener('click', (event) => {
+          event.preventDefault();
+          submitCurrentQuiz();
+        });
       }
 
       typesetQuizMath();
