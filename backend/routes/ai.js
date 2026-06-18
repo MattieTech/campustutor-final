@@ -89,19 +89,15 @@ router.post("/summarize", authMiddleware, async (req, res) => {
 
     const doc = await getDocumentText(documentId, req.user.id);
     const pageCount = doc.page_count || 1;
-    const isLarge = pageCount > 10;
 
     const prompt = `
 You are CampusTutor AI, a premium academic assistant.
 
-Lecture notes from "${doc.file_name}" (${pageCount} pages):
+Lecture notes from "${doc.file_name}":
 ---
 ${doc.extracted_text}
 ---
-
-Requirement: ${isLarge 
-      ? "Generate an extensive, comprehensive deep-dive document layout broken down by textbook-style chapters and subsections. The summary must be massive and thorough, covering every technical detail and conceptual nuance within the document context." 
-      : "Provide a concise, targeted core summary focusing on the absolute essentials and high-level takeaways."}
+Requirement: Generate a tightly packed, core textbook-style overview using high-density markdown headings. Focus on structural hierarchy and conceptual density. Avoid long-form rambling; use precise, technical language and subsection headers to categorize information.
 
 IMPORTANT: Format ALL mathematical expressions using LaTeX ($ for inline, $$ for block).
 
@@ -110,11 +106,8 @@ Format your response like this:
 
 **Main Topic:** [1-sentence overview]
 
-${isLarge ? "### Comprehensive Breakdown" : "**Key Points:**"}
-- [Point 1]
-- [Point 2]
-- [Point 3]
-(Scale output to document depth; use LaTeX for any maths)
+### 📖 Core Technical Overview
+[Use high-density headings (###, ####) and bullet points to break down the material textbook-style. Cover every key technical nuance briefly.]
 
 **Core Takeaway:** [2-3 sentences on what this is really about]
 
@@ -221,23 +214,21 @@ router.post("/questions", authMiddleware, async (req, res) => {
     }
 
     const doc = await getDocumentText(documentId, req.user.id);
-    const pageCount = doc.page_count || 1;
-    const isLarge = pageCount > 10;
 
-    // Dynamic Scaling Volume
-    const mcqCount = isLarge ? "30 to 50" : "5 to 8";
-    const shortCount = isLarge ? "20 to 30" : "3 to 5";
-    const essayCount = isLarge ? "10 to 15" : "2 to 3";
+    // Optimized batch limits for performance and stability
+    const mcqCount = "15";
+    const shortCount = "5";
+    const essayCount = "2";
 
     const prompt = `
-You are CampusTutor AI, a university exam setter creating a massive review pool.
+You are CampusTutor AI, a university exam setter creating a revision quiz pool.
 
 Based on these lecture notes (${pageCount} pages):
 ---
 ${doc.extracted_text}
 ---
 
-Generate a comprehensive revision quiz scaled to the document size.
+Generate a high-yield interactive revision quiz.
 Required Volumes:
 - Multiple Choice Questions (MCQs): ${mcqCount} (Include 4 distinct options A, B, C, D)
 - Short Answer Questions: ${shortCount} (Include detailed grading criteria)
@@ -316,10 +307,9 @@ router.post("/flashcards", authMiddleware, async (req, res) => {
     }
 
     const doc = await getDocumentText(documentId, req.user.id);
-    const pageCount = doc.page_count || 1;
-    const targetCount = pageCount > 10 ? "50 to 100" : "10 to 15";
+    const targetCount = "20"; // Capped for high-yield speed
 
-    const prompt = `Create exactly ${targetCount} high-yield study flashcards from this text covering all complex terminologies. Return ONLY a JSON array - no markdown, no code blocks.
+    const prompt = `Create exactly ${targetCount} high-yield, conceptually dense study flashcards from this text covering all complex terminologies. Return ONLY a JSON array - no markdown, no code blocks.
 
 Text to extract from:
 ---
