@@ -248,10 +248,20 @@ async function runSummarize() {
 async function runQuestions() {
   const btn = document.getElementById('btnQ');
   setBtnLoading(btn, 'Generating questions…');
-  const { data, error } = await apiGenerateQuestions(docId);
+
+  // CRITICAL FIX: Capture full response to handle nested { data: { questions: ... } }
+  const response = await apiGenerateQuestions(docId);
+
   resetBtn(btn, '📝', 'Revision Questions', 'MCQs + essay questions with model answers');
-  if (error) { showToast(error, 'error'); return; }
-  showResult('questions', '📝 Questions', data.questions);
+
+  if (response.error) {
+    showToast(response.error, 'error');
+    return;
+  }
+
+  // Pass response.data to the dispatcher logic
+  showResult('questions', '📝 Questions', response.data);
+
   awardXP(20, 'first_quiz');
   showToast('Questions ready! +20 XP 🌟', 'success');
 }
@@ -299,7 +309,13 @@ function showResult(key, label, content) {
   if (panels[key]) {
     // Tab already exists — just update its content
     const panelEl = document.getElementById('panel-' + key);
-    panelEl.innerHTML = buildResultWithDownload(key, content);
+    
+    // Reset panel and use dispatcher to handle objects (quiz) or strings (summary)
+    panelEl.innerHTML = (key === 'flashcards') ? '' : `
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+        <button class="btn btn-sm btn-primary" onclick="downloadResult('${key}')">⬇️ Download</button>
+      </div>`;
+    renderStudyContent(content, panelEl);
     renderMath(panelEl);
     activateTab(key);
     return;
@@ -326,13 +342,18 @@ function showResult(key, label, content) {
   const panel = document.createElement('div');
   panel.className = 'tab-panel';
   panel.id        = 'panel-' + key;
-  panel.innerHTML = buildResultWithDownload(key, content);
+  
+  panel.innerHTML = (key === 'flashcards') ? '' : `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+      <button class="btn btn-sm btn-primary" onclick="downloadResult('${key}')">⬇️ Download</button>
+    </div>`;
   tc.appendChild(panel);
 
   panels[key] = true;
   activateTab(key);
 
-  // Run KaTeX on the newly created panel
+  // Delegate rendering to the central content dispatcher
+  renderStudyContent(content, panel);
   renderMath(panel);
 
   addSidebarTool(label, key);
