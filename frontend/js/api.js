@@ -263,12 +263,15 @@ function formatDateTime(isoString) {
 function renderStudyContent(data, container) {
   if (!data || !container) return;
 
+  // Ensure the target container is active and visible
+  container.style.display = 'block';
+
   // Check if data.questions exists (nested structure from backend)
   if (data && typeof data === "object" && data.questions) {
     console.log("Rendering nested quiz payload...");
     const quizPayload = data.questions;
     if (typeof renderMattieQuiz === "function") {
-      renderMattieQuiz(quizPayload);
+      renderMattieQuiz(quizPayload, container);
       return;
     }
   }
@@ -277,7 +280,7 @@ function renderStudyContent(data, container) {
   if (typeof data === "object" && (data.mcqs || data.shortAnswer || data.flashcards)) {
     console.log("Rendering structured quiz/flashcard data...");
     if (typeof renderMattieQuiz === "function") {
-      renderMattieQuiz(data);
+      renderMattieQuiz(data, container);
     } else {
       container.innerHTML = `<div class="error">Quiz renderer not found.</div>`;
     }
