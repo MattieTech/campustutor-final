@@ -263,7 +263,17 @@ function formatDateTime(isoString) {
 function renderStudyContent(data, container) {
   if (!data || !container) return;
 
-  // If it's a structured quiz object (MCQs, Short Answers, Essays)
+  // Check if data.questions exists (nested structure from backend)
+  if (data && typeof data === "object" && data.questions) {
+    console.log("Rendering nested quiz payload...");
+    const quizPayload = data.questions;
+    if (typeof renderMattieQuiz === "function") {
+      renderMattieQuiz(quizPayload);
+      return;
+    }
+  }
+
+  // Handle direct structured objects or flashcards
   if (typeof data === "object" && (data.mcqs || data.shortAnswer || data.flashcards)) {
     console.log("Rendering structured quiz/flashcard data...");
     if (typeof renderMattieQuiz === "function") {
