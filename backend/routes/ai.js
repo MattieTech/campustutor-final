@@ -214,6 +214,7 @@ router.post("/questions", authMiddleware, async (req, res) => {
     }
 
     const doc = await getDocumentText(documentId, req.user.id);
+    const pageCount = doc.page_count || 1;
 
     // Optimized batch limits for performance and stability
     const mcqCount = "15";
