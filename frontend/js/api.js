@@ -271,7 +271,10 @@ function renderStudyContent(data, container) {
     console.log("Rendering nested quiz payload...");
     const quizPayload = data.questions;
     if (typeof renderMattieQuiz === "function") {
-      renderMattieQuiz(quizPayload, container);
+      container.innerHTML = ""; // Clear loader text
+      // Force the quiz to render inside the ACTIVE page container passed from study.html
+      window.quizTargetContainer = container; 
+      renderMattieQuiz(quizPayload);
       return;
     }
   }
@@ -280,7 +283,10 @@ function renderStudyContent(data, container) {
   if (typeof data === "object" && (data.mcqs || data.shortAnswer || data.flashcards)) {
     console.log("Rendering structured quiz/flashcard data...");
     if (typeof renderMattieQuiz === "function") {
-      renderMattieQuiz(data, container);
+      container.innerHTML = ""; // Clear loader text
+      // Force the quiz to render inside the ACTIVE page container passed from study.html
+      window.quizTargetContainer = container; 
+      renderMattieQuiz(data);
     } else {
       container.innerHTML = `<div class="error">Quiz renderer not found.</div>`;
     }
