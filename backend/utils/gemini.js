@@ -83,10 +83,22 @@ async function askGemini(prompt) {
   const fullPrompt = `${SYSTEM_PROMPT}\n\n---\n\n${prompt}`;
 
   try {
-    // 1. PRIMARY CORE ATTEMPT: Google Gemini
+    // 1. PRIMARY CORE ATTEMPT: Google Gemini stream mode for large outputs
     console.log("🤖 Attempting Primary Core AI (MattieTech AI Framework)...");
-    const result = await model.generateContent(fullPrompt);
-    return result.response.text();
+    const streamResult = await model.generateContentStream(fullPrompt);
+    let output = "";
+
+    for await (const chunk of streamResult.stream) {
+      const text = chunk?.text ? chunk.text() : "";
+      if (text) output += text;
+    }
+
+    if (!output.trim()) {
+      const fallbackSync = await model.generateContent(fullPrompt);
+      return fallbackSync.response.text();
+    }
+
+    return output;
   } catch (geminiError) {
     console.warn("⚠️ Primary core busy, initiating MattieTech AI Backup Chain:", geminiError.message);
 

@@ -209,8 +209,8 @@ function renderQuizCorrections(reviewData) {
     .replace(/'/g, '&#39;');
 
   const renderAnswerLine = (label, value, tone = 'neutral') => {
-    const background = tone === 'good' ? 'rgba(46,213,115,0.12)' : tone === 'bad' ? 'rgba(255,77,77,0.12)' : 'rgba(0,0,0,0.04)';
-    const color = tone === 'good' ? '#1f8a4c' : tone === 'bad' ? '#d63031' : '#444';
+    const background = tone === 'good' ? 'rgba(46,213,115,0.14)' : tone === 'bad' ? 'rgba(255,77,77,0.14)' : 'rgba(0,0,0,0.04)';
+    const color = tone === 'good' ? '#2ed573' : tone === 'bad' ? '#ff4d4d' : '#444';
     return `<div style="padding:10px 12px;border-radius:14px;background:${background};color:${color};margin-top:8px;"><strong>${label}:</strong> ${value}</div>`;
   };
 
@@ -225,12 +225,12 @@ function renderQuizCorrections(reviewData) {
 
     return `
       <section style="padding:18px;border:1px solid rgba(0,0,0,0.08);border-radius:18px;background:rgba(255,255,255,0.72);box-shadow:0 8px 24px rgba(0,0,0,0.04);display:grid;gap:10px;">
-        <div style="font-weight:800;font-size:0.98rem;line-height:1.5;">${item.prompt || `Question ${index + 1}`}</div>
+        <div style="font-weight:800;font-size:0.98rem;line-height:1.5;">Question ${index + 1}: ${item.prompt || `Question ${index + 1}`}</div>
         <div style="font-size:0.82rem;color:#666;">${isMcq ? 'Multiple Choice' : 'Written Response'}</div>
-        ${isMcq ? renderAnswerLine('Your Answer', escapeHTML(storedValue || 'No answer selected'), storedValue === correctAnswer ? 'good' : 'bad') : renderAnswerLine('Your Response', escapeHTML(storedValue || 'No response submitted'), storedValue ? 'neutral' : 'bad')}
+        ${isMcq ? renderAnswerLine('Your Answer', escapeHTML(storedValue || 'No answer selected'), selectedTone) : renderAnswerLine('Your Response', escapeHTML(storedValue || 'No response submitted'), storedValue ? 'neutral' : 'bad')}
         ${renderAnswerLine('Correct Answer', escapeHTML(correctAnswer || 'N/A'), 'good')}
         <div style="padding:12px 14px;border-radius:14px;background:rgba(0,0,0,0.03);color:#333;line-height:1.6;">
-          <strong>Explanation:</strong> ${escapeHTML(explanation)}
+          <strong>Step-by-step Explanation:</strong> ${escapeHTML(explanation)}
         </div>
       </section>
     `;
@@ -406,8 +406,8 @@ window.showPerformanceBanner = function(score, message) {
   const scoreColor = badge === "perf-high" ? "#2ed573" : badge === "perf-mid" ? "#ff9f43" : "#ff4d4d";
   const modalHTML = `
     <div class="performance-modal-overlay result-anim ${badge}" style="background:rgba(15,23,42,0.18);backdrop-filter:blur(16px);padding:24px;">
-      <div class="performance-card card liquid-glass-card ${badge}" style="background:rgba(255,255,255,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.05);color:#333;min-height:350px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:48px 32px;max-width:820px;width:min(92vw,820px);">
-        <div class="card-body" style="width:100%;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:0;">
+      <div class="performance-card card liquid-glass-card ${badge}" style="background:rgba(255,255,255,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.05);color:#333;min-height:350px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:18px;padding:48px 32px;max-width:820px;width:min(92vw,820px);">
+        <div class="card-body" style="width:100%;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:18px;padding:0;min-height:350px;">
           <div class="score-circle ${badge}" style="background:transparent;color:${scoreColor};box-shadow:none;border:2px solid ${scoreColor};display:flex;align-items:center;justify-content:center;min-width:112px;min-height:112px;">${score}%</div>
           <h2 style="font-weight:900;font-size:1.7rem;margin:0;color:${scoreColor};">Evaluation Complete</h2>
           <p style="font-size:1.08rem;line-height:1.7;color:#333;margin:0;max-width:680px;">${message}</p>
@@ -655,6 +655,7 @@ if (typeof window.renderMattieQuiz !== "function") {
           event.preventDefault();
           container.style.display = 'none';
           container.innerHTML = '';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
           submitCurrentQuiz();
         });
       }

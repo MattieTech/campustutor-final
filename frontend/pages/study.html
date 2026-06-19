@@ -549,7 +549,12 @@ function ensureResultsArea() {
 
 function activateTab(key) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.remove('active');
+    p.style.display = 'none';
+    p.style.visibility = 'hidden';
+    p.style.opacity = '0';
+  });
 
   const tabEl   = document.getElementById('tab-' + key);
   const panelEl = document.getElementById('panel-' + key);

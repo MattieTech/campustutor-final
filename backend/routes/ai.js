@@ -76,35 +76,215 @@ Use simple English. Assume the reader is a first-year university student.
     `.trim();
 }
 
-function buildQuestionsPrompt(doc, pageCount) {
-  let mcqCount = "15";
-  let shortCount = "3";
-  let essayCount = "0";
+function estimateDocumentPages(doc) {
+  const explicitPages = Number(doc.page_count || 0);
+  if (explicitPages > 0) return explicitPages;
+  const textLength = (doc.extracted_text || "").length;
+  return Math.max(1, Math.ceil(textLength / 3500));
+}
 
-  if (pageCount > 5 && pageCount <= 15) {
-    mcqCount = "30";
-    shortCount = "5";
-    essayCount = "0";
-  } else if (pageCount > 15) {
-    mcqCount = "40";
-    shortCount = "8";
-    essayCount = "2";
+function splitDocumentIntoChunks(doc, chunkPageSpan = 5) {
+  const text = (doc.extracted_text || "").trim();
+  if (!text) {
+    return [{ index: 0, rangeLabel: "Pages 1-1", text: "" }];
   }
 
+  const estimatedPages = estimateDocumentPages(doc);
+  const markerRegex = /(\n|^)(?:\s*page\s+)(\d+)(?::|-)?/gi;
+  const markerMatches = [...text.matchAll(markerRegex)];
+
+  if (markerMatches.length >= 3) {
+    const pageSections = [];
+    for (let i = 0; i < markerMatches.length; i++) {
+      const currentMatch = markerMatches[i];
+      const nextMatch = markerMatches[i + 1];
+      const pageNumber = Number(currentMatch[2]);
+      const sectionStart = currentMatch.index || 0;
+      const sectionEnd = nextMatch ? (nextMatch.index || text.length) : text.length;
+      pageSections.push({
+        pageNumber,
+        text: text.substring(sectionStart, sectionEnd).trim(),
+      });
+    }
+
+    const grouped = [];
+    for (let i = 0; i < pageSections.length; i += chunkPageSpan) {
+      const subset = pageSections.slice(i, i + chunkPageSpan);
+      const firstPage = subset[0]?.pageNumber || 1;
+      const lastPage = subset[subset.length - 1]?.pageNumber || firstPage;
+      grouped.push({
+        index: grouped.length,
+        rangeLabel: `Pages ${firstPage}-${lastPage}`,
+        text: subset.map((s) => s.text).join("\n\n").trim(),
+      });
+    }
+
+    return grouped.filter((chunk) => chunk.text.length > 0);
+  }
+
+  const maxCharsPerPage = 3200;
+  const estimatedTotalCharsPerChunk = Math.max(7000, chunkPageSpan * maxCharsPerPage);
+  const chunks = [];
+
+  for (let cursor = 0; cursor < text.length; cursor += estimatedTotalCharsPerChunk) {
+    const rawSlice = text.substring(cursor, cursor + estimatedTotalCharsPerChunk);
+    const pageStart = Math.floor(cursor / maxCharsPerPage) + 1;
+    const pageEnd = Math.min(
+      estimatedPages,
+      Math.max(pageStart, Math.ceil((cursor + rawSlice.length) / maxCharsPerPage))
+    );
+    chunks.push({
+      index: chunks.length,
+      rangeLabel: `Pages ${pageStart}-${pageEnd}`,
+      text: rawSlice.trim(),
+    });
+  }
+
+  return chunks.filter((chunk) => chunk.text.length > 0);
+}
+
+function calculateQuestionTargets(doc) {
+  const pages = estimateDocumentPages(doc);
+  const textLength = (doc.extracted_text || "").length;
+
+  if (pages >= 25 || textLength >= 90000) {
+    return { mcqCount: 30, shortCount: 15, essayCount: 5 };
+  }
+  if (pages >= 14 || textLength >= 50000) {
+    return { mcqCount: 24, shortCount: 10, essayCount: 4 };
+  }
+  if (pages >= 7 || textLength >= 23000) {
+    return { mcqCount: 18, shortCount: 7, essayCount: 2 };
+  }
+
+  return { mcqCount: 12, shortCount: 4, essayCount: 1 };
+}
+
+function calculateFlashcardTarget(doc) {
+  const pages = estimateDocumentPages(doc);
+  const textLength = (doc.extracted_text || "").length;
+
+  if (pages >= 25 || textLength >= 90000) return 60;
+  if (pages >= 14 || textLength >= 50000) return 50;
+  if (pages >= 7 || textLength >= 23000) return 40;
+  return 25;
+}
+
+function safeExtractJSON(rawResponse) {
+  const cleaned = String(rawResponse || "")
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
+
+  const objectStart = cleaned.indexOf("{");
+  const objectEnd = cleaned.lastIndexOf("}");
+  const arrayStart = cleaned.indexOf("[");
+  const arrayEnd = cleaned.lastIndexOf("]");
+
+  const canUseObject = objectStart !== -1 && objectEnd > objectStart;
+  const canUseArray = arrayStart !== -1 && arrayEnd > arrayStart;
+
+  if (!canUseObject && !canUseArray) {
+    throw new Error("No JSON object or array found in model response.");
+  }
+
+  if (canUseObject && (!canUseArray || objectStart < arrayStart)) {
+    return JSON.parse(cleaned.substring(objectStart, objectEnd + 1));
+  }
+
+  return JSON.parse(cleaned.substring(arrayStart, arrayEnd + 1));
+}
+
+function dedupeByQuestion(items = []) {
+  const seen = new Set();
+  return items.filter((entry) => {
+    const key = String(entry?.question || "").trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function dedupeByFront(items = []) {
+  const seen = new Set();
+  return items.filter((entry) => {
+    const key = String(entry?.front || "").trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function buildChunkSummaryPrompt(doc, chunk, index, totalChunks) {
+  return `
+You are CampusTutor AI, a premium academic assistant.
+
+You are processing chunk ${index + 1} of ${totalChunks} from "${doc.file_name}".
+Source range: ${chunk.rangeLabel}
+
+Lecture chunk:
+---
+${chunk.text}
+---
+
+Generate a precise technical summary for this chunk only.
+Use compact structure with headings and bullet points.
+IMPORTANT: Format all mathematical expressions using LaTeX ($ for inline, $$ for block).
+
+Output markdown only.
+  `.trim();
+}
+
+function buildFinalSummaryPrompt(doc, partialSummaries) {
+  return `
+You are CampusTutor AI, a premium academic assistant.
+
+You are given chunk-level summaries for "${doc.file_name}".
+Combine them into one comprehensive textbook-grade summary.
+
+Chunk summaries:
+---
+${partialSummaries.join("\n\n---\n\n")}
+---
+
+Output format:
+## 📋 Summary of "${doc.file_name}"
+
+**Main Topic:** [1-sentence overview]
+
+### 📖 Core Technical Overview
+[Use compact technical sections and bullets. Preserve full conceptual coverage.]
+
+### 🧠 Concept Relationships
+[Show how major ideas connect across the document.]
+
+### 🎯 Exam-Focused Takeaways
+[High-yield revision points likely to be tested.]
+
+**Core Takeaway:** [2-3 sentences]
+
+IMPORTANT: Format all mathematical expressions using LaTeX ($ for inline, $$ for block).
+Keep language clear for first-year students.
+  `.trim();
+}
+
+function buildQuestionsPrompt(chunk, allocation, contextMeta) {
   const prompt = `
 You are CampusTutor AI, a university exam setter creating a revision quiz pool.
 
-Based on these lecture notes (${pageCount} pages):
+Document context: "${contextMeta.fileName}" | ${chunk.rangeLabel} | chunk ${contextMeta.chunkIndex + 1} of ${contextMeta.totalChunks}
+
+Based on these lecture notes:
 ---
-${doc.extracted_text}
+${chunk.text}
 ---
 
 Generate a high-yield interactive revision quiz.
 Ensure your questions are selected randomly from different sections of the text context so that subsequent attempts yield fresh variations.
 Required Volumes:
-- Multiple Choice Questions (MCQs): ${mcqCount} (Include 4 distinct options A, B, C, D)
-- Short Answer Questions: ${shortCount} (Include detailed grading criteria)
-- Essay Questions: ${essayCount} (Broad synthesis questions)
+- Multiple Choice Questions (MCQs): ${allocation.mcqCount} (Include 4 distinct options A, B, C, D)
+- Short Answer Questions: ${allocation.shortCount} (Include detailed grading criteria)
+- Essay Questions: ${allocation.essayCount} (Broad synthesis questions)
 
 IMPORTANT: Format ALL mathematical expressions using LaTeX ($ for inline, $$ for block).
 
@@ -134,16 +314,17 @@ JSON Structure:
   ]
 }`.trim();
 
-  return { prompt, mcqCount, shortCount, essayCount };
+  return { prompt };
 }
 
-function buildFlashcardsPrompt(doc) {
-  const targetCount = "20";
+function buildFlashcardsPrompt(chunk, targetCount, contextMeta) {
   const prompt = `Create exactly ${targetCount} high-yield, conceptually dense study flashcards from this text covering all complex terminologies. Return ONLY a JSON array - no markdown, no code blocks.
+
+Document context: "${contextMeta.fileName}" | ${chunk.rangeLabel} | chunk ${contextMeta.chunkIndex + 1} of ${contextMeta.totalChunks}
 
 Text to extract from:
 ---
-${doc.extracted_text}
+${chunk.text}
 ---
 
 Return valid JSON array ONLY (start with [ end with ]):
@@ -166,8 +347,20 @@ Generate:`.trim();
 async function generateSummaryForDocument(documentId, userId, options = {}) {
   const { persist = true, log = true, award = true } = options;
   const doc = await getDocumentText(documentId, userId);
-  const prompt = buildSummaryPrompt(doc);
-  const summary = await askGemini(prompt);
+  const chunks = splitDocumentIntoChunks(doc, 5);
+
+  const partialSummaries = [];
+  for (let i = 0; i < chunks.length; i++) {
+    const chunkPrompt = buildChunkSummaryPrompt(doc, chunks[i], i, chunks.length);
+    const partial = await askGemini(chunkPrompt);
+    partialSummaries.push(`### ${chunks[i].rangeLabel}\n${partial}`);
+  }
+
+  const finalPrompt =
+    partialSummaries.length > 1
+      ? buildFinalSummaryPrompt(doc, partialSummaries)
+      : buildSummaryPrompt({ ...doc, extracted_text: chunks[0]?.text || doc.extracted_text });
+  const summary = await askGemini(finalPrompt);
 
   if (persist) {
     await saveAIResult(documentId, userId, "summary", summary);
@@ -192,20 +385,57 @@ async function generateSummaryForDocument(documentId, userId, options = {}) {
 async function generateQuestionsForDocument(documentId, userId, options = {}) {
   const { persist = true, log = true, award = true } = options;
   const doc = await getDocumentText(documentId, userId);
-  const pageCount = doc.page_count || 1;
-  const { prompt, mcqCount, shortCount, essayCount } = buildQuestionsPrompt(doc, pageCount);
-  const rawResponse = await askGemini(prompt);
+  const targets = calculateQuestionTargets(doc);
+  const chunks = splitDocumentIntoChunks(doc, 5);
 
-  let questionsData;
-  try {
-    const cleaned = rawResponse.replace(/```[\s\S]*?```/g, "").replace(/^```/gm, "").trim();
-    const startIdx = cleaned.indexOf('{');
-    const endIdx = cleaned.lastIndexOf('}');
+  const perChunkAllocation = chunks.map((_, index) => {
+    const chunkCount = chunks.length;
+    const alloc = {
+      mcqCount: Math.floor(targets.mcqCount / chunkCount),
+      shortCount: Math.floor(targets.shortCount / chunkCount),
+      essayCount: Math.floor(targets.essayCount / chunkCount),
+    };
 
-    if (startIdx === -1 || endIdx === -1) throw new Error("No JSON found");
-    questionsData = JSON.parse(cleaned.substring(startIdx, endIdx + 1));
-  } catch (parseErr) {
-    console.error("❌ Questions parsing error:", parseErr.message);
+    if (index < targets.mcqCount % chunkCount) alloc.mcqCount += 1;
+    if (index < targets.shortCount % chunkCount) alloc.shortCount += 1;
+    if (index < targets.essayCount % chunkCount) alloc.essayCount += 1;
+
+    return alloc;
+  });
+
+  const merged = { mcqs: [], shortAnswer: [], essays: [] };
+
+  for (let i = 0; i < chunks.length; i++) {
+    const allocation = perChunkAllocation[i];
+    if (allocation.mcqCount + allocation.shortCount + allocation.essayCount <= 0) continue;
+
+    const { prompt } = buildQuestionsPrompt(chunks[i], allocation, {
+      fileName: doc.file_name,
+      chunkIndex: i,
+      totalChunks: chunks.length,
+    });
+
+    const rawResponse = await askGemini(prompt);
+    let chunkData;
+    try {
+      chunkData = safeExtractJSON(rawResponse);
+    } catch (parseErr) {
+      console.error("❌ Questions parsing error for chunk", i + 1, parseErr.message);
+      continue;
+    }
+
+    merged.mcqs.push(...(Array.isArray(chunkData.mcqs) ? chunkData.mcqs : []));
+    merged.shortAnswer.push(...(Array.isArray(chunkData.shortAnswer) ? chunkData.shortAnswer : []));
+    merged.essays.push(...(Array.isArray(chunkData.essays) ? chunkData.essays : []));
+  }
+
+  const questionsData = {
+    mcqs: dedupeByQuestion(merged.mcqs).slice(0, targets.mcqCount),
+    shortAnswer: dedupeByQuestion(merged.shortAnswer).slice(0, targets.shortCount),
+    essays: dedupeByQuestion(merged.essays).slice(0, targets.essayCount),
+  };
+
+  if (!questionsData.mcqs.length && !questionsData.shortAnswer.length && !questionsData.essays.length) {
     throw new Error("Failed to generate structured quiz data.");
   }
 
@@ -214,7 +444,11 @@ async function generateQuestionsForDocument(documentId, userId, options = {}) {
   }
 
   if (log) {
-    await logUserActivity(userId, "ai_questions", `Generated ${mcqCount} MCQs and ${shortCount} Short Answer questions | Document: "${doc.file_name}"`);
+    await logUserActivity(
+      userId,
+      "ai_questions",
+      `Generated ${questionsData.mcqs.length} MCQs, ${questionsData.shortAnswer.length} short answers, ${questionsData.essays.length} essays | Document: "${doc.file_name}"`
+    );
   }
 
   if (award) {
@@ -233,35 +467,47 @@ async function generateQuestionsForDocument(documentId, userId, options = {}) {
 async function generateFlashcardsForDocument(documentId, userId, options = {}) {
   const { persist = true, log = true, award = true } = options;
   const doc = await getDocumentText(documentId, userId);
-  const { prompt } = buildFlashcardsPrompt(doc);
-  const rawResponse = await askGemini(prompt);
+  const targetCount = calculateFlashcardTarget(doc);
+  const chunks = splitDocumentIntoChunks(doc, 5);
+  const perChunkTargets = chunks.map((_, index) => {
+    const base = Math.floor(targetCount / chunks.length);
+    return base + (index < targetCount % chunks.length ? 1 : 0);
+  });
 
-  let flashcards;
-  try {
-    let cleaned = rawResponse.replace(/```[\s\S]*?```/g, "").replace(/^```/gm, "").trim();
-    const startIdx = cleaned.indexOf('[');
-    const endIdx = cleaned.lastIndexOf(']');
+  const mergedCards = [];
 
-    if (startIdx === -1 || endIdx === -1) {
-      throw new Error("No JSON array found");
+  for (let i = 0; i < chunks.length; i++) {
+    const chunkTarget = perChunkTargets[i];
+    if (!chunkTarget) continue;
+
+    const { prompt } = buildFlashcardsPrompt(chunks[i], chunkTarget, {
+      fileName: doc.file_name,
+      chunkIndex: i,
+      totalChunks: chunks.length,
+    });
+
+    const rawResponse = await askGemini(prompt);
+    try {
+      const parsed = safeExtractJSON(rawResponse);
+      if (Array.isArray(parsed)) {
+        mergedCards.push(...parsed);
+      }
+    } catch (parseErr) {
+      console.error("❌ Flashcards parsing error for chunk", i + 1, parseErr.message);
+      continue;
     }
+  }
 
-    const jsonString = cleaned.substring(startIdx, endIdx + 1);
-    flashcards = JSON.parse(jsonString);
-
-    if (!Array.isArray(flashcards) || flashcards.length === 0) {
-      throw new Error("Empty or invalid array");
-    }
-
-    flashcards = flashcards.map((card, idx) => ({
-      id: card.id || idx + 1,
-      front: String(card.front || "").trim().substring(0, 200),
-      back: String(card.back || "").trim().substring(0, 500),
+  let flashcards = dedupeByFront(mergedCards)
+    .slice(0, targetCount)
+    .map((card, idx) => ({
+      id: idx + 1,
+      front: String(card.front || "").trim().substring(0, 220),
+      back: String(card.back || "").trim().substring(0, 520),
       category: String(card.category || "General").trim(),
     }));
-  } catch (parseErr) {
-    console.error("❌ Flashcards error:", parseErr.message);
-    console.error("Response preview:", rawResponse.substring(0, 400));
+
+  if (!flashcards.length) {
     throw new Error("Could not parse flashcards. Please try again with a different document.");
   }
 
