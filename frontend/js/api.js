@@ -757,6 +757,7 @@ function markdownToHTML(text) {
     .replace(/^### (.+)$/gm, "<h3>$1</h3>")
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/`([^`\n]+)`/g, "<code>$1</code>")
     .replace(/^- (.+)$/gm, "<li>$1</li>")
     .replace(/(<li>.*<\/li>\n?)+/g, "<ul>$&</ul>")
     .replace(/\n\n/g, "</p><p>")
