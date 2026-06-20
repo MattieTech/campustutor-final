@@ -112,20 +112,23 @@
       </div>
     </div>
 
-    <!-- Quiz Size Selector -->
-    <div class="card liquid-glass-card" style="margin-bottom:22px; padding:20px; border-radius:24px;">
+    <!-- Quiz Size Selector (Initially Hidden) -->
+    <div id="quizSizeSelectContainer" class="card liquid-glass-card result-anim" style="display:none; margin-bottom:22px; padding:20px; border-radius:24px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.06); backdrop-filter:blur(10px);">
       <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
         <div>
-          <div style="font-weight:800; font-size:1rem; margin-bottom:4px; color:var(--label);">🎯 Customize Revision Quiz Size</div>
-          <div style="font-size:0.85rem; color:var(--label3);">Select question volume and recommended waiting time</div>
+          <div style="font-weight:800; font-size:1.1rem; margin-bottom:4px; color:var(--label);">🎯 Choose Quiz Volume & Wait Time</div>
+          <div style="font-size:0.85rem; color:var(--label3);">Pick the number of questions to generate. Large pools take longer.</div>
         </div>
-        <select id="quizSizeSelect" class="form-input" style="max-width:280px; width:100%; border-radius:12px; background:rgba(255,255,255,0.05); color:inherit; border:1px solid rgba(255,255,255,0.15); padding:10px;">
-          <option value="10" selected>10 Questions (8 MCQ, 2 Essay) - ~30s</option>
-          <option value="20">20 Questions - ~1m wait time</option>
-          <option value="30">30 Questions - ~1.5m wait time</option>
-          <option value="40">40 Questions - ~2m wait time</option>
-          <option value="50">50 Questions - ~2.5m wait time</option>
-        </select>
+        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+          <select id="quizSizeSelect" class="form-input" style="max-width:240px; border-radius:12px; background:rgba(255,255,255,0.05); color:inherit; border:1px solid rgba(255,255,255,0.15); padding:10px;">
+            <option value="10" selected>10 Questions (8 MCQ, 2 Essay) - ~30s</option>
+            <option value="20">20 Questions - ~1m wait time</option>
+            <option value="30">30 Questions - ~1.5m wait time</option>
+            <option value="40">40 Questions - ~2m wait time</option>
+            <option value="50">50 Questions - ~2.5m wait time</option>
+          </select>
+          <button id="btnConfirmQ" class="btn btn-primary" onclick="triggerQuestionGeneration()" style="border-radius:12px; padding:10px 20px;">Generate Quiz 🚀</button>
+        </div>
       </div>
     </div>
 
@@ -316,7 +319,23 @@ async function runSummarize() {
   showToast('Summary ready! +15 XP 🌟', 'success');
 }
 
-async function runQuestions() {
+function runQuestions() {
+  const container = document.getElementById('quizSizeSelectContainer');
+  if (container) {
+    if (container.style.display === 'none') {
+      container.style.display = 'block';
+      container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      showToast('Select quiz size above the action cards 🎯', 'info');
+    } else {
+      container.style.display = 'none';
+    }
+  }
+}
+
+async function triggerQuestionGeneration() {
+  const container = document.getElementById('quizSizeSelectContainer');
+  if (container) container.style.display = 'none';
+
   const btn = document.getElementById('btnQ');
   const quizSize = Number(document.getElementById('quizSizeSelect')?.value || 10);
   
@@ -326,7 +345,7 @@ async function runQuestions() {
   else if (quizSize === 20) { waitText = "Generating (1m)..."; waitTimeLabel = "1 minute"; }
   else if (quizSize === 30) { waitText = "Generating (1.5m)..."; waitTimeLabel = "1.5 minutes"; }
   else if (quizSize === 40) { waitText = "Generating (2m)..."; waitTimeLabel = "2 minutes"; }
-  else if (quizSize === 55 || quizSize === 50) { waitText = "Generating (2.5m)..."; waitTimeLabel = "2.5 minutes"; }
+  else if (quizSize === 50) { waitText = "Generating (2.5m)..."; waitTimeLabel = "2.5 minutes"; }
 
   setBtnLoading(btn, waitText);
   
