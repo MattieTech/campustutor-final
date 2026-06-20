@@ -350,12 +350,12 @@ async function generateSummaryForDocument(documentId, userId, options = {}) {
   const doc = await getDocumentText(documentId, userId);
   const chunks = splitDocumentIntoChunks(doc, 5);
 
-  const partialSummaries = [];
-  for (let i = 0; i < chunks.length; i++) {
-    const chunkPrompt = buildChunkSummaryPrompt(doc, chunks[i], i, chunks.length);
+  const partialSummaryPromises = chunks.map(async (chunk, i) => {
+    const chunkPrompt = buildChunkSummaryPrompt(doc, chunk, i, chunks.length);
     const partial = await askGemini(chunkPrompt);
-    partialSummaries.push(`### ${chunks[i].rangeLabel}\n${partial}`);
-  }
+    return `### ${chunk.rangeLabel}\n${partial}`;
+  });
+  const partialSummaries = await Promise.all(partialSummaryPromises);
 
   const finalPrompt =
     partialSummaries.length > 1
@@ -406,29 +406,32 @@ async function generateQuestionsForDocument(documentId, userId, options = {}) {
 
   const merged = { mcqs: [], shortAnswer: [], essays: [] };
 
-  for (let i = 0; i < chunks.length; i++) {
+  const promises = chunks.map(async (chunk, i) => {
     const allocation = perChunkAllocation[i];
-    if (allocation.mcqCount + allocation.shortCount + allocation.essayCount <= 0) continue;
+    if (allocation.mcqCount + allocation.shortCount + allocation.essayCount <= 0) return null;
 
-    const { prompt } = buildQuestionsPrompt(chunks[i], allocation, {
+    const { prompt } = buildQuestionsPrompt(chunk, allocation, {
       fileName: doc.file_name,
       chunkIndex: i,
       totalChunks: chunks.length,
     });
 
-    const rawResponse = await askGemini(prompt);
-    let chunkData;
     try {
-      chunkData = safeExtractJSON(rawResponse);
+      const rawResponse = await askGemini(prompt);
+      return safeExtractJSON(rawResponse);
     } catch (parseErr) {
       console.error("❌ Questions parsing error for chunk", i + 1, parseErr.message);
-      continue;
+      return null;
     }
+  });
 
+  const results = await Promise.all(promises);
+  results.forEach((chunkData) => {
+    if (!chunkData) return;
     merged.mcqs.push(...(Array.isArray(chunkData.mcqs) ? chunkData.mcqs : []));
     merged.shortAnswer.push(...(Array.isArray(chunkData.shortAnswer) ? chunkData.shortAnswer : []));
     merged.essays.push(...(Array.isArray(chunkData.essays) ? chunkData.essays : []));
-  }
+  });
 
   const questionsData = {
     mcqs: dedupeByQuestion(merged.mcqs).slice(0, targets.mcqCount),
@@ -477,27 +480,31 @@ async function generateFlashcardsForDocument(documentId, userId, options = {}) {
 
   const mergedCards = [];
 
-  for (let i = 0; i < chunks.length; i++) {
+  const promises = chunks.map(async (chunk, i) => {
     const chunkTarget = perChunkTargets[i];
-    if (!chunkTarget) continue;
+    if (!chunkTarget) return null;
 
-    const { prompt } = buildFlashcardsPrompt(chunks[i], chunkTarget, {
+    const { prompt } = buildFlashcardsPrompt(chunk, chunkTarget, {
       fileName: doc.file_name,
       chunkIndex: i,
       totalChunks: chunks.length,
     });
 
-    const rawResponse = await askGemini(prompt);
     try {
-      const parsed = safeExtractJSON(rawResponse);
-      if (Array.isArray(parsed)) {
-        mergedCards.push(...parsed);
-      }
+      const rawResponse = await askGemini(prompt);
+      return safeExtractJSON(rawResponse);
     } catch (parseErr) {
       console.error("❌ Flashcards parsing error for chunk", i + 1, parseErr.message);
-      continue;
+      return null;
     }
-  }
+  });
+
+  const results = await Promise.all(promises);
+  results.forEach((parsed) => {
+    if (Array.isArray(parsed)) {
+      mergedCards.push(...parsed);
+    }
+  });
 
   let flashcards = dedupeByFront(mergedCards)
     .slice(0, targetCount)

@@ -41,6 +41,12 @@
 .result-anim { animation: fadeUp 0.35s ease; }
 @keyframes fadeUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 
+/* ── spinner animation ── */
+@keyframes ctSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* ── explain row ── */
 .explain-row { display:flex; gap:10px; }
 @media(max-width:560px) { .explain-row { flex-direction:column; } }
@@ -255,22 +261,6 @@ async function loadSavedResults() {
   if (r.flashcards) showFlashcards(r.flashcards);
 }
 
-async function waitForCachedResult(key, timeoutMs = 120000, intervalMs = 4000) {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    const cached = getCachedAIResults(docId);
-    if (cached && cached[key]) {
-      return cached[key];
-    }
-    const { data } = await fetchAndCacheAIResults(docId, { forceRefresh: true });
-    if (data?.results?.[key]) {
-      return data.results[key];
-    }
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
-  }
-  return null;
-}
-
 function showLoaderResult(key, label, loaderHTML) {
   showResult(key, label, { __html: loaderHTML });
 }
@@ -280,7 +270,13 @@ function showLoaderResult(key, label, loaderHTML) {
 async function runSummarize() {
   const btn = document.getElementById('btnSum');
   setBtnLoading(btn, 'Summarizing…');
-  const cached = getCachedAIResults(docId);
+  
+  let cached = getCachedAIResults(docId);
+  if (!cached?.summary) {
+    const { data } = await fetchAndCacheAIResults(docId);
+    if (data?.results) cached = data.results;
+  }
+
   if (cached?.summary) {
     resetBtn(btn, '📋', 'Summarize Notes', 'Get a clean overview of all key points');
     showResult('summary', '📋 Summary', cached.summary);
@@ -290,23 +286,29 @@ async function runSummarize() {
   }
 
   showLoaderResult('summary', '📋 Summary', buildPolishingLoaderHTML());
-  const summary = await waitForCachedResult('summary');
+  const { data, error } = await apiSummarize(docId);
   resetBtn(btn, '📋', 'Summarize Notes', 'Get a clean overview of all key points');
-  if (summary) {
-    showResult('summary', '📋 Summary', summary);
-  } else {
-    const { data, error } = await apiSummarize(docId);
-    if (error) { showToast(error, 'error'); return; }
-    showResult('summary', '📋 Summary', data.summary);
+  if (error) { 
+    showToast(error, 'error');
+    const panelEl = document.getElementById('panel-summary');
+    if (panelEl) panelEl.innerHTML = '';
+    return; 
   }
+  showResult('summary', '📋 Summary', data.summary);
   awardXP(15, 'first_summary');
   showToast('Summary ready! +15 XP 🌟', 'success');
 }
 
 async function runQuestions() {
   const btn = document.getElementById('btnQ');
-  setBtnLoading(btn, '🔄 Generating Questions... Please wait 1-2 minutes.');
-  const cached = getCachedAIResults(docId);
+  setBtnLoading(btn, 'Generating Questions...');
+  
+  let cached = getCachedAIResults(docId);
+  if (!cached?.questions) {
+    const { data } = await fetchAndCacheAIResults(docId);
+    if (data?.results) cached = data.results;
+  }
+
   if (cached?.questions) {
     resetBtn(btn, '📝', 'Revision Questions', 'MCQs + essay questions with model answers');
     showResult('questions', '📝 Questions', { questions: cached.questions });
@@ -316,28 +318,29 @@ async function runQuestions() {
   }
 
   showLoaderResult('questions', '📝 Questions', buildQuizGenerationLoaderHTML());
-  const cachedQuestions = await waitForCachedResult('questions');
+  const response = await apiGenerateQuestions(docId);
   resetBtn(btn, '📝', 'Revision Questions', 'MCQs + essay questions with model answers');
-  if (cachedQuestions) {
-    showResult('questions', '📝 Questions', { questions: cachedQuestions });
-  } else {
-    // CRITICAL FIX: Capture full response to handle nested { data: { questions: ... } }
-    const response = await apiGenerateQuestions(docId);
-    if (response.error) {
-      showToast(response.error, 'error');
-      return;
-    }
-    showResult('questions', '📝 Questions', response.data);
+  if (response.error) {
+    showToast(response.error, 'error');
+    const panelEl = document.getElementById('panel-questions');
+    if (panelEl) panelEl.innerHTML = '';
+    return;
   }
-
+  showResult('questions', '📝 Questions', response.data);
   awardXP(20, 'first_quiz');
   showToast('Questions ready! +20 XP 🌟', 'success');
 }
 
 async function runFlashcards() {
   const btn = document.getElementById('btnFlash');
-  setBtnLoading(btn, 'CampusTutor AI is polishing your study assets in the background. Ready in just a few seconds...');
-  const cached = getCachedAIResults(docId);
+  setBtnLoading(btn, 'Creating Flashcards...');
+  
+  let cached = getCachedAIResults(docId);
+  if (!cached?.flashcards) {
+    const { data } = await fetchAndCacheAIResults(docId);
+    if (data?.results) cached = data.results;
+  }
+
   if (cached?.flashcards) {
     resetBtn(btn, '🃏', 'Create Flashcards', 'Interactive flip-card study set');
     showFlashcards(cached.flashcards);
@@ -347,15 +350,15 @@ async function runFlashcards() {
   }
 
   showLoaderResult('flashcards', '🃏 Flashcards', buildPolishingLoaderHTML());
-  const flashcards = await waitForCachedResult('flashcards');
+  const { data, error } = await apiGenerateFlashcards(docId);
   resetBtn(btn, '🃏', 'Create Flashcards', 'Interactive flip-card study set');
-  if (flashcards) {
-    showFlashcards(flashcards);
-  } else {
-    const { data, error } = await apiGenerateFlashcards(docId);
-    if (error) { showToast(error, 'error'); return; }
-    showFlashcards(data.flashcards);
+  if (error) { 
+    showToast(error, 'error');
+    const panelEl = document.getElementById('panel-flashcards');
+    if (panelEl) panelEl.innerHTML = '';
+    return; 
   }
+  showFlashcards(data.flashcards);
   awardXP(15, 'first_flash');
   showToast('Flashcards ready! +15 XP 🌟', 'success');
 }
