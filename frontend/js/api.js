@@ -403,21 +403,21 @@ async function regenerateFreshQuiz() {
 
 window.showPerformanceBanner = function(score, message) {
   const badge = score >= 70 ? "perf-high" : score >= 40 ? "perf-mid" : "perf-low";
-  const scoreColor = badge === "perf-high" ? "#2ed573" : badge === "perf-mid" ? "#ff9f43" : "#ff4d4d";
+  const scoreColor = score >= 70 ? "#2ed573" : score >= 40 ? "#ff9f43" : "#ff4d4d";
   const modalHTML = `
-    <div class="performance-modal-overlay result-anim ${badge}" style="background:rgba(15,23,42,0.18);backdrop-filter:blur(16px);padding:24px;">
-      <div class="performance-card card liquid-glass-card ${badge}" style="background:rgba(255,255,255,0.7);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.05);color:#333;min-height:350px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:18px;padding:48px 32px;max-width:820px;width:min(92vw,820px);">
-        <div class="card-body" style="width:100%;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:18px;padding:0;min-height:350px;">
-          <div class="score-circle ${badge}" style="background:transparent;color:${scoreColor};box-shadow:none;border:2px solid ${scoreColor};display:flex;align-items:center;justify-content:center;min-width:112px;min-height:112px;">${score}%</div>
-          <h2 style="font-weight:900;font-size:1.7rem;margin:0;color:${scoreColor};">Evaluation Complete</h2>
-          <p style="font-size:1.08rem;line-height:1.7;color:#333;margin:0;max-width:680px;">${message}</p>
-          <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
-            <button type="button" onclick="this.closest('.performance-modal-overlay').remove()" class="btn btn-primary btn-lg">Continue Learning</button>
-            <button type="button" id="mattie-review-answers-btn" class="btn btn-info">🔍 Review Corrections</button>
-            <button type="button" id="mattie-refresh-quiz-btn" class="btn btn-secondary">🔄 Generate Fresh Quiz</button>
+    <div class="performance-modal-overlay result-anim" style="position:fixed; top:0; left:0; width:100vw; height:100vh; display:flex; align-items:center; justify-content:center; z-index:10000; background:rgba(15,23,42,0.4); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); padding:24px; box-sizing:border-box;">
+      <div class="performance-card card liquid-glass-card" style="background:rgba(255,255,255,0.7); backdrop-filter:blur(25px); -webkit-backdrop-filter:blur(25px); border:1px solid rgba(255,255,255,0.4); box-shadow:0 20px 50px rgba(0,0,0,0.1); color:#1e293b; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; padding:48px 32px; max-width:620px; width:100%; border-radius:28px; box-sizing:border-box;">
+        <div class="card-body" style="width:100%; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; padding:0; box-sizing:border-box;">
+          <div class="score-circle" style="background:rgba(255,255,255,0.8); color:${scoreColor}; box-shadow:0 10px 30px rgba(0,0,0,0.05); border:4px solid ${scoreColor}; display:flex; align-items:center; justify-content:center; width:120px; height:120px; border-radius:50%; font-size:2.2rem; font-weight:900; backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px);">${score}%</div>
+          <h2 style="font-weight:900; font-size:1.8rem; margin:0; color:${scoreColor};">Evaluation Complete</h2>
+          <p style="font-size:1.1rem; line-height:1.7; color:#1e293b; margin:0; max-width:500px; font-weight:600;">${message}</p>
+          <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:8px; width:100%;">
+            <button type="button" onclick="this.closest('.performance-modal-overlay').remove()" class="btn btn-primary btn-lg" style="padding:12px 24px; border-radius:14px; font-weight:700;">Continue Learning</button>
+            <button type="button" id="mattie-review-answers-btn" class="btn btn-info" style="padding:12px 20px; border-radius:14px; font-weight:700; background:#0ea5e9; border:none; color:white; cursor:pointer;">🔍 Review Corrections</button>
+            <button type="button" id="mattie-refresh-quiz-btn" class="btn btn-secondary" style="padding:12px 20px; border-radius:14px; font-weight:700; background:#64748b; border:none; color:white; cursor:pointer;">🔄 Generate Fresh Quiz</button>
           </div>
-          <div id="mattie-review-panel" style="width:100%;max-height:0;opacity:0;overflow:hidden;transition:max-height .45s ease,opacity .35s ease;margin-top:8px;">
-            <div id="mattie-review-content" style="display:grid;gap:14px;padding-top:16px;text-align:left;"></div>
+          <div id="mattie-review-panel" style="width:100%; max-height:0; opacity:0; overflow:hidden; transition:max-height .45s ease, opacity .35s ease; margin-top:8px;">
+            <div id="mattie-review-content" style="display:grid; gap:14px; padding-top:16px; text-align:left; max-height:400px; overflow-y:auto; padding-right:8px;"></div>
           </div>
         </div>
       </div>

@@ -148,16 +148,16 @@ function calculateQuestionTargets(doc) {
   const textLength = (doc.extracted_text || "").length;
 
   if (pages >= 25 || textLength >= 90000) {
-    return { mcqCount: 30, shortCount: 15, essayCount: 5 };
+    return { mcqCount: 40, shortCount: 20, essayCount: 8 };
   }
   if (pages >= 14 || textLength >= 50000) {
-    return { mcqCount: 24, shortCount: 10, essayCount: 4 };
+    return { mcqCount: 32, shortCount: 16, essayCount: 6 };
   }
   if (pages >= 7 || textLength >= 23000) {
-    return { mcqCount: 18, shortCount: 7, essayCount: 2 };
+    return { mcqCount: 24, shortCount: 12, essayCount: 4 };
   }
 
-  return { mcqCount: 12, shortCount: 4, essayCount: 1 };
+  return { mcqCount: 16, shortCount: 8, essayCount: 2 };
 }
 
 function calculateFlashcardTarget(doc) {
@@ -303,7 +303,8 @@ JSON Structure:
     {
       "question": "...",
       "modelAnswer": "...",
-      "gradingCriteria": "..."
+      "gradingCriteria": "...",
+      "explanation": "..."
     }
   ],
   "essays": [

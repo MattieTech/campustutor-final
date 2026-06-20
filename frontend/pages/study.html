@@ -150,10 +150,18 @@
       </div>
     </div>
 
-    <!-- Results Tabs (populated dynamically) -->
+    <!-- Results Tabs -->
     <div id="resultsArea" style="display:none;">
-      <div class="tabs" id="tabsBar"></div>
-      <div id="tabContent" style="margin-top:18px;"></div>
+      <div class="tabs" id="tabsBar">
+        <button class="tab-btn" id="tab-summary" onclick="activateTab('summary')" style="display:none;">📋 Summary</button>
+        <button class="tab-btn" id="tab-flashcards" onclick="activateTab('flashcards')" style="display:none;">🃏 Flashcards</button>
+        <button class="tab-btn" id="tab-questions" onclick="activateTab('questions')" style="display:none;">📝 Quiz</button>
+      </div>
+      <div id="tabContent" style="margin-top:18px;">
+        <div class="tab-panel" id="panel-summary"></div>
+        <div class="tab-panel" id="panel-flashcards"></div>
+        <div class="tab-panel" id="panel-questions"></div>
+      </div>
     </div>
 
   </main>
@@ -381,93 +389,40 @@ const panels = {}; // tracks which tabs have been created
 function showResult(key, label, content) {
   ensureResultsArea();
 
-  if (panels[key]) {
-    // Tab already exists — just update its content
-    const panelEl = document.getElementById('panel-' + key);
-    
-    // Reset panel and use dispatcher to handle objects (quiz) or strings (summary)
+  const tabEl = document.getElementById('tab-' + key);
+  if (tabEl) {
+    tabEl.style.display = 'inline-block';
+  }
+
+  const panelEl = document.getElementById('panel-' + key);
+  if (panelEl) {
     panelEl.innerHTML = (key === 'flashcards') ? '' : `
       <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
         <button class="btn btn-sm btn-primary" onclick="downloadResult('${key}')">⬇️ Download</button>
       </div>`;
     renderStudyContent(content, panelEl);
     renderMath(panelEl);
-    activateTab(key);
-    return;
   }
-
-  // Create tab button with download icon
-  const tabsBar = document.getElementById('tabsBar');
-  const btn = document.createElement('button');
-  btn.className  = 'tab-btn';
-  btn.id         = 'tab-' + key;
-  btn.innerHTML = `${label} <span style="margin-left:8px;font-size:0.9rem;">⬇️</span>`;
-  btn.onclick    = (e) => {
-    // If they click the download icon, trigger download
-    if(e.target.textContent.includes('⬇️')) {
-      downloadResult(key);
-    } else {
-      activateTab(key);
-    }
-  };
-  tabsBar.appendChild(btn);
-
-  // Create panel div
-  const tc = document.getElementById('tabContent');
-  const panel = document.createElement('div');
-  panel.className = 'tab-panel';
-  panel.id        = 'panel-' + key;
-  
-  panel.innerHTML = (key === 'flashcards') ? '' : `
-    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
-      <button class="btn btn-sm btn-primary" onclick="downloadResult('${key}')">⬇️ Download</button>
-    </div>`;
-  tc.appendChild(panel);
-
-  panels[key] = true;
   activateTab(key);
-
-  // Delegate rendering to the central content dispatcher
-  renderStudyContent(content, panel);
-  renderMath(panel);
-
   addSidebarTool(label, key);
 }
 
 function showFlashcards(cards) {
   ensureResultsArea();
-  const key = 'flashcards', label = '🃏 Flashcards';
+  const key = 'flashcards';
 
-  if (panels[key]) {
-    const panelEl = document.getElementById('panel-' + key);
-    panelEl.innerHTML = buildFlashcardHTML(cards);
-    renderMath(panelEl);
-    activateTab(key);
-    return;
+  const tabEl = document.getElementById('tab-' + key);
+  if (tabEl) {
+    tabEl.style.display = 'inline-block';
   }
 
-  const tabsBar = document.getElementById('tabsBar');
-  const btn = document.createElement('button');
-  btn.className  = 'tab-btn';
-  btn.id         = 'tab-' + key;
-  btn.textContent = label;
-  btn.onclick    = () => activateTab(key);
-  tabsBar.appendChild(btn);
-
-  const tc = document.getElementById('tabContent');
-  const panel = document.createElement('div');
-  panel.className = 'tab-panel';
-  panel.id        = 'panel-' + key;
-  panel.innerHTML = buildFlashcardHTML(cards);
-  tc.appendChild(panel);
-
-  panels[key] = true;
+  const panelEl = document.getElementById('panel-' + key);
+  if (panelEl) {
+    panelEl.innerHTML = buildFlashcardHTML(cards);
+    renderMath(panelEl);
+  }
   activateTab(key);
-
-  // KaTeX on flashcard text (front/back may contain LaTeX)
-  renderMath(panel);
-
-  addSidebarTool(label, key);
+  addSidebarTool('🃏 Flashcards', key);
 }
 
 // ── BUILDERS ───────────────────────────────────────────────────
