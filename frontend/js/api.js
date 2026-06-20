@@ -133,7 +133,7 @@ async function apiGetUserStats(userId) { return apiRequest(`/api/upload/stats/${
 // ── AI ────────────────────────────────────────────────────────
 async function apiSummarize(documentId)           { return apiRequest("/api/ai/summarize", "POST", { documentId }); }
 async function apiExplain(documentId, concept)    { return apiRequest("/api/ai/explain", "POST", { documentId, concept }); }
-async function apiGenerateQuestions(documentId)   { return apiRequest("/api/ai/questions", "POST", { documentId }); }
+async function apiGenerateQuestions(documentId, quizSize = 10)   { return apiRequest("/api/ai/questions", "POST", { documentId, quizSize }); }
 async function apiGenerateFlashcards(documentId)  { return apiRequest("/api/ai/flashcards", "POST", { documentId }); }
 window.studyAssetCache = window.studyAssetCache || {};
 
@@ -175,13 +175,13 @@ function buildPolishingLoaderHTML(message) {
     </div>`;
 }
 
-function buildQuizGenerationLoaderHTML() {
+function buildQuizGenerationLoaderHTML(waitingTime = "1-2 minutes") {
   return `
     <div class="quiz-engine-workspace result-anim" style="display:flex; align-items:center; justify-content:center; min-height:260px;">
       <div class="card liquid-glass-card" style="max-width:620px; width:100%; padding:30px; text-align:center; border-radius:24px;">
         <div style="width:48px; height:48px; margin:0 auto 18px; border-radius:50%; border:4px solid rgba(0,0,0,0.08); border-top-color:#ff9f43; animation:ctSpin 0.8s linear infinite;"></div>
-        <p style="font-weight:800; margin:0 0 10px;">🔄 Generating Questions... Please wait 1-2 minutes.</p>
-        <p style="margin:0; color:var(--label3);">CampusTutor AI is crafting a high-yield interactive exam pool. Deep analysis extraction takes about 1-2 minutes. Please keep this tab open...</p>
+        <p style="font-weight:800; margin:0 0 10px;">🔄 Generating Questions... Please wait ${waitingTime}.</p>
+        <p style="margin:0; color:var(--label3);">CampusTutor AI is crafting a high-yield interactive exam pool. Deep analysis extraction takes about ${waitingTime}. Please keep this tab open...</p>
       </div>
     </div>`;
 }

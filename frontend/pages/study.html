@@ -112,6 +112,23 @@
       </div>
     </div>
 
+    <!-- Quiz Size Selector -->
+    <div class="card liquid-glass-card" style="margin-bottom:22px; padding:20px; border-radius:24px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+        <div>
+          <div style="font-weight:800; font-size:1rem; margin-bottom:4px; color:var(--label);">🎯 Customize Revision Quiz Size</div>
+          <div style="font-size:0.85rem; color:var(--label3);">Select question volume and recommended waiting time</div>
+        </div>
+        <select id="quizSizeSelect" class="form-input" style="max-width:280px; width:100%; border-radius:12px; background:rgba(255,255,255,0.05); color:inherit; border:1px solid rgba(255,255,255,0.15); padding:10px;">
+          <option value="10" selected>10 Questions (8 MCQ, 2 Essay) - ~30s</option>
+          <option value="20">20 Questions - ~1m wait time</option>
+          <option value="30">30 Questions - ~1.5m wait time</option>
+          <option value="40">40 Questions - ~2m wait time</option>
+          <option value="50">50 Questions - ~2.5m wait time</option>
+        </select>
+      </div>
+    </div>
+
     <!-- AI Action Buttons -->
     <div class="action-grid">
       <button class="action-btn" id="btnSum" onclick="runSummarize()">
@@ -301,7 +318,17 @@ async function runSummarize() {
 
 async function runQuestions() {
   const btn = document.getElementById('btnQ');
-  setBtnLoading(btn, 'Generating Questions...');
+  const quizSize = Number(document.getElementById('quizSizeSelect')?.value || 10);
+  
+  let waitText = "Generating Quiz...";
+  let waitTimeLabel = "1-2 minutes";
+  if (quizSize === 10) { waitText = "Generating (30s)..."; waitTimeLabel = "30 seconds"; }
+  else if (quizSize === 20) { waitText = "Generating (1m)..."; waitTimeLabel = "1 minute"; }
+  else if (quizSize === 30) { waitText = "Generating (1.5m)..."; waitTimeLabel = "1.5 minutes"; }
+  else if (quizSize === 40) { waitText = "Generating (2m)..."; waitTimeLabel = "2 minutes"; }
+  else if (quizSize === 55 || quizSize === 50) { waitText = "Generating (2.5m)..."; waitTimeLabel = "2.5 minutes"; }
+
+  setBtnLoading(btn, waitText);
   
   let cached = getCachedAIResults(docId);
   if (!cached?.questions) {
@@ -309,7 +336,8 @@ async function runQuestions() {
     if (data?.results) cached = data.results;
   }
 
-  if (cached?.questions) {
+  // Note: if user selects a different size, we force generation of the new size
+  if (cached?.questions && cached.questions.mcqs?.length === (quizSize === 10 ? 8 : quizSize === 20 ? 14 : quizSize === 30 ? 20 : quizSize === 40 ? 25 : 30)) {
     resetBtn(btn, '📝', 'Revision Questions', 'MCQs + essay questions with model answers');
     showResult('questions', '📝 Questions', { questions: cached.questions });
     awardXP(20, 'first_quiz');
@@ -317,8 +345,8 @@ async function runQuestions() {
     return;
   }
 
-  showLoaderResult('questions', '📝 Questions', buildQuizGenerationLoaderHTML());
-  const response = await apiGenerateQuestions(docId);
+  showLoaderResult('questions', '📝 Questions', buildQuizGenerationLoaderHTML(waitTimeLabel));
+  const response = await apiGenerateQuestions(docId, quizSize);
   resetBtn(btn, '📝', 'Revision Questions', 'MCQs + essay questions with model answers');
   if (response.error) {
     showToast(response.error, 'error');

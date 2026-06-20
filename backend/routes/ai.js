@@ -160,6 +160,22 @@ function calculateQuestionTargets(doc) {
   return { mcqCount: 16, shortCount: 8, essayCount: 2 };
 }
 
+function calculateQuestionTargetsWithSize(quizSize) {
+  switch (quizSize) {
+    case 10:
+      return { mcqCount: 8, shortCount: 0, essayCount: 2 };
+    case 20:
+      return { mcqCount: 14, shortCount: 4, essayCount: 2 };
+    case 30:
+      return { mcqCount: 20, shortCount: 8, essayCount: 2 };
+    case 40:
+      return { mcqCount: 25, shortCount: 11, essayCount: 4 };
+    case 50:
+    default:
+      return { mcqCount: 30, shortCount: 15, essayCount: 5 };
+  }
+}
+
 function calculateFlashcardTarget(doc) {
   const pages = estimateDocumentPages(doc);
   const textLength = (doc.extracted_text || "").length;
@@ -384,9 +400,9 @@ async function generateSummaryForDocument(documentId, userId, options = {}) {
 }
 
 async function generateQuestionsForDocument(documentId, userId, options = {}) {
-  const { persist = true, log = true, award = true } = options;
+  const { persist = true, log = true, award = true, quizSize = 10 } = options;
   const doc = await getDocumentText(documentId, userId);
-  const targets = calculateQuestionTargets(doc);
+  const targets = calculateQuestionTargetsWithSize(quizSize);
   const chunks = splitDocumentIntoChunks(doc, 5);
 
   const perChunkAllocation = chunks.map((_, index) => {
@@ -670,12 +686,12 @@ Keep the language simple, warm, and encouraging.
 // ── REVISION QUESTIONS ────────────────────────────────────────
 router.post("/questions", authMiddleware, async (req, res) => {
   try {
-    const { documentId } = req.body;
+    const { documentId, quizSize } = req.body;
     if (!documentId) {
       return res.status(400).json({ error: "documentId is required." });
     }
 
-    const { questionsData } = await generateQuestionsForDocument(documentId, req.user.id);
+    const { questionsData } = await generateQuestionsForDocument(documentId, req.user.id, { quizSize: Number(quizSize || 10) });
     res.json({ questions: questionsData });
   } catch (err) {
     console.error("Questions error:", err.message);
