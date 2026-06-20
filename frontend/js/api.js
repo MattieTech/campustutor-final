@@ -217,18 +217,32 @@ function renderQuizCorrections(reviewData) {
   return reviewData.quizItems.map((item, index) => {
     const storedValue = reviewData.answerStore?.[index];
     const isMcq = item.type === 'mcq';
-    const correctAnswer = isMcq ? item.question.correctAnswer : (item.question.modelAnswer || (Array.isArray(item.question.keyPoints) ? item.question.keyPoints.join('; ') : item.question.gradingCriteria || ''));
-    const explanation = isMcq
+    
+    let correctAnswer = isMcq ? item.question.correctAnswer : (item.question.modelAnswer || (Array.isArray(item.question.keyPoints) ? item.question.keyPoints.join('; ') : item.question.gradingCriteria || ''));
+    let explanation = isMcq
       ? (item.question.explanation || item.question.gradingCriteria || 'Review this answer against the lecture notes.')
       : (item.question.gradingCriteria || item.question.modelAnswer || item.question.keyPoints?.join('; ') || 'Review this answer against the lecture notes.');
+    
+    let displayYourAnswer = storedValue || (isMcq ? 'No answer selected' : 'No response submitted');
+    let displayCorrectAnswer = correctAnswer || 'N/A';
+
+    if (isMcq) {
+      if (storedValue && item.question.options && item.question.options[storedValue]) {
+        displayYourAnswer = `${storedValue}: ${item.question.options[storedValue]}`;
+      }
+      if (correctAnswer && item.question.options && item.question.options[correctAnswer]) {
+        displayCorrectAnswer = `${correctAnswer}: ${item.question.options[correctAnswer]}`;
+      }
+    }
+
     const selectedTone = isMcq && storedValue !== correctAnswer ? 'bad' : 'good';
 
     return `
       <section style="padding:18px;border:1px solid rgba(0,0,0,0.08);border-radius:18px;background:rgba(255,255,255,0.72);box-shadow:0 8px 24px rgba(0,0,0,0.04);display:grid;gap:10px;">
         <div style="font-weight:800;font-size:0.98rem;line-height:1.5;">Question ${index + 1}: ${item.prompt || `Question ${index + 1}`}</div>
         <div style="font-size:0.82rem;color:#666;">${isMcq ? 'Multiple Choice' : 'Written Response'}</div>
-        ${isMcq ? renderAnswerLine('Your Answer', escapeHTML(storedValue || 'No answer selected'), selectedTone) : renderAnswerLine('Your Response', escapeHTML(storedValue || 'No response submitted'), storedValue ? 'neutral' : 'bad')}
-        ${renderAnswerLine('Correct Answer', escapeHTML(correctAnswer || 'N/A'), 'good')}
+        ${isMcq ? renderAnswerLine('Your Answer', escapeHTML(displayYourAnswer), selectedTone) : renderAnswerLine('Your Response', escapeHTML(displayYourAnswer), storedValue ? 'neutral' : 'bad')}
+        ${renderAnswerLine('Correct Answer', escapeHTML(displayCorrectAnswer), 'good')}
         <div style="padding:12px 14px;border-radius:14px;background:rgba(0,0,0,0.03);color:#333;line-height:1.6;">
           <strong>Step-by-step Explanation:</strong> ${escapeHTML(explanation)}
         </div>
