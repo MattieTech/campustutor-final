@@ -485,9 +485,9 @@ async function generateQuestionsForDocument(documentId, userId, options = {}) {
 }
 
 async function generateFlashcardsForDocument(documentId, userId, options = {}) {
-  const { persist = true, log = true, award = true } = options;
+  const { persist = true, log = true, award = true, flashcardSize } = options;
   const doc = await getDocumentText(documentId, userId);
-  const targetCount = calculateFlashcardTarget(doc);
+  const targetCount = flashcardSize ? Number(flashcardSize) : calculateFlashcardTarget(doc);
   const chunks = splitDocumentIntoChunks(doc, 5);
   const perChunkTargets = chunks.map((_, index) => {
     const base = Math.floor(targetCount / chunks.length);
@@ -600,12 +600,12 @@ function handleAIError(err, res) {
 // ── SUMMARIZE ─────────────────────────────────────────────────
 router.post("/summarize", authMiddleware, async (req, res) => {
   try {
-    const { documentId } = req.body;
+    const { documentId, summarySize } = req.body;
     if (!documentId) {
       return res.status(400).json({ error: "documentId is required." });
     }
 
-    const { summary } = await generateSummaryForDocument(documentId, req.user.id);
+    const { summary } = await generateSummaryForDocument(documentId, req.user.id, { summarySize });
     res.json({ summary });
   } catch (err) {
     console.error("Summarize error:", err.message);
@@ -702,12 +702,12 @@ router.post("/questions", authMiddleware, async (req, res) => {
 // ── FLASHCARDS ────────────────────────────────────────────────
 router.post("/flashcards", authMiddleware, async (req, res) => {
   try {
-    const { documentId } = req.body;
+    const { documentId, flashcardSize } = req.body;
     if (!documentId) {
       return res.status(400).json({ error: "documentId is required." });
     }
 
-    const { flashcards } = await generateFlashcardsForDocument(documentId, req.user.id);
+    const { flashcards } = await generateFlashcardsForDocument(documentId, req.user.id, { flashcardSize: Number(flashcardSize || 25) });
     res.json({ flashcards });
   } catch (err) {
     console.error("Flashcards error:", err.message);

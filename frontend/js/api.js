@@ -131,10 +131,10 @@ async function apiGetMyAIResults()      { return apiRequest("/api/upload/my-resu
 async function apiGetUserStats(userId) { return apiRequest(`/api/upload/stats/${userId}`); }
 
 // ── AI ────────────────────────────────────────────────────────
-async function apiSummarize(documentId)           { return apiRequest("/api/ai/summarize", "POST", { documentId }); }
+async function apiSummarize(documentId, summarySize = 'standard')           { return apiRequest("/api/ai/summarize", "POST", { documentId, summarySize }); }
 async function apiExplain(documentId, concept)    { return apiRequest("/api/ai/explain", "POST", { documentId, concept }); }
 async function apiGenerateQuestions(documentId, quizSize = 10)   { return apiRequest("/api/ai/questions", "POST", { documentId, quizSize }); }
-async function apiGenerateFlashcards(documentId)  { return apiRequest("/api/ai/flashcards", "POST", { documentId }); }
+async function apiGenerateFlashcards(documentId, flashcardSize = 25)  { return apiRequest("/api/ai/flashcards", "POST", { documentId, flashcardSize }); }
 window.studyAssetCache = window.studyAssetCache || {};
 
 function setStudyAssetCache(documentId, results) {
