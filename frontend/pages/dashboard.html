@@ -697,25 +697,25 @@ function extractMath(text) {
   // Protect display math \[ ... \]
   let processed = text.replace(/\\\[([\s\S]*?)\\\]/g, (match) => {
     mathPlaceholders.push(match);
-    return `__MATH_${counter++}__`;
+    return `MATHTOKENDSP${counter++}`;
   });
 
   // Protect inline math \( ... \)
   processed = processed.replace(/\\\(([\s\S]*?)\\\)/g, (match) => {
     mathPlaceholders.push(match);
-    return `__MATH_${counter++}__`;
+    return `MATHTOKENINL${counter++}`;
   });
 
   // Protect display math $$ ... $$
   processed = processed.replace(/\$\$\s*([\s\S]*?)\s*\$\$/g, (match) => {
     mathPlaceholders.push(match);
-    return `__MATH_${counter++}__`;
+    return `MATHTOKENDSP${counter++}`;
   });
 
   // Protect inline math $ ... $
   processed = processed.replace(/\$([^\$\n]+)\$/g, (match) => {
     mathPlaceholders.push(match);
-    return `__MATH_${counter++}__`;
+    return `MATHTOKENINL${counter++}`;
   });
   
   return { text: processed, placeholders: mathPlaceholders };
@@ -724,8 +724,9 @@ function extractMath(text) {
 function restoreMath(html, placeholders) {
   let result = html;
   placeholders.forEach((math, index) => {
-    // Use function replacement to avoid JS regex capture character bugs
-    result = result.replace(`__MATH_${index}__`, () => math);
+    // Try to replace both display and inline tokens
+    result = result.replace(`MATHTOKENDSP${index}`, () => math);
+    result = result.replace(`MATHTOKENINL${index}`, () => math);
   });
   return result;
 }

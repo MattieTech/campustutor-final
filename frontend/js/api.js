@@ -762,28 +762,28 @@ function markdownToHTML(text) {
 
   // Protect display math $$ ... $$
   text = text.replace(/\$\$\s*([\s\S]*?)\s*\$\$/g, (match) => {
-    const key = `__MATHBLOCK_DSP_${idx++}__`;
+    const key = `MATHTOKENDSP${idx++}`;
     mathBlocks.push({ key, val: match });
     return key;
   });
 
   // Protect display math \[ ... \]
   text = text.replace(/\\\[([\s\S]*?)\\\]/g, (match) => {
-    const key = `__MATHBLOCK_DSP_${idx++}__`;
+    const key = `MATHTOKENDSP${idx++}`;
     mathBlocks.push({ key, val: match });
     return key;
   });
 
   // Protect inline math \( ... \)
   text = text.replace(/\\\(([\s\S]*?)\\\)/g, (match) => {
-    const key = `__MATHBLOCK_INL_${idx++}__`;
+    const key = `MATHTOKENINL${idx++}`;
     mathBlocks.push({ key, val: match });
     return key;
   });
 
   // Protect inline math $ ... $
   text = text.replace(/\$([^\$\n]+)\$/g, (match) => {
-    const key = `__MATHBLOCK_INL_${idx++}__`;
+    const key = `MATHTOKENINL${idx++}`;
     mathBlocks.push({ key, val: match });
     return key;
   });
