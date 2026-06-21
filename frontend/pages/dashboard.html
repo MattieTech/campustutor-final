@@ -675,11 +675,25 @@ function extractMath(text) {
   const mathPlaceholders = [];
   let counter = 0;
   
-  let processed = text.replace(/\$\$\s*([\s\S]*?)\s*\$\$/g, (match) => {
+  // Protect display math \[ ... \]
+  let processed = text.replace(/\\\[([\s\S]*?)\\\]/g, (match) => {
     mathPlaceholders.push(match);
     return `__MATH_${counter++}__`;
   });
-  
+
+  // Protect inline math \( ... \)
+  processed = processed.replace(/\\\(([\s\S]*?)\\\)/g, (match) => {
+    mathPlaceholders.push(match);
+    return `__MATH_${counter++}__`;
+  });
+
+  // Protect display math $$ ... $$
+  processed = processed.replace(/\$\$\s*([\s\S]*?)\s*\$\$/g, (match) => {
+    mathPlaceholders.push(match);
+    return `__MATH_${counter++}__`;
+  });
+
+  // Protect inline math $ ... $
   processed = processed.replace(/\$([^\$\n]+)\$/g, (match) => {
     mathPlaceholders.push(match);
     return `__MATH_${counter++}__`;
