@@ -30,6 +30,7 @@ const supabase = require("../utils/supabase");
 const authMiddleware = require("../middleware/authMiddleware");
 const { awardXP, updateStreak } = require("../utils/xp");
 const { warmDocumentStudyAssets } = require("./ai");
+const { ocrScannedPDF } = require("../utils/gemini");
 
 // ── MULTER CONFIGURATION ──────────────────────────────────────
 // Multer handles multipart/form-data (the format used for file uploads)
@@ -140,10 +141,15 @@ router.post("/pdf", authMiddleware, upload.single("pdf"), async (req, res) => {
 
     // Check if the PDF had any readable text
     if (!extractedText || extractedText.trim().length < 50) {
-      return res.status(400).json({
-        error:
-          "This PDF appears to be a scanned image or has no readable text. Please use a text-based PDF.",
-      });
+      try {
+        extractedText = await ocrScannedPDF(fileBuffer);
+      } catch (ocrErr) {
+        console.error("❌ Scanned PDF OCR fallback failed:", ocrErr.message);
+        return res.status(400).json({
+          error:
+            "This PDF appears to be a scanned image and OCR processing failed. Please use a text-based PDF.",
+        });
+      }
     }
 
     // Limit text to ~15,000 characters to avoid Gemini token limits

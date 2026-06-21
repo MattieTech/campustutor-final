@@ -135,4 +135,25 @@ async function askGemini(prompt) {
   }
 }
 
-module.exports = { askGemini };
+// ── ocrScannedPDF ─────────────────────────────────────────────
+// Multimodal inline data request to transcribe scanned PDFs using Gemini
+async function ocrScannedPDF(fileBuffer) {
+  try {
+    console.log("👁️ Scanned PDF detected, initiating multimodal OCR transcription using primary Gemini...");
+    const response = await model.generateContent([
+      {
+        inlineData: {
+          data: fileBuffer.toString("base64"),
+          mimeType: "application/pdf"
+        }
+      },
+      "Extract and transcribe all text from this scanned document. Return ONLY the transcribed text. Do not include any summary, intro, outro, explanation, or notes. Keep formatting, headers, paragraphs, lists, and equations exactly as they appear."
+    ]);
+    return response.response.text();
+  } catch (error) {
+    console.error("❌ Multimodal OCR failed:", error.message);
+    throw new Error("This PDF appears to be a scanned image and OCR processing failed. Please use a text-based PDF.");
+  }
+}
+
+module.exports = { askGemini, ocrScannedPDF };
