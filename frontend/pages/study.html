@@ -512,7 +512,7 @@ if (!docId) {
   window.location.href = '/pages/dashboard.html';
 }
 
-document.getElementById('pageTitle').textContent    = '📄 ' + docName;
+document.getElementById('pageTitle').innerHTML    = '<i class="fa-solid fa-file-pdf"></i> ' + docName;
 document.getElementById('pageSubtitle').textContent = 'Use the AI tools below to study this document';
 
 // Track XP earned this session

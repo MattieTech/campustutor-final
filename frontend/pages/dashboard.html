@@ -300,8 +300,8 @@ initMobileMenu();
 const user=getUser();
 if(user && user.fullName){
   const firstName = user.fullName.split(' ')[0];
-  document.getElementById('userGreeting').textContent=`Hi, ${firstName} <i class="fa-solid fa-hand"></i>`;
-  document.getElementById('welcomeMsg').textContent=`Welcome back, ${firstName} <i class="fa-solid fa-graduation-cap"></i>`;
+  document.getElementById('userGreeting').innerHTML=`Hi, ${firstName} <i class="fa-solid fa-hand"></i>`;
+  document.getElementById('welcomeMsg').innerHTML=`Welcome back, ${firstName} <i class="fa-solid fa-graduation-cap"></i>`;
 }
 
 loadUserStats();
@@ -322,7 +322,7 @@ async function loadUserStats(){
   document.getElementById('xpMax').textContent=stats.xpForNextLevel||100;
   document.getElementById('xpFill').style.width=(stats.xpProgressPercent||0)+'%';
   document.getElementById('statXP').textContent=stats.xp||0;
-  document.getElementById('statStreak').textContent=(stats.streak||0)+' <i class="fa-solid fa-fire"></i>';
+  document.getElementById('statStreak').innerHTML=(stats.streak||0)+' <i class="fa-solid fa-fire"></i>';
   document.getElementById('statDocs').textContent=stats.documentsCount||0;
   document.getElementById('activityCount').textContent=(stats.activityCount||0)+' actions';
   
