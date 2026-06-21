@@ -670,6 +670,25 @@ async function renderMattieQuiz(quizData) {
   renderQuestion();
 }
 
+function preProcessMathDelimiters(text) {
+  if (!text) return "";
+  // Convert [ ... ] to \[ ... \] if it contains LaTeX characters
+  let processed = text.replace(/\[\s*([\s\S]*?\\\S[\s\S]*?)\s*\]/g, (match, p1) => {
+    if (p1.includes('\\')) {
+      return `\\[${p1}\\]`;
+    }
+    return match;
+  });
+  // Convert ( ... ) to \( ... \) if it contains LaTeX characters
+  processed = processed.replace(/\(\s*([\s\S]*?\\\S[\s\S]*?)\s*\)/g, (match, p1) => {
+    if (p1.includes('\\')) {
+      return `\\(${p1}\\)`;
+    }
+    return match;
+  });
+  return processed;
+}
+
 // AI Assistant Functions
 function extractMath(text) {
   const mathPlaceholders = [];
@@ -705,7 +724,8 @@ function extractMath(text) {
 function restoreMath(html, placeholders) {
   let result = html;
   placeholders.forEach((math, index) => {
-    result = result.replace(`__MATH_${index}__`, math);
+    // Use function replacement to avoid JS regex capture character bugs
+    result = result.replace(`__MATH_${index}__`, () => math);
   });
   return result;
 }
@@ -713,7 +733,9 @@ function restoreMath(html, placeholders) {
 function parseWithMath(text) {
   if(typeof marked === 'undefined') return text;
   
-  const { text: textWithPlaceholders, placeholders } = extractMath(text);
+  // Preprocess first to resolve bracket/parenthesis omissions
+  const preProcessed = preProcessMathDelimiters(text);
+  const { text: textWithPlaceholders, placeholders } = extractMath(preProcessed);
   const htmlWithPlaceholders = marked.parse(textWithPlaceholders);
   const htmlWithMath = restoreMath(htmlWithPlaceholders, placeholders);
   

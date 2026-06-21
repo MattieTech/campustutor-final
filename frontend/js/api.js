@@ -729,24 +729,61 @@ function renderStudyContent(data, container, documentId = null) {
 }
 
 // ── MARKDOWN → HTML ───────────────────────────────────────────
+function preProcessMathDelimiters(text) {
+  if (!text) return "";
+  // Convert [ ... ] to \[ ... \] if it contains LaTeX characters like \frac, \pm, \sqrt, \alpha, \beta, \lambda, etc.
+  let processed = text.replace(/\[\s*([\s\S]*?\\\S[\s\S]*?)\s*\]/g, (match, p1) => {
+    if (p1.includes('\\')) {
+      return `\\[${p1}\\]`;
+    }
+    return match;
+  });
+  // Convert ( ... ) to \( ... \) if it contains LaTeX characters
+  processed = processed.replace(/\(\s*([\s\S]*?\\\S[\s\S]*?)\s*\)/g, (match, p1) => {
+    if (p1.includes('\\')) {
+      return `\\(${p1}\\)`;
+    }
+    return match;
+  });
+  return processed;
+}
+
+// ── MARKDOWN → HTML ───────────────────────────────────────────
 function markdownToHTML(text) {
   if (!text || typeof text !== "string") return "";
+
+  // Preprocess brackets/parentheses to add missing backslashes for LaTeX
+  text = preProcessMathDelimiters(text);
 
   // Protect LaTeX math blocks from being mangled by markdown parsing.
   // We replace them with placeholders, process markdown, then restore.
   const mathBlocks = [];
   let idx = 0;
 
+  // Protect display math $$ ... $$
+  text = text.replace(/\$\$\s*([\s\S]*?)\s*\$\$/g, (match) => {
+    const key = `__MATHBLOCK_DSP_${idx++}__`;
+    mathBlocks.push({ key, val: match });
+    return key;
+  });
+
   // Protect display math \[ ... \]
   text = text.replace(/\\\[([\s\S]*?)\\\]/g, (match) => {
-    const key = `__MATHBLOCK${idx++}__`;
+    const key = `__MATHBLOCK_DSP_${idx++}__`;
     mathBlocks.push({ key, val: match });
     return key;
   });
 
   // Protect inline math \( ... \)
   text = text.replace(/\\\(([\s\S]*?)\\\)/g, (match) => {
-    const key = `__MATHINLINE${idx++}__`;
+    const key = `__MATHBLOCK_INL_${idx++}__`;
+    mathBlocks.push({ key, val: match });
+    return key;
+  });
+
+  // Protect inline math $ ... $
+  text = text.replace(/\$([^\$\n]+)\$/g, (match) => {
+    const key = `__MATHBLOCK_INL_${idx++}__`;
     mathBlocks.push({ key, val: match });
     return key;
   });
@@ -831,9 +868,9 @@ function markdownToHTML(text) {
     .replace(/`([^`\n]+)`/g, "<code>$1</code>")
     .replace(/<p><\/p>/g, "");
 
-  // Restore math blocks
+  // Restore math blocks safely using function replacement
   mathBlocks.forEach(({ key, val }) => {
-    html = html.replace(key, val);
+    html = html.replace(key, () => val);
   });
 
   return html;

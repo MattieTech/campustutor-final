@@ -60,7 +60,7 @@ ${doc.extracted_text}
 ---
 Requirement: Generate a tightly packed, core textbook-style overview using high-density markdown headings. Focus on structural hierarchy and conceptual density. Avoid long-form rambling; use precise, technical language and subsection headers to categorize information.
 
-IMPORTANT: Format ALL mathematical expressions using LaTeX ($ for inline, $$ for block).
+IMPORTANT: Format ALL mathematical expressions using LaTeX (\( ... \) for inline, \[ ... \] for display).
 
 Format your response like this:
 ## 📋 Summary of "${doc.file_name}"
@@ -245,7 +245,7 @@ ${chunk.text}
 
 Generate a precise technical summary for this chunk only.
 Use compact structure with headings and bullet points.
-IMPORTANT: Format all mathematical expressions using LaTeX ($ for inline, $$ for block).
+IMPORTANT: Format all mathematical expressions using LaTeX (\( ... \) for inline, \[ ... \] for display).
 
 Output markdown only.
   `.trim();
@@ -279,7 +279,7 @@ Output format:
 
 **Core Takeaway:** [2-3 sentences]
 
-IMPORTANT: Format all mathematical expressions using LaTeX ($ for inline, $$ for block).
+IMPORTANT: Format all mathematical expressions using LaTeX (\( ... \) for inline, \[ ... \] for display).
 Keep language clear for first-year students.
   `.trim();
 }
@@ -302,7 +302,7 @@ Required Volumes:
 - Short Answer Questions: ${allocation.shortCount} (Include detailed grading criteria)
 - Essay Questions: ${allocation.essayCount} (Broad synthesis questions)
 
-IMPORTANT: Format ALL mathematical expressions using LaTeX ($ for inline, $$ for block).
+IMPORTANT: Format ALL mathematical expressions using LaTeX (\( ... \) for inline, \[ ... \] for display).
 
 You MUST return the output as a valid JSON object only. No markdown code blocks.
 JSON Structure:
@@ -640,7 +640,8 @@ You are CampusTutor AI, a patient university lecturer who explains things simply
 ${docContext}The student wants you to explain this concept in beginner-friendly terms: "${concept}"
 
 IMPORTANT: Format ALL mathematical expressions using LaTeX.
-Use $ for inline math and $$ for display equations.
+Use \( ... \) for inline math (e.g., \( f(x) = x^2 \)) and \[ ... \] for display equations (e.g., \[ x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a} \]).
+Never write math as plain text.
 
 Please explain it like this:
 ## 💡 Explaining: "${concept}"
@@ -650,7 +651,9 @@ Please explain it like this:
 **Real-World Example:** [A relatable analogy or everyday example]
 
 **Mathematical Expression (if applicable):**
-[Show the key equation(s) as a LaTeX display equation using \\[ ... \\]]
+\[
+\text{Key equation(s) here}
+\]
 
 **How it relates to the notes:** ${docContext ? "[Connect it back to what's in the lecture]" : "[General explanation without specific notes]"}
 

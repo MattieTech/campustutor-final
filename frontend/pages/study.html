@@ -108,6 +108,70 @@
 /* ── explain row ── */
 .explain-row { display:flex; gap:10px; }
 @media(max-width:560px) { .explain-row { flex-direction:column; } }
+
+/* ── modern selection choice cards ── */
+.mattie-choice-group {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0 16px 0;
+  width: 100%;
+}
+@media(max-width: 600px) {
+  .mattie-choice-group {
+    flex-direction: column;
+  }
+}
+.mattie-choice-card {
+  flex: 1;
+  min-width: 120px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.22s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+}
+.mattie-choice-card:hover {
+  border-color: var(--blue-lt);
+  transform: translateY(-2px);
+  box-shadow: var(--gshadow);
+}
+.mattie-choice-card.active {
+  border-color: var(--blue);
+  background: var(--blue-dim);
+  box-shadow: 0 0 14px rgba(0, 122, 255, 0.25);
+}
+[data-theme="light"] .mattie-choice-card {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+[data-theme="light"] .mattie-choice-card.active {
+  background: rgba(0, 122, 255, 0.08);
+  border-color: var(--blue);
+}
+.mattie-choice-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--label);
+}
+.mattie-choice-desc {
+  font-size: 0.78rem;
+  color: var(--label3);
+  line-height: 1.3;
+}
+.mattie-choice-time {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--blue);
+  margin-top: 4px;
+}
 </style>
 </head>
 <body>
@@ -172,56 +236,151 @@
 
     <!-- Summary Size Selector (Initially Hidden) -->
     <div id="summarySizeSelectContainer" class="card liquid-glass-card result-anim" style="display:none; margin-bottom:22px; padding:20px; border-radius:24px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.06); backdrop-filter:blur(10px);">
-      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
-        <div>
-          <div style="font-weight:800; font-size:1.1rem; margin-bottom:4px; color:var(--label);">📋 Choose Summary Depth & Wait Time</div>
-          <div style="font-size:0.85rem; color:var(--label3);">Select the depth of your summary. Highly detailed overviews require more time.</div>
-        </div>
-        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-          <select id="summarySizeSelect" class="form-input" style="max-width:240px; border-radius:12px; background:rgba(255,255,255,0.05); color:inherit; border:1px solid rgba(255,255,255,0.15); padding:10px;">
-            <option value="standard" selected>Standard Overview - ~15s</option>
-            <option value="detailed">Detailed Summary - ~30s</option>
-            <option value="comprehensive">Comprehensive Summary - ~1m</option>
-          </select>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+          <div>
+            <div style="font-weight:800; font-size:1.1rem; margin-bottom:4px; color:var(--label);">📋 Choose Summary Depth & Wait Time</div>
+            <div style="font-size:0.85rem; color:var(--label3);">Select the depth of your summary. Highly detailed overviews require more time.</div>
+          </div>
           <button id="btnConfirmSum" class="btn btn-primary" onclick="triggerSummaryGeneration()" style="border-radius:12px; padding:10px 20px;">Generate Summary 🚀</button>
+        </div>
+        
+        <!-- Hidden Select for compatibility -->
+        <select id="summarySizeSelect" style="display:none;">
+          <option value="standard" selected>Standard Overview</option>
+          <option value="detailed">Detailed Summary</option>
+          <option value="comprehensive">Comprehensive Summary</option>
+        </select>
+        
+        <!-- Modern Choice Cards -->
+        <div class="mattie-choice-group">
+          <div class="mattie-choice-card active" data-value="standard" onclick="selectMattieChoice('summary', 'standard')">
+            <div>
+              <div class="mattie-choice-title">Standard Overview</div>
+              <div class="mattie-choice-desc">Core concepts and takeaways.</div>
+            </div>
+            <div class="mattie-choice-time">⏳ ~15s wait</div>
+          </div>
+          <div class="mattie-choice-card" data-value="detailed" onclick="selectMattieChoice('summary', 'detailed')">
+            <div>
+              <div class="mattie-choice-title">Detailed Summary</div>
+              <div class="mattie-choice-desc">Deeper breakdown of lecture points.</div>
+            </div>
+            <div class="mattie-choice-time">⏳ ~30s wait</div>
+          </div>
+          <div class="mattie-choice-card" data-value="comprehensive" onclick="selectMattieChoice('summary', 'comprehensive')">
+            <div>
+              <div class="mattie-choice-title">Comprehensive Summary</div>
+              <div class="mattie-choice-desc">Fully detailed textbook summary.</div>
+            </div>
+            <div class="mattie-choice-time">⏳ ~1m wait</div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Flashcard Size Selector (Initially Hidden) -->
     <div id="flashcardSizeSelectContainer" class="card liquid-glass-card result-anim" style="display:none; margin-bottom:22px; padding:20px; border-radius:24px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.06); backdrop-filter:blur(10px);">
-      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
-        <div>
-          <div style="font-weight:800; font-size:1.1rem; margin-bottom:4px; color:var(--label);">🃏 Choose Flashcard Deck Size</div>
-          <div style="font-size:0.85rem; color:var(--label3);">Select the size of the flashcard set. Larger study decks require more time.</div>
-        </div>
-        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-          <select id="flashcardSizeSelect" class="form-input" style="max-width:240px; border-radius:12px; background:rgba(255,255,255,0.05); color:inherit; border:1px solid rgba(255,255,255,0.15); padding:10px;">
-            <option value="10" selected>10 Flashcards - ~20s</option>
-            <option value="25">25 Flashcards - ~40s</option>
-            <option value="50">50 Flashcards - ~1.5m</option>
-          </select>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+          <div>
+            <div style="font-weight:800; font-size:1.1rem; margin-bottom:4px; color:var(--label);">🃏 Choose Flashcard Deck Size</div>
+            <div style="font-size:0.85rem; color:var(--label3);">Select the size of the flashcard set. Larger study decks require more time.</div>
+          </div>
           <button id="btnConfirmFlash" class="btn btn-primary" onclick="triggerFlashcardGeneration()" style="border-radius:12px; padding:10px 20px;">Generate Flashcards 🚀</button>
+        </div>
+
+        <!-- Hidden Select for compatibility -->
+        <select id="flashcardSizeSelect" style="display:none;">
+          <option value="10" selected>10 Flashcards</option>
+          <option value="25">25 Flashcards</option>
+          <option value="50">50 Flashcards</option>
+        </select>
+        
+        <!-- Modern Choice Cards -->
+        <div class="mattie-choice-group">
+          <div class="mattie-choice-card active" data-value="10" onclick="selectMattieChoice('flashcard', '10')">
+            <div>
+              <div class="mattie-choice-title">⚡ Quick Deck</div>
+              <div class="mattie-choice-desc">10 high-yield flashcards.</div>
+            </div>
+            <div class="mattie-choice-time">⏳ ~20s wait</div>
+          </div>
+          <div class="mattie-choice-card" data-value="25" onclick="selectMattieChoice('flashcard', '25')">
+            <div>
+              <div class="mattie-choice-title">🃏 Standard Deck</div>
+              <div class="mattie-choice-desc">25 balanced practice flashcards.</div>
+            </div>
+            <div class="mattie-choice-time">⏳ ~40s wait</div>
+          </div>
+          <div class="mattie-choice-card" data-value="50" onclick="selectMattieChoice('flashcard', '50')">
+            <div>
+              <div class="mattie-choice-title">🏆 Mastery Deck</div>
+              <div class="mattie-choice-desc">50 deep-dive study flashcards.</div>
+            </div>
+            <div class="mattie-choice-time">⏳ ~1.5m wait</div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Quiz Size Selector (Initially Hidden) -->
     <div id="quizSizeSelectContainer" class="card liquid-glass-card result-anim" style="display:none; margin-bottom:22px; padding:20px; border-radius:24px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.06); backdrop-filter:blur(10px);">
-      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
-        <div>
-          <div style="font-weight:800; font-size:1.1rem; margin-bottom:4px; color:var(--label);">🎯 Choose Quiz Volume & Wait Time</div>
-          <div style="font-size:0.85rem; color:var(--label3);">Pick the number of questions to generate. Large pools take longer.</div>
-        </div>
-        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-          <select id="quizSizeSelect" class="form-input" style="max-width:240px; border-radius:12px; background:rgba(255,255,255,0.05); color:inherit; border:1px solid rgba(255,255,255,0.15); padding:10px;">
-            <option value="10" selected>10 Questions (8 MCQ, 2 Essay) - ~30s</option>
-            <option value="20">20 Questions - ~1m wait time</option>
-            <option value="30">30 Questions - ~1.5m wait time</option>
-            <option value="40">40 Questions - ~2m wait time</option>
-            <option value="50">50 Questions - ~2.5m wait time</option>
-          </select>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+          <div>
+            <div style="font-weight:800; font-size:1.1rem; margin-bottom:4px; color:var(--label);">🎯 Choose Quiz Volume & Wait Time</div>
+            <div style="font-size:0.85rem; color:var(--label3);">Pick the number of questions to generate. Large pools take longer.</div>
+          </div>
           <button id="btnConfirmQ" class="btn btn-primary" onclick="triggerQuestionGeneration()" style="border-radius:12px; padding:10px 20px;">Generate Questions 🚀</button>
+        </div>
+
+        <!-- Hidden Select for compatibility -->
+        <select id="quizSizeSelect" style="display:none;">
+          <option value="10" selected>10 Questions</option>
+          <option value="20">20 Questions</option>
+          <option value="30">30 Questions</option>
+          <option value="40">40 Questions</option>
+          <option value="50">50 Questions</option>
+        </select>
+        
+        <!-- Modern Choice Cards -->
+        <div class="mattie-choice-group">
+          <div class="mattie-choice-card active" data-value="10" onclick="selectMattieChoice('quiz', '10')">
+            <div>
+              <div class="mattie-choice-title">⚡ 10 Questions</div>
+              <div class="mattie-choice-desc">8 MCQ & 2 Essay questions.</div>
+            </div>
+            <div class="mattie-choice-time">⏳ ~30s wait</div>
+          </div>
+          <div class="mattie-choice-card" data-value="20" onclick="selectMattieChoice('quiz', '20')">
+            <div>
+              <div class="mattie-choice-title">🎯 20 Questions</div>
+              <div class="mattie-choice-desc">16 MCQ & 4 Essay questions.</div>
+            </div>
+            <div class="mattie-choice-time">⏳ ~1m wait</div>
+          </div>
+          <div class="mattie-choice-card" data-value="30" onclick="selectMattieChoice('quiz', '30')">
+            <div>
+              <div class="mattie-choice-title">🧠 30 Questions</div>
+              <div class="mattie-choice-desc">24 MCQ & 6 Essay questions.</div>
+            </div>
+            <div class="mattie-choice-time">⏳ ~1.5m wait</div>
+          </div>
+          <div class="mattie-choice-card" data-value="40" onclick="selectMattieChoice('quiz', '40')">
+            <div>
+              <div class="mattie-choice-title">🔥 40 Questions</div>
+              <div class="mattie-choice-desc">32 MCQ & 8 Essay questions.</div>
+            </div>
+            <div class="mattie-choice-time">⏳ ~2m wait</div>
+          </div>
+          <div class="mattie-choice-card" data-value="50" onclick="selectMattieChoice('quiz', '50')">
+            <div>
+              <div class="mattie-choice-title">🏆 50 Questions</div>
+              <div class="mattie-choice-desc">40 MCQ & 10 Essay questions.</div>
+            </div>
+            <div class="mattie-choice-time">⏳ ~2.5m wait</div>
+          </div>
         </div>
       </div>
     </div>
@@ -773,6 +932,25 @@ function awardXP(pts, badgeKey) {
 document.getElementById('conceptInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') runExplain();
 });
+
+// Modern Choice Selector Function
+function selectMattieChoice(type, value) {
+  const selectEl = document.getElementById(`${type}SizeSelect`);
+  if (selectEl) {
+    selectEl.value = value;
+    selectEl.dispatchEvent(new Event('change'));
+  }
+  const container = document.getElementById(`${type}SizeSelectContainer`);
+  if (container) {
+    container.querySelectorAll('.mattie-choice-card').forEach(card => {
+      if (card.getAttribute('data-value') === String(value)) {
+        card.classList.add('active');
+      } else {
+        card.classList.remove('active');
+      }
+    });
+  }
+}
 
 // Mobile Menu Toggle
 function toggleMobileMenu(){const m=document.getElementById('mobileMenu'),o=document.getElementById('mobileMenuOverlay');m.classList.toggle('open');o.classList.toggle('open');}
