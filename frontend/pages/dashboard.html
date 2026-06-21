@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Dashboard — CampusTutor AI</title>
 <link rel="stylesheet" href="/css/style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
   window.MathJax = {
@@ -51,7 +52,7 @@
 <body>
 <nav class="navbar">
   <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">☰</button>
-  <a href="/" class="brand"><div class="brand-icon">🎓</div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span> <span class="brand-ai">AI</span></a>
+  <a href="/" class="brand"><div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span> <span class="brand-ai">AI</span></a>
   <div class="navbar-right">
     <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
     <span id="userGreeting" style="font-size:0.83rem;color:var(--label3);"></span>
@@ -61,51 +62,51 @@
 
 <div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="closeMobileMenu()"></div>
 <nav class="mobile-menu" id="mobileMenu">
-  <a href="/pages/dashboard.html" class="mobile-menu-item" onclick="closeMobileMenu()">🏠 Dashboard</a>
-  <a href="/pages/upload.html" class="mobile-menu-item" onclick="closeMobileMenu()">📤 Uploads</a>
-  <a href="/pages/history.html" class="mobile-menu-item" onclick="closeMobileMenu()">📊 History</a>
-  <a href="/pages/dashboard.html#profile" class="mobile-menu-item" onclick="closeMobileMenu()">👤 Profile</a>
-  <button class="mobile-menu-item logout" onclick="logout()">🚪 Logout</button>
+  <a href="/pages/dashboard.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-house"></i> Dashboard</a>
+  <a href="/pages/upload.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-cloud-arrow-up"></i> Uploads</a>
+  <a href="/pages/history.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-chart-simple"></i> History</a>
+  <a href="/pages/dashboard.html#profile" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-user"></i> Profile</a>
+  <button class="mobile-menu-item logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
 </nav>
 
 <div class="app-layout">
   <aside class="sidebar">
     <div class="sidebar-section">Main</div>
-    <a href="/pages/dashboard.html" class="sidebar-link active">🏠 Dashboard</a>
-    <a href="/pages/history.html" class="sidebar-link">📊 History</a>
-    <a href="/pages/upload.html" class="sidebar-link">📤 Upload PDF</a>
+    <a href="/pages/dashboard.html" class="sidebar-link active"><i class="fa-solid fa-house"></i> Dashboard</a>
+    <a href="/pages/history.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> History</a>
+    <a href="/pages/upload.html" class="sidebar-link"><i class="fa-solid fa-cloud-arrow-up"></i> Upload PDF</a>
 
     <div class="sidebar-section" style="margin-top:8px;">Study Tools</div>
     <div id="sidebarDocs"></div>
 
     <div class="sidebar-section" style="margin-top:8px;">Productivity</div>
-    <button class="sidebar-link" onclick="openPomodoro()" style="background:none;border:none;width:100%;text-align:left;padding:10px 12px;cursor:pointer;font-size:0.88rem;font-weight:500;">⏱️ Focus Timer</button>
-    <a href="#" class="sidebar-link">📌 Bookmarks</a>
+    <button class="sidebar-link" onclick="openPomodoro()" style="background:none;border:none;width:100%;text-align:left;padding:10px 12px;cursor:pointer;font-size:0.88rem;font-weight:500;"><i class="fa-solid fa-stopwatch"></i> Focus Timer</button>
+    <a href="#" class="sidebar-link"><i class="fa-solid fa-bookmark"></i> Bookmarks</a>
 
     <div class="sidebar-bottom">
-      <div style="font-size:0.7rem;color:var(--label4);text-align:center;padding:8px;">⚡ Developed by MattieTech</div>
+      <div style="font-size:0.7rem;color:var(--label4);text-align:center;padding:8px;"><i class="fa-solid fa-bolt"></i> Developed by MattieTech</div>
       <div style="font-size:0.7rem;color:var(--label4);text-align:center;padding:8px;">Version 1.0.1</div>
     </div>
   </aside>
 
   <main class="main-content">
     <div class="page-header">
-      <h1 id="welcomeMsg">Welcome back, Student 🎓</h1>
+      <h1 id="welcomeMsg">Welcome back, Student <i class="fa-solid fa-graduation-cap"></i></h1>
       <p>Your study hub — track progress, manage documents, stay motivated.</p>
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
       <a href="/pages/upload.html" class="btn btn-primary btn-lg" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-weight:700;">
-        📄 Upload PDF
+        <i class="fa-solid fa-file-pdf"></i> Upload PDF
       </a>
       <a href="/pages/upload.html" class="btn btn-primary btn-lg" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-weight:700;">
-        📸 Upload Image
+        <i class="fa-solid fa-image"></i> Upload Image
       </a>
     </div>
 
     <div class="xp-bar-wrap">
       <div class="xp-row">
-        <div class="xp-level">⚡ Level <span id="xpLevel">1</span> — Rising Scholar</div>
+        <div class="xp-level"><i class="fa-solid fa-bolt"></i> Level <span id="xpLevel">1</span> — Rising Scholar</div>
         <div class="xp-points"><span id="xpCur">0</span> / <span id="xpMax">100</span> XP</div>
       </div>
       <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
@@ -113,7 +114,7 @@
 
     <div class="stats-row">
       <div class="stat-card"><div class="stat-num" id="statDocs" style="color:var(--blue);">—</div><div class="stat-label">Documents</div></div>
-      <div class="stat-card"><div class="stat-num" id="statStreak" style="color:var(--orange);">0🔥</div><div class="stat-label">Day Streak</div></div>
+      <div class="stat-card"><div class="stat-num" id="statStreak" style="color:var(--orange);">0<i class="fa-solid fa-fire"></i></div><div class="stat-label">Day Streak</div></div>
       <div class="stat-card"><div class="stat-num" id="statXP" style="color:var(--purple);">0</div><div class="stat-label">Total XP</div></div>
       <div class="stat-card"><div class="stat-num" style="color:var(--green);">Free</div><div class="stat-label">Plan</div></div>
     </div>
@@ -121,7 +122,7 @@
     <div class="card liquid-glass-card" style="margin-bottom:24px;">
       <div class="card-body">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-          <span style="font-size:1.5rem;">💬</span>
+          <span style="font-size:1.5rem;"><i class="fa-solid fa-comment-dots"></i></span>
           <div>
             <div style="font-weight:700;font-size:0.95rem;">Explain a Concept</div>
             <div style="font-size:0.8rem;color:var(--label3);">Ask the AI to explain any topic or concept instantly</div>
@@ -141,7 +142,7 @@
       <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
         <div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-            <span style="font-size:1.5rem;">🎯</span>
+            <span style="font-size:1.5rem;"><i class="fa-solid fa-bullseye"></i></span>
             <div>
               <div style="font-weight:700;font-size:0.95rem;">Today's Challenge</div>
               <div style="font-size:0.8rem;color:var(--label3);">Upload a PDF and generate flashcards to earn +50 XP</div>
@@ -151,13 +152,13 @@
             <div class="progress-fill" style="width:30%"></div>
           </div>
         </div>
-        <a href="/pages/upload.html" class="btn btn-primary">Start Challenge 🚀</a>
+        <a href="/pages/upload.html" class="btn btn-primary">Start Challenge <i class="fa-solid fa-rocket"></i></a>
       </div>
     </div>
 
     <div style="margin-bottom:28px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <h2 style="font-size:1.1rem;font-family:var(--font-ui);font-weight:700;">🏆 Achievements</h2>
+        <h2 style="font-size:1.1rem;font-family:var(--font-ui);font-weight:700;"><i class="fa-solid fa-trophy"></i> Achievements</h2>
         <span class="badge badge-blue" id="badgeCount">0 / 6 Unlocked</span>
       </div>
       <div class="badges-grid" id="badgesGrid"></div>
@@ -165,7 +166,7 @@
 
     <div style="margin-bottom:28px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <h2 style="font-size:1.1rem;font-family:var(--font-ui);font-weight:700;">📊 Your Activity</h2>
+        <h2 style="font-size:1.1rem;font-family:var(--font-ui);font-weight:700;"><i class="fa-solid fa-chart-simple"></i> Your Activity</h2>
         <span class="badge badge-blue" id="activityCount">0 actions</span>
       </div>
       <div id="activityEmpty" style="display:none;" class="empty-state">
@@ -187,14 +188,14 @@
 
     <div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <h2 style="font-size:1.1rem;font-family:var(--font-ui);font-weight:700;">📄 Your Documents</h2>
+        <h2 style="font-size:1.1rem;font-family:var(--font-ui);font-weight:700;"><i class="fa-solid fa-file-pdf"></i> Your Documents</h2>
         <a href="/pages/upload.html" class="btn btn-primary btn-sm">+ Upload New</a>
       </div>
       <div id="emptyState" style="display:none;" class="empty-state">
-        <div class="empty-state-icon">📂</div>
+        <div class="empty-state-icon"><i class="fa-solid fa-folder-open"></i></div>
         <h3>No documents yet</h3>
         <p>Upload your first PDF lecture note to start studying with AI assistance.</p>
-        <a href="/pages/upload.html" class="btn btn-primary">📤 Upload Your First PDF</a>
+        <a href="/pages/upload.html" class="btn btn-primary"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Your First PDF</a>
       </div>
       <div class="doc-grid" id="docGrid"></div>
     </div>
@@ -205,7 +206,7 @@
   <div class="card" style="max-width:320px;width:100%;margin:20px;">
     <div class="card-body" style="text-align:center;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <h3 style="font-size:1rem;font-weight:700;">⏱️ Focus Timer</h3>
+        <h3 style="font-size:1rem;font-weight:700;"><i class="fa-solid fa-stopwatch"></i> Focus Timer</h3>
         <button onclick="closePomodoro()" class="btn btn-ghost btn-sm">✕</button>
       </div>
       <div class="pomo-circle">
@@ -224,7 +225,7 @@
   </div>
 </div>
 
-<a href="https://chat.whatsapp.com/CNlccvf5Eue6ZvE4Pz3JGX" class="whatsapp-fab" title="WhatsApp Support">💬</a>
+<a href="https://chat.whatsapp.com/CNlccvf5Eue6ZvE4Pz3JGX" class="whatsapp-fab" title="WhatsApp Support"><i class="fa-solid fa-comment-dots"></i></a>
 
 <script src="/js/api.js"></script>
 <script>
@@ -299,8 +300,8 @@ initMobileMenu();
 const user=getUser();
 if(user && user.fullName){
   const firstName = user.fullName.split(' ')[0];
-  document.getElementById('userGreeting').textContent=`Hi, ${firstName} 👋`;
-  document.getElementById('welcomeMsg').textContent=`Welcome back, ${firstName} 🎓`;
+  document.getElementById('userGreeting').textContent=`Hi, ${firstName} <i class="fa-solid fa-hand"></i>`;
+  document.getElementById('welcomeMsg').textContent=`Welcome back, ${firstName} <i class="fa-solid fa-graduation-cap"></i>`;
 }
 
 loadUserStats();
@@ -317,11 +318,11 @@ async function loadUserStats(){
   }
   
   document.getElementById('xpLevel').textContent=stats.level||1;
-  document.getElementById('xpCur').textContent=(stats.xp%100)||0;
-  document.getElementById('xpMax').textContent=100;
-  document.getElementById('xpFill').style.width=((stats.xp%100)||0)+'%';
+  document.getElementById('xpCur').textContent=stats.xpInLevel||0;
+  document.getElementById('xpMax').textContent=stats.xpForNextLevel||100;
+  document.getElementById('xpFill').style.width=(stats.xpProgressPercent||0)+'%';
   document.getElementById('statXP').textContent=stats.xp||0;
-  document.getElementById('statStreak').textContent=(stats.streak||0)+'🔥';
+  document.getElementById('statStreak').textContent=(stats.streak||0)+' <i class="fa-solid fa-fire"></i>';
   document.getElementById('statDocs').textContent=stats.documentsCount||0;
   document.getElementById('activityCount').textContent=(stats.activityCount||0)+' actions';
   
@@ -350,15 +351,15 @@ function loadStatsFromLocalStorage(){
   document.getElementById('statXP').textContent=xp;
 
   const streak=parseInt(localStorage.getItem('ct_streak')||'0');
-  document.getElementById('statStreak').textContent=streak+'🔥';
+  document.getElementById('statStreak').textContent=streak+' <i class="fa-solid fa-fire"></i>';
 
   const allBadges=[
-    {icon:'🚀',name:'First Upload',key:'first_upload'},
-    {icon:'📋',name:'Summarizer',key:'first_summary'},
-    {icon:'🃏',name:'Flashmaster',key:'first_flash'},
-    {icon:'🔥',name:'3-Day Streak',key:'streak_3'},
-    {icon:'📝',name:'Quiz Ace',key:'first_quiz'},
-    {icon:'⭐',name:'Level 5',key:'level_5'},
+    {icon:'<i class="fa-solid fa-rocket"></i>',name:'First Upload',key:'first_upload'},
+    {icon:'<i class="fa-solid fa-list-check"></i>',name:'Summarizer',key:'first_summary'},
+    {icon:'<i class="fa-solid fa-id-card"></i>',name:'Flashmaster',key:'first_flash'},
+    {icon:'<i class="fa-solid fa-fire"></i>',name:'3-Day Streak',key:'streak_3'},
+    {icon:'<i class="fa-solid fa-pen-to-square"></i>',name:'Quiz Ace',key:'first_quiz'},
+    {icon:'<i class="fa-solid fa-star"></i>',name:'Level 5',key:'level_5'},
   ];
   const unlocked=JSON.parse(localStorage.getItem('ct_badges')||'[]');
   document.getElementById('badgeCount').textContent=unlocked.length+' / '+allBadges.length+' Unlocked';
@@ -383,16 +384,16 @@ async function loadDocs(){
   }
   document.getElementById('docGrid').innerHTML=docs.map(d=>`
     <div class="doc-card" onclick="openDoc('${d.id}','${esc(d.file_name)}')">
-      <div class="doc-icon">📄</div>
+      <div class="doc-icon"><i class="fa-solid fa-file-pdf"></i></div>
       <div class="doc-name" title="${esc(d.file_name)}">${esc(d.file_name)}</div>
       <div class="doc-meta">${d.page_count} pages · ${formatDate(d.created_at)}</div>
       <div class="doc-actions" onclick="event.stopPropagation()">
-        <button class="btn btn-primary btn-sm" onclick="openDoc('${d.id}','${esc(d.file_name)}')">🤖 Study</button>
-        <button class="btn btn-danger btn-sm" onclick="delDoc('${d.id}',this)">🗑️</button>
+        <button class="btn btn-primary btn-sm" onclick="openDoc('${d.id}','${esc(d.file_name)}')"><i class="fa-solid fa-robot"></i> Study</button>
+        <button class="btn btn-danger btn-sm" onclick="delDoc('${d.id}',this)"><i class="fa-solid fa-trash-can"></i></button>
       </div>
     </div>`).join('');
   sidebar.innerHTML=docs.slice(0,5).map(d=>`
-    <a href="/pages/study.html?docId=${d.id}&name=${encodeURIComponent(d.file_name)}" class="sidebar-link" style="font-size:0.82rem;padding:8px 12px;">📄 ${d.file_name.length>22?d.file_name.substring(0,22)+'…':d.file_name}</a>`).join('');
+    <a href="/pages/study.html?docId=${d.id}&name=${encodeURIComponent(d.file_name)}" class="sidebar-link" style="font-size:0.82rem;padding:8px 12px;"><i class="fa-solid fa-file-pdf"></i> ${d.file_name.length>22?d.file_name.substring(0,22)+'…':d.file_name}</a>`).join('');
 }
 
 loadActivity();
@@ -418,10 +419,10 @@ async function loadActivity(){
   const actList=document.getElementById('activityList');
   
   const actEmojis={
-    upload_document:'📤',upload_image:'📸',upload_video:'🎥',
-    ai_summarize:'📋',ai_explain:'💡',ai_questions:'📝',ai_flashcards:'🃏',
-    ai_quiz:'📖',download_summary:'⬇️',download_flashcards:'⬇️',
-    other:'✨'
+    upload_document:'<i class="fa-solid fa-cloud-arrow-up"></i>',upload_image:'<i class="fa-solid fa-image"></i>',upload_video:'<i class="fa-solid fa-video"></i>',
+    ai_summarize:'<i class="fa-solid fa-list-check"></i>',ai_explain:'<i class="fa-solid fa-lightbulb"></i>',ai_questions:'<i class="fa-solid fa-pen-to-square"></i>',ai_flashcards:'<i class="fa-solid fa-id-card"></i>',
+    ai_quiz:'<i class="fa-solid fa-book-open"></i>',download_summary:'<i class="fa-solid fa-download"></i>',download_flashcards:'<i class="fa-solid fa-download"></i>',
+    other:'<i class="fa-solid fa-wand-magic-sparkles"></i>'
   };
   
   actList.innerHTML=acts.map(a=>`
@@ -439,7 +440,7 @@ async function delDoc(id,btn){
   if(!confirm('Delete this document?'))return;
   btn.textContent='...';btn.disabled=true;
   const{error}=await apiDeleteDoc(id);
-  if(error){showToast('Failed to delete.','error');btn.textContent='🗑️';btn.disabled=false;return;}
+  if(error){showToast('Failed to delete.','error');btn.innerHTML='<i class="fa-solid fa-trash-can"></i>';btn.disabled=false;return;}
   showToast('Document deleted.','info');loadDocs();
 }
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
@@ -455,12 +456,12 @@ function togglePomo(){
       pomoSeconds--;
       const m=Math.floor(pomoSeconds/60),s=pomoSeconds%60;
       document.getElementById('pomoTime').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-      if(pomoSeconds<=0){clearInterval(pomoInterval);pomoRunning=false;document.getElementById('pomoStatus').textContent='Session complete! +10 XP 🎉';awardXP(10);}
+      if(pomoSeconds<=0){clearInterval(pomoInterval);pomoRunning=false;document.getElementById('pomoStatus').textContent='Session complete! +10 XP <i class="fa-solid fa-trophy"></i>';awardXP(10);}
     },1000);
   }
 }
 function resetPomo(){clearInterval(pomoInterval);pomoRunning=false;pomoSeconds=25*60;document.getElementById('pomoTime').textContent='25:00';document.getElementById('pomoStart').textContent='▶ Start';document.getElementById('pomoStatus').textContent='Ready to focus?';}
-function awardXP(pts){const cur=parseInt(localStorage.getItem('ct_xp')||'0');localStorage.setItem('ct_xp',cur+pts);showToast(`+${pts} XP earned! 🌟`,'success');}
+function awardXP(pts){const cur=parseInt(localStorage.getItem('ct_xp')||'0');localStorage.setItem('ct_xp',cur+pts);showToast(`+${pts} XP earned! <i class="fa-solid fa-star"></i>`,'success');}
 
 // Mobile Menu Toggle
 function toggleMobileMenu(){const m=document.getElementById('mobileMenu'),o=document.getElementById('mobileMenuOverlay');m.classList.toggle('open');o.classList.toggle('open');}
@@ -829,10 +830,10 @@ document.addEventListener('DOMContentLoaded', initAnnouncementModal);
 
 <div class="announcement-overlay" id="announcementOverlay">
   <div class="announcement-modal">
-    <div class="announcement-header">📢 Important Announcement!</div>
+    <div class="announcement-header"><i class="fa-solid fa-bullhorn"></i> Important Announcement!</div>
     <div class="announcement-text">To stay updated with the latest improvements, new feature releases, and critical announcements for CampusTutor AI, join our official WhatsApp community managed by MattieTech!</div>
     <div class="announcement-buttons">
-      <button class="announcement-btn announcement-btn-primary" id="announcementJoin">🟢 Join WhatsApp Updates</button>
+      <button class="announcement-btn announcement-btn-primary" id="announcementJoin"><i class="fa-solid fa-circle" style="color: #25d366;"></i> Join WhatsApp Updates</button>
       <button class="announcement-btn announcement-btn-dismiss" id="announcementDismiss">Close</button>
     </div>
   </div>

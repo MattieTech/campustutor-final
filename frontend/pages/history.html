@@ -5,11 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>History — CampusTutor AI</title>
 <link rel="stylesheet" href="/css/style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 </head>
 <body>
 <nav class="navbar">
   <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">☰</button>
-  <a href="/" class="brand"><div class="brand-icon">🎓</div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span> <span class="brand-ai">AI</span></a>
+  <a href="/" class="brand"><div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span> <span class="brand-ai">AI</span></a>
   <div class="navbar-right">
     <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
     <a href="/pages/dashboard.html" class="pill-btn">← Dashboard</a>
@@ -19,25 +20,25 @@
 
 <div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="closeMobileMenu()"></div>
 <nav class="mobile-menu" id="mobileMenu">
-  <a href="/pages/dashboard.html" class="mobile-menu-item" onclick="closeMobileMenu()">🏠 Dashboard</a>
-  <a href="/pages/upload.html" class="mobile-menu-item" onclick="closeMobileMenu()">📤 Uploads</a>
-  <a href="/pages/history.html" class="mobile-menu-item" onclick="closeMobileMenu()">📊 History</a>
-  <a href="/pages/dashboard.html#profile" class="mobile-menu-item" onclick="closeMobileMenu()">👤 Profile</a>
-  <button class="mobile-menu-item logout" onclick="logout()">🚪 Logout</button>
+  <a href="/pages/dashboard.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-house"></i> Dashboard</a>
+  <a href="/pages/upload.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-cloud-arrow-up"></i> Uploads</a>
+  <a href="/pages/history.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-chart-simple"></i> History</a>
+  <a href="/pages/dashboard.html#profile" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-user"></i> Profile</a>
+  <button class="mobile-menu-item logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
 </nav>
 
 <div class="app-layout">
   <aside class="sidebar">
     <div class="sidebar-section">Navigation</div>
-    <a href="/pages/dashboard.html" class="sidebar-link">🏠 Dashboard</a>
-    <a href="/pages/history.html" class="sidebar-link active">📊 History</a>
-    <a href="/pages/upload.html" class="sidebar-link">📤 Upload PDF</a>
-    <div class="sidebar-bottom"><div style="font-size:0.7rem;color:var(--label4);text-align:center;padding:8px;">⚡ Developed by MattieTech</div></div>
+    <a href="/pages/dashboard.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Dashboard</a>
+    <a href="/pages/history.html" class="sidebar-link active"><i class="fa-solid fa-chart-simple"></i> History</a>
+    <a href="/pages/upload.html" class="sidebar-link"><i class="fa-solid fa-cloud-arrow-up"></i> Upload PDF</a>
+    <div class="sidebar-bottom"><div style="font-size:0.7rem;color:var(--label4);text-align:center;padding:8px;"><i class="fa-solid fa-bolt"></i> Developed by MattieTech</div></div>
   </aside>
 
   <main class="main-content">
     <div class="page-header">
-      <h1>📊 Your Study History</h1>
+      <h1><i class="fa-solid fa-chart-simple"></i> Your Study History</h1>
       <p>Track your learning journey, achievements, and progress.</p>
     </div>
 
@@ -45,17 +46,17 @@
     <div class="stats-row">
       <div class="stat-card"><div class="stat-num" id="totalXP" style="color:var(--purple);">0</div><div class="stat-label">Total XP</div></div>
       <div class="stat-card"><div class="stat-num" id="currentLevel" style="color:var(--blue);">1</div><div class="stat-label">Current Level</div></div>
-      <div class="stat-card"><div class="stat-num" id="dayStreak" style="color:var(--orange);">0🔥</div><div class="stat-label">Day Streak</div></div>
+      <div class="stat-card"><div class="stat-num" id="dayStreak" style="color:var(--orange);">0<i class="fa-solid fa-fire"></i></div><div class="stat-label">Day Streak</div></div>
       <div class="stat-card"><div class="stat-num" id="totalDocs" style="color:var(--green);">0</div><div class="stat-label">Documents</div></div>
     </div>
 
     <!-- Tabs -->
     <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;border-bottom:1px solid var(--sep);padding-bottom:12px;">
-      <button class="tab-btn active" onclick="switchTab('activity')">📋 Activity</button>
-      <button class="tab-btn" onclick="switchTab('ai')">✨ AI Results</button>
-      <button class="tab-btn" onclick="switchTab('documents')">📄 Documents</button>
-      <button class="tab-btn" onclick="switchTab('achievements')">🏆 Achievements</button>
-      <button class="tab-btn" onclick="switchTab('xp')">⚡ XP History</button>
+      <button class="tab-btn active" onclick="switchTab('activity')"><i class="fa-solid fa-list-check"></i> Activity</button>
+      <button class="tab-btn" onclick="switchTab('ai')"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Results</button>
+      <button class="tab-btn" onclick="switchTab('documents')"><i class="fa-solid fa-file-pdf"></i> Documents</button>
+      <button class="tab-btn" onclick="switchTab('achievements')"><i class="fa-solid fa-trophy"></i> Achievements</button>
+      <button class="tab-btn" onclick="switchTab('xp')"><i class="fa-solid fa-bolt"></i> XP History</button>
     </div>
 
     <!-- Activity Tab -->
@@ -63,7 +64,7 @@
       <h2 style="font-size:1rem;margin-bottom:16px;font-weight:700;">Recent Activities</h2>
       <div id="activityList" style="display:flex;flex-direction:column;gap:8px;"></div>
       <div id="activityEmpty" style="display:none;text-align:center;padding:40px;color:var(--label3);">
-        <div style="font-size:3rem;margin-bottom:12px;">🌱</div>
+        <div style="font-size:3rem;margin-bottom:12px;"><i class="fa-solid fa-seedling"></i></div>
         <div>No activities yet. Start by uploading a document!</div>
       </div>
     </div>
@@ -73,7 +74,7 @@
       <h2 style="font-size:1rem;margin-bottom:16px;font-weight:700;">Generated AI Content</h2>
       <div id="aiResultsList" style="display:flex;flex-direction:column;gap:16px;"></div>
       <div id="aiEmpty" style="display:none;text-align:center;padding:40px;color:var(--label3);">
-        <div style="font-size:3rem;margin-bottom:12px;">🤖</div>
+        <div style="font-size:3rem;margin-bottom:12px;"><i class="fa-solid fa-robot"></i></div>
         <div>No AI-generated content yet. Generate summaries, flashcards, or questions from your documents!</div>
         <a href="/pages/upload.html" class="btn btn-primary btn-sm" style="margin-top:16px;">Upload & Generate →</a>
       </div>
@@ -84,7 +85,7 @@
       <h2 style="font-size:1rem;margin-bottom:16px;font-weight:700;">Uploaded Documents</h2>
       <div id="documentsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;"></div>
       <div id="docsEmpty" style="display:none;text-align:center;padding:40px;color:var(--label3);">
-        <div style="font-size:3rem;margin-bottom:12px;">📂</div>
+        <div style="font-size:3rem;margin-bottom:12px;"><i class="fa-solid fa-folder-open"></i></div>
         <div>No documents uploaded yet.</div>
         <a href="/pages/upload.html" class="btn btn-primary btn-sm" style="margin-top:16px;">Upload Your First Document</a>
       </div>
@@ -95,7 +96,7 @@
       <h2 style="font-size:1rem;margin-bottom:16px;font-weight:700;">Achievements Earned</h2>
       <div id="achievementsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;"></div>
       <div id="achievementsEmpty" style="display:none;text-align:center;padding:40px;color:var(--label3);">
-        <div style="font-size:3rem;margin-bottom:12px;">🎯</div>
+        <div style="font-size:3rem;margin-bottom:12px;"><i class="fa-solid fa-bullseye"></i></div>
         <div>No achievements unlocked yet. Keep studying!</div>
       </div>
     </div>
@@ -198,7 +199,7 @@ async function loadHistoryData(){
   if(stats){
     document.getElementById('totalXP').textContent=stats.xp||0;
     document.getElementById('currentLevel').textContent=stats.level||1;
-    document.getElementById('dayStreak').textContent=(stats.streak||0)+'🔥';
+    document.getElementById('dayStreak').textContent=(stats.streak||0)+' <i class="fa-solid fa-fire"></i>';
     document.getElementById('totalDocs').textContent=stats.documentsCount||0;
     document.getElementById('xpToNext').textContent=stats.xpToNextLevel||100;
     document.getElementById('lifetimeXP').textContent=stats.xp||0;
@@ -211,10 +212,10 @@ async function loadHistoryData(){
   if(actData?.activities?.length>0){
     const acts=actData.activities;
     const actEmojis={
-      upload_document:'📤',upload_image:'📸',upload_video:'🎥',
-      ai_summarize:'📋',ai_explain:'💡',ai_questions:'📝',ai_flashcards:'🃏',
-      ai_quiz:'📖',download_summary:'⬇️',download_flashcards:'⬇️',
-      other:'✨'
+      upload_document:'<i class="fa-solid fa-cloud-arrow-up"></i>',upload_image:'<i class="fa-solid fa-image"></i>',upload_video:'<i class="fa-solid fa-video"></i>',
+      ai_summarize:'<i class="fa-solid fa-list-check"></i>',ai_explain:'<i class="fa-solid fa-lightbulb"></i>',ai_questions:'<i class="fa-solid fa-pen-to-square"></i>',ai_flashcards:'<i class="fa-solid fa-id-card"></i>',
+      ai_quiz:'<i class="fa-solid fa-book-open"></i>',download_summary:'<i class="fa-solid fa-download"></i>',download_flashcards:'<i class="fa-solid fa-download"></i>',
+      other:'<i class="fa-solid fa-wand-magic-sparkles"></i>'
     };
     document.getElementById('activityList').innerHTML=acts.map(a=>`
       <div style="display:flex;gap:12px;padding:12px;background:rgba(118,118,128,.04);border-radius:var(--r);align-items:flex-start;">
@@ -232,7 +233,7 @@ async function loadHistoryData(){
   // Load AI results
   const {data:aiData,error:aiErr}=await apiGetMyAIResults();
   if(aiData?.results?.length>0){
-    const typeEmojis={summary:'📋',explanation:'💡',questions:'❓',flashcards:'🃏'};
+    const typeEmojis={summary:'<i class="fa-solid fa-list-check"></i>',explanation:'<i class="fa-solid fa-lightbulb"></i>',questions:'<i class="fa-solid fa-circle-question"></i>',flashcards:'<i class="fa-solid fa-id-card"></i>'};
     const typeNames={summary:'Summary',explanation:'Explanation',questions:'Questions',flashcards:'Flashcards'};
     const aiHTML=aiData.results.map(group=>`
       <div style="background:var(--glass);border:0.5px solid var(--glass-b);border-radius:var(--r-lg);padding:16px;overflow:hidden;">
@@ -246,7 +247,7 @@ async function loadHistoryData(){
           ${group.results.map(r=>`
             <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(118,118,128,.06);border-radius:var(--r);font-size:0.85rem;">
               <div style="display:flex;align-items:center;gap:8px;">
-                <span>${typeEmojis[r.type]||'✨'}</span>
+                <span>${typeEmojis[r.type]||'<i class="fa-solid fa-wand-magic-sparkles"></i>'}</span>
                 <span style="font-weight:600;">${typeNames[r.type]||r.type}</span>
               </div>
               <div style="font-size:0.72rem;color:var(--label3);">${formatDateTime(r.created_at)}</div>
@@ -265,10 +266,10 @@ async function loadHistoryData(){
   if(docs?.documents?.length>0){
     document.getElementById('documentsList').innerHTML=docs.documents.map(d=>`
       <div class="card" style="padding:12px;text-align:center;cursor:pointer;" onclick="openDoc('${d.id}','${esc(d.file_name)}')">
-        <div style="font-size:2rem;margin-bottom:8px;">📄</div>
+        <div style="font-size:2rem;margin-bottom:8px;"><i class="fa-solid fa-file-pdf"></i></div>
         <div style="font-size:0.8rem;font-weight:600;margin-bottom:4px;word-break:break-word;">${d.file_name.substring(0,30)}${d.file_name.length>30?'…':''}</div>
         <div style="font-size:0.7rem;color:var(--label3);">${d.page_count||1} pages · ${formatDate(d.created_at)}</div>
-        <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%;" onclick="event.stopPropagation();openDoc('${d.id}','${esc(d.file_name)}')">Study 🤖</button>
+        <button class="btn btn-primary btn-sm" style="margin-top:8px;width:100%;" onclick="event.stopPropagation();openDoc('${d.id}','${esc(d.file_name)}')">Study <i class="fa-solid fa-robot"></i></button>
       </div>`).join('');
   }else{
     document.getElementById('docsEmpty').style.display='block';

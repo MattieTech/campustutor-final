@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Create Account — CampusTutor AI</title>
 <link rel="stylesheet" href="/css/style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 </head>
 <body class="auth-page">
 <div class="auth-orb1"></div>
@@ -14,7 +15,7 @@
     <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
   </div>
   <div class="auth-brand">
-    <div class="auth-brand-icon">🎓</div>
+    <div class="auth-brand-icon"><i class="fa-solid fa-graduation-cap"></i></div>
     <h1><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></h1>
     <p>Create your free account and start studying smarter.</p>
   </div>
@@ -42,7 +43,7 @@
   <div class="auth-divider">or</div>
   <div class="auth-footer">Already have an account? <a href="/pages/login.html">Log in</a></div>
   <div style="text-align:center;margin-top:12px;"><a href="/" style="font-size:0.8rem;color:var(--label3);">← Back to Home</a></div>
-  <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:0.5px solid var(--sep);font-size:0.73rem;color:var(--label4);">⚡ Developed & Maintained by MattieTech</div>
+  <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:0.5px solid var(--sep);font-size:0.73rem;color:var(--label4);"><i class="fa-solid fa-bolt"></i> Developed & Maintained by MattieTech</div>
 </div>
 <script src="/js/api.js"></script>
 <script>
@@ -70,7 +71,7 @@ document.getElementById('signupForm').addEventListener('submit',async(e)=>{
     document.getElementById('email').value.trim(), pwd
   );
   if(error){err.textContent=error;err.style.display='block';btn.disabled=false;btn.textContent='Create Free Account →';return;}
-  ok.textContent='🎉 Account created! Redirecting to login...';ok.style.display='block';
+  ok.innerHTML='<i class="fa-solid fa-circle-check"></i> Account created! Redirecting to login...';ok.style.display='block';
   setTimeout(()=>{window.location.href='/pages/login.html';},1500);
 });
 </script>

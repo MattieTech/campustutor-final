@@ -80,6 +80,9 @@ const ACHIEVEMENTS = [
   },
 ];
 
+// Progressive Leveling Thresholds
+const LEVEL_THRESHOLDS = [0, 100, 350, 750, 1350, 2150, 3150, 4350, 5850, 7850];
+
 // ── AWARD XP ──────────────────────────────────────────────
 // Call this whenever a user completes an activity
 async function awardXP(userId, activityType, details = {}) {
@@ -101,6 +104,46 @@ async function awardXP(userId, activityType, details = {}) {
 
     const currentXP = profile.xp || 0;
     const currentLevel = profile.level || 1;
+
+    // If a document ID is provided for AI actions, check if XP was already awarded
+    if (details.documentId && (activityType === "ai_summarize" || activityType === "ai_questions" || activityType === "ai_flashcards")) {
+      const { data: existing, error: checkErr } = await supabase
+        .from("awarded_xp")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("document_id", details.documentId)
+        .eq("activity_type", activityType)
+        .maybeSingle();
+
+      if (checkErr) {
+        console.error("awarded_xp query error:", checkErr.message);
+      }
+
+      if (existing) {
+        console.log(`ℹ️ XP already awarded for ${activityType} on document ${details.documentId}. Skipping.`);
+        return {
+          xpAwarded: 0,
+          totalXP: currentXP,
+          newLevel: currentLevel,
+          leveledUp: false,
+          details,
+        };
+      }
+
+      // Record the XP award
+      const { error: insertErr } = await supabase
+        .from("awarded_xp")
+        .insert({
+          user_id: userId,
+          document_id: details.documentId,
+          activity_type: activityType,
+        });
+
+      if (insertErr) {
+        console.error("Failed to insert awarded_xp record:", insertErr.message);
+      }
+    }
+
     const newXP = currentXP + xpAmount;
     const newLevel = calculateLevel(newXP);
     const leveledUp = newLevel > currentLevel;
@@ -137,19 +180,16 @@ async function awardXP(userId, activityType, details = {}) {
 }
 
 // ── CALCULATE LEVEL ──────────────────────────────────────
-// Formula: Each level requires (level * 100) total XP
-// Level 1: 0 XP, Level 2: 100 XP, Level 3: 200 XP, etc.
 function calculateLevel(totalXP) {
-  if (totalXP < 100) return 1;
-  if (totalXP < 200) return 2;
-  if (totalXP < 300) return 3;
-  if (totalXP < 400) return 4;
-  if (totalXP < 500) return 5;
-  if (totalXP < 750) return 6;
-  if (totalXP < 1000) return 7;
-  if (totalXP < 1500) return 8;
-  if (totalXP < 2000) return 9;
-  return 10; // Max level
+  let level = 1;
+  for (let i = 1; i < LEVEL_THRESHOLDS.length; i++) {
+    if (totalXP >= LEVEL_THRESHOLDS[i]) {
+      level = i + 1;
+    } else {
+      break;
+    }
+  }
+  return level;
 }
 
 // ── UPDATE STREAK ─────────────────────────────────────────
@@ -296,11 +336,25 @@ async function getUserStats(userId) {
     // Check achievements
     const achievements = await checkAchievements(userId);
 
+    const level = profile.level || 1;
+    const xp = profile.xp || 0;
+    
+    // Calculate level thresholds
+    const currentThreshold = LEVEL_THRESHOLDS[level - 1] || 0;
+    const nextThreshold = LEVEL_THRESHOLDS[level] || LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1];
+    const xpInLevel = xp - currentThreshold;
+    const xpForNextLevel = nextThreshold - currentThreshold;
+    const xpProgressPercent = Math.min(Math.round((xpInLevel / xpForNextLevel) * 100), 100);
+    const xpToNextLevel = Math.max(nextThreshold - xp, 0);
+
     return {
-      xp: profile.xp || 0,
-      level: profile.level || 1,
+      xp: xp,
+      level: level,
       streak: profile.streak || 0,
-      xpToNextLevel: (profile.level * 100) - (profile.xp || 0),
+      xpInLevel: xpInLevel,
+      xpForNextLevel: xpForNextLevel,
+      xpProgressPercent: xpProgressPercent,
+      xpToNextLevel: xpToNextLevel,
       documentsCount: documents?.length || 0,
       activityCount: activity?.length || 0,
       achievements: achievements,

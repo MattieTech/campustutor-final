@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Log In — CampusTutor AI</title>
 <link rel="stylesheet" href="/css/style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 </head>
 <body class="auth-page">
 <div class="auth-orb1"></div>
@@ -14,11 +15,11 @@
     <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
   </div>
   <div class="auth-brand">
-    <div class="auth-brand-icon">🎓</div>
+    <div class="auth-brand-icon"><i class="fa-solid fa-graduation-cap"></i></div>
     <h1><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></h1>
     <p>Welcome back! Log in to continue.</p>
   </div>
-  <div id="statusAlert" style="display:none;padding:12px;border-radius:var(--r,12px);background:rgba(175,82,222,.1);border:1px solid rgba(175,82,222,.3);color:#af52de;margin-bottom:16px;text-align:center;font-size:0.9rem;font-weight:500;">👉 Your session has expired. Please log in again! 🔒</div>
+  <div id="statusAlert" style="display:none;padding:12px;border-radius:var(--r,12px);background:rgba(175,82,222,.1);border:1px solid rgba(175,82,222,.3);color:#af52de;margin-bottom:16px;text-align:center;font-size:0.9rem;font-weight:500;"><i class="fa-solid fa-hand-point-right"></i> Your session has expired. Please log in again! <i class="fa-solid fa-lock"></i></div>
   <div class="alert alert-error" id="errMsg"></div>
   <form id="loginForm">
     <div class="form-group">
@@ -34,7 +35,7 @@
   <div class="auth-divider">or</div>
   <div class="auth-footer">Don't have an account? <a href="/pages/signup.html">Sign up free</a></div>
   <div style="text-align:center;margin-top:12px;"><a href="/" style="font-size:0.8rem;color:var(--label3);">← Back to Home</a></div>
-  <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:0.5px solid var(--sep);font-size:0.73rem;color:var(--label4);">⚡ Developed & Maintained by MattieTech</div>
+  <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:0.5px solid var(--sep);font-size:0.73rem;color:var(--label4);"><i class="fa-solid fa-bolt"></i> Developed & Maintained by MattieTech</div>
 </div>
 <script src="/js/api.js"></script>
 <script>
@@ -59,7 +60,7 @@ document.getElementById('loginForm').addEventListener('submit',async(e)=>{
   btn.disabled=true; btn.textContent='Logging in...';
   const {data,error}=await apiLogin(document.getElementById('email').value.trim(),document.getElementById('password').value);
   if(error){err.textContent=error;err.style.display='block';btn.disabled=false;btn.textContent='Log In →';return;}
-  showToast(`Welcome back, ${data.user.fullName}! 👋`,'success');
+  showToast(`Welcome back, ${data.user.fullName}! <i class="fa-solid fa-hand"></i>`,'success');
   setTimeout(()=>{window.location.href='/pages/dashboard.html';},800);
 });
 </script>

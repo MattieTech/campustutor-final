@@ -389,7 +389,7 @@ async function generateSummaryForDocument(documentId, userId, options = {}) {
 
   if (award) {
     try {
-      await awardXP(userId, "ai_summarize", { document: doc.file_name });
+      await awardXP(userId, "ai_summarize", { document: doc.file_name, documentId });
       await updateStreak(userId);
     } catch (xpErr) {
       console.log("Note: Could not award XP:", xpErr.message);
@@ -474,7 +474,7 @@ async function generateQuestionsForDocument(documentId, userId, options = {}) {
   if (award) {
     try {
       const totalQ = (questionsData.mcqs?.length || 0) + (questionsData.shortAnswer?.length || 0) + (questionsData.essays?.length || 0);
-      await awardXP(userId, "ai_questions", { document: doc.file_name, count: totalQ });
+      await awardXP(userId, "ai_questions", { document: doc.file_name, count: totalQ, documentId });
       await updateStreak(userId);
     } catch (xpErr) {
       console.log("Note: Could not award XP:", xpErr.message);
@@ -545,7 +545,7 @@ async function generateFlashcardsForDocument(documentId, userId, options = {}) {
 
   if (award) {
     try {
-      await awardXP(userId, "ai_flashcards", { document: doc.file_name, count: flashcards.length });
+      await awardXP(userId, "ai_flashcards", { document: doc.file_name, count: flashcards.length, documentId });
       await updateStreak(userId);
     } catch (xpErr) {
       console.log("Note: Could not award XP:", xpErr.message);

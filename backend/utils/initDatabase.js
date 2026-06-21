@@ -76,6 +76,21 @@ const REQUIRED_TABLES = {
       CREATE INDEX IF NOT EXISTS idx_ai_results_user_id ON ai_results(user_id);
     `,
   },
+  awarded_xp: {
+    name: "awarded_xp",
+    description: "Track document-based XP awards to prevent duplicates",
+    sql: `
+      CREATE TABLE IF NOT EXISTS awarded_xp (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+        document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+        activity_type TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(user_id, document_id, activity_type)
+      );
+      CREATE INDEX IF NOT EXISTS idx_awarded_xp_user_id ON awarded_xp(user_id);
+    `,
+  },
   user_activity: {
     name: "user_activity",
     description: "User action audit log",
