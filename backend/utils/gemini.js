@@ -139,17 +139,44 @@ async function askGemini(prompt) {
 // Multimodal inline data request to transcribe scanned PDFs using Gemini
 async function ocrScannedPDF(fileBuffer) {
   try {
-    console.log("👁️ Scanned PDF detected, initiating multimodal OCR transcription using primary Gemini...");
-    const response = await model.generateContent([
-      {
-        inlineData: {
-          data: fileBuffer.toString("base64"),
-          mimeType: "application/pdf"
-        }
+    console.log("👁️ Scanned PDF detected, initiating multimodal OCR transcription using OpenRouter...");
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "HTTP-Referer": process.env.FRONTEND_URL || "http://localhost:3000",
+        "X-Title": "CampusTutor AI",
+        "Content-Type": "application/json",
       },
-      "Extract and transcribe all text from this scanned document. Return ONLY the transcribed text. Do not include any summary, intro, outro, explanation, or notes. Keep formatting, headers, paragraphs, lists, and equations exactly as they appear."
-    ]);
-    return response.response.text();
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        max_tokens: 8000,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Extract and transcribe all text from this scanned document. Return ONLY the transcribed text. Do not include any summary, intro, outro, explanation, or notes. Keep formatting, headers, paragraphs, lists, and equations exactly as they appear."
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:application/pdf;base64,${fileBuffer.toString("base64")}`
+                }
+              }
+            ]
+          }
+        ]
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error?.message || `OpenRouter error: ${response.status}`);
+    }
+
+    return data.choices[0].message.content;
   } catch (error) {
     console.error("❌ Multimodal OCR failed:", error.message);
     throw new Error("This PDF appears to be a scanned image and OCR processing failed. Please use a text-based PDF.");

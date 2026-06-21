@@ -44,9 +44,11 @@ const upload = multer({
     fileSize: 50 * 1024 * 1024, // Max 50MB per file
   },
   fileFilter: (req, file, cb) => {
-    // Allow both PDF and image files
+    // Allow PDF, PowerPoint and image files
     const allowedMimes = [
       "application/pdf",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "application/vnd.ms-powerpoint",
       "image/jpeg",
       "image/jpg",
       "image/png",
@@ -58,7 +60,7 @@ const upload = multer({
     } else {
       cb(
         new Error(
-          "Only PDF and image files (JPG, PNG, WEBP) are allowed!"
+          "Only PDF, PowerPoint (.pptx) and image files (JPG, PNG, WEBP) are allowed!"
         ),
         false
       ); // Reject
@@ -69,7 +71,7 @@ const upload = multer({
 // ── HELPER: Upload file to Supabase Storage ────────────────────
 async function uploadFileToStorage(userId, file, fileType) {
   const fileName = `${userId}/${Date.now()}-${file.originalname}`;
-  const bucketName = fileType === "pdf" ? "documents" : "images";
+  const bucketName = (fileType === "pdf" || fileType === "pptx") ? "documents" : "images";
 
   try {
     const { data, error } = await supabase.storage
@@ -100,7 +102,7 @@ async function uploadFileToStorage(userId, file, fileType) {
   }
 }
 
-// ── UPLOAD PDF ────────────────────────────────────────────────
+// ── UPLOAD PDF & PPTX ──────────────────────────────────────────
 // POST /api/upload/pdf
 // Protected route — user must be logged in
 // Frontend sends: FormData with a "pdf" field containing the file
@@ -108,46 +110,64 @@ router.post("/pdf", authMiddleware, upload.single("pdf"), async (req, res) => {
   try {
     // upload.single("pdf") puts the file into req.file
     if (!req.file) {
-      return res.status(400).json({ error: "No PDF file was uploaded." });
+      return res.status(400).json({ error: "No document file was uploaded." });
     }
 
     // Validate file type once more
-    if (req.file.mimetype !== "application/pdf") {
-      return res.status(400).json({ error: "Only PDF files are allowed!" });
+    const isPdf = req.file.mimetype === "application/pdf";
+    const isPptx = req.file.mimetype === "application/vnd.openxmlformats-officedocument.presentationml.presentation" || 
+                   req.file.mimetype === "application/vnd.ms-powerpoint";
+
+    if (!isPdf && !isPptx) {
+      return res.status(400).json({ error: "Only PDF and PowerPoint files are allowed!" });
     }
 
     const userId = req.user.id;
     const fileName = req.file.originalname;
-    const fileBuffer = req.file.buffer; // The PDF as a Buffer (raw bytes)
+    const fileBuffer = req.file.buffer; // The file as a Buffer (raw bytes)
+    const fileType = isPdf ? "pdf" : "pptx";
 
-    console.log(`📄 Processing PDF: ${fileName} for user ${userId}`);
+    console.log(`📄 Processing ${fileType.toUpperCase()}: ${fileName} for user ${userId}`);
 
-    // ── STEP 1: Extract text from the PDF ────────────────────
-    // pdf-parse reads the binary PDF data and gives us the text content
+    // ── STEP 1: Extract text from the PDF/PPTX ────────────────────
     let extractedText = "";
     let pageCount = 0;
 
-    try {
-      const pdfData = await pdfParse(fileBuffer);
-      extractedText = pdfData.text;
-      pageCount = pdfData.numpages || 0;
-    } catch (pdfErr) {
-      console.warn("⚠️  PDF parsing failed:", pdfErr.message);
-      return res.status(400).json({
-        error:
-          "Could not read this PDF. It may be encrypted, scanned, or corrupted. Please try another PDF.",
-      });
-    }
-
-    // Check if the PDF had any readable text
-    if (!extractedText || extractedText.trim().length < 50) {
+    if (isPdf) {
       try {
-        extractedText = await ocrScannedPDF(fileBuffer);
-      } catch (ocrErr) {
-        console.error("❌ Scanned PDF OCR fallback failed:", ocrErr.message);
+        const pdfData = await pdfParse(fileBuffer);
+        extractedText = pdfData.text;
+        pageCount = pdfData.numpages || 0;
+      } catch (pdfErr) {
+        console.warn("⚠️  PDF parsing failed:", pdfErr.message);
         return res.status(400).json({
           error:
-            "This PDF appears to be a scanned image and OCR processing failed. Please use a text-based PDF.",
+            "Could not read this PDF. It may be encrypted, scanned, or corrupted. Please try another PDF.",
+        });
+      }
+
+      // Check if the PDF had any readable text
+      if (!extractedText || extractedText.trim().length < 50) {
+        try {
+          extractedText = await ocrScannedPDF(fileBuffer);
+        } catch (ocrErr) {
+          console.error("❌ Scanned PDF OCR fallback failed:", ocrErr.message);
+          return res.status(400).json({
+            error:
+              "This PDF appears to be a scanned image and OCR processing failed. Please use a text-based PDF.",
+          });
+        }
+      }
+    } else {
+      // It is a PPTX
+      try {
+        const officeParser = require("officeparser");
+        extractedText = await officeParser.parseOffice(fileBuffer);
+        pageCount = 1; // Default estimate
+      } catch (pptxErr) {
+        console.error("❌ PPTX parsing failed:", pptxErr.message);
+        return res.status(400).json({
+          error: "Could not read this PowerPoint file. It may be corrupted. Please try another file.",
         });
       }
     }
@@ -159,7 +179,7 @@ router.post("/pdf", authMiddleware, upload.single("pdf"), async (req, res) => {
         : extractedText;
 
     // ── STEP 2: Upload file to Supabase Storage ──────────────
-    const fileStorageData = await uploadFileToStorage(userId, req.file, "pdf");
+    const fileStorageData = await uploadFileToStorage(userId, req.file, fileType);
 
     // ── STEP 3: Save document record to Supabase ─────────────
     const { data: document, error: dbError } = await supabase
@@ -167,7 +187,7 @@ router.post("/pdf", authMiddleware, upload.single("pdf"), async (req, res) => {
       .insert({
         user_id: userId,
         file_name: fileName,
-        file_type: "pdf",
+        file_type: fileType,
         file_path: fileStorageData?.path || null,
         extracted_text: truncatedText,
         page_count: pageCount,

@@ -39,15 +39,15 @@
     </div>
     <div class="card">
       <div class="card-body">
-        <!-- PDF Upload -->
+        <!-- PDF/PPTX Upload -->
         <div style="margin-bottom: 32px;">
-          <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px;">📄 Upload PDF</h3>
+          <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px;">📄 Upload PDF or PowerPoint (.pptx)</h3>
           <div class="upload-zone" id="pdfUploadZone">
-            <input type="file" id="pdfInput" accept=".pdf"/>
+            <input type="file" id="pdfInput" accept=".pdf,.pptx,.ppt"/>
             <div class="upload-icon">📄</div>
-            <h3>Drop your PDF here</h3>
+            <h3>Drop your PDF or PowerPoint slides here</h3>
             <p>or click to browse files</p>
-            <p style="margin-top:6px;font-size:0.75rem;">PDF only · Max 50MB</p>
+            <p style="margin-top:6px;font-size:0.75rem;">PDF, PPTX, PPT · Max 50MB</p>
           </div>
           <div id="pdfFileInfo" style="display:none;margin-top:18px;padding:14px;background:rgba(118,118,128,0.06);border-radius:var(--r);border:0.5px solid var(--sep);display:flex;align-items:center;gap:14px;">
             <div style="font-size:1.8rem;">📄</div>
@@ -58,7 +58,7 @@
             <div style="font-size:0.83rem;color:var(--label3);margin-bottom:8px;" id="pdfProgressLabel">Uploading...</div>
             <div class="progress-bar"><div class="progress-fill" id="pdfProgressFill" style="width:0%"></div></div>
           </div>
-          <button class="btn btn-primary btn-full btn-lg" id="pdfUploadBtn" onclick="uploadPDF()" disabled style="margin-top:20px;">📤 Upload & Process PDF</button>
+          <button class="btn btn-primary btn-full btn-lg" id="pdfUploadBtn" onclick="uploadPDF()" disabled style="margin-top:20px;">📤 Upload & Process Document</button>
         </div>
 
         <!-- Image Upload -->
@@ -155,7 +155,16 @@ let selectedPdfFile=null;
 
 pdfInput.addEventListener('change',e=>{if(e.target.files[0])handlePdfFile(e.target.files[0]);});
 function handlePdfFile(f){
-  if(f.type!=='application/pdf'){showToast('Please select a PDF file only.','error');return;}
+  const ext = f.name.split('.').pop().toLowerCase();
+  const allowedTypes = [
+    'application/pdf', 
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation', 
+    'application/vnd.ms-powerpoint'
+  ];
+  if(ext!=='pdf' && ext!=='pptx' && ext!=='ppt' && !allowedTypes.includes(f.type)){
+    showToast('Please select a PDF or PowerPoint file only.','error');
+    return;
+  }
   if(f.size>50*1024*1024){showToast('File too large. Max 50MB.','error');return;}
   selectedPdfFile=f;
   document.getElementById('pdfFileName').textContent=f.name;
@@ -163,7 +172,7 @@ function handlePdfFile(f){
   pdfFileInfo.style.display='flex';
   pdfUploadBtn.disabled=false;pdfUploadBtn.textContent=`📤 Upload "${f.name.length>30?f.name.substring(0,30)+'…':f.name}"`;
 }
-function clearPdfFile(){selectedPdfFile=null;pdfInput.value='';pdfFileInfo.style.display='none';pdfUploadBtn.disabled=true;pdfUploadBtn.textContent='📤 Upload & Process PDF';}
+function clearPdfFile(){selectedPdfFile=null;pdfInput.value='';pdfFileInfo.style.display='none';pdfUploadBtn.disabled=true;pdfUploadBtn.textContent='📤 Upload & Process Document';}
 
 pdfUploadZone.addEventListener('dragover',e=>{e.preventDefault();pdfUploadZone.classList.add('dragover');});
 pdfUploadZone.addEventListener('dragleave',()=>pdfUploadZone.classList.remove('dragover'));
@@ -177,7 +186,7 @@ async function uploadPDF(){
   let p=0;
   const iv=setInterval(()=>{
     p=Math.min(p+Math.random()*12,85);fill.style.width=p+'%';
-    lbl.textContent=p<40?'Uploading PDF…':p<70?'Extracting text…':'Saving to database…';
+    lbl.textContent=p<40?'Uploading file…':p<70?'Extracting text…':'Saving to database…';
   },300);
   const{data,error}=await apiUploadPDF(selectedPdfFile);
   clearInterval(iv);
@@ -187,7 +196,7 @@ async function uploadPDF(){
   const xp=parseInt(localStorage.getItem('ct_xp')||'0');localStorage.setItem('ct_xp',xp+20);
   const badges=JSON.parse(localStorage.getItem('ct_badges')||'[]');
   if(!badges.includes('first_upload')){badges.push('first_upload');localStorage.setItem('ct_badges',JSON.stringify(badges));}
-  showToast('PDF uploaded! +20 XP 🌟','success');
+  showToast('Document uploaded! +20 XP 🌟','success');
   setTimeout(()=>{window.location.href=`/pages/study.html?docId=${data.document.id}&name=${encodeURIComponent(data.document.fileName)}`;},1000);
 }
 
