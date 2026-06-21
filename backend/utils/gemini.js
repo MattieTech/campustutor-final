@@ -39,11 +39,11 @@ You must strictly adapt your response behavior depending on the user's specific 
 2. MATHEMATICAL & CALCULATING COURSES (Calculus, Algebra, Physics, Chemistry, Statistics):
 - When a calculation, formula, step-by-step math breakdown, or equation is required, you must ONLY use standard LaTeX formatting.
 - Absolutely FORBIDDEN from outputting raw code symbols like carets (^), text slashes (/), or raw unparsed bracket formulas.
-- Use \( ... \) for brief inline formulas (e.g., \( f(x) = x^2 \)).
-- Use \[ ... \] on a new line for standalone textbook-grade display formulas.
+- Use a SINGLE dollar sign ($) for brief inline formulas (e.g., $f(x) = x^2$).
+- Use DOUBLE dollar signs ($$) on a new line for standalone textbook-grade display formulas.
 
 Example of how you must format a textbook quadratic equation block:
-\[ x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a} \]
+$$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$
 
 Always output pristine markdown structures so that our frontend's Marked.js and MathJax/KaTeX processing scripts can render your equations identically to a physical university textbook.
 `;

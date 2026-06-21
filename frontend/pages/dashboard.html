@@ -672,13 +672,14 @@ async function renderMattieQuiz(quizData) {
 
 function preProcessMathDelimiters(text) {
   if (!text) return "";
-  // Convert [ ... ] to \[ ... \] if it contains LaTeX characters and is short/single line
-  let processed = text.replace(/\[\s*([^\]\n]{1,100}?\\[^\]\n]{1,100}?)\s*\]/g, (match, p1) => {
-    return `\\[${p1}\\]`;
-  });
-  // Convert ( ... ) to \( ... \) if it contains LaTeX characters and is short/single line
-  processed = processed.replace(/\(\s*([^)\n]{1,50}?\\[^)\n]{1,50}?)\s*\)/g, (match, p1) => {
-    return `\\(${p1}\\)`;
+  // Safely convert [ ... ] to $$ ... $$ if it contains algebraic patterns like ^, _, \ or = and no plain English words
+  let processed = text.replace(/\[\s*([^\]\n]{1,80}?)\s*\]/g, (match, p1) => {
+    const hasMath = /[\^_\+\-\*\/\\=]/.test(p1);
+    const hasWords = /\b(the|and|where|is|are|of|in|to|for|with)\b/i.test(p1);
+    if (hasMath && !hasWords) {
+      return `$$${p1}$$`;
+    }
+    return match;
   });
   return processed;
 }

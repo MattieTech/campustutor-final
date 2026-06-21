@@ -640,7 +640,7 @@ You are CampusTutor AI, a patient university lecturer who explains things simply
 ${docContext}The student wants you to explain this concept in beginner-friendly terms: "${concept}"
 
 IMPORTANT: Format ALL mathematical expressions using LaTeX.
-Use \( ... \) for inline math (e.g., \( f(x) = x^2 \)) and \[ ... \] for display equations (e.g., \[ x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a} \]).
+Use $ for inline math (e.g., $f(x) = x^2$) and $$ for display equations (e.g., $$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$).
 Never write math as plain text.
 
 Please explain it like this:
@@ -651,9 +651,9 @@ Please explain it like this:
 **Real-World Example:** [A relatable analogy or everyday example]
 
 **Mathematical Expression (if applicable):**
-\[
+$$
 \text{Key equation(s) here}
-\]
+$$
 
 **How it relates to the notes:** ${docContext ? "[Connect it back to what's in the lecture]" : "[General explanation without specific notes]"}
 
