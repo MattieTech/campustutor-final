@@ -456,14 +456,27 @@ window.showPerformanceBanner = function(score, message) {
   }
 
   if (refreshButton) {
-    refreshButton.addEventListener('click', async () => {
-      refreshButton.disabled = true;
-      refreshButton.textContent = '🔄 Generating Questions... Please wait 1-2 minutes.';
-      window.mattieQuizState = null;
-      await regenerateFreshQuiz();
+    refreshButton.addEventListener('click', () => {
       const overlay = refreshButton.closest('.performance-modal-overlay');
       if (overlay) {
         overlay.remove();
+      }
+
+      const quizContainer = document.getElementById('quizSizeSelectContainer');
+      if (quizContainer) {
+        const sumContainer = document.getElementById('summarySizeSelectContainer');
+        const flashContainer = document.getElementById('flashcardSizeSelectContainer');
+        if (sumContainer) sumContainer.style.display = 'none';
+        if (flashContainer) flashContainer.style.display = 'none';
+
+        quizContainer.style.display = 'block';
+        quizContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        if (typeof showToast === 'function') {
+          showToast('Select the number of questions you want for your new quiz! 🎯', 'info');
+        }
+      } else {
+        regenerateFreshQuiz();
       }
     });
   }
