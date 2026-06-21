@@ -628,14 +628,23 @@ async function triggerQuestionGeneration() {
 
   setBtnLoading(btn, waitText);
   
+  const forceFresh = window.mattieForceFreshQuiz;
+  window.mattieForceFreshQuiz = false; // Reset flag
+
+  if (forceFresh) {
+    if (window.studyAssetCache && window.studyAssetCache[docId]) {
+      delete window.studyAssetCache[docId].questions;
+    }
+  }
+
   let cached = getCachedAIResults(docId);
-  if (!cached?.questions) {
+  if (!forceFresh && !cached?.questions) {
     const { data } = await fetchAndCacheAIResults(docId);
     if (data?.results) cached = data.results;
   }
 
   // Note: if user selects a different size, we force generation of the new size
-  if (cached?.questions && cached.questions.mcqs?.length === (quizSize === 10 ? 8 : quizSize === 20 ? 14 : quizSize === 30 ? 20 : quizSize === 40 ? 25 : 30)) {
+  if (!forceFresh && cached?.questions && cached.questions.mcqs?.length === (quizSize === 10 ? 8 : quizSize === 20 ? 14 : quizSize === 30 ? 20 : quizSize === 40 ? 25 : 30)) {
     resetBtn(btn, '📝', 'Revision Questions', 'MCQs + essay questions with model answers');
     showResult('questions', '📝 Questions', { questions: cached.questions });
     awardXP(20, 'first_quiz');

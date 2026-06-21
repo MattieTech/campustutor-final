@@ -462,6 +462,9 @@ window.showPerformanceBanner = function(score, message) {
         overlay.remove();
       }
 
+      // Set force fresh flag so the caching layer is bypassed
+      window.mattieForceFreshQuiz = true;
+
       const quizContainer = document.getElementById('quizSizeSelectContainer');
       if (quizContainer) {
         const sumContainer = document.getElementById('summarySizeSelectContainer');
