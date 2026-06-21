@@ -732,18 +732,12 @@ function renderStudyContent(data, container, documentId = null) {
 function preProcessMathDelimiters(text) {
   if (!text) return "";
   // Convert [ ... ] to \[ ... \] if it contains LaTeX characters like \frac, \pm, \sqrt, \alpha, \beta, \lambda, etc.
-  let processed = text.replace(/\[\s*([\s\S]*?\\\S[\s\S]*?)\s*\]/g, (match, p1) => {
-    if (p1.includes('\\')) {
-      return `\\[${p1}\\]`;
-    }
-    return match;
+  let processed = text.replace(/\[\s*([^\]\n]{1,100}?\\[^\]\n]{1,100}?)\s*\]/g, (match, p1) => {
+    return `\\[${p1}\\]`;
   });
   // Convert ( ... ) to \( ... \) if it contains LaTeX characters
-  processed = processed.replace(/\(\s*([\s\S]*?\\\S[\s\S]*?)\s*\)/g, (match, p1) => {
-    if (p1.includes('\\')) {
-      return `\\(${p1}\\)`;
-    }
-    return match;
+  processed = processed.replace(/\(\s*([^)\n]{1,50}?\\[^)\n]{1,50}?)\s*\)/g, (match, p1) => {
+    return `\\(${p1}\\)`;
   });
   return processed;
 }
