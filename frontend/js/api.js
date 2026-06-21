@@ -755,10 +755,12 @@ function markdownToHTML(text) {
   let html = text
     .replace(/^## (.+)$/gm, "<h2>$1</h2>")
     .replace(/^### (.+)$/gm, "<h3>$1</h3>")
+    .replace(/^#### (.+)$/gm, "<h4>$1</h4>")
+    .replace(/^##### (.+)$/gm, "<h5>$1</h5>")
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.+?)\*/g, "<em>$1</em>")
     .replace(/`([^`\n]+)`/g, "<code>$1</code>")
-    .replace(/^- (.+)$/gm, "<li>$1</li>")
+    .replace(/^[-*+] (.+)$/gm, "<li>$1</li>")
     .replace(/(<li>.*<\/li>\n?)+/g, "<ul>$&</ul>")
     .replace(/\n\n/g, "</p><p>")
     .replace(/^(?!<[hul])(.+)$/gm, "<p>$1</p>")

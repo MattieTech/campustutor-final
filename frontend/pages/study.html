@@ -32,10 +32,41 @@
 .katex { font-size: 1.08em; }
 
 /* ── AI output typography ── */
-.ai-output { line-height: 1.85; }
-.ai-output h2 { margin-top: 20px; margin-bottom: 10px; }
-.ai-output h2:first-child { margin-top: 0; }
-.ai-output p  { margin-bottom: 10px; }
+.ai-output { 
+  line-height: 1.8; 
+  font-size: 1.02rem; 
+  padding: 8px 4px;
+}
+.ai-output h2, .ai-output h3, .ai-output h4, .ai-output h5 {
+  font-weight: 800;
+  margin-top: 1.8rem;
+  margin-bottom: 0.8rem;
+}
+.ai-output h2:first-child, .ai-output h3:first-child, .ai-output h4:first-child, .ai-output h5:first-child {
+  margin-top: 0;
+}
+.ai-output p {
+  margin-bottom: 1.2rem;
+  line-height: 1.85;
+}
+.ai-output ul, .ai-output ol {
+  margin-bottom: 1.4rem;
+  padding-left: 24px;
+}
+.ai-output li {
+  margin-bottom: 0.7rem;
+  line-height: 1.75;
+}
+.ai-output code {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 3px 6px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+[data-theme="dark"] .ai-output code {
+  background: rgba(255, 255, 255, 0.1);
+}
 
 /* ── result animation ── */
 .result-anim { animation: fadeUp 0.35s ease; }
