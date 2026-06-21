@@ -156,8 +156,8 @@ function calculateLevel(totalXP) {
 // Called after any activity to maintain study streak
 async function updateStreak(userId) {
   try {
-    const today = new Date().toISOString().split("T")[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+    const today = new Date().toLocaleDateString('sv');
+    const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('sv');
 
     const { data: profile, error: fetchErr } = await supabase
       .from("profiles")

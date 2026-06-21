@@ -454,12 +454,19 @@ router.delete("/:id", authMiddleware, async (req, res) => {
 // Returns user's XP, level, streak, and achievements
 router.get("/stats/:userId", authMiddleware, async (req, res) => {
   try {
-    const { getUserStats } = require("../utils/xp");
+    const { getUserStats, updateStreak } = require("../utils/xp");
     const userId = req.params.userId;
     
     // Security: users can only fetch their own stats
     if (userId !== req.user.id) {
       return res.status(403).json({ error: "Cannot view other users' stats." });
+    }
+
+    // Automatically update the user's streak daily when they check stats (visit the dashboard)
+    try {
+      await updateStreak(userId);
+    } catch (streakErr) {
+      console.error("Failed to automatically update streak on stats load:", streakErr.message);
     }
 
     const stats = await getUserStats(userId);
