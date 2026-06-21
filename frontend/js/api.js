@@ -751,19 +751,84 @@ function markdownToHTML(text) {
     return key;
   });
 
-  // Process markdown
-  let html = text
-    .replace(/^## (.+)$/gm, "<h2>$1</h2>")
-    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
-    .replace(/^#### (.+)$/gm, "<h4>$1</h4>")
-    .replace(/^##### (.+)$/gm, "<h5>$1</h5>")
+  // Line-by-line parser for headers and nested lists
+  const lines = text.split("\n");
+  let listLevel = 0; // 0 = none, 1 = main, 2 = nested
+  let outputLines = [];
+
+  for (let line of lines) {
+    // Check headers
+    if (line.startsWith("## ")) {
+      while (listLevel > 0) { outputLines.push("</ul>"); listLevel--; }
+      outputLines.push(`<h2>${line.substring(3).trim()}</h2>`);
+      continue;
+    }
+    if (line.startsWith("### ")) {
+      while (listLevel > 0) { outputLines.push("</ul>"); listLevel--; }
+      outputLines.push(`<h3>${line.substring(4).trim()}</h3>`);
+      continue;
+    }
+    if (line.startsWith("#### ")) {
+      while (listLevel > 0) { outputLines.push("</ul>"); listLevel--; }
+      outputLines.push(`<h4>${line.substring(5).trim()}</h4>`);
+      continue;
+    }
+    if (line.startsWith("##### ")) {
+      while (listLevel > 0) { outputLines.push("</ul>"); listLevel--; }
+      outputLines.push(`<h5>${line.substring(6).trim()}</h5>`);
+      continue;
+    }
+
+    // Match list item with spaces before marker: e.g., "  - Option" or "* Option"
+    const listMatch = line.match(/^(\s*)([-*+])\s+(.+)$/);
+    if (listMatch) {
+      const spaces = listMatch[1].length;
+      const content = listMatch[3].trim();
+      const targetLevel = spaces >= 2 ? 2 : 1;
+
+      if (listLevel === 0) {
+        outputLines.push("<ul>");
+        listLevel = 1;
+      }
+
+      if (targetLevel > listLevel) {
+        outputLines.push("<ul>");
+        listLevel = 2;
+      } else if (targetLevel < listLevel) {
+        outputLines.push("</ul>");
+        listLevel = 1;
+      }
+
+      outputLines.push(`<li>${content}</li>`);
+      continue;
+    }
+
+    // Blank line closes lists
+    if (line.trim() === "") {
+      while (listLevel > 0) { outputLines.push("</ul>"); listLevel--; }
+      outputLines.push("");
+      continue;
+    }
+
+    // Normal paragraph text
+    if (listLevel > 0) {
+      while (listLevel > 0) { outputLines.push("</ul>"); listLevel--; }
+    }
+    outputLines.push(`<p>${line.trim()}</p>`);
+  }
+
+  while (listLevel > 0) {
+    outputLines.push("</ul>");
+    listLevel--;
+  }
+
+  let html = outputLines.join("\n");
+
+  // Inline formatting
+  html = html
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.+?)\*/g, "<em>$1</em>")
     .replace(/`([^`\n]+)`/g, "<code>$1</code>")
-    .replace(/^[-*+] (.+)$/gm, "<li>$1</li>")
-    .replace(/(<li>.*<\/li>\n?)+/g, "<ul>$&</ul>")
-    .replace(/\n\n/g, "</p><p>")
-    .replace(/^(?!<[hul])(.+)$/gm, "<p>$1</p>")
     .replace(/<p><\/p>/g, "");
 
   // Restore math blocks

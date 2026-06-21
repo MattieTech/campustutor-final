@@ -33,29 +33,56 @@
 
 /* ── AI output typography ── */
 .ai-output { 
+  font-family: "Outfit", "Inter", system-ui, -apple-system, sans-serif;
   line-height: 1.8; 
-  font-size: 1.02rem; 
-  padding: 8px 4px;
+  font-size: 1.05rem; 
+  padding: 16px 8px;
+  color: #1f1f1f;
+}
+[data-theme="dark"] .ai-output {
+  color: #e3e3e3;
 }
 .ai-output h2, .ai-output h3, .ai-output h4, .ai-output h5 {
-  font-weight: 800;
-  margin-top: 1.8rem;
+  font-family: "Outfit", "Inter", system-ui, -apple-system, sans-serif;
+  color: inherit;
+  font-weight: 700;
+}
+.ai-output h2 {
+  font-size: 1.65rem;
+  margin-top: 2.2rem;
+  margin-bottom: 1.1rem;
+}
+.ai-output h3 {
+  font-size: 1.35rem;
+  margin-top: 1.9rem;
+  margin-bottom: 0.9rem;
+}
+.ai-output h4 {
+  font-size: 1.18rem;
+  margin-top: 1.6rem;
   margin-bottom: 0.8rem;
 }
 .ai-output h2:first-child, .ai-output h3:first-child, .ai-output h4:first-child, .ai-output h5:first-child {
   margin-top: 0;
 }
 .ai-output p {
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.3rem;
   line-height: 1.85;
 }
 .ai-output ul, .ai-output ol {
   margin-bottom: 1.4rem;
-  padding-left: 24px;
+  padding-left: 28px;
+  list-style-type: disc;
+}
+.ai-output ul ul, .ai-output ol ol, .ai-output ul ol, .ai-output ol ul {
+  margin-top: 0.6rem;
+  margin-bottom: 0.6rem;
+  padding-left: 26px;
+  list-style-type: circle;
 }
 .ai-output li {
-  margin-bottom: 0.7rem;
-  line-height: 1.75;
+  margin-bottom: 0.75rem;
+  line-height: 1.8;
 }
 .ai-output code {
   background: rgba(0, 0, 0, 0.05);
