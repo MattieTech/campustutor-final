@@ -240,9 +240,8 @@
         <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
           <div>
             <div style="font-weight:800; font-size:1.1rem; margin-bottom:4px; color:var(--label);">📋 Choose Summary Depth & Wait Time</div>
-            <div style="font-size:0.85rem; color:var(--label3);">Select the depth of your summary. Highly detailed overviews require more time.</div>
+            <div style="font-size:0.85rem; color:var(--label3);">Select the depth of your summary. Click any card below to start generating immediately.</div>
           </div>
-          <button id="btnConfirmSum" class="btn btn-primary" onclick="triggerSummaryGeneration()" style="border-radius:12px; padding:10px 20px;">Generate Summary 🚀</button>
         </div>
         
         <!-- Hidden Select for compatibility -->
@@ -285,9 +284,8 @@
         <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
           <div>
             <div style="font-weight:800; font-size:1.1rem; margin-bottom:4px; color:var(--label);">🃏 Choose Flashcard Deck Size</div>
-            <div style="font-size:0.85rem; color:var(--label3);">Select the size of the flashcard set. Larger study decks require more time.</div>
+            <div style="font-size:0.85rem; color:var(--label3);">Select the size of the flashcard set. Click any card below to start generating immediately.</div>
           </div>
-          <button id="btnConfirmFlash" class="btn btn-primary" onclick="triggerFlashcardGeneration()" style="border-radius:12px; padding:10px 20px;">Generate Flashcards 🚀</button>
         </div>
 
         <!-- Hidden Select for compatibility -->
@@ -330,9 +328,8 @@
         <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
           <div>
             <div style="font-weight:800; font-size:1.1rem; margin-bottom:4px; color:var(--label);">🎯 Choose Quiz Volume & Wait Time</div>
-            <div style="font-size:0.85rem; color:var(--label3);">Pick the number of questions to generate. Large pools take longer.</div>
+            <div style="font-size:0.85rem; color:var(--label3);">Pick the number of questions to generate. Click any card below to start generating immediately.</div>
           </div>
-          <button id="btnConfirmQ" class="btn btn-primary" onclick="triggerQuestionGeneration()" style="border-radius:12px; padding:10px 20px;">Generate Questions 🚀</button>
         </div>
 
         <!-- Hidden Select for compatibility -->
@@ -949,6 +946,15 @@ function selectMattieChoice(type, value) {
         card.classList.remove('active');
       }
     });
+  }
+
+  // Trigger generation immediately
+  if (type === 'summary') {
+    triggerSummaryGeneration();
+  } else if (type === 'flashcard') {
+    triggerFlashcardGeneration();
+  } else if (type === 'quiz') {
+    triggerQuestionGeneration();
   }
 }
 
