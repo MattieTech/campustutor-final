@@ -569,9 +569,9 @@ if (typeof window.renderMattieQuiz !== "function") {
         ? Math.round((correctAnswers / scoredQuestions) * 100)
         : Math.round((completedAnswers / quizItems.length) * 100);
 
-      const feedback = percentage >= 70 ? "Outstanding Academic Performance! 🔥 — Engineered by MattieTech" :
-               percentage >= 40 ? "Good Core Comprehension — Keep reviewing! 📚 — Engineered by MattieTech" :
-                       "Needs Improvement. Let's re-study the source material together! 💪 — Engineered by MattieTech";
+      const feedback = percentage >= 70 ? "Outstanding Academic Performance! — Engineered by MattieTech" :
+               percentage >= 40 ? "Good Core Comprehension — Keep reviewing! — Engineered by MattieTech" :
+                       "Needs Improvement. Let's re-study the source material together! — Engineered by MattieTech";
 
         window.mattieLatestReview = {
           quizItems,

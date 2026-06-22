@@ -10,7 +10,7 @@
 <body>
 <nav class="navbar">
   <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">☰</button>
-  <a href="/" class="brand"><div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span> <span class="brand-ai">AI</span></a>
+  <a href="/" class="brand" style="gap:0;"><img src="/assets/logo.png" alt="CampusTutor AI" style="height: 38px; width: auto; object-fit: contain; display: block;" /></a>
   <div class="navbar-right">
     <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
     <a href="/pages/dashboard.html" class="pill-btn">← Dashboard</a>
@@ -277,10 +277,25 @@ async function loadHistoryData(){
 
   // Load achievements
   if(stats?.allAchievements?.length>0){
+    const badgeIconMap = {
+      'first_upload': '<i class="fa-solid fa-rocket"></i>',
+      'first_summary': '<i class="fa-solid fa-list-check"></i>',
+      'first_flash': '<i class="fa-solid fa-id-card"></i>',
+      'first_flashcards': '<i class="fa-solid fa-id-card"></i>',
+      'streak_3': '<i class="fa-solid fa-fire"></i>',
+      'first_quiz': '<i class="fa-solid fa-pen-to-square"></i>',
+      'level_5': '<i class="fa-solid fa-star"></i>',
+      'power_user': '<i class="fa-solid fa-bolt"></i>',
+      'documents_5': '<i class="fa-solid fa-book"></i>'
+    };
+    const getBadgeIcon = (a) => {
+      if (a.icon && a.icon.includes('<i ')) return a.icon;
+      return badgeIconMap[a.key] || '<i class="fa-solid fa-award"></i>';
+    };
     const unlockedKeys=stats.achievements||[];
     document.getElementById('achievementsList').innerHTML=stats.allAchievements.map(a=>`
       <div class="badge-card ${unlockedKeys.includes(a.key)?'':'locked'}" style="padding:16px;text-align:center;">
-        <div class="badge-icon" style="font-size:2rem;margin-bottom:8px;">${a.icon}</div>
+        <div class="badge-icon" style="font-size:2rem;margin-bottom:8px;">${getBadgeIcon(a)}</div>
         <div class="badge-name" style="font-size:0.8rem;">${a.name}</div>
         <div style="font-size:0.7rem;color:var(--label3);margin-top:4px;">${a.description}</div>
       </div>`).join('');

@@ -52,7 +52,7 @@
 <body>
 <nav class="navbar">
   <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">☰</button>
-  <a href="/" class="brand"><div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span> <span class="brand-ai">AI</span></a>
+  <a href="/" class="brand" style="gap:0;"><img src="/assets/logo.png" alt="CampusTutor AI" style="height: 38px; width: auto; object-fit: contain; display: block;" /></a>
   <div class="navbar-right">
     <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
     <span id="userGreeting" style="font-size:0.83rem;color:var(--label3);"></span>
@@ -372,14 +372,29 @@ if(user && user.fullName){
   document.getElementById('welcomeMsg').innerHTML=`Welcome back, ${firstName} <i class="fa-solid fa-graduation-cap"></i>`;
 }
 
-loadUserStats();
+try {
+  loadUserStats();
+} catch (e) {
+  console.error("Failed to load user stats:", e);
+}
+try {
+  loadLeaderboard();
+} catch (e) {
+  console.error("Failed to load leaderboard:", e);
+}
+try {
+  loadTriviaQuest();
+} catch (e) {
+  console.error("Failed to load trivia quest:", e);
+}
+
 async function loadUserStats(){
   const userId = user?.id;
   if(!userId) return;
   
   const {data:stats, error} = await apiGetUserStats(userId);
   
-  if(error){
+  if(error || !stats){
     console.log('Note: Could not load stats from backend, using localStorage');
     loadStatsFromLocalStorage();
     return;
@@ -410,11 +425,38 @@ async function loadUserStats(){
   const offset = 113 - (113 * Math.min(dailyGoalPct, 100)) / 100;
   document.getElementById('dailyGoalCircle').style.strokeDashoffset = offset;
   
-  const allBadges=stats.allAchievements.map(a=>({
-    icon:a.icon,
-    name:a.name,
-    key:a.key
+  const badgeIconMap = {
+    'first_upload': '<i class="fa-solid fa-rocket"></i>',
+    'first_summary': '<i class="fa-solid fa-list-check"></i>',
+    'first_flash': '<i class="fa-solid fa-id-card"></i>',
+    'first_flashcards': '<i class="fa-solid fa-id-card"></i>',
+    'streak_3': '<i class="fa-solid fa-fire"></i>',
+    'first_quiz': '<i class="fa-solid fa-pen-to-square"></i>',
+    'level_5': '<i class="fa-solid fa-star"></i>',
+    'power_user': '<i class="fa-solid fa-bolt"></i>',
+    'documents_5': '<i class="fa-solid fa-book"></i>'
+  };
+
+  const getBadgeIcon = (b) => {
+    if (b.icon && b.icon.includes('<i ')) return b.icon;
+    return badgeIconMap[b.key] || '<i class="fa-solid fa-award"></i>';
+  };
+
+  const allAchievements = stats.allAchievements || [
+    {key: 'first_upload', name: 'First Upload', icon: 'fa-solid fa-rocket'},
+    {key: 'first_summary', name: 'Summarizer', icon: 'fa-solid fa-list-check'},
+    {key: 'first_flashcards', name: 'Flashmaster', icon: 'fa-solid fa-id-card'},
+    {key: 'streak_3', name: '3-Day Streak', icon: 'fa-solid fa-fire'},
+    {key: 'first_quiz', name: 'Quiz Ace', icon: 'fa-solid fa-pen-to-square'},
+    {key: 'level_5', name: 'Level 5 Scholar', icon: 'fa-solid fa-star'}
+  ];
+
+  const allBadges = allAchievements.map(a => ({
+    icon: getBadgeIcon(a),
+    name: a.name,
+    key: a.key
   }));
+
   const unlockedKeys=stats.achievements||[];
   document.getElementById('badgeCount').textContent=unlockedKeys.length+' / '+allBadges.length+' Unlocked';
   document.getElementById('badgesGrid').innerHTML=allBadges.map(b=>`
@@ -422,44 +464,50 @@ async function loadUserStats(){
       <div class="badge-icon">${b.icon}</div>
       <div class="badge-name">${b.name}</div>
     </div>`).join('');
-
-  // Load Leaderboard and Trivia Quest
-  loadLeaderboard();
-  loadTriviaQuest();
 }
 
 // ── LEADERBOARD LOADER ─────────────────────────────────────────
 async function loadLeaderboard() {
-  const { data, error } = await apiGetLeaderboard();
-  const listEl = document.getElementById('leaderboardList');
-  if (error || !data || !data.leaderboard) {
-    listEl.innerHTML = '<div style="font-size:0.8rem; color:var(--label3); text-align:center; padding:10px;">Failed to load leaderboard</div>';
-    return;
+  try {
+    const { data, error } = await apiGetLeaderboard();
+    const listEl = document.getElementById('leaderboardList');
+    if (!listEl) return;
+
+    if (error || !data || !data.leaderboard) {
+      listEl.innerHTML = '<div style="font-size:0.8rem; color:var(--label3); text-align:center; padding:10px;">Failed to load leaderboard</div>';
+      return;
+    }
+
+    const ranks = data.leaderboard;
+    listEl.innerHTML = ranks.map((rankUser, index) => {
+      let medal = '';
+      if (index === 0) medal = '<i class="fa-solid fa-trophy" style="color:#ffd700;"></i>';
+      else if (index === 1) medal = '<i class="fa-solid fa-trophy" style="color:#c0c0c0;"></i>';
+      else if (index === 2) medal = '<i class="fa-solid fa-trophy" style="color:#cd7f32;"></i>';
+      else medal = `<span style="color:var(--label3); font-weight:700;">#${index + 1}</span>`;
+
+      const isMe = rankUser.id === user?.id ? 'background: rgba(0, 122, 255, 0.08); border-left: 3px solid var(--blue); font-weight:700;' : '';
+
+      return `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-radius:10px; font-size:0.85rem; ${isMe}">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-weight:800; min-width:24px;">${medal}</span>
+            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px;">${rankUser.full_name}</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span class="badge badge-blue" style="font-size:0.7rem; padding:2px 6px;">Lvl ${rankUser.level}</span>
+            <span style="font-weight:700; color:var(--purple);">${rankUser.xp} XP</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error("Leaderboard loader error:", err);
+    const listEl = document.getElementById('leaderboardList');
+    if (listEl) {
+      listEl.innerHTML = '<div style="font-size:0.8rem; color:var(--label3); text-align:center; padding:10px;">Failed to load leaderboard</div>';
+    }
   }
-
-  const ranks = data.leaderboard;
-  listEl.innerHTML = ranks.map((rankUser, index) => {
-    let medal = '';
-    if (index === 0) medal = '<i class="fa-solid fa-trophy" style="color:#ffd700;"></i>';
-    else if (index === 1) medal = '<i class="fa-solid fa-trophy" style="color:#c0c0c0;"></i>';
-    else if (index === 2) medal = '<i class="fa-solid fa-trophy" style="color:#cd7f32;"></i>';
-    else medal = `<span style="color:var(--label3); font-weight:700;">#${index + 1}</span>`;
-
-    const isMe = rankUser.id === user?.id ? 'background: rgba(0, 122, 255, 0.08); border-left: 3px solid var(--blue); font-weight:700;' : '';
-
-    return `
-      <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-radius:10px; font-size:0.85rem; ${isMe}">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span style="font-weight:800; min-width:24px;">${medal}</span>
-          <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px;">${rankUser.full_name}</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:6px;">
-          <span class="badge badge-blue" style="font-size:0.7rem; padding:2px 6px;">Lvl ${rankUser.level}</span>
-          <span style="font-weight:700; color:var(--purple);">${rankUser.xp} XP</span>
-        </div>
-      </div>
-    `;
-  }).join('');
 }
 
 // ── TRIVIA QUEST ENGINE ────────────────────────────────────────
@@ -471,34 +519,44 @@ const TRIVIA_QUESTIONS = [
 ];
 
 function loadTriviaQuest() {
-  const answered = localStorage.getItem('ct_trivia_answered_date');
-  const todayStr = new Date().toISOString().split('T')[0];
-  const qIdx = new Date().getDate() % TRIVIA_QUESTIONS.length;
-  const question = TRIVIA_QUESTIONS[qIdx];
+  try {
+    const answered = localStorage.getItem('ct_trivia_answered_date');
+    const todayStr = new Date().toISOString().split('T')[0];
+    const qIdx = new Date().getDate() % TRIVIA_QUESTIONS.length;
+    const question = TRIVIA_QUESTIONS[qIdx];
 
-  const qEl = document.getElementById('triviaQuestion');
-  const optEl = document.getElementById('triviaOptions');
-  const feedEl = document.getElementById('triviaFeedback');
+    const qEl = document.getElementById('triviaQuestion');
+    const optEl = document.getElementById('triviaOptions');
+    const feedEl = document.getElementById('triviaFeedback');
 
-  qEl.textContent = question.q;
+    if (!qEl || !optEl || !feedEl) return;
 
-  if (answered === todayStr) {
-    const isCorrect = localStorage.getItem('ct_trivia_correct') === 'true';
-    optEl.innerHTML = '';
-    feedEl.style.display = 'block';
-    feedEl.style.background = isCorrect ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)';
-    feedEl.style.color = isCorrect ? 'var(--green)' : 'var(--red)';
-    feedEl.innerHTML = isCorrect 
-      ? `<i class="fa-solid fa-circle-check"></i> Correct! You've already answered today's question. <div style="font-size:0.75rem; font-weight:normal; margin-top:6px; color:var(--label);">${question.explanation}</div>` 
-      : `<i class="fa-solid fa-circle-xmark"></i> You answered today's question incorrectly. Better luck tomorrow! <div style="font-size:0.75rem; font-weight:normal; margin-top:6px; color:var(--label);">${question.explanation}</div>`;
-    return;
+    qEl.textContent = question.q;
+
+    if (answered === todayStr) {
+      const isCorrect = localStorage.getItem('ct_trivia_correct') === 'true';
+      optEl.innerHTML = '';
+      feedEl.style.display = 'block';
+      feedEl.style.background = isCorrect ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)';
+      feedEl.style.color = isCorrect ? 'var(--green)' : 'var(--red)';
+      feedEl.innerHTML = isCorrect 
+        ? `<i class="fa-solid fa-circle-check"></i> Correct! You've already answered today's question. <div style="font-size:0.75rem; font-weight:normal; margin-top:6px; color:var(--label);">${question.explanation}</div>` 
+        : `<i class="fa-solid fa-circle-xmark"></i> You answered today's question incorrectly. Better luck tomorrow! <div style="font-size:0.75rem; font-weight:normal; margin-top:6px; color:var(--label);">${question.explanation}</div>`;
+      return;
+    }
+
+    optEl.innerHTML = question.options.map((opt, idx) => `
+      <button class="btn btn-ghost btn-sm" style="text-align:left; justify-content:flex-start; width:100%; border-radius:10px; font-weight:normal;" onclick="submitTriviaAnswer(${idx}, ${question.answer}, '${todayStr}')">
+        ${String.fromCharCode(65 + idx)}. ${opt}
+      </button>
+    `).join('');
+  } catch (err) {
+    console.error("Trivia Quest loader error:", err);
+    const qEl = document.getElementById('triviaQuestion');
+    if (qEl) {
+      qEl.textContent = "Unable to load trivia question today.";
+    }
   }
-
-  optEl.innerHTML = question.options.map((opt, idx) => `
-    <button class="btn btn-ghost btn-sm" style="text-align:left; justify-content:flex-start; width:100%; border-radius:10px; font-weight:normal;" onclick="submitTriviaAnswer(${idx}, ${question.answer}, '${todayStr}')">
-      ${String.fromCharCode(65 + idx)}. ${opt}
-    </button>
-  `).join('');
 }
 
 async function submitTriviaAnswer(selectedIdx, correctIdx, todayStr) {
@@ -757,9 +815,9 @@ async function renderMattieQuiz(quizData) {
 
     const percentage = scoredQuestions > 0 ? Math.round((correctAnswers / scoredQuestions) * 100) : Math.round((completedAnswers / quizItems.length) * 100);
 
-    const feedback = percentage >= 70 ? "Outstanding Academic Performance! 🔥 — Engineered by MattieTech" :
-             percentage >= 40 ? "Good Core Comprehension — Keep reviewing! 📚 — Engineered by MattieTech" :
-                     "Needs Improvement. Let's re-study the source material together! 💪 — Engineered by MattieTech";
+    const feedback = percentage >= 70 ? "Outstanding Academic Performance! — Engineered by MattieTech" :
+             percentage >= 40 ? "Good Core Comprehension — Keep reviewing! — Engineered by MattieTech" :
+                     "Needs Improvement. Let's re-study the source material together! — Engineered by MattieTech";
 
     window.mattieLatestReview = {
       quizItems,
@@ -956,7 +1014,7 @@ async function explainConcept(){
   const concept=document.getElementById('conceptInput').value.trim();
   if(!concept){showToast('Please enter a concept to explain','error');return;}
   const resultDiv=document.getElementById('conceptResult');
-  resultDiv.innerHTML='<div style="text-align:center;color:var(--label3);">🧠 Thinking...</div>';
+  resultDiv.innerHTML='<div style="text-align:center;color:var(--label3);"><i class="fa-solid fa-brain fa-bounce" style="margin-right: 8px; color: var(--blue);"></i>Thinking...</div>';
   resultDiv.style.display='block';
   
   try{
