@@ -197,6 +197,25 @@
       <div class="badges-grid" id="badgesGrid"></div>
     </div>
 
+    <!-- Today's Challenge (Repositioned above Documents & Styled Premium) -->
+    <div class="card liquid-glass-card" style="margin-bottom:24px; cursor:pointer; border: 1.5px solid rgba(0, 122, 255, 0.2); transition: transform 0.2s, border-color 0.2s;" onclick="window.location.href='/pages/upload.html'" onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='var(--blue)'" onmouseout="this.style.transform='none'; this.style.borderColor='rgba(0,122,255,0.2)'">
+      <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+            <span style="font-size:1.5rem; color:var(--blue);"><i class="fa-solid fa-bullseye"></i></span>
+            <div>
+              <div style="font-weight:700;font-size:0.95rem;">Today's Challenge</div>
+              <div style="font-size:0.8rem;color:var(--label3);">Upload a PDF and generate flashcards to earn +50 XP</div>
+            </div>
+          </div>
+          <div class="progress-bar" style="width:220px;margin-top:8px;">
+            <div class="progress-fill" style="width:30%"></div>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="event.stopPropagation(); window.location.href='/pages/upload.html'">Start Challenge <i class="fa-solid fa-rocket"></i></button>
+      </div>
+    </div>
+
     <div style="margin-bottom:28px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <h2 style="font-size:1.1rem;font-family:var(--font-ui);font-weight:700;"><i class="fa-solid fa-file-pdf"></i> Your Documents</h2>
@@ -209,25 +228,6 @@
         <a href="/pages/upload.html" class="btn btn-primary"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Your First PDF</a>
       </div>
       <div class="doc-grid" id="docGrid"></div>
-    </div>
-
-    <!-- Today's Challenge (Moved to bottom) -->
-    <div class="card liquid-glass-card" style="margin-bottom:24px;">
-      <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
-        <div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-            <span style="font-size:1.5rem;"><i class="fa-solid fa-bullseye"></i></span>
-            <div>
-              <div style="font-weight:700;font-size:0.95rem;">Today's Challenge</div>
-              <div style="font-size:0.8rem;color:var(--label3);">Upload a PDF and generate flashcards to earn +50 XP</div>
-            </div>
-          </div>
-          <div class="progress-bar" style="width:220px;margin-top:8px;">
-            <div class="progress-fill" style="width:30%"></div>
-          </div>
-        </div>
-        <a href="/pages/upload.html" class="btn btn-primary">Start Challenge <i class="fa-solid fa-rocket"></i></a>
-      </div>
     </div>
 
   </main>
