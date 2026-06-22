@@ -481,6 +481,30 @@ router.get("/stats/:userId", authMiddleware, async (req, res) => {
   }
 });
 
+// ── GET LEADERBOARD DATA ──────────────────────────────────────
+// GET /api/upload/leaderboard
+// Returns top 5 users by XP
+router.get("/leaderboard", authMiddleware, async (req, res) => {
+  try {
+    const { data: leaderboard, error } = await supabase
+      .from("profiles")
+      .select("id, full_name, xp, level")
+      .order("xp", { ascending: false })
+      .limit(5);
+
+    if (error) {
+      console.error("Leaderboard query error:", error.message);
+      return res.status(500).json({ error: "Failed to fetch leaderboard data." });
+    }
+
+    res.json({ leaderboard: leaderboard || [] });
+  } catch (err) {
+    console.error("Leaderboard error:", err.message);
+    res.status(500).json({ error: "Failed to fetch leaderboard." });
+  }
+});
+
+
 // ── GET USER'S AI RESULTS (for history page) ──────────────────────
 // GET /api/upload/my-results
 // Returns all AI-generated results (summaries, flashcards, etc.)

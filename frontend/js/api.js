@@ -126,9 +126,10 @@ async function apiGetActivity()         { return apiRequest("/api/upload/my-acti
 // Get user's AI results (summaries, flashcards, etc.)
 async function apiGetMyAIResults()      { return apiRequest("/api/upload/my-results"); }
 
-// ── STATS ─────────────────────────────────────────────────────
 // Get user's XP, level, streak, and achievements
 async function apiGetUserStats(userId) { return apiRequest(`/api/upload/stats/${userId}`); }
+// Get leaderboard top users by XP
+async function apiGetLeaderboard()      { return apiRequest("/api/upload/leaderboard"); }
 
 // ── AI ────────────────────────────────────────────────────────
 async function apiSummarize(documentId, summarySize = 'standard')           { return apiRequest("/api/ai/summarize", "POST", { documentId, summarySize }); }

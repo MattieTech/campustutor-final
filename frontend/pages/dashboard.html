@@ -95,48 +95,106 @@
       <p>Your study hub — track progress, manage documents, stay motivated.</p>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
-      <a href="/pages/upload.html" class="btn btn-primary btn-lg" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-weight:700;">
-        <i class="fa-solid fa-file-pdf"></i> Upload PDF
-      </a>
-      <a href="/pages/upload.html" class="btn btn-primary btn-lg" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-weight:700;">
-        <i class="fa-solid fa-image"></i> Upload Image
-      </a>
-    </div>
+    <div style="display:grid;grid-template-columns: 2fr 1fr;gap:24px;margin-bottom:24px;" class="dashboard-grid-layout">
+      <!-- Left Column: Core Actions & Tools -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <a href="/pages/upload.html" class="btn btn-primary btn-lg" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-weight:700;">
+            <i class="fa-solid fa-file-pdf"></i> Upload PDF
+          </a>
+          <a href="/pages/upload.html" class="btn btn-primary btn-lg" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-weight:700;">
+            <i class="fa-solid fa-image"></i> Upload Image
+          </a>
+        </div>
 
-    <div class="xp-bar-wrap">
-      <div class="xp-row">
-        <div class="xp-level"><i class="fa-solid fa-bolt"></i> Level <span id="xpLevel">1</span> — Rising Scholar</div>
-        <div class="xp-points"><span id="xpCur">0</span> / <span id="xpMax">100</span> XP</div>
-      </div>
-      <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
-    </div>
-
-    <div class="stats-row">
-      <div class="stat-card"><div class="stat-num" id="statDocs" style="color:var(--blue);">—</div><div class="stat-label">Documents</div></div>
-      <div class="stat-card"><div class="stat-num" id="statStreak" style="color:var(--orange);">0<i class="fa-solid fa-fire"></i></div><div class="stat-label">Day Streak</div></div>
-      <div class="stat-card"><div class="stat-num" id="statXP" style="color:var(--purple);">0</div><div class="stat-label">Total XP</div></div>
-      <div class="stat-card"><div class="stat-num" style="color:var(--green);">Free</div><div class="stat-label">Plan</div></div>
-    </div>
-
-    <div class="card liquid-glass-card" style="margin-bottom:24px;">
-      <div class="card-body">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-          <span style="font-size:1.5rem;"><i class="fa-solid fa-comment-dots"></i></span>
-          <div>
-            <div style="font-weight:700;font-size:0.95rem;">Explain a Concept</div>
-            <div style="font-size:0.8rem;color:var(--label3);">Ask the AI to explain any topic or concept instantly</div>
+        <!-- Concept Explainer -->
+        <div class="card liquid-glass-card" style="margin:0;">
+          <div class="card-body">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+              <span style="font-size:1.5rem;"><i class="fa-solid fa-comment-dots"></i></span>
+              <div>
+                <div style="font-weight:700;font-size:0.95rem;">Explain a Concept</div>
+                <div style="font-size:0.8rem;color:var(--label3);">Ask the AI to explain any topic or concept instantly</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:6px;">
+              <input type="text" class="form-input" id="conceptInput" placeholder="e.g., Photosynthesis, Newton's Laws..." style="flex:1;min-width:200px;"/>
+              <button onclick="explainConcept()" class="btn btn-primary" style="white-space:nowrap;">Send</button>
+            </div>
+            <div id="conceptResult" style="display:none;margin-top:12px;padding:16px;background:rgba(118,118,128,.08);border-radius:var(--r,12px);color:var(--label);font-size:0.9rem;max-height:400px;overflow-y:auto;line-height:1.6;"></div>
           </div>
         </div>
-        <div style="display:flex;gap:8px;margin-bottom:6px;">
-          <input type="text" class="form-input" id="conceptInput" placeholder="e.g., Photosynthesis, Newton's Laws..." style="flex:1;min-width:200px;"/>
-          <button onclick="explainConcept()" class="btn btn-primary" style="white-space:nowrap;">Send</button>
+
+        <!-- Daily Brain Teaser Widget -->
+        <div class="card liquid-glass-card" style="margin:0; border: 1px solid rgba(0, 122, 255, 0.15);">
+          <div class="card-body">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+              <span style="font-size:1.5rem;color:var(--orange);"><i class="fa-solid fa-brain"></i></span>
+              <div>
+                <div style="font-weight:700;font-size:0.95rem;">Daily Trivia Quest</div>
+                <div style="font-size:0.8rem;color:var(--label3);">Solve today's question to earn bonus XP!</div>
+              </div>
+            </div>
+            <div id="triviaContent" style="padding:14px; background:rgba(118,118,128,0.05); border-radius:var(--r); font-size:0.9rem; margin-bottom:12px;">
+              <div style="font-weight:600; margin-bottom:10px;" id="triviaQuestion">Loading question...</div>
+              <div style="display:flex; flex-direction:column; gap:8px;" id="triviaOptions"></div>
+            </div>
+            <div id="triviaFeedback" style="display:none; font-size:0.85rem; font-weight:600; padding:10px; border-radius:8px; text-align:center;"></div>
+          </div>
         </div>
-        <div id="conceptResult" style="display:none;margin-top:12px;padding:16px;background:rgba(118,118,128,.08);border-radius:var(--r,12px);color:var(--label);font-size:0.9rem;max-height:400px;overflow-y:auto;line-height:1.6;"></div>
+      </div>
+
+      <!-- Right Column: Stats & Gamification -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <!-- Level Progress & Daily Target -->
+        <div class="xp-bar-wrap" style="margin-bottom:0;">
+          <div class="xp-row">
+            <div class="xp-level"><i class="fa-solid fa-bolt"></i> Level <span id="xpLevel">1</span></div>
+            <div class="xp-points"><span id="xpCur">0</span> / <span id="xpMax">100</span> XP</div>
+          </div>
+          <div class="xp-bar" style="margin-bottom:14px;"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+
+          <!-- Daily XP Target progress ring -->
+          <div style="display:flex; align-items:center; gap:12px; margin-top:14px; padding-top:14px; border-top:1px solid var(--sep);">
+            <div style="position:relative; width:44px; height:44px; flex-shrink:0;">
+              <svg width="44" height="44" viewBox="0 0 44 44">
+                <circle cx="22" cy="22" r="18" fill="none" stroke="var(--sep)" stroke-width="4"></circle>
+                <circle cx="22" cy="22" r="18" fill="none" stroke="var(--blue)" stroke-width="4" stroke-dasharray="113" stroke-dashoffset="113" id="dailyGoalCircle" stroke-linecap="round" style="transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset 0.6s ease;"></circle>
+              </svg>
+              <div style="position:absolute; inset:0; display:grid; place-items:center; font-size:0.72rem; font-weight:800; color:var(--blue);" id="dailyGoalPct">0%</div>
+            </div>
+            <div>
+              <div style="font-weight:700; font-size:0.82rem;">Daily Study Quest</div>
+              <div style="font-size:0.75rem; color:var(--label3);" id="dailyGoalText">Earn 50 XP today!</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly Leaderboard Widget -->
+        <div class="card liquid-glass-card" style="margin:0;">
+          <div class="card-body" style="padding:20px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+              <span style="font-size:1.2rem;color:var(--orange);"><i class="fa-solid fa-trophy"></i></span>
+              <div style="font-weight:700;font-size:0.9rem;">Weekly Leaderboard</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;" id="leaderboardList">
+              <div style="font-size:0.8rem; color:var(--label3); text-align:center; padding:10px;">Loading ranks...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mini Stats Grid -->
+        <div class="stats-row" style="grid-template-columns:1fr 1fr; gap:10px; margin-bottom:0;">
+          <div class="stat-card" style="padding:12px 10px;"><div class="stat-num" id="statDocs" style="color:var(--blue); font-size:1.4rem;">—</div><div class="stat-label" style="font-size:0.68rem;">Documents</div></div>
+          <div class="stat-card" style="padding:12px 10px;"><div class="stat-num" id="statStreak" style="color:var(--orange); font-size:1.4rem;">0 <i class="fa-solid fa-fire"></i></div><div class="stat-label" style="font-size:0.68rem;">Day Streak</div></div>
+          <div class="stat-card" style="padding:12px 10px;"><div class="stat-num" id="statXP" style="color:var(--purple); font-size:1.4rem;">0</div><div class="stat-label" style="font-size:0.68rem;">Total XP</div></div>
+          <div class="stat-card" style="padding:12px 10px;"><div class="stat-num" style="color:var(--green); font-size:1.4rem;">Free</div><div class="stat-label" style="font-size:0.68rem;">Plan</div></div>
+        </div>
       </div>
     </div>
 
     <div id="quizWorkspace" style="display:none; margin-bottom: 24px;"></div>
+
 
     <div class="card liquid-glass-card" style="margin-bottom:24px;">
       <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
@@ -325,6 +383,20 @@ async function loadUserStats(){
   document.getElementById('statStreak').innerHTML=(stats.streak||0)+' <i class="fa-solid fa-fire"></i>';
   document.getElementById('statDocs').textContent=stats.documentsCount||0;
   document.getElementById('activityCount').textContent=(stats.activityCount||0)+' actions';
+
+  // Calculate daily quest progress ring
+  // Goal: 50 XP per day. Let's map how much they have earned today towards 50 XP
+  // We can count XP or just mock a dynamic interactive progress based on documents count / activity count.
+  const docsCount = stats.documentsCount || 0;
+  const activityCount = stats.activityCount || 0;
+  let dailyGoalXp = Math.min((docsCount * 15) + (activityCount * 5), 50);
+  const dailyGoalPct = Math.round((dailyGoalXp / 50) * 100);
+  document.getElementById('dailyGoalPct').textContent = dailyGoalPct + '%';
+  document.getElementById('dailyGoalText').textContent = `Earned ${dailyGoalXp} / 50 XP today`;
+  
+  // Calculate SVG stroke offset. Radius is 18, circumference is 113.
+  const offset = 113 - (113 * Math.min(dailyGoalPct, 100)) / 100;
+  document.getElementById('dailyGoalCircle').style.strokeDashoffset = offset;
   
   const allBadges=stats.allAchievements.map(a=>({
     icon:a.icon,
@@ -338,7 +410,117 @@ async function loadUserStats(){
       <div class="badge-icon">${b.icon}</div>
       <div class="badge-name">${b.name}</div>
     </div>`).join('');
+
+  // Load Leaderboard and Trivia Quest
+  loadLeaderboard();
+  loadTriviaQuest();
 }
+
+// ── LEADERBOARD LOADER ─────────────────────────────────────────
+async function loadLeaderboard() {
+  const { data, error } = await apiGetLeaderboard();
+  const listEl = document.getElementById('leaderboardList');
+  if (error || !data || !data.leaderboard) {
+    listEl.innerHTML = '<div style="font-size:0.8rem; color:var(--label3); text-align:center; padding:10px;">Failed to load leaderboard</div>';
+    return;
+  }
+
+  const ranks = data.leaderboard;
+  listEl.innerHTML = ranks.map((rankUser, index) => {
+    let medal = '';
+    if (index === 0) medal = '🥇';
+    else if (index === 1) medal = '🥈';
+    else if (index === 2) medal = '🥉';
+    else medal = `#${index + 1}`;
+
+    const isMe = rankUser.id === user?.id ? 'background: rgba(0, 122, 255, 0.08); border-left: 3px solid var(--blue); font-weight:700;' : '';
+
+    return `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-radius:10px; font-size:0.85rem; ${isMe}">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-weight:800; min-width:24px;">${medal}</span>
+          <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px;">${rankUser.full_name}</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="badge badge-blue" style="font-size:0.7rem; padding:2px 6px;">Lvl ${rankUser.level}</span>
+          <span style="font-weight:700; color:var(--purple);">${rankUser.xp} XP</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── TRIVIA QUEST ENGINE ────────────────────────────────────────
+const TRIVIA_QUESTIONS = [
+  { q: "Which part of the cell is known as the powerhouse?", options: ["Nucleus", "Mitochondria", "Ribosome", "Lysosome"], answer: 1, explanation: "Mitochondria generate most of the cell's supply of adenosine triphosphate (ATP), used as a source of chemical energy." },
+  { q: "What is the primary function of DNA in living organisms?", options: ["Energy production", "Storing genetic information", "Cell structure", "Oxygen transport"], answer: 1, explanation: "DNA is the molecule that carries genetic instructions for development, functioning, growth, and reproduction." },
+  { q: "Which law states that pressure is inversely proportional to volume?", options: ["Charles's Law", "Boyle's Law", "Newton's Law", "Avogadro's Law"], answer: 1, explanation: "Boyle's Law describes the inversely proportional relationship between the absolute pressure and volume of a gas, if the temperature is kept constant." },
+  { q: "Who is credited with inventing the World Wide Web in 1989?", options: ["Steve Jobs", "Tim Berners-Lee", "Bill Gates", "Alan Turing"], answer: 1, explanation: "Tim Berners-Lee invented the World Wide Web while working at CERN in 1989." }
+];
+
+function loadTriviaQuest() {
+  const answered = localStorage.getItem('ct_trivia_answered_date');
+  const todayStr = new Date().toISOString().split('T')[0];
+  const qIdx = new Date().getDate() % TRIVIA_QUESTIONS.length;
+  const question = TRIVIA_QUESTIONS[qIdx];
+
+  const qEl = document.getElementById('triviaQuestion');
+  const optEl = document.getElementById('triviaOptions');
+  const feedEl = document.getElementById('triviaFeedback');
+
+  qEl.textContent = question.q;
+
+  if (answered === todayStr) {
+    const isCorrect = localStorage.getItem('ct_trivia_correct') === 'true';
+    optEl.innerHTML = '';
+    feedEl.style.display = 'block';
+    feedEl.style.background = isCorrect ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)';
+    feedEl.style.color = isCorrect ? 'var(--green)' : 'var(--red)';
+    feedEl.innerHTML = isCorrect 
+      ? `🎉 Correct! You've already answered today's question. <div style="font-size:0.75rem; font-weight:normal; margin-top:6px; color:var(--label);">${question.explanation}</div>` 
+      : `❌ You answered today's question incorrectly. Better luck tomorrow! <div style="font-size:0.75rem; font-weight:normal; margin-top:6px; color:var(--label);">${question.explanation}</div>`;
+    return;
+  }
+
+  optEl.innerHTML = question.options.map((opt, idx) => `
+    <button class="btn btn-ghost btn-sm" style="text-align:left; justify-content:flex-start; width:100%; border-radius:10px; font-weight:normal;" onclick="submitTriviaAnswer(${idx}, ${question.answer}, '${todayStr}')">
+      ${String.fromCharCode(65 + idx)}. ${opt}
+    </button>
+  `).join('');
+}
+
+async function submitTriviaAnswer(selectedIdx, correctIdx, todayStr) {
+  const isCorrect = selectedIdx === correctIdx;
+  localStorage.setItem('ct_trivia_answered_date', todayStr);
+  localStorage.setItem('ct_trivia_correct', isCorrect ? 'true' : 'false');
+
+  const qIdx = new Date().getDate() % TRIVIA_QUESTIONS.length;
+  const question = TRIVIA_QUESTIONS[qIdx];
+  const optEl = document.getElementById('triviaOptions');
+  const feedEl = document.getElementById('triviaFeedback');
+
+  optEl.innerHTML = '';
+  feedEl.style.display = 'block';
+  feedEl.style.background = isCorrect ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)';
+  feedEl.style.color = isCorrect ? 'var(--green)' : 'var(--red)';
+
+  if (isCorrect) {
+    feedEl.innerHTML = `🎉 Correct! +10 XP earned! <div style="font-size:0.75rem; font-weight:normal; margin-top:6px; color:var(--label);">${question.explanation}</div>`;
+    showToast('Correct answer! +10 XP <i class="fa-solid fa-star"></i>', 'success');
+    
+    // Call award XP
+    const userId = user?.id;
+    if (userId) {
+      await apiRequest(`/api/upload/stats/${userId}`); // Refresh stats locally
+      awardXP(10);
+      setTimeout(() => loadUserStats(), 1000);
+    }
+  } else {
+    feedEl.innerHTML = `❌ Incorrect! The correct answer was B. <div style="font-size:0.75rem; font-weight:normal; margin-top:6px; color:var(--label);">${question.explanation}</div>`;
+    showToast('Incorrect answer. Better luck tomorrow!', 'error');
+  }
+}
+
 
 function loadStatsFromLocalStorage(){
   const xp = parseInt(localStorage.getItem('ct_xp')||'0');

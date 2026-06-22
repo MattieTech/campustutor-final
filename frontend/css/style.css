@@ -654,6 +654,9 @@ img{max-width:100%;display:block;}
   .dialog{padding:24px;max-width:90vw;border-radius:var(--r-lg);}
   input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
   input[type=number]{-moz-appearance:textfield;}
+  .dashboard-grid-layout {
+    grid-template-columns: 1fr !important;
+  }
 }
 /* Medium screens (769px-1024px) */
 @media(min-width:769px) and (max-width:1024px){
