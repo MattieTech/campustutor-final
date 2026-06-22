@@ -897,7 +897,7 @@ function addSidebarTool(label, key) {
   const a = document.createElement('a');
   a.className = 'sidebar-link';
   a.style.cssText = 'font-size:.82rem;padding:8px 12px;cursor:pointer;';
-  a.textContent = label;
+  a.innerHTML = label;
   a.onclick = () => activateTab(key);
   document.getElementById('toolsList').appendChild(a);
 }

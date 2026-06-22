@@ -317,7 +317,7 @@ function showToast(message, type = "info") {
   const toast = document.createElement("div");
   toast.id = "toast";
   toast.className = `toast toast-${type}`;
-  toast.textContent = message;
+  toast.innerHTML = message;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3500);
 }
