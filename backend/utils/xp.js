@@ -196,8 +196,13 @@ function calculateLevel(totalXP) {
 // Called after any activity to maintain study streak
 async function updateStreak(userId) {
   try {
-    const today = new Date().toLocaleDateString('sv');
-    const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('sv');
+    // Get dates in user's local timezone parsed to 'YYYY-MM-DD'
+    const todayObj = new Date();
+    const today = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
+    
+    const yesterdayObj = new Date();
+    yesterdayObj.setDate(yesterdayObj.getDate() - 1);
+    const yesterday = `${yesterdayObj.getFullYear()}-${String(yesterdayObj.getMonth() + 1).padStart(2, '0')}-${String(yesterdayObj.getDate()).padStart(2, '0')}`;
 
     const { data: profile, error: fetchErr } = await supabase
       .from("profiles")
@@ -211,14 +216,17 @@ async function updateStreak(userId) {
     }
 
     let newStreak = profile.streak || 0;
-    const lastDate = profile.last_activity_date;
+    const lastDate = profile.last_activity_date; // YYYY-MM-DD string in DB
 
     // If this is the first activity today, check if it's consecutive
     if (lastDate !== today) {
       if (lastDate === yesterday) {
         newStreak += 1;
+      } else if (!lastDate) {
+        newStreak = 1; // First time ever
       } else {
-        newStreak = 1; // Break in streak
+        // If last active date was more than 1 day ago, reset to 1
+        newStreak = 1;
       }
 
       const { error: updateErr } = await supabase
