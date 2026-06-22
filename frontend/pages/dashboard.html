@@ -392,7 +392,9 @@ async function loadUserStats(){
   document.getElementById('statXP').textContent=stats.xp||0;
   document.getElementById('statStreak').innerHTML=(stats.streak||0)+' <i class="fa-solid fa-fire"></i>';
   document.getElementById('statDocs').textContent=stats.documentsCount||0;
-  document.getElementById('activityCount').textContent=(stats.activityCount||0)+' actions';
+  // If activityCount label is in DOM, update it
+  const actCountEl = document.getElementById('activityCount');
+  if (actCountEl) actCountEl.textContent=(stats.activityCount||0)+' actions';
 
   // Calculate daily quest progress ring
   // Goal: 50 XP per day. Let's map how much they have earned today towards 50 XP
@@ -601,13 +603,12 @@ async function loadActivity(){
     return;
   }
   
-  const acts=(data.activities||[]).slice(0,3);
+  const acts=(data.activities||[]).slice(0,10); // Show last 10 actions in modal
   if(acts.length===0){
     document.getElementById('activityEmpty').style.display='block';
     return;
   }
   
-  document.getElementById('activityCount').textContent=acts.length+' recent actions';
   document.getElementById('activityLog').style.display='block';
   const actList=document.getElementById('activityList');
   

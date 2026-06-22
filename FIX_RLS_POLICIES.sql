@@ -22,6 +22,12 @@ CREATE POLICY "Users can read own profile"
   FOR SELECT
   USING (auth.uid() = id);
 
+-- Allow authenticated users to view profiles for leaderboard/stats purposes
+CREATE POLICY "Allow authenticated users to read all profiles"
+  ON profiles
+  FOR SELECT
+  USING (auth.role() = 'authenticated');
+
 CREATE POLICY "Users can update own profile"
   ON profiles
   FOR UPDATE
