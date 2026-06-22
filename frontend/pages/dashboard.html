@@ -351,7 +351,7 @@ function loadStatsFromLocalStorage(){
   document.getElementById('statXP').textContent=xp;
 
   const streak=parseInt(localStorage.getItem('ct_streak')||'0');
-  document.getElementById('statStreak').textContent=streak+' <i class="fa-solid fa-fire"></i>';
+  document.getElementById('statStreak').innerHTML=streak+' <i class="fa-solid fa-fire"></i>';
 
   const allBadges=[
     {icon:'<i class="fa-solid fa-rocket"></i>',name:'First Upload',key:'first_upload'},
