@@ -196,13 +196,13 @@ function calculateLevel(totalXP) {
 // Called after any activity to maintain study streak
 async function updateStreak(userId) {
   try {
-    // Get dates in user's local timezone parsed to 'YYYY-MM-DD'
+    // Get dates in UTC timezone parsed to 'YYYY-MM-DD'
     const todayObj = new Date();
-    const today = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
+    const today = todayObj.toISOString().split('T')[0];
     
     const yesterdayObj = new Date();
-    yesterdayObj.setDate(yesterdayObj.getDate() - 1);
-    const yesterday = `${yesterdayObj.getFullYear()}-${String(yesterdayObj.getMonth() + 1).padStart(2, '0')}-${String(yesterdayObj.getDate()).padStart(2, '0')}`;
+    yesterdayObj.setUTCDate(yesterdayObj.getUTCDate() - 1);
+    const yesterday = yesterdayObj.toISOString().split('T')[0];
 
     const { data: profile, error: fetchErr } = await supabase
       .from("profiles")
