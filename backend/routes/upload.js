@@ -450,6 +450,40 @@ router.delete("/:id", authMiddleware, async (req, res) => {
 });
 
 // ── GET USER STATS ────────────────────────────────────────────
+// Auto-heals missing profiles in the database
+async function ensureProfile(userId, email) {
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (!profile) {
+      const refCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      await supabase.from("profiles").insert({
+        id: userId,
+        full_name: email ? email.split("@")[0] : "Student",
+        email: email || `${userId}@campustutor.com`,
+        plan: "free",
+        is_verified: true,
+        referral_code: refCode,
+        created_at: new Date().toISOString(),
+      });
+      console.log(`✅ Auto-healed profile row for user ${userId}`);
+    } else if (!profile.referral_code) {
+      const refCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      await supabase
+        .from("profiles")
+        .update({ referral_code: refCode })
+        .eq("id", userId);
+      console.log(`✅ Added referral code to existing profile for user ${userId}`);
+    }
+  } catch (err) {
+    console.error("Failed to ensure profile:", err.message);
+  }
+}
+
 router.get("/stats/:userId", authMiddleware, async (req, res) => {
   try {
     const { getUserStats, updateStreak } = require("../utils/xp");
@@ -458,6 +492,9 @@ router.get("/stats/:userId", authMiddleware, async (req, res) => {
     if (userId !== req.user.id) {
       return res.status(403).json({ error: "Cannot view other users' stats." });
     }
+
+    // Auto-heal profile if it is missing
+    await ensureProfile(userId, req.user.email);
 
     try {
       await updateStreak(userId);
@@ -534,6 +571,9 @@ router.get("/my-results", authMiddleware, async (req, res) => {
 router.get("/referrals/stats", authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
+
+    // Auto-heal profile if missing
+    await ensureProfile(userId, req.user.email);
 
     // 1. Get profile referral code
     const { data: profile, error: profileErr } = await supabase

@@ -56,7 +56,7 @@
   <div class="navbar-right">
     <a href="/pages/pricing.html" class="btn btn-warning btn-sm" style="display:flex;align-items:center;gap:6px;font-weight:700;background:linear-gradient(135deg, #ffb020, #d97806);color:#fff;border:none;border-radius:20px;padding:6px 14px;text-decoration:none;font-size:0.8rem;margin-right:8px;"><i class="fa-solid fa-crown"></i> Upgrade</a>
     <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
-    <span id="userGreeting" style="font-size:0.83rem;color:var(--label3);"></span>
+    <span id="userGreeting" style="display: none;"></span>
     <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop">Log Out</button>
   </div>
 </nav>
@@ -145,8 +145,8 @@
           </div>
         </div>
 
-        <!-- Daily Brain Teaser Widget -->
-        <div class="card liquid-glass-card" style="margin:0; border: 1px solid rgba(0, 122, 255, 0.15);">
+        <!-- Daily Brain Teaser Widget (Hidden) -->
+        <div class="card liquid-glass-card" style="display:none; margin:0; border: 1px solid rgba(0, 122, 255, 0.15);">
           <div class="card-body">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
               <span style="font-size:1.5rem;color:var(--orange);"><i class="fa-solid fa-brain"></i></span>
