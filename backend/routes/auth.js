@@ -282,9 +282,32 @@ router.post("/google-login", async (req, res) => {
       userStatus = profile.status || "active";
 
       // Align password in auth to match deterministic password
-      await supabase.auth.admin.updateUserById(userId, {
-        password: googleUserPassword
+      const { error: updateAuthError } = await supabase.auth.admin.updateUserById(userId, {
+        password: googleUserPassword,
+        email_confirm: true
       });
+
+      // Auto-heal if the user exists in profiles but is missing from Supabase Auth
+      if (updateAuthError && (updateAuthError.status === 404 || updateAuthError.message.includes("not found"))) {
+        console.log(`Healing missing Auth user for email: ${email}`);
+        const { error: createAuthError } = await supabase.auth.admin.createUser({
+          email,
+          password: googleUserPassword,
+          email_confirm: true,
+          user_metadata: { full_name: profile.full_name || fullName }
+        });
+        if (createAuthError) {
+          console.error("Failed to heal Auth user:", createAuthError.message);
+        }
+      }
+
+      // If user profile exists but is not marked verified, set to true (since they authenticated via Google)
+      if (!profile.is_verified) {
+        await supabase
+          .from("profiles")
+          .update({ is_verified: true })
+          .eq("id", userId);
+      }
     }
 
     if (userStatus === "banned") {
