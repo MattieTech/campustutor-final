@@ -530,4 +530,149 @@ router.get("/my-results", authMiddleware, async (req, res) => {
   }
 });
 
+// ── GET REFERRAL DASHBOARD STATS ──────────────────────────────────────
+router.get("/referrals/stats", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // 1. Get profile referral code
+    const { data: profile, error: profileErr } = await supabase
+      .from("profiles")
+      .select("referral_code, referred_by")
+      .eq("id", userId)
+      .single();
+
+    if (profileErr || !profile) {
+      return res.status(404).json({ error: "User profile not found." });
+    }
+
+    // 2. Count total referees (people referred by user)
+    const { count: refereeCount, error: countErr } = await supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("referred_by", userId);
+
+    if (countErr) {
+      console.error("Referee count error:", countErr.message);
+    }
+
+    // 3. Get completed referral rewards
+    const { data: completedRefs, error: refsErr } = await supabase
+      .from("referrals")
+      .select("reward_amount")
+      .eq("referrer_id", userId)
+      .eq("status", "completed");
+
+    if (refsErr) {
+      console.error("Referrals rewards select error:", refsErr.message);
+    }
+
+    const totalEarned = (completedRefs || []).reduce((acc, curr) => acc + Number(curr.reward_amount || 0), 0);
+
+    // 4. Get withdrawals history
+    const { data: withdrawals, error: wErr } = await supabase
+      .from("withdrawals")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (wErr) {
+      console.error("Withdrawals select error:", wErr.message);
+    }
+
+    const totalWithdrawn = (withdrawals || [])
+      .filter(w => w.status === "approved")
+      .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+
+    const pendingWithdrawn = (withdrawals || [])
+      .filter(w => w.status === "pending")
+      .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+
+    // Balance is total earned minus both approved and pending withdrawals
+    const balance = Math.max(0, totalEarned - totalWithdrawn - pendingWithdrawn);
+
+    res.json({
+      referral_code: profile.referral_code,
+      referee_count: refereeCount || 0,
+      balance: balance,
+      total_withdrawn: totalWithdrawn,
+      withdrawals: withdrawals || [],
+    });
+  } catch (err) {
+    console.error("Referral stats error:", err.message);
+    res.status(500).json({ error: "Failed to load referral statistics." });
+  }
+});
+
+// ── SUBMIT WITHDRAWAL REQUEST ────────────────────────────────────────
+router.post("/referrals/withdraw", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { amount, bankName, accountName, accountNumber } = req.body;
+    const withdrawAmt = parseInt(amount);
+
+    if (!withdrawAmt || withdrawAmt < 1500) {
+      return res.status(400).json({ error: "Minimum payout request is ₦1,500." });
+    }
+
+    if (!bankName || !accountNumber || !accountName) {
+      return res.status(400).json({ error: "Bank details (Bank Name, Account Number, Account Name) are required." });
+    }
+
+    // Calculate current balance
+    const { data: completedRefs } = await supabase
+      .from("referrals")
+      .select("reward_amount")
+      .eq("referrer_id", userId)
+      .eq("status", "completed");
+
+    const totalEarned = (completedRefs || []).reduce((acc, curr) => acc + Number(curr.reward_amount || 0), 0);
+
+    const { data: withdrawals } = await supabase
+      .from("withdrawals")
+      .select("*")
+      .eq("user_id", userId);
+
+    const totalWithdrawn = (withdrawals || [])
+      .filter(w => w.status === "approved")
+      .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+
+    const pendingWithdrawn = (withdrawals || [])
+      .filter(w => w.status === "pending")
+      .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+
+    const balance = Math.max(0, totalEarned - totalWithdrawn - pendingWithdrawn);
+
+    if (withdrawAmt > balance) {
+      return res.status(400).json({ error: "Insufficient wallet balance." });
+    }
+
+    // Insert new pending withdrawal
+    const { data, error } = await supabase
+      .from("withdrawals")
+      .insert({
+        user_id: userId,
+        amount: withdrawAmt,
+        status: "pending",
+        bank_name: bankName,
+        account_number: accountNumber,
+        account_name: accountName,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Insertion error:", error.message);
+      return res.status(500).json({ error: "Failed to submit withdrawal request." });
+    }
+
+    res.json({ message: "Withdrawal request submitted successfully.", withdrawal: data });
+  } catch (err) {
+    console.error("Submit withdrawal error:", err.message);
+    res.status(500).json({ error: "Failed to submit withdrawal request." });
+  }
+});
+
 module.exports = router;

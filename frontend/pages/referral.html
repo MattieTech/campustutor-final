@@ -101,9 +101,12 @@
         <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px;"><i class="fa-solid fa-money-bill-transfer"></i> Request Withdrawal</h3>
         <p style="font-size: 0.8rem; color: var(--label3); margin-bottom: 16px;">Minimum withdrawal threshold is <b>₦1,500</b>. Manual payout will be reviewed by admin.</p>
         
-        <div style="display: flex; gap: 10px; margin-bottom: 24px;">
-          <input type="number" id="withdrawAmount" placeholder="Amount (e.g., 2000)" class="form-input" style="max-width: 250px;"/>
-          <button class="btn btn-success" onclick="requestWithdrawal()">Request payout</button>
+        <div style="display: flex; flex-direction: column; gap: 12px; max-width: 400px; margin-bottom: 24px;">
+          <input type="number" id="withdrawAmount" placeholder="Amount (e.g., 2000)" class="form-input" required/>
+          <input type="text" id="bankName" placeholder="Bank Name (e.g., GTBank)" class="form-input" required/>
+          <input type="text" id="accountNumber" placeholder="Account Number" class="form-input" required maxlength="10"/>
+          <input type="text" id="accountName" placeholder="Account Name / Beneficiary Name" class="form-input" required/>
+          <button class="btn btn-success" onclick="requestWithdrawal()" style="width: 100%;">Request Payout</button>
         </div>
 
         <h4 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 10px;">Withdrawal History</h4>
@@ -132,6 +135,31 @@
 <script src="/js/api.js"></script>
 <script>
   requireAuth();
+
+  // Mobile Menu Toggle
+  function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const btn = document.getElementById('mobileMenuBtn');
+    if (sidebar) {
+      sidebar.classList.toggle('mobile-open');
+      if (btn) btn.textContent = sidebar.classList.contains('mobile-open') ? '✕' : '☰';
+    }
+  }
+
+  // Theme Toggle
+  const themeBtn = document.getElementById('themeBtn');
+  const initialTheme = localStorage.getItem('ct_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', initialTheme);
+  if (themeBtn) {
+    themeBtn.innerHTML = initialTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    themeBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', nextTheme);
+      localStorage.setItem('ct_theme', nextTheme);
+      themeBtn.innerHTML = nextTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    });
+  }
 
   let userBalance = 0;
 
@@ -191,6 +219,10 @@
 
   async function requestWithdrawal() {
     const amt = parseInt(document.getElementById('withdrawAmount').value);
+    const bankName = document.getElementById('bankName').value.trim();
+    const accountNumber = document.getElementById('accountNumber').value.trim();
+    const accountName = document.getElementById('accountName').value.trim();
+
     if (!amt || amt <= 0) {
       showToast('Please specify a valid withdrawal amount.', 'error');
       return;
@@ -203,9 +235,18 @@
       showToast('Insufficient wallet balance.', 'error');
       return;
     }
+    if (!bankName || !accountNumber || !accountName) {
+      showToast('Please fill in all bank account details.', 'error');
+      return;
+    }
 
     showToast('Submitting withdrawal request...', 'info');
-    const { error } = await apiRequest('/api/upload/referrals/withdraw', 'POST', { amount: amt });
+    const { error } = await apiRequest('/api/upload/referrals/withdraw', 'POST', { 
+      amount: amt,
+      bankName,
+      accountNumber,
+      accountName
+    });
     if (error) {
       showToast(error, 'error');
       return;
@@ -213,6 +254,9 @@
 
     showToast('Withdrawal request submitted successfully! <i class="fa-solid fa-circle-check"></i>', 'success');
     document.getElementById('withdrawAmount').value = '';
+    document.getElementById('bankName').value = '';
+    document.getElementById('accountNumber').value = '';
+    document.getElementById('accountName').value = '';
     loadReferralDashboard();
   }
 

@@ -195,7 +195,14 @@ async function uploadPDF(){
   },300);
   const{data,error}=await apiUploadPDF(selectedPdfFile);
   clearInterval(iv);
-  if(error){fill.style.width='100%';fill.style.background='var(--red)';lbl.textContent='Upload failed.';showToast(error,'error');pdfUploadBtn.disabled=false;return;}
+  if(error){
+    fill.style.width='100%';fill.style.background='var(--red)';lbl.textContent='Upload failed.';
+    showToast(error,'error');
+    if ((error || '').toLowerCase().includes('upgrade') || (error || '').toLowerCase().includes('limit')) {
+      setTimeout(() => { window.location.href = '/pages/pricing.html'; }, 1500);
+    }
+    pdfUploadBtn.disabled=false;return;
+  }
   fill.style.width='100%';lbl.innerHTML='<i class="fa-solid fa-circle-check"></i> Done! Redirecting...';
   // Award XP + badge
   const xp=parseInt(localStorage.getItem('ct_xp')||'0');localStorage.setItem('ct_xp',xp+20);
@@ -252,7 +259,11 @@ async function uploadImage(){
     clearInterval(iv);
       if(!response.ok){
         fill.style.width='100%';fill.style.background='var(--red)';lbl.textContent='Upload failed.';
-        showToast(data.error||'Upload failed.','error');imageUploadBtn.disabled=false;return;
+        showToast(data.error||'Upload failed.','error');
+        if (response.status === 403 || (data.error || '').toLowerCase().includes('upgrade') || (data.error || '').toLowerCase().includes('limit')) {
+          setTimeout(() => { window.location.href = '/pages/pricing.html'; }, 1500);
+        }
+        imageUploadBtn.disabled=false;return;
       }
       fill.style.width='100%';lbl.innerHTML='<i class="fa-solid fa-circle-check"></i> Done! Redirecting...';
       const xp=parseInt(localStorage.getItem('ct_xp')||'0');localStorage.setItem('ct_xp',xp+15);

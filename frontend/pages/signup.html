@@ -39,6 +39,10 @@
       <label class="form-label">Confirm Password</label>
       <input class="form-input" type="password" id="confirmPwd" placeholder="Repeat your password" required autocomplete="new-password"/>
     </div>
+    <div class="form-group">
+      <label class="form-label">Referral Code (Optional)</label>
+      <input class="form-input" type="text" id="referredByInput" placeholder="e.g. CT_REF_XXXXXX"/>
+    </div>
     <button type="submit" class="btn btn-primary btn-full btn-lg" id="signupBtn">Create Free Account →</button>
   </form>
 
@@ -84,6 +88,9 @@ redirectIfLoggedIn();
 // Capture referral parameter
 const urlParams = new URLSearchParams(window.location.search);
 const referredBy = urlParams.get('ref');
+if (referredBy) {
+  document.getElementById('referredByInput').value = referredBy.trim().toUpperCase();
+}
 
 let registeredEmail = '';
 
@@ -97,12 +104,13 @@ document.getElementById('signupForm').addEventListener('submit',async(e)=>{
   btn.disabled=true; btn.textContent='Creating account...';
   
   registeredEmail = document.getElementById('email').value.trim();
+  const refCodeVal = document.getElementById('referredByInput').value.trim();
 
   const {data,error}=await apiSignup(
     document.getElementById('fullName').value.trim(),
     registeredEmail,
     pwd,
-    referredBy
+    refCodeVal || null
   );
   if(error){err.textContent=error;err.style.display='block';btn.disabled=false;btn.textContent='Create Free Account →';return;}
   

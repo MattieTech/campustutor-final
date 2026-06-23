@@ -945,7 +945,43 @@ document.getElementById('conceptInput').addEventListener('keydown', e => {
 });
 
 // Modern Choice Selector Function
+let userPlan = 'free';
+async function fetchUserPlan() {
+  const u = getUser();
+  if (!u) return;
+  const { data: stats } = await apiGetUserStats(u.id);
+  if (stats && stats.plan) {
+    userPlan = stats.plan.toLowerCase();
+  }
+}
+fetchUserPlan();
+
 function selectMattieChoice(type, value) {
+  // Validate premium tier restrictions
+  if (userPlan === 'free') {
+    if (type === 'summary' && value !== 'standard') {
+      showToast('This summary depth requires a Premium Plan. Redirecting to upgrade...', 'info');
+      setTimeout(() => { window.location.href = '/pages/pricing.html'; }, 1500);
+      return;
+    }
+    if (type === 'flashcard' && String(value) !== '10') {
+      showToast('Generating more than 10 flashcards requires a Premium Plan. Redirecting to upgrade...', 'info');
+      setTimeout(() => { window.location.href = '/pages/pricing.html'; }, 1500);
+      return;
+    }
+    if (type === 'quiz' && String(value) !== '10') {
+      showToast('Generating more than 10 quiz questions requires a Premium Plan. Redirecting to upgrade...', 'info');
+      setTimeout(() => { window.location.href = '/pages/pricing.html'; }, 1500);
+      return;
+    }
+  } else if (userPlan === 'plus') {
+    if (type === 'summary' && value === 'comprehensive') {
+      showToast('Comprehensive Textbook Summary requires Pro Plan. Redirecting to upgrade...', 'info');
+      setTimeout(() => { window.location.href = '/pages/pricing.html'; }, 1500);
+      return;
+    }
+  }
+
   const selectEl = document.getElementById(`${type}SizeSelect`);
   if (selectEl) {
     selectEl.value = value;

@@ -7,44 +7,235 @@
 <link rel="stylesheet" href="/css/style.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <style>
-  .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 24px; }
-  .price-card {
+  .pricing-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 16px;
+  }
+  .pricing-title-section {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .pricing-title-section h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 12px;
+    font-family: var(--font-ui);
+  }
+  .pricing-title-section p {
+    font-size: 1.05rem;
+    color: var(--label3);
+  }
+  .pricing-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+  .plan-card-claude {
     background: var(--glass);
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 0.5px solid var(--glass-b);
-    border-radius: var(--r-xl);
+    border: 1px solid var(--glass-b);
+    border-radius: 20px;
+    padding: 32px;
     box-shadow: var(--gshadow);
-    padding: 28px;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .plan-card-claude:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--gshadow-lg);
+  }
+  .plan-card-claude.popular {
+    border: 2px solid var(--blue);
+  }
+  .popular-badge-claude {
+    position: absolute;
+    top: -14px;
+    right: 32px;
+    background: var(--blue);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
+  }
+  .plan-card-header {
+    margin-bottom: 24px;
+  }
+  .plan-card-header h3 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+    color: var(--label);
+  }
+  .plan-card-header p {
+    font-size: 0.92rem;
+    color: var(--label3);
+  }
+  
+  .pricing-options-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .pricing-option {
+    border: 1.5px solid var(--sep);
+    border-radius: 16px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    background: rgba(118, 118, 128, 0.02);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .pricing-option:hover {
+    border-color: var(--blue);
+    background: rgba(0, 122, 255, 0.02);
+  }
+  .pricing-option.active {
+    border-color: var(--blue);
+    background: rgba(0, 122, 255, 0.05);
+    box-shadow: 0 0 0 1px var(--blue);
+  }
+  
+  .option-radio {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--label4);
+    display: inline-block;
+    margin-bottom: 16px;
     position: relative;
+    transition: all 0.2s;
   }
-  .price-card:hover { transform: translateY(-4px); box-shadow: var(--gshadow-lg); }
-  .price-card.popular { border: 2px solid var(--blue); }
-  .popular-badge {
-    position: absolute; top: 12px; right: 12px;
-    background: var(--blue); color: #fff; font-size: 0.65rem; font-weight: 700;
-    padding: 4px 8px; border-radius: 20px; text-transform: uppercase;
+  .pricing-option.active .option-radio {
+    border-color: var(--blue);
+    background: var(--blue);
   }
-  .price-header h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 8px; }
-  .price-header p { font-size: 0.82rem; color: var(--label3); margin-bottom: 16px; }
-  .price-amt { font-size: 2.2rem; font-weight: 800; margin-bottom: 20px; font-family: var(--font-d); }
-  .price-amt span { font-size: 0.9rem; font-weight: 500; color: var(--label3); }
-  .price-features { list-style: none; padding: 0; margin: 0 0 28px 0; font-size: 0.85rem; display: flex; flex-direction: column; gap: 12px; }
-  .price-features li { display: flex; align-items: center; gap: 8px; }
-  .price-features li i { color: var(--blue); }
-  .selector-wrap { margin-bottom: 20px; }
-  .selector-wrap label { font-size: 0.78rem; font-weight: 700; color: var(--label2); display: block; margin-bottom: 6px; }
-  .plan-select {
-    width: 100%; padding: 10px; border-radius: var(--r);
-    border: 1px solid var(--sep); background: var(--bg2); color: var(--label);
-    font-family: inherit; font-size: 0.88rem; outline: none; cursor: pointer;
+  .pricing-option.active .option-radio::after {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #fff;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
   }
-  .price-card.current { border: 2px solid var(--green); }
-  .price-card.current .popular-badge { background: var(--green); }
+  
+  .option-price {
+    font-size: 1.8rem;
+    font-weight: 800;
+    font-family: var(--font-d);
+    margin-bottom: 4px;
+    color: var(--label);
+  }
+  .option-billing {
+    font-size: 0.8rem;
+    color: var(--label3);
+    font-weight: 600;
+  }
+  
+  .save-badge {
+    position: absolute;
+    top: -10px;
+    right: 16px;
+    background: rgba(52, 199, 89, 0.15);
+    color: var(--green);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 0.5px solid rgba(52, 199, 89, 0.3);
+  }
+  
+  .btn-primary-claude {
+    width: 100%;
+    padding: 16px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 99px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-primary-claude:hover {
+    background: #222;
+  }
+  .btn-primary-claude:disabled {
+    background: var(--sep);
+    color: var(--label4);
+    cursor: not-allowed;
+    opacity: 0.8;
+  }
+  [data-theme="dark"] .btn-primary-claude {
+    background: #fff;
+    color: #111;
+  }
+  [data-theme="dark"] .btn-primary-claude:hover {
+    background: #eee;
+  }
+  [data-theme="dark"] .btn-primary-claude:disabled {
+    background: var(--sep);
+    color: var(--label4);
+  }
+  
+  .price-features-claude {
+    list-style: none;
+    padding: 24px 0 0 0;
+    margin: 0;
+    border-top: 1px solid var(--sep);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    font-size: 0.92rem;
+  }
+  .price-features-claude li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--label2);
+  }
+  .price-features-claude li i {
+    color: var(--green);
+    font-size: 1rem;
+    width: 16px;
+    text-align: center;
+  }
+  .price-features-claude li i.reject {
+    color: var(--red);
+  }
+  
+  .plan-card-claude.current-subscription {
+    border: 2px solid var(--green);
+  }
+  .current-badge-claude {
+    position: absolute;
+    top: -14px;
+    right: 32px;
+    background: var(--green);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    box-shadow: 0 4px 12px rgba(52, 199, 89, 0.25);
+  }
 </style>
 </head>
 <body>
@@ -63,6 +254,8 @@
   <a href="/pages/dashboard.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-house"></i> Dashboard</a>
   <a href="/pages/upload.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-cloud-arrow-up"></i> Uploads</a>
   <a href="/pages/history.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-chart-simple"></i> History</a>
+  <a href="/pages/pricing.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-credit-card"></i> Upgrade Plan</a>
+  <a href="/pages/referral.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-users"></i> Refer & Earn</a>
   <a href="/pages/dashboard.html#profile" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-user"></i> Profile</a>
   <button class="mobile-menu-item logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
 </nav>
@@ -77,84 +270,95 @@
   </aside>
 
   <main class="main-content">
-    <div class="page-header">
-      <h1>Pricing Plans <i class="fa-solid fa-credit-card"></i></h1>
-      <p>Choose the plan that matches your academic speed</p>
-    </div>
-
-    <div style="margin-bottom: 24px; padding: 12px 18px; border-radius: var(--r); background: rgba(52, 199, 89, 0.08); border-left: 4px solid var(--green); display: none;" id="activePlanAlert">
-      <span style="font-weight: 700; color: var(--green);">Current Subscription: </span>
-      <span id="activePlanName" style="font-weight: 600;">Free Trial</span>
-      <span id="activePlanExpiry" style="font-size: 0.8rem; color: var(--label2); margin-left: 8px;"></span>
-    </div>
-
-    <div class="pricing-grid">
-      <!-- Free Card -->
-      <div class="price-card" id="card-free">
-        <div class="price-header">
-          <h3>Free Trial</h3>
-          <p>Kickstart your notes revision</p>
-          <div class="price-amt">₦0 <span>/ forever</span></div>
-        </div>
-        <ul class="price-features">
-          <li><i class="fa-solid fa-circle-check"></i> Max 2 documents total</li>
-          <li><i class="fa-solid fa-circle-check"></i> Standard PDF/Slides formats</li>
-          <li><i class="fa-solid fa-circle-check"></i> Core Concept summaries</li>
-          <li><i class="fa-solid fa-circle-check"></i> Up to 20-question quiz pools</li>
-          <li><i class="fa-solid fa-circle-xmark" style="color:var(--red);"></i> No scanned images or heavy photos</li>
-        </ul>
-        <button class="btn btn-ghost" disabled style="width: 100%;">Current Plan</button>
+    <div class="pricing-container">
+      <div class="pricing-title-section">
+        <h1>Upgrade your revision</h1>
+        <p>Choose the subscription plan that works for you</p>
       </div>
 
-      <!-- Plus Card -->
-      <div class="price-card" id="card-plus">
-        <div class="price-header">
-          <h3>Plus Plan</h3>
-          <p>Boost your productivity</p>
-          <div class="price-amt" id="plus-price-display">₦1,000</div>
-        </div>
-        <div class="selector-wrap">
-          <label for="plus-duration">Choose Duration</label>
-          <select id="plus-duration" class="plan-select" onchange="updatePlusPrice()">
-            <option value="1">1 Month (₦1,000)</option>
-            <option value="3">3 Months (₦2,500)</option>
-            <option value="6">6 Months (₦4,500)</option>
-          </select>
-        </div>
-        <ul class="price-features">
-          <li><i class="fa-solid fa-circle-check"></i> Up to 15 documents per month</li>
-          <li><i class="fa-solid fa-circle-check"></i> Lecture slides support</li>
-          <li><i class="fa-solid fa-circle-check"></i> Detailed Point breakdowns</li>
-          <li><i class="fa-solid fa-circle-check"></i> Up to 40-question quiz pools</li>
-          <li><i class="fa-solid fa-circle-xmark" style="color:var(--red);"></i> No scanner image processing</li>
-        </ul>
-        <button class="btn btn-primary" style="width: 100%;" onclick="checkout('plus')">Upgrade to Plus</button>
+      <div style="margin-bottom: 32px; padding: 14px 18px; border-radius: var(--r); background: rgba(52, 199, 89, 0.08); border-left: 4px solid var(--green); display: none;" id="activePlanAlert">
+        <span style="font-weight: 700; color: var(--green);">Current Subscription: </span>
+        <span id="activePlanName" style="font-weight: 600;">Free Trial</span>
+        <span id="activePlanExpiry" style="font-size: 0.8rem; color: var(--label2); margin-left: 8px;"></span>
       </div>
 
-      <!-- Pro Card -->
-      <div class="price-card popular" id="card-pro">
-        <div class="popular-badge">Most Popular</div>
-        <div class="price-header">
-          <h3>Pro Plan</h3>
-          <p>Get full academic dominance</p>
-          <div class="price-amt" id="pro-price-display">₦2,500</div>
+      <div class="pricing-grid">
+        <!-- Plus Card -->
+        <div class="plan-card-claude" id="card-plus">
+          <div class="plan-card-header">
+            <h3>Plus Plan</h3>
+            <p>Boost your productivity with expanded limits</p>
+          </div>
+          
+          <div class="pricing-options-row">
+            <div class="pricing-option active" onclick="selectOption('plus', 1, 1000)" id="opt-plus-1">
+              <div class="option-radio"></div>
+              <div class="option-price">₦1,000</div>
+              <div class="option-billing">Billed monthly</div>
+            </div>
+            <div class="pricing-option" onclick="selectOption('plus', 3, 2500)" id="opt-plus-3">
+              <span class="save-badge">Save ₦500</span>
+              <div class="option-radio"></div>
+              <div class="option-price">₦2,500</div>
+              <div class="option-billing">Billed 3-monthly</div>
+            </div>
+            <div class="pricing-option" onclick="selectOption('plus', 6, 4500)" id="opt-plus-6">
+              <span class="save-badge">Save ₦1,500</span>
+              <div class="option-radio"></div>
+              <div class="option-price">₦4,500</div>
+              <div class="option-billing">Billed 6-monthly</div>
+            </div>
+          </div>
+
+          <button class="btn-primary-claude" onclick="triggerCheckout('plus')" id="btn-plus">Get Plus Plan</button>
+
+          <ul class="price-features-claude">
+            <li><i class="fa-solid fa-check"></i> Up to 15 documents per month</li>
+            <li><i class="fa-solid fa-check"></i> Lecture slides support</li>
+            <li><i class="fa-solid fa-check"></i> Detailed Point breakdowns</li>
+            <li><i class="fa-solid fa-check"></i> Up to 40-question quiz pools</li>
+            <li><i class="fa-solid fa-xmark reject"></i> No scanner image processing</li>
+          </ul>
         </div>
-        <div class="selector-wrap">
-          <label for="pro-duration">Choose Duration</label>
-          <select id="pro-duration" class="plan-select" onchange="updateProPrice()">
-            <option value="1">1 Month (₦2,500)</option>
-            <option value="3">3 Months (₦4,000)</option>
-            <option value="6">6 Months (₦7,500)</option>
-          </select>
+
+        <!-- Pro Card -->
+        <div class="plan-card-claude popular" id="card-pro">
+          <div class="popular-badge-claude" id="pro-badge-text">Most Popular</div>
+          <div class="plan-card-header">
+            <h3>Pro Plan</h3>
+            <p>Unlock absolute academic dominance and priority support</p>
+          </div>
+          
+          <div class="pricing-options-row">
+            <div class="pricing-option active" onclick="selectOption('pro', 1, 2500)" id="opt-pro-1">
+              <div class="option-radio"></div>
+              <div class="option-price">₦2,500</div>
+              <div class="option-billing">Billed monthly</div>
+            </div>
+            <div class="pricing-option" onclick="selectOption('pro', 3, 4000)" id="opt-pro-3">
+              <span class="save-badge">Save ₦3,500</span>
+              <div class="option-radio"></div>
+              <div class="option-price">₦4,000</div>
+              <div class="option-billing">Billed 3-monthly</div>
+            </div>
+            <div class="pricing-option" onclick="selectOption('pro', 6, 7500)" id="opt-pro-6">
+              <span class="save-badge">Save ₦7,500</span>
+              <div class="option-radio"></div>
+              <div class="option-price">₦7,500</div>
+              <div class="option-billing">Billed 6-monthly</div>
+            </div>
+          </div>
+
+          <button class="btn-primary-claude" onclick="triggerCheckout('pro')" id="btn-pro">Get Pro Plan</button>
+
+          <ul class="price-features-claude">
+            <li><i class="fa-solid fa-check"></i> Unlimited document uploads</li>
+            <li><i class="fa-solid fa-check"></i> Image scan / photo OCR</li>
+            <li><i class="fa-solid fa-check"></i> 1-Min Textbook summaries</li>
+            <li><i class="fa-solid fa-check"></i> 50-question Exam Master pools</li>
+            <li><i class="fa-solid fa-check"></i> Priority AI speeds</li>
+          </ul>
         </div>
-        <ul class="price-features">
-          <li><i class="fa-solid fa-circle-check"></i> Unlimited document uploads</li>
-          <li><i class="fa-solid fa-circle-check"></i> Image scan / photo OCR</li>
-          <li><i class="fa-solid fa-circle-check"></i> 1-Min Textbook summaries</li>
-          <li><i class="fa-solid fa-circle-check"></i> 50-question Exam Master pools</li>
-          <li><i class="fa-solid fa-circle-check"></i> Priority AI speeds</li>
-        </ul>
-        <button class="btn btn-primary" style="width: 100%;" onclick="checkout('pro')">Upgrade to Pro</button>
       </div>
     </div>
   </main>
@@ -164,20 +368,47 @@
 <script>
   requireAuth();
 
-  function updatePlusPrice() {
-    const dur = document.getElementById('plus-duration').value;
-    const disp = document.getElementById('plus-price-display');
-    if (dur === '1') disp.textContent = '₦1,000';
-    if (dur === '3') disp.textContent = '₦2,500';
-    if (dur === '6') disp.textContent = '₦4,500';
+  // Mobile Menu Toggle
+  function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const btn = document.getElementById('mobileMenuBtn');
+    if (sidebar) {
+      sidebar.classList.toggle('mobile-open');
+      if (btn) btn.textContent = sidebar.classList.contains('mobile-open') ? '✕' : '☰';
+    }
   }
 
-  function updateProPrice() {
-    const dur = document.getElementById('pro-duration').value;
-    const disp = document.getElementById('pro-price-display');
-    if (dur === '1') disp.textContent = '₦2,500';
-    if (dur === '3') disp.textContent = '₦4,000';
-    if (dur === '6') disp.textContent = '₦7,500';
+  // Theme Toggle
+  const themeBtn = document.getElementById('themeBtn');
+  const initialTheme = localStorage.getItem('ct_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', initialTheme);
+  if (themeBtn) {
+    themeBtn.innerHTML = initialTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    themeBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', nextTheme);
+      localStorage.setItem('ct_theme', nextTheme);
+      themeBtn.innerHTML = nextTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    });
+  }
+
+  // Selections state
+  const selectedDuration = {
+    plus: 1,
+    pro: 1
+  };
+
+  function selectOption(planType, duration, price) {
+    selectedDuration[planType] = duration;
+    
+    // Remove active class from options in the same plan card
+    document.querySelectorAll(`#card-${planType} .pricing-option`).forEach(opt => {
+      opt.classList.remove('active');
+    });
+    
+    // Add active class to clicked option
+    document.getElementById(`opt-${planType}-${duration}`).classList.add('active');
   }
 
   async function loadUserSubscription() {
@@ -198,23 +429,34 @@
         expEl.textContent = `(Renews/Expires: ${new Date(expiry).toLocaleDateString()})`;
       }
 
-      // Highlight active plan
-      document.querySelectorAll('.price-card').forEach(c => c.classList.remove('current'));
-      const activeCard = document.getElementById(`card-${plan}`);
-      if (activeCard) {
-        activeCard.classList.add('current');
-        const btn = activeCard.querySelector('button');
-        if (btn) {
-          btn.textContent = 'Current Plan';
-          btn.className = 'btn btn-ghost';
-          btn.disabled = true;
+      // If user has plus or pro subscription, modify corresponding buttons
+      if (plan === 'plus' || plan === 'pro') {
+        const activeCard = document.getElementById(`card-${plan}`);
+        if (activeCard) {
+          activeCard.classList.add('current-subscription');
+          // Add current badge instead of popular
+          if (plan === 'pro') {
+            document.getElementById('pro-badge-text').textContent = 'Current Subscription';
+            document.getElementById('pro-badge-text').className = 'current-badge-claude';
+          } else {
+            // Create badge for plus
+            const badge = document.createElement('div');
+            badge.className = 'current-badge-claude';
+            badge.textContent = 'Current Subscription';
+            activeCard.appendChild(badge);
+          }
+          const btn = document.getElementById(`btn-${plan}`);
+          if (btn) {
+            btn.textContent = 'Current Plan';
+            btn.disabled = true;
+          }
         }
       }
     }
   }
 
-  async function checkout(planType) {
-    const duration = document.getElementById(`${planType}-duration`).value;
+  async function triggerCheckout(planType) {
+    const duration = selectedDuration[planType];
     showToast('Initializing checkout...', 'info');
     
     const { data, error } = await apiRequest('/api/paystack/initialize', 'POST', { planType, duration });
