@@ -33,6 +33,12 @@
     <button type="submit" class="btn btn-primary btn-full btn-lg" id="loginBtn">Log In →</button>
   </form>
   <div class="auth-divider">or</div>
+  
+  <!-- Continue with Google Button -->
+  <button class="btn btn-outline btn-full" type="button" onclick="continueWithGoogle()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:16px;padding:12px;border:1px solid var(--sep);border-radius:var(--r);background:var(--bg2);color:var(--label);font-family:inherit;font-size:0.9rem;cursor:pointer;">
+    <i class="fa-brands fa-google" style="color:#db4437;"></i> Continue with Google
+  </button>
+
   <div class="auth-footer">Don't have an account? <a href="/pages/signup.html">Sign up free</a></div>
   <div style="text-align:center;margin-top:12px;"><a href="/" style="font-size:0.8rem;color:var(--label3);">← Back to Home</a></div>
   <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:0.5px solid var(--sep);font-size:0.73rem;color:var(--label4);"><i class="fa-solid fa-bolt"></i> Developed & Maintained by MattieTech</div>
@@ -63,6 +69,25 @@ document.getElementById('loginForm').addEventListener('submit',async(e)=>{
   showToast(`Welcome back, ${data.user.fullName}! <i class="fa-solid fa-hand"></i>`,'success');
   setTimeout(()=>{window.location.href='/pages/dashboard.html';},800);
 });
+
+async function continueWithGoogle() {
+  const email = prompt("Enter your Google Account Email to simulate Continue with Google:");
+  if (!email) return;
+  const fullName = prompt("Enter your Full Name:", email.split('@')[0]);
+  
+  showToast('Connecting with Google...', 'info');
+  const { data, error } = await apiRequest('/api/auth/google-login', 'POST', { email, fullName });
+  if (error) {
+    showToast(error, 'error');
+    return;
+  }
+  
+  // Save credentials and redirect
+  localStorage.setItem("ct_token", data.token);
+  localStorage.setItem("ct_user", JSON.stringify(data.user));
+  showToast(`Welcome to CampusTutor, ${data.user.fullName}! <i class="fa-solid fa-circle-check"></i>`, 'success');
+  setTimeout(() => { window.location.href = '/pages/dashboard.html'; }, 1000);
+}
 </script>
 </body>
 </html>

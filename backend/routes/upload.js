@@ -1,50 +1,25 @@
 // ============================================================
 // routes/upload.js — PDF & Image Upload & Storage
-//
-// This route handles file uploads (PDF and images) with storage.
-// Here's what happens step-by-step:
-//
-// 1. Frontend sends a file via multipart/form-data (FormData)
-// 2. Multer receives and temporarily stores the file in memory
-// 3. File is validated (type, size)
-// 4. For PDFs: extract text using pdf-parse
-// 5. For Images: prepare for AI analysis (base64 encode)
-// 6. Store file in Supabase Storage bucket
-// 7. Save document record to Supabase database
-// 8. Return success response with file metadata
-//
-// Routes defined here:
-//   POST /api/upload/pdf     → Upload a PDF
-//   POST /api/upload/image   → Upload an image (JPG, PNG, WEBP)
-//   GET  /api/upload/my-docs → List user's uploaded documents
-//   GET  /api/upload/my-activity → Get user's activity log
-//   GET  /api/upload/:id     → Get single document (with content)
-//   DELETE /api/upload/:id   → Delete a document
 // ============================================================
 
 const express = require("express");
 const router = express.Router();
-const multer = require("multer"); // Handles file uploads
-const pdfParse = require("pdf-parse"); // Extracts text from PDFs
+const multer = require("multer");
+const pdfParse = require("pdf-parse");
 const supabase = require("../utils/supabase");
 const authMiddleware = require("../middleware/authMiddleware");
 const { awardXP, updateStreak } = require("../utils/xp");
 const { warmDocumentStudyAssets } = require("./ai");
 const { ocrScannedPDF } = require("../utils/gemini");
 
-// ── MULTER CONFIGURATION ──────────────────────────────────────
-// Multer handles multipart/form-data (the format used for file uploads)
-// We use memoryStorage so the file stays in RAM (not saved to disk)
-// This is perfect for serverless platforms like Vercel
 const storage = multer.memoryStorage();
 
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 50 * 1024 * 1024, // Max 50MB per file
+    fileSize: 50 * 1024 * 1024,
   },
   fileFilter: (req, file, cb) => {
-    // Allow PDF, PowerPoint and image files
     const allowedMimes = [
       "application/pdf",
       "application/vnd.openxmlformats-officedocument.presentationml.presentation",
@@ -56,19 +31,18 @@ const upload = multer({
     ];
 
     if (allowedMimes.includes(file.mimetype)) {
-      cb(null, true); // Accept the file
+      cb(null, true);
     } else {
       cb(
         new Error(
           "Only PDF, PowerPoint (.pptx) and image files (JPG, PNG, WEBP) are allowed!"
         ),
         false
-      ); // Reject
+      );
     }
   },
 });
 
-// ── HELPER: Upload file to Supabase Storage ────────────────────
 async function uploadFileToStorage(userId, file, fileType) {
   const fileName = `${userId}/${Date.now()}-${file.originalname}`;
   const bucketName = (fileType === "pdf" || fileType === "pptx") ? "documents" : "images";
@@ -85,7 +59,6 @@ async function uploadFileToStorage(userId, file, fileType) {
       throw new Error(`Storage upload failed: ${error.message}`);
     }
 
-    // Get the public URL
     const { data: urlData } = supabase.storage
       .from(bucketName)
       .getPublicUrl(fileName);
@@ -97,23 +70,17 @@ async function uploadFileToStorage(userId, file, fileType) {
     };
   } catch (err) {
     console.error(`❌ Storage upload error:`, err.message);
-    // Return null if storage fails — we'll still save metadata
     return null;
   }
 }
 
 // ── UPLOAD PDF & PPTX ──────────────────────────────────────────
-// POST /api/upload/pdf
-// Protected route — user must be logged in
-// Frontend sends: FormData with a "pdf" field containing the file
 router.post("/pdf", authMiddleware, upload.single("pdf"), async (req, res) => {
   try {
-    // upload.single("pdf") puts the file into req.file
     if (!req.file) {
       return res.status(400).json({ error: "No document file was uploaded." });
     }
 
-    // Validate file type once more
     const isPdf = req.file.mimetype === "application/pdf";
     const isPptx = req.file.mimetype === "application/vnd.openxmlformats-officedocument.presentationml.presentation" || 
                    req.file.mimetype === "application/vnd.ms-powerpoint";
@@ -123,13 +90,45 @@ router.post("/pdf", authMiddleware, upload.single("pdf"), async (req, res) => {
     }
 
     const userId = req.user.id;
+    
+    // Enforce Plan Boundaries
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("plan")
+      .eq("id", userId)
+      .single();
+    const userPlan = profile?.plan || 'free';
+
+    if (userPlan === 'free') {
+      const { count: totalDocs } = await supabase
+        .from("documents")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId);
+      if (totalDocs >= 2) {
+        return res.status(403).json({ error: "Free Trial tier limits reached (maximum 2 documents total). Please upgrade your plan." });
+      }
+    } else if (userPlan === 'plus') {
+      const startOfMonth = new Date();
+      startOfMonth.setUTCDate(1);
+      startOfMonth.setUTCHours(0, 0, 0, 0);
+
+      const { count: monthlyDocs } = await supabase
+        .from("documents")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .gte("created_at", startOfMonth.toISOString());
+      
+      if (monthlyDocs >= 15) {
+        return res.status(403).json({ error: "Plus Plan tier limits reached (maximum 15 documents per month). Please upgrade to Pro." });
+      }
+    }
+
     const fileName = req.file.originalname;
-    const fileBuffer = req.file.buffer; // The file as a Buffer (raw bytes)
+    const fileBuffer = req.file.buffer;
     const fileType = isPdf ? "pdf" : "pptx";
 
     console.log(`📄 Processing ${fileType.toUpperCase()}: ${fileName} for user ${userId}`);
 
-    // ── STEP 1: Extract text from the PDF/PPTX ────────────────────
     let extractedText = "";
     let pageCount = 0;
 
@@ -139,31 +138,27 @@ router.post("/pdf", authMiddleware, upload.single("pdf"), async (req, res) => {
         extractedText = pdfData.text;
         pageCount = pdfData.numpages || 0;
       } catch (pdfErr) {
-        console.warn("⚠️  PDF parsing failed:", pdfErr.message);
+        console.warn("⚠️ PDF parsing failed:", pdfErr.message);
         return res.status(400).json({
-          error:
-            "Could not read this PDF. It may be encrypted, scanned, or corrupted. Please try another PDF.",
+          error: "Could not read this PDF. It may be encrypted, scanned, or corrupted. Please try another PDF.",
         });
       }
 
-      // Check if the PDF had any readable text
       if (!extractedText || extractedText.trim().length < 50) {
         try {
           extractedText = await ocrScannedPDF(fileBuffer);
         } catch (ocrErr) {
           console.error("❌ Scanned PDF OCR fallback failed:", ocrErr.message);
           return res.status(400).json({
-            error:
-              "This PDF appears to be a scanned image and OCR processing failed. Please use a text-based PDF.",
+            error: "This PDF appears to be a scanned image and OCR processing failed. Please use a text-based PDF.",
           });
         }
       }
     } else {
-      // It is a PPTX
       try {
         const officeParser = require("officeparser");
         extractedText = await officeParser.parseOffice(fileBuffer);
-        pageCount = 1; // Default estimate
+        pageCount = 1;
       } catch (pptxErr) {
         console.error("❌ PPTX parsing failed:", pptxErr.message);
         return res.status(400).json({
@@ -172,16 +167,13 @@ router.post("/pdf", authMiddleware, upload.single("pdf"), async (req, res) => {
       }
     }
 
-    // Limit text to ~15,000 characters to avoid Gemini token limits
     const truncatedText =
       extractedText.length > 15000
         ? extractedText.substring(0, 15000) + "\n\n[Document truncated...]"
         : extractedText;
 
-    // ── STEP 2: Upload file to Supabase Storage ──────────────
     const fileStorageData = await uploadFileToStorage(userId, req.file, fileType);
 
-    // ── STEP 3: Save document record to Supabase ─────────────
     const { data: document, error: dbError } = await supabase
       .from("documents")
       .insert({
@@ -193,17 +185,14 @@ router.post("/pdf", authMiddleware, upload.single("pdf"), async (req, res) => {
         page_count: pageCount,
         created_at: new Date().toISOString(),
       })
-      .select() // Return the inserted row
+      .select()
       .single();
 
     if (dbError) {
       console.error("Database error:", dbError.message);
-      return res
-        .status(500)
-        .json({ error: "Failed to save document to database." });
+      return res.status(500).json({ error: "Failed to save document to database." });
     }
 
-    // ── STEP 4: Return success immediately ────────────────────
     res.json({
       success: true,
       documentId: document.id,
@@ -215,7 +204,7 @@ router.post("/pdf", authMiddleware, upload.single("pdf"), async (req, res) => {
         fileUrl: fileStorageData?.url,
         pageCount: document.page_count,
         textLength: truncatedText.length,
-        extractedText: truncatedText, // Send text back so frontend can display it
+        extractedText: truncatedText,
       },
     });
 
@@ -250,10 +239,6 @@ router.post("/pdf", authMiddleware, upload.single("pdf"), async (req, res) => {
 });
 
 // ── UPLOAD IMAGE ──────────────────────────────────────────────
-// POST /api/upload/image
-// Protected route — user must be logged in
-// Frontend sends: FormData with an "image" field containing the file
-// Supported: JPG, JPEG, PNG, WEBP
 router.post(
   "/image",
   authMiddleware,
@@ -264,30 +249,35 @@ router.post(
         return res.status(400).json({ error: "No image file was uploaded." });
       }
 
-      // Validate file type
       const allowedImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
       if (!allowedImageTypes.includes(req.file.mimetype)) {
-        return res
-          .status(400)
-          .json({
-            error:
-              "Only JPG, JPEG, PNG, and WEBP images are allowed!",
-          });
+        return res.status(400).json({
+          error: "Only JPG, JPEG, PNG, and WEBP images are allowed!",
+        });
       }
 
       const userId = req.user.id;
+
+      // Enforce Plan Boundaries (Rejects free & plus)
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("plan")
+        .eq("id", userId)
+        .single();
+      const userPlan = profile?.plan || 'free';
+
+      if (userPlan === 'free' || userPlan === 'plus') {
+        return res.status(403).json({ error: "Image uploads and photo scans are only available on the Pro Plan. Please upgrade." });
+      }
+
       const fileName = req.file.originalname;
       const fileBuffer = req.file.buffer;
 
       console.log(`📸 Processing image: ${fileName} for user ${userId}`);
 
-      // ── STEP 1: Prepare image for AI analysis (base64 encode) ─
       const base64Image = fileBuffer.toString("base64");
-
-      // ── STEP 2: Upload image to Supabase Storage ─────────────
       const fileStorageData = await uploadFileToStorage(userId, req.file, "image");
 
-      // ── STEP 3: Save document record to Supabase ─────────────
       const { data: document, error: dbError } = await supabase
         .from("documents")
         .insert({
@@ -304,12 +294,9 @@ router.post(
 
       if (dbError) {
         console.error("Database error:", dbError.message);
-        return res
-          .status(500)
-          .json({ error: "Failed to save image to database." });
+        return res.status(500).json({ error: "Failed to save image to database." });
       }
 
-      // ── STEP 4: Return success immediately ────────────────────
       res.json({
         success: true,
         documentId: document.id,
@@ -321,7 +308,7 @@ router.post(
           fileUrl: fileStorageData?.url,
           mimeType: req.file.mimetype,
           size: req.file.size,
-          base64: base64Image, // Include base64 for AI analysis if needed
+          base64: base64Image,
         },
       });
 
@@ -357,15 +344,13 @@ router.post(
 );
 
 // ── LIST USER'S DOCUMENTS ─────────────────────────────────────
-// GET /api/upload/my-docs
-// Returns all documents uploaded by the logged-in user
 router.get("/my-docs", authMiddleware, async (req, res) => {
   try {
     const { data: documents, error } = await supabase
       .from("documents")
-      .select("id, file_name, page_count, created_at") // Don't send full text (too large)
+      .select("id, file_name, page_count, created_at")
       .eq("user_id", req.user.id)
-      .order("created_at", { ascending: false }); // Newest first
+      .order("created_at", { ascending: false });
 
     if (error) {
       return res.status(500).json({ error: "Failed to fetch documents." });
@@ -378,8 +363,6 @@ router.get("/my-docs", authMiddleware, async (req, res) => {
 });
 
 // ── GET USER'S ACTIVITY LOG ────────────────────────────────────
-// GET /api/upload/my-activity
-// Returns the user's activity history (uploads, AI generations, etc.)
 router.get("/my-activity", authMiddleware, async (req, res) => {
   try {
     const { data: activities, error } = await supabase
@@ -387,11 +370,10 @@ router.get("/my-activity", authMiddleware, async (req, res) => {
       .select("id, action, details, created_at")
       .eq("user_id", req.user.id)
       .order("created_at", { ascending: false })
-      .limit(50); // Last 50 activities
+      .limit(50);
 
     if (error) {
       if (error.message.includes("does not exist")) {
-        // user_activity table doesn't exist yet — return empty list
         return res.json({ activities: [], total: 0 });
       }
       return res.status(500).json({ error: "Failed to fetch activity." });
@@ -403,13 +385,11 @@ router.get("/my-activity", authMiddleware, async (req, res) => {
     });
   } catch (err) {
     console.log("Note: Could not fetch user activity:", err.message);
-    res.json({ activities: [], total: 0 }); // Return empty instead of error
+    res.json({ activities: [], total: 0 });
   }
 });
 
 // ── GET LEADERBOARD DATA ──────────────────────────────────────
-// GET /api/upload/leaderboard
-// Returns top 5 users by XP
 router.get("/leaderboard", authMiddleware, async (req, res) => {
   try {
     const { data: leaderboard, error } = await supabase
@@ -430,17 +410,14 @@ router.get("/leaderboard", authMiddleware, async (req, res) => {
   }
 });
 
-
 // ── GET SINGLE DOCUMENT ───────────────────────────────────────
-// GET /api/upload/:id
-// Returns a single document (including text) for re-processing
 router.get("/:id", authMiddleware, async (req, res) => {
   try {
     const { data: document, error } = await supabase
       .from("documents")
       .select("*")
       .eq("id", req.params.id)
-      .eq("user_id", req.user.id) // Security: only fetch OWN documents
+      .eq("user_id", req.user.id)
       .single();
 
     if (error || !document) {
@@ -454,14 +431,13 @@ router.get("/:id", authMiddleware, async (req, res) => {
 });
 
 // ── DELETE DOCUMENT ───────────────────────────────────────────
-// DELETE /api/upload/:id
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {
     const { error } = await supabase
       .from("documents")
       .delete()
       .eq("id", req.params.id)
-      .eq("user_id", req.user.id); // Security: only delete OWN documents
+      .eq("user_id", req.user.id);
 
     if (error) {
       return res.status(500).json({ error: "Failed to delete document." });
@@ -474,19 +450,15 @@ router.delete("/:id", authMiddleware, async (req, res) => {
 });
 
 // ── GET USER STATS ────────────────────────────────────────────
-// GET /api/upload/stats
-// Returns user's XP, level, streak, and achievements
 router.get("/stats/:userId", authMiddleware, async (req, res) => {
   try {
     const { getUserStats, updateStreak } = require("../utils/xp");
     const userId = req.params.userId;
     
-    // Security: users can only fetch their own stats
     if (userId !== req.user.id) {
       return res.status(403).json({ error: "Cannot view other users' stats." });
     }
 
-    // Automatically update the user's streak daily when they check stats (visit the dashboard)
     try {
       await updateStreak(userId);
     } catch (streakErr) {
@@ -505,11 +477,7 @@ router.get("/stats/:userId", authMiddleware, async (req, res) => {
   }
 });
 
-
-
-// ── GET USER'S AI RESULTS (for history page) ──────────────────────
-// GET /api/upload/my-results
-// Returns all AI-generated results (summaries, flashcards, etc.)
+// ── GET USER'S AI RESULTS ──────────────────────────────────────
 router.get("/my-results", authMiddleware, async (req, res) => {
   try {
     const { data: results, error } = await supabase
@@ -524,18 +492,15 @@ router.get("/my-results", authMiddleware, async (req, res) => {
       `)
       .eq("user_id", req.user.id)
       .order("created_at", { ascending: false })
-      .limit(100); // Last 100 results
+      .limit(100);
 
     if (error) {
       if (error.message.includes("does not exist")) {
-        // ai_results table doesn't exist yet — return empty list
         return res.json({ results: [], total: 0 });
       }
-      console.log("AI results fetch error:", error);
       return res.status(500).json({ error: "Failed to fetch AI results." });
     }
 
-    // Group results by document for easier frontend processing
     const groupedResults = {};
     (results || []).forEach(result => {
       const docId = result.document_id;
@@ -561,7 +526,7 @@ router.get("/my-results", authMiddleware, async (req, res) => {
     });
   } catch (err) {
     console.log("Error fetching AI results:", err.message);
-    res.json({ results: [], total: 0 }); // Return empty instead of error
+    res.json({ results: [], total: 0 });
   }
 });
 

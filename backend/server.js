@@ -1,7 +1,5 @@
 // ============================================================
 // server.js — CampusTutor AI Express Server
-//
-// Entry point. Mounts all route groups and serves the frontend.
 // ============================================================
 
 require("dotenv").config();
@@ -11,19 +9,19 @@ const cors    = require("cors");
 const path    = require("path");
 const { initializeDatabase } = require("./utils/initDatabase");
 
-const authRoutes    = require("./routes/auth");
-const uploadRoutes  = require("./routes/upload");
-const aiRoutes      = require("./routes/ai");
-const adminRoutes   = require("./routes/admin");   // ← admin panel API
-const contactRoutes = require("./routes/contact");
+const authRoutes     = require("./routes/auth");
+const uploadRoutes   = require("./routes/upload");
+const aiRoutes       = require("./routes/ai");
+const adminRoutes    = require("./routes/admin");
+const contactRoutes  = require("./routes/contact");
+const paystackRoutes = require("./routes/paystack");
 
 const app = express();
 
 // ── INITIALIZE DATABASE ───────────────────────────────────────
-// Check and create required tables at startup
 initializeDatabase().catch(err => {
   console.error("❌ Database initialization warning:", err.message);
-  console.warn("⚠️  Some features may not work properly. Check database schema.");
+  console.warn("⚠️ Some features may not work properly. Check database schema.");
 });
 
 // ── MIDDLEWARE ────────────────────────────────────────────────
@@ -34,15 +32,15 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Serve all static frontend files (HTML, CSS, JS, images)
 app.use(express.static(path.join(__dirname, "../frontend")));
 
 // ── API ROUTES ────────────────────────────────────────────────
-app.use("/api/auth",   authRoutes);
-app.use("/api/upload", uploadRoutes);
-app.use("/api/ai",     aiRoutes);
-app.use("/api/admin",  adminRoutes);   // protected by isAdmin() inside admin.js
-app.use("/api/contact", contactRoutes);   // contact form submission handler
+app.use("/api/auth",     authRoutes);
+app.use("/api/upload",   uploadRoutes);
+app.use("/api/ai",       aiRoutes);
+app.use("/api/admin",    adminRoutes);
+app.use("/api/contact",  contactRoutes);
+app.use("/api/paystack", paystackRoutes);
 
 // ── FRONTEND CATCH-ALL ────────────────────────────────────────
 app.get("/", (req, res) => {

@@ -378,9 +378,8 @@
 <nav class="mobile-menu" id="mobileMenu">
   <button class="mobile-menu-item" onclick="showPanel('overview',this);closeAdminMobileMenu();"><i class="fa-solid fa-house"></i> Overview</button>
   <button class="mobile-menu-item" onclick="showPanel('users',this);closeAdminMobileMenu();"><i class="fa-solid fa-users"></i> Users</button>
-  <button class="mobile-menu-item" onclick="showPanel('documents',this);closeAdminMobileMenu();"><i class="fa-solid fa-file-pdf"></i> Documents</button>
-  <button class="mobile-menu-item" onclick="showPanel('analytics',this);closeAdminMobileMenu();"><i class="fa-solid fa-chart-simple"></i> Analytics</button>
-  <button class="mobile-menu-item" onclick="showPanel('activity',this);closeAdminMobileMenu();"><i class="fa-solid fa-list-check"></i> Activities</button>
+  <button class="mobile-menu-item" onclick="showPanel('gift',this);closeAdminMobileMenu();"><i class="fa-solid fa-gift"></i> Gift Premium</button>
+  <button class="mobile-menu-item" onclick="showPanel('withdrawals',this);closeAdminMobileMenu();"><i class="fa-solid fa-money-bill-transfer"></i> Payouts</button>
   <button class="mobile-menu-item logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
 </nav>
 
@@ -397,6 +396,14 @@
     <div class="adm-sidebar-section" style="margin-top:8px;">Users</div>
     <button class="adm-nav-link" data-panel="users" onclick="showPanel('users',this)">
       <i class="fa-solid fa-users"></i> All Users
+    </button>
+
+    <div class="adm-sidebar-section" style="margin-top:8px;">Premium & Payouts</div>
+    <button class="adm-nav-link" data-panel="gift" onclick="showPanel('gift',this)">
+      <i class="fa-solid fa-gift"></i> Gift Premium
+    </button>
+    <button class="adm-nav-link" data-panel="withdrawals" onclick="showPanel('withdrawals',this)">
+      <i class="fa-solid fa-money-bill-transfer"></i> Payout Queue
     </button>
 
     <div style="margin-top:auto;padding-top:12px;border-top:0.5px solid var(--sep);">
@@ -518,6 +525,69 @@
       </div>
     </div>
 
+    <!-- ── GIFT PREMIUM PLAN PANEL ── -->
+    <div class="adm-panel" id="panel-gift">
+      <div class="adm-header">
+        <h1>Gift Premium Subscription <i class="fa-solid fa-gift"></i></h1>
+        <p>Grant premium capabilities to any registered student by entering their email address.</p>
+      </div>
+      <div class="card" style="max-width:550px;">
+        <div class="card-body">
+          <form id="giftForm" onsubmit="submitGift(event)">
+            <div class="form-group">
+              <label class="form-label">User Email Address</label>
+              <input type="email" id="giftEmail" class="form-input" placeholder="student@school.edu.ng" required autocomplete="email"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Plan Tier</label>
+              <select id="giftPlan" class="form-input">
+                <option value="plus">Plus Plan</option>
+                <option value="pro">Pro Plan</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Duration</label>
+              <select id="giftDuration" class="form-input">
+                <option value="1w">1 Week</option>
+                <option value="1m">1 Month</option>
+                <option value="2m">2 Months</option>
+                <option value="3m">3 Months</option>
+                <option value="6m">6 Months</option>
+                <option value="12m">1 Year</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary" id="giftBtn" style="margin-top:14px;width:100%;">Gift Plan →</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAYOUT QUEUE PANEL ── -->
+    <div class="adm-panel" id="panel-withdrawals">
+      <div class="adm-header">
+        <h1>Referral Payout Queue <i class="fa-solid fa-money-bill-transfer"></i></h1>
+        <p>Review, approve, or reject user referral commission withdrawal requests.</p>
+      </div>
+      
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th>User Details</th>
+              <th>Amount Requested</th>
+              <th>Date Requested</th>
+              <th>Status</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="payoutsBody">
+            <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--label3);">No payout requests in queue.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    </div>
+
   </main>
 </div>
 
@@ -598,6 +668,7 @@ function showPanel(name, btn) {
 
   if (name === 'users') loadUsers();
   if (name === 'overview') loadStats();
+  if (name === 'withdrawals') loadPayoutQueue();
 }
 
 // ── LOAD STATS ────────────────────────────────────────────────
@@ -1068,6 +1139,87 @@ function esc(s) {
   return String(s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+// ── PREMIUM GIFTING & PAYOUT QUEUE ──────────────────────────
+async function submitGift(event) {
+  event.preventDefault();
+  const email = document.getElementById('giftEmail').value.trim();
+  const plan = document.getElementById('giftPlan').value;
+  const duration = document.getElementById('giftDuration').value;
+  const btn = document.getElementById('giftBtn');
+
+  btn.disabled = true;
+  btn.textContent = 'Gifting subscription...';
+  showToast('Processing premium gift...', 'info');
+
+  const { error } = await apiRequest('/api/admin/gift-plan', 'POST', { email, plan, duration });
+  btn.disabled = false;
+  btn.textContent = 'Gift Plan →';
+
+  if (error) {
+    showToast(error, 'error');
+    return;
+  }
+
+  showToast(`Successfully gifted ${plan.toUpperCase()} plan to ${email}! <i class="fa-solid fa-gift"></i>`, 'success');
+  document.getElementById('giftEmail').value = '';
+}
+
+async function loadPayoutQueue() {
+  const tbody = document.getElementById('payoutsBody');
+  tbody.innerHTML = '<tr><td colspan="5" class="adm-loading"><div class="spinner"></div> Loading payout queue...</td></tr>';
+
+  const { data, error } = await apiRequest('/api/admin/withdrawals');
+  if (error || !data || !data.withdrawals) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--adm-red);">${error || 'Failed to load payout queue'}</td></tr>`;
+    return;
+  }
+
+  if (data.withdrawals.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--label3);">No payout requests in queue.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.withdrawals.map(w => `
+    <tr>
+      <td>
+        <div style="font-weight:700;">${esc(w.profiles?.full_name || 'Anonymous')}</div>
+        <div style="font-size:0.75rem;color:var(--label3);">${esc(w.profiles?.email || 'no-email')}</div>
+      </td>
+      <td style="font-weight:700;color:var(--purple);">₦${w.amount.toLocaleString()}</td>
+      <td>${new Date(w.created_at).toLocaleDateString()}</td>
+      <td><span class="badge" style="background:rgba(255,149,0,0.1);color:var(--orange);">Pending</span></td>
+      <td style="text-align:right;">
+        <button class="btn btn-sm btn-success" onclick="resolvePayout('${w.id}', 'approve')"><i class="fa-solid fa-check"></i> Approve</button>
+        <button class="btn btn-sm btn-danger" onclick="resolvePayout('${w.id}', 'reject')"><i class="fa-solid fa-xmark"></i> Reject</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function resolvePayout(id, action) {
+  let remark = '';
+  if (action === 'reject') {
+    remark = prompt("Enter a reason/remark for rejecting this withdrawal request:");
+    if (remark === null) return; // User cancelled prompt
+    if (remark.trim() === '') {
+      showToast('A rejection remark is required.', 'error');
+      return;
+    }
+  } else {
+    if (!confirm("Are you sure you want to approve this withdrawal request? Make sure you have manually paid the user!")) return;
+  }
+
+  showToast('Resolving payout request...', 'info');
+  const { error } = await apiRequest(`/api/admin/withdrawals/${id}/resolve`, 'POST', { status: action === 'approve' ? 'approved' : 'rejected', remark });
+  if (error) {
+    showToast(error, 'error');
+    return;
+  }
+
+  showToast(`Payout request ${action}ed successfully!`, 'success');
+  loadPayoutQueue();
 }
 
 // Mobile Menu Toggle for Admin

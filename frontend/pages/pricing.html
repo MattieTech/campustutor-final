@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Pricing Plans — CampusTutor AI</title>
+<link rel="stylesheet" href="/css/style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<style>
+  .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 24px; }
+  .price-card {
+    background: var(--glass);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 0.5px solid var(--glass-b);
+    border-radius: var(--r-xl);
+    box-shadow: var(--gshadow);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+  .price-card:hover { transform: translateY(-4px); box-shadow: var(--gshadow-lg); }
+  .price-card.popular { border: 2px solid var(--blue); }
+  .popular-badge {
+    position: absolute; top: 12px; right: 12px;
+    background: var(--blue); color: #fff; font-size: 0.65rem; font-weight: 700;
+    padding: 4px 8px; border-radius: 20px; text-transform: uppercase;
+  }
+  .price-header h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 8px; }
+  .price-header p { font-size: 0.82rem; color: var(--label3); margin-bottom: 16px; }
+  .price-amt { font-size: 2.2rem; font-weight: 800; margin-bottom: 20px; font-family: var(--font-d); }
+  .price-amt span { font-size: 0.9rem; font-weight: 500; color: var(--label3); }
+  .price-features { list-style: none; padding: 0; margin: 0 0 28px 0; font-size: 0.85rem; display: flex; flex-direction: column; gap: 12px; }
+  .price-features li { display: flex; align-items: center; gap: 8px; }
+  .price-features li i { color: var(--blue); }
+  .selector-wrap { margin-bottom: 20px; }
+  .selector-wrap label { font-size: 0.78rem; font-weight: 700; color: var(--label2); display: block; margin-bottom: 6px; }
+  .plan-select {
+    width: 100%; padding: 10px; border-radius: var(--r);
+    border: 1px solid var(--sep); background: var(--bg2); color: var(--label);
+    font-family: inherit; font-size: 0.88rem; outline: none; cursor: pointer;
+  }
+  .price-card.current { border: 2px solid var(--green); }
+  .price-card.current .popular-badge { background: var(--green); }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">☰</button>
+  <a href="/" class="brand"><div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></a>
+  <div class="navbar-right">
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+    <a href="/pages/dashboard.html" class="pill-btn">← Dashboard</a>
+    <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop">Log Out</button>
+  </div>
+</nav>
+
+<div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="closeMobileMenu()"></div>
+<nav class="mobile-menu" id="mobileMenu">
+  <a href="/pages/dashboard.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-house"></i> Dashboard</a>
+  <a href="/pages/upload.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-cloud-arrow-up"></i> Uploads</a>
+  <a href="/pages/history.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-chart-simple"></i> History</a>
+  <a href="/pages/dashboard.html#profile" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-user"></i> Profile</a>
+  <button class="mobile-menu-item logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+</nav>
+
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">Navigation</div>
+    <a href="/pages/dashboard.html" class="sidebar-link">🏠 Dashboard</a>
+    <a href="/pages/pricing.html" class="sidebar-link active"><i class="fa-solid fa-credit-card"></i> Upgrade Plan</a>
+    <a href="/pages/referral.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Refer & Earn</a>
+    <div class="sidebar-bottom"><div style="font-size:0.7rem;color:var(--label4);text-align:center;padding:8px;"><i class="fa-solid fa-bolt"></i> Developed by MattieTech</div></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1>Pricing Plans <i class="fa-solid fa-credit-card"></i></h1>
+      <p>Choose the plan that matches your academic speed</p>
+    </div>
+
+    <div style="margin-bottom: 24px; padding: 12px 18px; border-radius: var(--r); background: rgba(52, 199, 89, 0.08); border-left: 4px solid var(--green); display: none;" id="activePlanAlert">
+      <span style="font-weight: 700; color: var(--green);">Current Subscription: </span>
+      <span id="activePlanName" style="font-weight: 600;">Free Trial</span>
+      <span id="activePlanExpiry" style="font-size: 0.8rem; color: var(--label2); margin-left: 8px;"></span>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- Free Card -->
+      <div class="price-card" id="card-free">
+        <div class="price-header">
+          <h3>Free Trial</h3>
+          <p>Kickstart your notes revision</p>
+          <div class="price-amt">₦0 <span>/ forever</span></div>
+        </div>
+        <ul class="price-features">
+          <li><i class="fa-solid fa-circle-check"></i> Max 2 documents total</li>
+          <li><i class="fa-solid fa-circle-check"></i> Standard PDF/Slides formats</li>
+          <li><i class="fa-solid fa-circle-check"></i> Core Concept summaries</li>
+          <li><i class="fa-solid fa-circle-check"></i> Up to 20-question quiz pools</li>
+          <li><i class="fa-solid fa-circle-xmark" style="color:var(--red);"></i> No scanned images or heavy photos</li>
+        </ul>
+        <button class="btn btn-ghost" disabled style="width: 100%;">Current Plan</button>
+      </div>
+
+      <!-- Plus Card -->
+      <div class="price-card" id="card-plus">
+        <div class="price-header">
+          <h3>Plus Plan</h3>
+          <p>Boost your productivity</p>
+          <div class="price-amt" id="plus-price-display">₦1,000</div>
+        </div>
+        <div class="selector-wrap">
+          <label for="plus-duration">Choose Duration</label>
+          <select id="plus-duration" class="plan-select" onchange="updatePlusPrice()">
+            <option value="1">1 Month (₦1,000)</option>
+            <option value="3">3 Months (₦2,500)</option>
+            <option value="6">6 Months (₦4,500)</option>
+          </select>
+        </div>
+        <ul class="price-features">
+          <li><i class="fa-solid fa-circle-check"></i> Up to 15 documents per month</li>
+          <li><i class="fa-solid fa-circle-check"></i> Lecture slides support</li>
+          <li><i class="fa-solid fa-circle-check"></i> Detailed Point breakdowns</li>
+          <li><i class="fa-solid fa-circle-check"></i> Up to 40-question quiz pools</li>
+          <li><i class="fa-solid fa-circle-xmark" style="color:var(--red);"></i> No scanner image processing</li>
+        </ul>
+        <button class="btn btn-primary" style="width: 100%;" onclick="checkout('plus')">Upgrade to Plus</button>
+      </div>
+
+      <!-- Pro Card -->
+      <div class="price-card popular" id="card-pro">
+        <div class="popular-badge">Most Popular</div>
+        <div class="price-header">
+          <h3>Pro Plan</h3>
+          <p>Get full academic dominance</p>
+          <div class="price-amt" id="pro-price-display">₦2,500</div>
+        </div>
+        <div class="selector-wrap">
+          <label for="pro-duration">Choose Duration</label>
+          <select id="pro-duration" class="plan-select" onchange="updateProPrice()">
+            <option value="1">1 Month (₦2,500)</option>
+            <option value="3">3 Months (₦4,000)</option>
+            <option value="6">6 Months (₦7,500)</option>
+          </select>
+        </div>
+        <ul class="price-features">
+          <li><i class="fa-solid fa-circle-check"></i> Unlimited document uploads</li>
+          <li><i class="fa-solid fa-circle-check"></i> Image scan / photo OCR</li>
+          <li><i class="fa-solid fa-circle-check"></i> 1-Min Textbook summaries</li>
+          <li><i class="fa-solid fa-circle-check"></i> 50-question Exam Master pools</li>
+          <li><i class="fa-solid fa-circle-check"></i> Priority AI speeds</li>
+        </ul>
+        <button class="btn btn-primary" style="width: 100%;" onclick="checkout('pro')">Upgrade to Pro</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+  requireAuth();
+
+  function updatePlusPrice() {
+    const dur = document.getElementById('plus-duration').value;
+    const disp = document.getElementById('plus-price-display');
+    if (dur === '1') disp.textContent = '₦1,000';
+    if (dur === '3') disp.textContent = '₦2,500';
+    if (dur === '6') disp.textContent = '₦4,500';
+  }
+
+  function updateProPrice() {
+    const dur = document.getElementById('pro-duration').value;
+    const disp = document.getElementById('pro-price-display');
+    if (dur === '1') disp.textContent = '₦2,500';
+    if (dur === '3') disp.textContent = '₦4,000';
+    if (dur === '6') disp.textContent = '₦7,500';
+  }
+
+  async function loadUserSubscription() {
+    const user = getUser();
+    if (!user) return;
+    const { data: stats } = await apiGetUserStats(user.id);
+    if (stats) {
+      const plan = stats.plan || 'free';
+      const expiry = stats.subscription_end;
+      
+      const alertEl = document.getElementById('activePlanAlert');
+      const nameEl = document.getElementById('activePlanName');
+      const expEl = document.getElementById('activePlanExpiry');
+      
+      alertEl.style.display = 'block';
+      nameEl.textContent = plan.toUpperCase();
+      if (expiry) {
+        expEl.textContent = `(Renews/Expires: ${new Date(expiry).toLocaleDateString()})`;
+      }
+
+      // Highlight active plan
+      document.querySelectorAll('.price-card').forEach(c => c.classList.remove('current'));
+      const activeCard = document.getElementById(`card-${plan}`);
+      if (activeCard) {
+        activeCard.classList.add('current');
+        const btn = activeCard.querySelector('button');
+        if (btn) {
+          btn.textContent = 'Current Plan';
+          btn.className = 'btn btn-ghost';
+          btn.disabled = true;
+        }
+      }
+    }
+  }
+
+  async function checkout(planType) {
+    const duration = document.getElementById(`${planType}-duration`).value;
+    showToast('Initializing checkout...', 'info');
+    
+    const { data, error } = await apiRequest('/api/paystack/initialize', 'POST', { planType, duration });
+    if (error || !data || !data.authorization_url) {
+      showToast(error || 'Failed to initialize checkout. Please try again.', 'error');
+      return;
+    }
+    
+    // Redirect user to Paystack payment gateway
+    window.location.href = data.authorization_url;
+  }
+
+  // Load subscriptions on init
+  loadUserSubscription();
+</script>
+</body>
+</html>

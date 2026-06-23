@@ -65,6 +65,8 @@
   <a href="/pages/dashboard.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-house"></i> Dashboard</a>
   <a href="/pages/upload.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-cloud-arrow-up"></i> Uploads</a>
   <a href="/pages/history.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-chart-simple"></i> History</a>
+  <a href="/pages/pricing.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-credit-card"></i> Upgrade Plan</a>
+  <a href="/pages/referral.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-users"></i> Refer & Earn</a>
   <button class="mobile-menu-item" onclick="closeMobileMenu(); openLeaderboardModal()"><i class="fa-solid fa-trophy"></i> Weekly Leaderboard</button>
   <button class="mobile-menu-item" onclick="closeMobileMenu(); openActivityModal()"><i class="fa-solid fa-clock-rotate-left"></i> Activity Log</button>
   <a href="/pages/dashboard.html#profile" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-user"></i> Profile</a>
@@ -77,6 +79,8 @@
     <a href="/pages/dashboard.html" class="sidebar-link active"><i class="fa-solid fa-house"></i> Dashboard</a>
     <a href="/pages/history.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> History</a>
     <a href="/pages/upload.html" class="sidebar-link"><i class="fa-solid fa-cloud-arrow-up"></i> Upload PDF</a>
+    <a href="/pages/pricing.html" class="sidebar-link"><i class="fa-solid fa-credit-card"></i> Upgrade Plan</a>
+    <a href="/pages/referral.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Refer & Earn</a>
 
     <div class="sidebar-section" style="margin-top:8px;">Social & Stats</div>
     <button class="sidebar-link" onclick="openLeaderboardModal()" style="background:none;border:none;width:100%;text-align:left;cursor:pointer;"><i class="fa-solid fa-trophy"></i> Leaderboard</button>
@@ -364,6 +368,17 @@ const t=localStorage.getItem('ct_theme')||'light';
 document.documentElement.setAttribute('data-theme',t);
 initThemeToggle();
 initMobileMenu();
+
+// Check for payment success parameter in URL
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('payment') === 'success') {
+  const plan = urlParams.get('plan') || '';
+  const displayPlan = plan.charAt(0).toUpperCase() + plan.slice(1);
+  showToast(`Subscription successful! Your account has been upgraded to ${displayPlan} Plan. <i class="fa-solid fa-circle-check"></i>`, 'success');
+  // Clean up URL parameters so refresh doesn't trigger the toast again
+  const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+  window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+}
 
 const user=getUser();
 if(user && user.fullName){

@@ -21,6 +21,7 @@
   </div>
   <div class="alert alert-error" id="errMsg"></div>
   <div class="alert alert-success" id="okMsg"></div>
+  
   <form id="signupForm">
     <div class="form-group">
       <label class="form-label">Full Name</label>
@@ -40,7 +41,28 @@
     </div>
     <button type="submit" class="btn btn-primary btn-full btn-lg" id="signupBtn">Create Free Account →</button>
   </form>
+
+  <!-- Verification OTP Form (hidden by default) -->
+  <form id="verifyForm" style="display: none;">
+    <div style="text-align: center; margin-bottom: 20px;">
+      <i class="fa-solid fa-envelope-circle-check" style="font-size: 2.5rem; color: var(--blue);"></i>
+      <h3 style="margin-top: 10px; font-weight: 700;">Verify Your Email</h3>
+      <p style="font-size: 0.8rem; color: var(--label3); line-height: 1.4; margin-top: 4px;">We've sent a 6-digit confirmation code to your email. Enter it below to activate your account.</p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Verification OTP</label>
+      <input class="form-input" type="text" id="verificationOtp" placeholder="123456" required maxlength="6" style="text-align: center; font-size: 1.3rem; letter-spacing: 4px; font-weight: 700;"/>
+    </div>
+    <button type="submit" class="btn btn-success btn-full btn-lg" id="verifyBtn">Verify & Activate Account</button>
+  </form>
+
   <div class="auth-divider">or</div>
+  
+  <!-- Continue with Google Button -->
+  <button class="btn btn-outline btn-full" type="button" onclick="continueWithGoogle()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:16px;padding:12px;border:1px solid var(--sep);border-radius:var(--r);background:var(--bg2);color:var(--label);font-family:inherit;font-size:0.9rem;cursor:pointer;">
+    <i class="fa-brands fa-google" style="color:#db4437;"></i> Continue with Google
+  </button>
+
   <div class="auth-footer">Already have an account? <a href="/pages/login.html">Log in</a></div>
   <div style="text-align:center;margin-top:12px;"><a href="/" style="font-size:0.8rem;color:var(--label3);">← Back to Home</a></div>
   <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:0.5px solid var(--sep);font-size:0.73rem;color:var(--label4);"><i class="fa-solid fa-bolt"></i> Developed & Maintained by MattieTech</div>
@@ -58,6 +80,13 @@ document.getElementById('themeBtn').addEventListener('click',()=>{
   document.getElementById('themeBtn').textContent=n==='dark'?'☀️':'🌙';
 });
 redirectIfLoggedIn();
+
+// Capture referral parameter
+const urlParams = new URLSearchParams(window.location.search);
+const referredBy = urlParams.get('ref');
+
+let registeredEmail = '';
+
 document.getElementById('signupForm').addEventListener('submit',async(e)=>{
   e.preventDefault();
   const err=document.getElementById('errMsg'),ok=document.getElementById('okMsg');
@@ -66,14 +95,61 @@ document.getElementById('signupForm').addEventListener('submit',async(e)=>{
   if(pwd!==document.getElementById('confirmPwd').value){err.textContent='Passwords do not match.';err.style.display='block';return;}
   const btn=document.getElementById('signupBtn');
   btn.disabled=true; btn.textContent='Creating account...';
+  
+  registeredEmail = document.getElementById('email').value.trim();
+
   const {data,error}=await apiSignup(
     document.getElementById('fullName').value.trim(),
-    document.getElementById('email').value.trim(), pwd
+    registeredEmail,
+    pwd,
+    referredBy
   );
   if(error){err.textContent=error;err.style.display='block';btn.disabled=false;btn.textContent='Create Free Account →';return;}
-  ok.innerHTML='<i class="fa-solid fa-circle-check"></i> Account created! Redirecting to login...';ok.style.display='block';
-  setTimeout(()=>{window.location.href='/pages/login.html';},1500);
+  
+  ok.innerHTML='<i class="fa-solid fa-envelope"></i> Account created! Please check your email for verification OTP.';ok.style.display='block';
+  
+  // Transition to Verification Mode
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('verifyForm').style.display = 'block';
 });
+
+document.getElementById('verifyForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err=document.getElementById('errMsg'),ok=document.getElementById('okMsg');
+  err.style.display='none'; ok.style.display='none';
+  const otp = document.getElementById('verificationOtp').value.trim();
+  const btn = document.getElementById('verifyBtn');
+  btn.disabled = true; btn.textContent = 'Verifying...';
+
+  const { data, error } = await apiRequest('/api/auth/verify', 'POST', { email: registeredEmail, otp });
+  if (error) {
+    err.textContent = error; err.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Verify & Activate Account';
+    return;
+  }
+
+  ok.innerHTML = '<i class="fa-solid fa-circle-check"></i> Email verified successfully! Redirecting to login...'; ok.style.display = 'block';
+  setTimeout(() => { window.location.href = '/pages/login.html'; }, 1500);
+});
+
+async function continueWithGoogle() {
+  const email = prompt("Enter your Google Account Email to simulate Continue with Google:");
+  if (!email) return;
+  const fullName = prompt("Enter your Full Name:", email.split('@')[0]);
+  
+  showToast('Connecting with Google...', 'info');
+  const { data, error } = await apiRequest('/api/auth/google-login', 'POST', { email, fullName });
+  if (error) {
+    showToast(error, 'error');
+    return;
+  }
+  
+  // Save credentials and redirect
+  localStorage.setItem("ct_token", data.token);
+  localStorage.setItem("ct_user", JSON.stringify(data.user));
+  showToast(`Welcome to CampusTutor, ${data.user.fullName}! <i class="fa-solid fa-circle-check"></i>`, 'success');
+  setTimeout(() => { window.location.href = '/pages/dashboard.html'; }, 1000);
+}
 </script>
 </body>
 </html>

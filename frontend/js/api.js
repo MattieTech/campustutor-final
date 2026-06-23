@@ -80,8 +80,8 @@ async function apiRequest(endpoint, method = "GET", body = null) {
 }
 
 // ── AUTH ──────────────────────────────────────────────────────
-async function apiSignup(fullName, email, password) {
-  return apiRequest("/api/auth/signup", "POST", { fullName, email, password });
+async function apiSignup(fullName, email, password, referredBy = null) {
+  return apiRequest("/api/auth/signup", "POST", { fullName, email, password, referredBy });
 }
 
 async function apiLogin(email, password) {

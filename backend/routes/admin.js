@@ -1,43 +1,26 @@
 // ============================================================
 // routes/admin.js — CampusTutor AI Admin API
-//
-// All routes require the admin role (role = 'admin' in profiles).
-// The isAdmin middleware verifies the JWT and checks the role
-// on every request — no route is accessible without it.
-//
-// Endpoints:
-//   GET  /api/admin/stats                    → Dashboard stats
-//   GET  /api/admin/recent-activities        → Recent user activities
-//   GET  /api/admin/users                    → All users
-//   GET  /api/admin/users/:userId/activity   → User activity log
-//   POST /api/admin/users/:userId/ban        → Ban user
-//   POST /api/admin/users/:userId/unban      → Unban user
-//   DELETE /api/admin/users/:userId          → Delete user
-//   POST /api/admin/users/:userId/reset-password → Reset password
-//   POST /api/admin/users/:userId/set-role   → Change role
 // ============================================================
 
 const express = require("express");
 const router = express.Router();
 const supabase = require("../utils/supabase");
 
-// Helper: fetch ALL auth users from Supabase Admin API (handles pagination)
+// Helper: fetch ALL auth users from Supabase Admin API
 async function getAllAuthUsers() {
-  const perPage = 100; // fetch 100 users per page (reasonable batch)
+  const perPage = 100;
   let page = 1;
   const all = [];
 
   while (true) {
     const { data, error } = await supabase.auth.admin.listUsers({ page, perPage });
     if (error) {
-      // Surface the error so callers can fallback if needed
       throw error;
     }
 
     const users = data?.users || [];
     all.push(...users);
 
-    // If this page returned fewer than perPage users, we've reached the end
     if (users.length < perPage) break;
     page += 1;
   }
@@ -54,7 +37,6 @@ async function isAdmin(req, res, next) {
       return res.status(401).json({ error: "No token provided." });
     }
 
-    // Verify the JWT via Supabase
     const { data, error } = await supabase.auth.getUser(token);
 
     if (error || !data.user) {
@@ -62,7 +44,6 @@ async function isAdmin(req, res, next) {
       return res.status(401).json({ error: "Invalid or expired token." });
     }
 
-    // Check the role in app_metadata (where Gemini said you set it)
     const userRole = data.user.app_metadata?.role;
     
     console.log("🔐 Admin check for:", data.user.email);
@@ -75,7 +56,6 @@ async function isAdmin(req, res, next) {
 
     console.log("✅ Admin access granted");
 
-    // Attach the verified admin's ID to every request
     req.adminId = data.user.id;
     next();
   } catch (err) {
@@ -84,7 +64,7 @@ async function isAdmin(req, res, next) {
   }
 }
 
-// ── HELPER: Write an entry to the activity_logs table ────────
+// ── HELPER: Write activity log ────────────────────────────────
 async function logActivity(adminId, action, targetUserId, details) {
   try {
     await supabase.from("activity_logs").insert({
@@ -95,24 +75,19 @@ async function logActivity(adminId, action, targetUserId, details) {
       created_at: new Date().toISOString(),
     });
   } catch (err) {
-    // Don't crash the main request if logging fails
     console.error("Activity log error:", err.message);
   }
 }
 
 // ── DASHBOARD STATS ──────────────────────────────────────────
-// GET /api/admin/stats
-// Returns aggregate counts for the four dashboard cards
 router.get("/stats", isAdmin, async (req, res) => {
   try {
-    // ── 1. GET USER COUNTS FROM SUPABASE AUTH ──────────────────────
     console.log("📊 Fetching user stats...");
     let allUsers = [];
     try {
       allUsers = await getAllAuthUsers();
     } catch (authError) {
-      console.error("❌ Auth list error (pagination):", authError.message);
-      // Fall back to empty array; stats will still return other counts
+      console.error("❌ Auth list error:", authError.message);
       allUsers = [];
     }
 
@@ -120,9 +95,6 @@ router.get("/stats", isAdmin, async (req, res) => {
     const bannedUsers = allUsers.filter(u => u.app_metadata?.status === "banned").length;
     const activeUsers = totalUsers - bannedUsers;
 
-    console.log(`✅ Users: Total=${totalUsers}, Active=${activeUsers}, Banned=${bannedUsers}`);
-
-    // ── 2. GET DOCUMENT COUNTS ────────────────────────────────────
     let totalDocuments = 0;
     try {
       const { count, error: docError } = await supabase
@@ -131,16 +103,11 @@ router.get("/stats", isAdmin, async (req, res) => {
       
       if (docError) throw docError;
       totalDocuments = count || 0;
-      console.log(`✅ Documents: ${totalDocuments}`);
     } catch (err) {
       console.log("⚠️ Documents table error:", err.message);
-      totalDocuments = 0;
     }
 
-    // ── 3. GET AI GENERATION COUNTS ───────────────────────────────
     let totalAIGenerations = 0;
-    
-    // Try ai_results table first
     try {
       const { count: aiCount, error: aiError } = await supabase
         .from("ai_results")
@@ -148,14 +115,11 @@ router.get("/stats", isAdmin, async (req, res) => {
       
       if (!aiError) {
         totalAIGenerations = aiCount || 0;
-        console.log(`✅ AI Generations (from ai_results): ${totalAIGenerations}`);
       } else {
         throw aiError;
       }
     } catch (err) {
       console.log("⚠️ AI results table error:", err.message);
-      
-      // Fall back to user_activity table counting AI actions
       try {
         const { count: actCount, error: actError } = await supabase
           .from("user_activity")
@@ -164,15 +128,12 @@ router.get("/stats", isAdmin, async (req, res) => {
         
         if (!actError) {
           totalAIGenerations = actCount || 0;
-          console.log(`✅ AI Generations (from user_activity): ${totalAIGenerations}`);
         }
       } catch (fallbackErr) {
-        console.log("⚠️ User activity table error:", fallbackErr.message);
         totalAIGenerations = 0;
       }
     }
 
-    // ── RETURN STATS ──────────────────────────────────────────────
     const stats = {
       totalUsers,
       activeUsers: Math.max(0, activeUsers),
@@ -181,11 +142,8 @@ router.get("/stats", isAdmin, async (req, res) => {
       totalAIGenerations,
     };
 
-    console.log("📈 Final stats:", stats);
     res.json(stats);
-    
   } catch (err) {
-    console.error("❌ Stats endpoint error:", err.message);
     res.status(500).json({
       error: err.message,
       totalUsers: 0,
@@ -198,37 +156,22 @@ router.get("/stats", isAdmin, async (req, res) => {
 });
 
 // ── RECENT ACTIVITIES ────────────────────────────────────────
-// GET /api/admin/recent-activities
-// Returns all recent user activities across the platform
 router.get("/recent-activities", isAdmin, async (req, res) => {
   try {
     const { limit = 50 } = req.query;
 
-    console.log("📊 Fetching recent activities...");
-
-    // Fetch user activities
     const { data: userActivities, error: userError } = await supabase
       .from("user_activity")
       .select("id, user_id, action, details, created_at")
       .order("created_at", { ascending: false })
       .limit(parseInt(limit));
 
-    if (userError && !userError.message.includes("does not exist")) {
-      console.error("⚠️  Error fetching user activities:", userError.message);
-    }
-
-    // Fetch admin activities
     const { data: adminActivities, error: adminError } = await supabase
       .from("activity_logs")
       .select("id, user_id, action, details, created_at")
       .order("created_at", { ascending: false })
       .limit(parseInt(limit));
 
-    if (adminError && !adminError.message.includes("does not exist")) {
-      console.error("⚠️  Error fetching admin activities:", adminError.message);
-    }
-
-    // Merge and sort activities
     const activities = [
       ...(userActivities || []),
       ...(adminActivities || [])
@@ -236,14 +179,11 @@ router.get("/recent-activities", isAdmin, async (req, res) => {
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, parseInt(limit));
 
-    console.log(`✅ Retrieved ${activities.length} activities`);
-
     res.json({
       activityCount: activities.length,
       activities: activities,
     });
   } catch (err) {
-    console.error("❌ Recent activities error:", err.message);
     res.status(500).json({ 
       error: "Failed to fetch recent activities.",
       activityCount: 0,
@@ -253,39 +193,31 @@ router.get("/recent-activities", isAdmin, async (req, res) => {
 });
 
 // ── LIST ALL USERS ───────────────────────────────────────────
-// GET /api/admin/users
-// Supports optional ?search=query and ?status=active|banned|all
 router.get("/users", isAdmin, async (req, res) => {
   try {
     const { search } = req.query;
     let users = [];
 
-    // Try to get users from profiles table first (if it exists)
     try {
       const { data: profileUsers, error } = await supabase
         .from("profiles")
         .select("id, email, full_name, role, status, created_at, last_login, banned_reason, banned_at")
         .order("created_at", { ascending: false })
-        .range(0, 999);  // Explicitly fetch up to 1000 records (bypasses default limit)
+        .range(0, 999);
 
       if (!error && profileUsers && profileUsers.length > 0) {
         users = profileUsers;
       } else {
-        throw new Error("Profiles table not available, falling back to auth.users");
+        throw new Error("Profiles table fallback");
       }
     } catch (profileErr) {
-      console.log("📝 Profiles table unavailable, using auth.users instead");
-      
-      // Fall back to listing auth users via admin API
       let authUsers = [];
       try {
         authUsers = await getAllAuthUsers();
       } catch (authError) {
-        console.error("Failed to fetch auth users (pagination):", authError.message);
         return res.status(500).json({ error: "Failed to fetch users." });
       }
 
-      // Transform auth.users data to match expected format
       users = (authUsers || []).map(u => ({
         id: u.id,
         email: u.email,
@@ -299,7 +231,6 @@ router.get("/users", isAdmin, async (req, res) => {
       }));
     }
 
-    // Apply search filter if provided
     if (search && search.trim()) {
       const searchLower = search.toLowerCase();
       users = users.filter(
@@ -323,47 +254,34 @@ router.get("/users", isAdmin, async (req, res) => {
       })),
     });
   } catch (err) {
-    console.error("Fetch users error:", err.message);
     res.status(500).json({ error: "Failed to fetch users." });
   }
 });
 
 // ── USER ACTIVITY LOG ────────────────────────────────────────
-// GET /api/admin/users/:userId/activity
 router.get("/users/:userId/activity", isAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Fetch admin actions on this user
-    const { data: adminActions, error: adminError } = await supabase
+    const { data: adminActions } = await supabase
       .from("activity_logs")
       .select("id, action, details, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(100);
 
-    // Fetch user's own activities
-    const { data: userActions, error: userError } = await supabase
+    const { data: userActions } = await supabase
       .from("user_activity")
       .select("id, action, details, created_at")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(100);
 
-    if (adminError && !adminError.message.includes("does not exist")) {
-      throw adminError;
-    }
-
-    if (userError && !userError.message.includes("does not exist")) {
-      throw userError;
-    }
-
-    // Merge and sort activities by timestamp
     const allActivities = [
       ...(adminActions || []).map(a => ({ type: "admin", ...a })),
       ...(userActions || []).map(a => ({ type: "user", ...a }))
     ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-     .slice(0, 100); // Keep last 100 activities
+     .slice(0, 100);
 
     res.json({
       userId,
@@ -371,14 +289,11 @@ router.get("/users/:userId/activity", isAdmin, async (req, res) => {
       activities: allActivities,
     });
   } catch (err) {
-    console.error("Fetch activity error:", err.message);
     res.status(500).json({ error: "Failed to fetch activity." });
   }
 });
 
 // ── BAN USER ─────────────────────────────────────────────────
-// POST /api/admin/users/:userId/ban
-// Body: { reason: string }
 router.post("/users/:userId/ban", isAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
@@ -388,14 +303,10 @@ router.post("/users/:userId/ban", isAdmin, async (req, res) => {
       return res.status(400).json({ error: "A ban reason is required." });
     }
 
-    // Prevent an admin from banning themselves
     if (userId === req.adminId) {
       return res.status(400).json({ error: "You cannot ban your own account." });
     }
 
-    console.log("🚫 Attempting to ban user:", userId, "Reason:", reason);
-
-    // Try to ban via profiles table first (if it exists)
     let banned = false;
     try {
       const { data: profileData, error: profileError } = await supabase
@@ -410,25 +321,16 @@ router.post("/users/:userId/ban", isAdmin, async (req, res) => {
         .select();
 
       if (!profileError && profileData && profileData.length > 0) {
-        console.log("✅ User banned via profiles table");
         banned = true;
-      } else if (!profileError && (!profileData || profileData.length === 0)) {
-        console.log("⚠️ Profiles update returned no rows for ban");
       }
-    } catch (profileErr) {
-      console.log("📝 Profiles table unavailable, will use app_metadata");
-    }
+    } catch (profileErr) {}
 
-    // If profiles table didn't work, use app_metadata
     if (!banned) {
-      console.log("📝 Updating app_metadata for ban");
       const { data: user, error: fetchErr } = await supabase.auth.admin.getUserById(userId);
-      
       if (fetchErr || !user) {
         return res.status(404).json({ error: "User not found." });
       }
 
-      // Merge new data into existing app_metadata
       const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
         app_metadata: {
           ...(user.app_metadata || {}),
@@ -440,29 +342,22 @@ router.post("/users/:userId/ban", isAdmin, async (req, res) => {
       });
 
       if (updateError) {
-        console.error("❌ Ban error:", updateError.message);
         return res.status(500).json({ error: "Failed to ban user: " + updateError.message });
       }
-      console.log("✅ User banned via app_metadata");
     }
 
     await logActivity(req.adminId, "ban_user", userId, reason.trim());
     res.json({ message: "User banned successfully.", userId });
   } catch (err) {
-    console.error("❌ Ban error:", err.message);
-    res.status(500).json({ error: "Failed to ban user: " + err.message });
+    res.status(500).json({ error: "Failed to ban user." });
   }
 });
 
 // ── UNBAN USER ────────────────────────────────────────────────
-// POST /api/admin/users/:userId/unban
 router.post("/users/:userId/unban", isAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
 
-    console.log("✅ Attempting to unban user:", userId);
-
-    // Try to unban via profiles table first (if it exists)
     let unbanned = false;
     try {
       const { data: profileData, error: profileError } = await supabase
@@ -477,25 +372,16 @@ router.post("/users/:userId/unban", isAdmin, async (req, res) => {
         .select();
 
       if (!profileError && profileData && profileData.length > 0) {
-        console.log("✅ User unbanned via profiles table");
         unbanned = true;
-      } else if (!profileError && (!profileData || profileData.length === 0)) {
-        console.log("⚠️ Profiles update returned no rows for unban");
       }
-    } catch (profileErr) {
-      console.log("📝 Profiles table unavailable, will use app_metadata");
-    }
+    } catch (profileErr) {}
 
-    // If profiles table didn't work, use app_metadata
     if (!unbanned) {
-      console.log("📝 Updating app_metadata for unban");
       const { data: user, error: fetchErr } = await supabase.auth.admin.getUserById(userId);
-      
       if (fetchErr || !user) {
         return res.status(404).json({ error: "User not found." });
       }
 
-      // Merge new data into existing app_metadata
       const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
         app_metadata: {
           ...(user.app_metadata || {}),
@@ -507,23 +393,18 @@ router.post("/users/:userId/unban", isAdmin, async (req, res) => {
       });
 
       if (updateError) {
-        console.error("❌ Unban error:", updateError.message);
-        return res.status(500).json({ error: "Failed to unban user: " + updateError.message });
+        return res.status(500).json({ error: "Failed to unban user." });
       }
-      console.log("✅ User unbanned via app_metadata");
     }
 
     await logActivity(req.adminId, "unban_user", userId, "Account reinstated.");
     res.json({ message: "User unbanned successfully.", userId });
   } catch (err) {
-    console.error("❌ Unban error:", err.message);
-    res.status(500).json({ error: "Failed to unban user: " + err.message });
+    res.status(500).json({ error: "Failed to unban user." });
   }
 });
 
 // ── DELETE USER ───────────────────────────────────────────────
-// DELETE /api/admin/users/:userId
-// Body: { reason: string } (optional)
 router.delete("/users/:userId", isAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
@@ -533,48 +414,31 @@ router.delete("/users/:userId", isAdmin, async (req, res) => {
       return res.status(400).json({ error: "You cannot delete your own account." });
     }
 
-    // Log before deletion
-    await logActivity(
-      req.adminId,
-      "delete_user",
-      userId,
-      reason || "Account deleted by admin."
-    );
+    await logActivity(req.adminId, "delete_user", userId, reason || "Account deleted by admin.");
 
-    // Try to delete from profiles table first (if it exists)
     try {
       await supabase.from("profiles").delete().eq("id", userId);
-    } catch (profileErr) {
-      console.log("Note: Could not delete from profiles table");
-    }
+    } catch (profileErr) {}
 
-    // Delete from Supabase Auth (this removes the user completely)
     const { error } = await supabase.auth.admin.deleteUser(userId);
-
     if (error) {
-      console.error("Delete error:", error.message);
       return res.status(500).json({ error: "Failed to delete user." });
     }
 
     res.json({ message: "User deleted successfully.", userId });
   } catch (err) {
-    console.error("Delete error:", err.message);
     res.status(500).json({ error: "Failed to delete user." });
   }
 });
 
 // ── RESET PASSWORD ────────────────────────────────────────────
-// POST /api/admin/users/:userId/reset-password
-// Body: { newPassword: string }
 router.post("/users/:userId/reset-password", isAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
     const { newPassword } = req.body;
 
     if (!newPassword || newPassword.length < 6) {
-      return res
-        .status(400)
-        .json({ error: "Password must be at least 6 characters." });
+      return res.status(400).json({ error: "Password must be at least 6 characters." });
     }
 
     const { error } = await supabase.auth.admin.updateUserById(userId, {
@@ -584,17 +448,13 @@ router.post("/users/:userId/reset-password", isAdmin, async (req, res) => {
     if (error) throw error;
 
     await logActivity(req.adminId, "reset_password", userId, "Password reset by admin.");
-
     res.json({ message: "Password reset successfully.", userId });
   } catch (err) {
-    console.error("Reset password error:", err.message);
     res.status(500).json({ error: "Failed to reset password." });
   }
 });
 
 // ── SET ROLE ──────────────────────────────────────────────────
-// POST /api/admin/users/:userId/set-role
-// Body: { role: 'user' | 'admin' }
 router.post("/users/:userId/set-role", isAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
@@ -605,14 +465,9 @@ router.post("/users/:userId/set-role", isAdmin, async (req, res) => {
     }
 
     if (userId === req.adminId && role !== "admin") {
-      return res
-        .status(400)
-        .json({ error: "You cannot remove your own admin privileges." });
+      return res.status(400).json({ error: "You cannot remove your own admin privileges." });
     }
 
-    console.log("👤 Attempting to set role to", role, "for user:", userId);
-
-    // Try to update profiles table first (if it exists)
     let roleUpdated = false;
     try {
       const { data: profileData, error: profileError } = await supabase
@@ -622,25 +477,16 @@ router.post("/users/:userId/set-role", isAdmin, async (req, res) => {
         .select();
 
       if (!profileError && profileData && profileData.length > 0) {
-        console.log("✅ Role updated via profiles table");
         roleUpdated = true;
-      } else if (!profileError && (!profileData || profileData.length === 0)) {
-        console.log("⚠️ Profiles update returned no rows for role change");
       }
-    } catch (profileErr) {
-      console.log("📝 Profiles table unavailable, will use app_metadata");
-    }
+    } catch (profileErr) {}
 
-    // If profiles table didn't work, use app_metadata
     if (!roleUpdated) {
-      console.log("📝 Updating app_metadata for role");
       const { data: user, error: fetchErr } = await supabase.auth.admin.getUserById(userId);
-      
       if (fetchErr || !user) {
         return res.status(404).json({ error: "User not found." });
       }
 
-      // Merge new data into existing app_metadata
       const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
         app_metadata: {
           ...(user.app_metadata || {}),
@@ -649,29 +495,18 @@ router.post("/users/:userId/set-role", isAdmin, async (req, res) => {
       });
 
       if (updateError) {
-        console.error("❌ Set role error:", updateError.message);
         return res.status(500).json({ error: "Failed to update role: " + updateError.message });
       }
-      console.log("✅ Role updated via app_metadata");
     }
 
-    await logActivity(
-      req.adminId,
-      "set_role",
-      userId,
-      `Role changed to ${role}.`
-    );
-
+    await logActivity(req.adminId, "set_role", userId, `Role changed to ${role}.`);
     res.json({ message: "Role updated successfully.", userId, role });
   } catch (err) {
-    console.error("❌ Set role error:", err.message);
-    res.status(500).json({ error: "Failed to update role: " + err.message });
+    res.status(500).json({ error: "Failed to update role." });
   }
 });
 
 // ── USER UPLOADED FILES ──────────────────────────────────────
-// GET /api/admin/users/:userId/files
-// Returns all files uploaded by a specific user (PDFs and images only)
 router.get("/users/:userId/files", isAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
@@ -700,19 +535,15 @@ router.get("/users/:userId/files", isAdmin, async (req, res) => {
       }))
     });
   } catch (err) {
-    console.error("Fetch user files error:", err.message);
     res.status(500).json({ error: "Failed to fetch user files." });
   }
 });
 
 // ── USER AI INTERACTIONS ────────────────────────────────────
-// GET /api/admin/users/:userId/ai-interactions
-// Returns all AI interactions for a specific user with full details
 router.get("/users/:userId/ai-interactions", isAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Get all user activities related to AI
     const { data: aiActivities, error } = await supabase
       .from("user_activity")
       .select("id, action, details, created_at")
@@ -736,46 +567,139 @@ router.get("/users/:userId/ai-interactions", isAdmin, async (req, res) => {
       }))
     });
   } catch (err) {
-    console.error("Fetch AI interactions error:", err.message);
     res.status(500).json({ error: "Failed to fetch AI interactions." });
   }
 });
 
-// ── FIX RLS POLICIES (Emergency endpoint) ──────────────────
-// POST /api/admin/fix-rls
-// Temporarily disables RLS on backend tables so data can be read
-// This is a quick fix - for production, use proper RLS policies
+// ── PREMIUM PLAN GIFTING ──────────────────────────────────────
+// POST /api/admin/gift-plan
+router.post("/gift-plan", isAdmin, async (req, res) => {
+  try {
+    const { email, plan, durationDays } = req.body;
+
+    if (!email || !plan || !durationDays) {
+      return res.status(400).json({ error: "Email, plan, and durationDays are required." });
+    }
+
+    if (!["free", "plus", "pro"].includes(plan)) {
+      return res.status(400).json({ error: "Plan must be 'free', 'plus', or 'pro'." });
+    }
+
+    const { data: profile, error: findError } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .eq("email", email.trim().toLowerCase())
+      .single();
+
+    if (findError || !profile) {
+      return res.status(404).json({ error: "User with this email not found." });
+    }
+
+    const subscriptionEnd = new Date();
+    subscriptionEnd.setDate(subscriptionEnd.getDate() + Number(durationDays));
+
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({
+        plan: plan,
+        subscription_status: "active",
+        subscription_end: subscriptionEnd.toISOString()
+      })
+      .eq("id", profile.id);
+
+    if (updateError) {
+      return res.status(500).json({ error: "Failed to gift plan to user." });
+    }
+
+    await logActivity(req.adminId, "gift_plan", profile.id, `Gifted ${plan.toUpperCase()} plan for ${durationDays} days.`);
+
+    res.json({ message: `Successfully gifted ${plan.toUpperCase()} plan to ${profile.full_name} for ${durationDays} days.` });
+  } catch (err) {
+    console.error("Gift plan error:", err);
+    res.status(500).json({ error: "Failed to gift plan." });
+  }
+});
+
+// ── GET WITHDRAWALS QUEUE ─────────────────────────────────────
+// GET /api/admin/withdrawals
+router.get("/withdrawals", isAdmin, async (req, res) => {
+  try {
+    const { data: withdrawals, error } = await supabase
+      .from("withdrawals")
+      .select("*, profiles(full_name, email)")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      return res.status(500).json({ error: "Failed to fetch withdrawals." });
+    }
+
+    res.json({ withdrawals: withdrawals || [] });
+  } catch (err) {
+    console.error("Get withdrawals error:", err);
+    res.status(500).json({ error: "Failed to fetch withdrawals." });
+  }
+});
+
+// ── RESOLVE WITHDRAWALS ───────────────────────────────────────
+// POST /api/admin/withdrawals/:id/resolve
+router.post("/withdrawals/:id/resolve", isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, remark } = req.body;
+
+    if (!status || !["approved", "rejected"].includes(status)) {
+      return res.status(400).json({ error: "Status must be 'approved' or 'rejected'." });
+    }
+
+    const { data: withdrawal, error: findError } = await supabase
+      .from("withdrawals")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (findError || !withdrawal) {
+      return res.status(404).json({ error: "Withdrawal request not found." });
+    }
+
+    const { error: updateError } = await supabase
+      .from("withdrawals")
+      .update({
+        status,
+        remark,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", id);
+
+    if (updateError) {
+      return res.status(500).json({ error: "Failed to resolve withdrawal." });
+    }
+
+    await logActivity(req.adminId, `resolve_withdrawal_${status}`, withdrawal.user_id, `Withdrawal request resolved as ${status}. Remark: ${remark || 'None'}`);
+
+    res.json({ message: `Withdrawal request has been ${status}.` });
+  } catch (err) {
+    console.error("Resolve withdrawal error:", err);
+    res.status(500).json({ error: "Failed to resolve withdrawal." });
+  }
+});
+
+// ── FIX RLS POLICIES ──────────────────────────────────────────
 router.post("/fix-rls", isAdmin, async (req, res) => {
   try {
-    console.log("🔧 Attempting to fix RLS policies...");
-
-    // Disable RLS on backend tables
-    const tables = [
-      "activity_logs",
-      "user_activity",
-      "ai_results",
-      "documents",
-    ];
+    console.log("🔧 Attempting to fix RLS...");
+    const tables = ["activity_logs", "user_activity", "ai_results", "documents"];
 
     for (const table of tables) {
-      const { error } = await supabase.rpc("exec_sql", {
+      await supabase.rpc("exec_sql", {
         sql: `ALTER TABLE ${table} DISABLE ROW LEVEL SECURITY;`,
-      }).catch(() => ({ error: null })); // RPC might not exist
-
-      if (error) {
-        console.log(`⚠️  Could not disable RLS on ${table} via RPC`);
-      } else {
-        console.log(`✅ Disabled RLS on ${table}`);
-      }
+      }).catch(() => {});
     }
 
     res.json({
-      message: "RLS policies have been updated",
-      note: "Run migration.sql in Supabase SQL Editor for permanent fix",
+      message: "RLS policies updated",
     });
   } catch (err) {
-    console.error("❌ RLS fix error:", err.message);
-    res.status(500).json({ error: "Failed to fix RLS: " + err.message });
+    res.status(500).json({ error: "Failed to fix RLS." });
   }
 });
 

@@ -1,16 +1,5 @@
 // ============================================================
 // routes/ai.js — MattieTech AI-powered study features
-//
-// Every prompt now includes explicit LaTeX math formatting
-// instructions so that the AI output can be rendered by KaTeX
-// on the frontend.
-//
-// Routes:
-//   POST /api/ai/summarize     → Summarize the notes
-//   POST /api/ai/explain       → Explain a specific concept
-//   POST /api/ai/questions     → Generate revision questions
-//   POST /api/ai/flashcards    → Generate flashcards
-//   GET  /api/ai/results/:docId → Get saved AI results
 // ============================================================
 
 const express = require("express");
@@ -605,7 +594,26 @@ router.post("/summarize", authMiddleware, async (req, res) => {
       return res.status(400).json({ error: "documentId is required." });
     }
 
-    const { summary } = await generateSummaryForDocument(documentId, req.user.id, { summarySize });
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("plan")
+      .eq("id", req.user.id)
+      .single();
+    const userPlan = profile?.plan || 'free';
+
+    const size = Number(summarySize || 1);
+
+    if (userPlan === 'free') {
+      if (size > 1) {
+        return res.status(403).json({ error: "Summary options 2 and 3 are only available on Plus and Pro plans. Please upgrade." });
+      }
+    } else if (userPlan === 'plus') {
+      if (size > 2) {
+        return res.status(403).json({ error: "Summary option 3 is only available on the Pro Plan. Please upgrade." });
+      }
+    }
+
+    const { summary } = await generateSummaryForDocument(documentId, req.user.id, { summarySize: size });
     res.json({ summary });
   } catch (err) {
     console.error("Summarize error:", err.message);
@@ -671,7 +679,6 @@ Keep the language simple, warm, and encouraging.
       await logUserActivity(req.user.id, "ai_explain", `Asked: "${concept}" | No document`);
     }
     
-    // Award XP
     try {
       await awardXP(req.user.id, "ai_explain", { concept });
       await updateStreak(req.user.id);
@@ -694,7 +701,30 @@ router.post("/questions", authMiddleware, async (req, res) => {
       return res.status(400).json({ error: "documentId is required." });
     }
 
-    const { questionsData } = await generateQuestionsForDocument(documentId, req.user.id, { quizSize: Number(quizSize || 10) });
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("plan")
+      .eq("id", req.user.id)
+      .single();
+    const userPlan = profile?.plan || 'free';
+
+    const size = Number(quizSize || 10);
+
+    if (userPlan === 'free') {
+      if (size < 10 || size > 20) {
+        return res.status(403).json({ error: "Free Plan allows 10-20 quiz questions. Please upgrade your plan." });
+      }
+    } else if (userPlan === 'plus') {
+      if (size > 40) {
+        return res.status(403).json({ error: "Plus Plan is limited to up to 40 quiz questions. Please upgrade to Pro." });
+      }
+    } else if (userPlan === 'pro') {
+      if (size > 50) {
+        return res.status(403).json({ error: "Pro Plan is limited to up to 50 quiz questions." });
+      }
+    }
+
+    const { questionsData } = await generateQuestionsForDocument(documentId, req.user.id, { quizSize: size });
     res.json({ questions: questionsData });
   } catch (err) {
     console.error("Questions error:", err.message);
@@ -744,9 +774,6 @@ router.get("/results/:documentId", authMiddleware, async (req, res) => {
 });
 
 // ── DOWNLOAD ENDPOINTS ────────────────────────────────────────
-// These generate downloadable versions of AI-generated content
-
-// Download Summary as TXT
 router.get("/download/summary/:documentId/txt", authMiddleware, async (req, res) => {
   try {
     const { data: result, error } = await supabase
@@ -761,7 +788,6 @@ router.get("/download/summary/:documentId/txt", authMiddleware, async (req, res)
       return res.status(404).json({ error: "Summary not found." });
     }
 
-    // Convert LaTeX to text-friendly format
     const content = result.content
       .replace(/\$/g, "[MATH]")
       .replace(/\$\$/g, "\n[EQUATION]\n");
@@ -770,14 +796,12 @@ router.get("/download/summary/:documentId/txt", authMiddleware, async (req, res)
     res.setHeader("Content-Disposition", "attachment; filename=summary.txt");
     res.send(content);
 
-    // Log activity
     await logUserActivity(req.user.id, "download_summary", `Downloaded summary (TXT)`);
   } catch (err) {
     res.status(500).json({ error: "Failed to download file." });
   }
 });
 
-// Download Flashcards as CSV
 router.get("/download/flashcards/:documentId/csv", authMiddleware, async (req, res) => {
   try {
     const { data: result, error } = await supabase
@@ -794,7 +818,6 @@ router.get("/download/flashcards/:documentId/csv", authMiddleware, async (req, r
 
     const flashcards = JSON.parse(result.content);
     
-    // Generate CSV
     let csv = "Question,Answer,Category\n";
     flashcards.forEach((card) => {
       const front = (card.front || "").replace(/"/g, '""');
@@ -807,14 +830,12 @@ router.get("/download/flashcards/:documentId/csv", authMiddleware, async (req, r
     res.setHeader("Content-Disposition", "attachment; filename=flashcards.csv");
     res.send(csv);
 
-    // Log activity
     await logUserActivity(req.user.id, "download_flashcards", `Downloaded ${flashcards.length} flashcards (CSV)`);
   } catch (err) {
     res.status(500).json({ error: "Failed to download file." });
   }
 });
 
-// Download Questions as TXT
 router.get("/download/questions/:documentId/txt", authMiddleware, async (req, res) => {
   try {
     const { data: result, error } = await supabase
@@ -853,7 +874,6 @@ router.get("/download/questions/:documentId/txt", authMiddleware, async (req, re
       textOutput = result.content;
     }
 
-    // Convert LaTeX to text-friendly format
     const content = textOutput
       .replace(/\$/g, "[MATH]")
       .replace(/\$\$/g, "\n[EQUATION]\n");
@@ -862,14 +882,12 @@ router.get("/download/questions/:documentId/txt", authMiddleware, async (req, re
     res.setHeader("Content-Disposition", "attachment; filename=questions.txt");
     res.send(content);
 
-    // Log activity
     await logUserActivity(req.user.id, "download_questions", `Downloaded questions (TXT)`);
   } catch (err) {
     res.status(500).json({ error: "Failed to download file." });
   }
 });
 
-// Download Explanation as TXT
 router.get("/download/explanation/:documentId/txt", authMiddleware, async (req, res) => {
   try {
     const { data: result, error } = await supabase
@@ -884,7 +902,6 @@ router.get("/download/explanation/:documentId/txt", authMiddleware, async (req, 
       return res.status(404).json({ error: "Explanation not found." });
     }
 
-    // Convert LaTeX to text-friendly format
     const content = result.content
       .replace(/\\\(/g, "[MATH: ")
       .replace(/\\\)/g, "]")
@@ -896,7 +913,6 @@ router.get("/download/explanation/:documentId/txt", authMiddleware, async (req, 
     res.setHeader("Content-Disposition", "attachment; filename=explanation.txt");
     res.send(content);
 
-    // Log activity
     await logUserActivity(req.user.id, "download_explanation", `Downloaded explanation (TXT)`);
   } catch (err) {
     res.status(500).json({ error: "Failed to download file." });
