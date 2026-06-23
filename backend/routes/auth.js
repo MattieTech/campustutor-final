@@ -193,6 +193,13 @@ router.post("/verify", async (req, res) => {
   }
 });
 
+// ── GET AUTH CONFIG ───────────────────────────────────────────
+router.get("/config", (req, res) => {
+  res.json({
+    googleClientId: process.env.GOOGLE_CLIENT_ID || "1028751505342-placeholder.apps.googleusercontent.com"
+  });
+});
+
 // ── GOOGLE LOGIN ──────────────────────────────────────────────
 router.post("/google-login", async (req, res) => {
   try {

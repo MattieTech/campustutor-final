@@ -6,6 +6,7 @@
 <title>Create Account — CampusTutor AI</title>
 <link rel="stylesheet" href="/css/style.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="auth-page">
 <div class="auth-orb1"></div>
@@ -63,9 +64,7 @@
   <div class="auth-divider">or</div>
   
   <!-- Continue with Google Button -->
-  <button class="btn btn-outline btn-full" type="button" onclick="continueWithGoogle()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:16px;padding:12px;border:1px solid var(--sep);border-radius:var(--r);background:var(--bg2);color:var(--label);font-family:inherit;font-size:0.9rem;cursor:pointer;">
-    <i class="fa-brands fa-google" style="color:#db4437;"></i> Continue with Google
-  </button>
+  <div id="google-signin-btn" style="width:100%;display:flex;justify-content:center;margin-bottom:16px;min-height:44px;"></div>
 
   <div class="auth-footer">Already have an account? <a href="/pages/login.html">Log in</a></div>
   <div style="text-align:center;margin-top:12px;"><a href="/" style="font-size:0.8rem;color:var(--label3);">← Back to Home</a></div>
@@ -82,6 +81,7 @@ document.getElementById('themeBtn').addEventListener('click',()=>{
   document.documentElement.setAttribute('data-theme',n);
   localStorage.setItem('ct_theme',n);
   document.getElementById('themeBtn').textContent=n==='dark'?'☀️':'🌙';
+  renderGoogleButton();
 });
 redirectIfLoggedIn();
 
@@ -140,13 +140,50 @@ document.getElementById('verifyForm').addEventListener('submit', async (e) => {
   setTimeout(() => { window.location.href = '/pages/login.html'; }, 1500);
 });
 
-async function continueWithGoogle() {
-  const email = prompt("Enter your Google Account Email to simulate Continue with Google:");
-  if (!email) return;
-  const fullName = prompt("Enter your Full Name:", email.split('@')[0]);
+let googleClientId = "";
+
+async function initGoogleSignIn() {
+  try {
+    const { data } = await apiRequest('/api/auth/config');
+    googleClientId = (data && data.googleClientId) || "1028751505342-placeholder.apps.googleusercontent.com";
+    
+    google.accounts.id.initialize({
+      client_id: googleClientId,
+      callback: handleCredentialResponse,
+      auto_select: false,
+      itp_support: true
+    });
+    
+    renderGoogleButton();
+  } catch (err) {
+    console.error("Error initializing Google Sign-In:", err);
+  }
+}
+
+function renderGoogleButton() {
+  const btnContainer = document.getElementById("google-signin-btn");
+  if (btnContainer && window.google) {
+    google.accounts.id.renderButton(
+      btnContainer,
+      { 
+        theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'filled_black' : 'outline', 
+        size: 'large',
+        width: btnContainer.offsetWidth || 340,
+        text: 'continue_with',
+        shape: 'pill'
+      }
+    );
+  }
+}
+
+async function handleCredentialResponse(response) {
+  if (!response || !response.credential) {
+    showToast('Google authentication failed.', 'error');
+    return;
+  }
   
   showToast('Connecting with Google...', 'info');
-  const { data, error } = await apiRequest('/api/auth/google-login', 'POST', { email, fullName });
+  const { data, error } = await apiRequest('/api/auth/google-login', 'POST', { credential: response.credential });
   if (error) {
     showToast(error, 'error');
     return;
@@ -158,6 +195,10 @@ async function continueWithGoogle() {
   showToast(`Welcome to CampusTutor, ${data.user.fullName}! <i class="fa-solid fa-circle-check"></i>`, 'success');
   setTimeout(() => { window.location.href = '/pages/dashboard.html'; }, 1000);
 }
+
+window.addEventListener('load', () => {
+  initGoogleSignIn();
+});
 </script>
 </body>
 </html>
