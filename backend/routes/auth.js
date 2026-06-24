@@ -14,14 +14,14 @@ const transporter = nodemailer.createTransport({
   port: parseInt(process.env.SMTP_PORT || process.env.EMAIL_PORT || "587"),
   secure: (process.env.SMTP_PORT || process.env.EMAIL_PORT) === "465",
   auth: {
-    user: process.env.SMTP_USER || process.env.EMAIL_USER,
-    pass: process.env.SMTP_PASS || process.env.EMAIL_PASS,
+    user: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER,
+    pass: process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.GMAIL_PASSWORD,
   },
 });
 
 async function sendVerificationEmail(email, otp) {
   const mailOptions = {
-    from: process.env.SMTP_USER || process.env.EMAIL_USER || "no-reply@campustutor.com",
+    from: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER || "no-reply@campustutor.com",
     to: email,
     subject: "Verify Your CampusTutor Account",
     text: `Your verification code is: ${otp}\n\nThis code will expire in 10 minutes.`,
@@ -57,9 +57,11 @@ router.post("/signup", async (req, res) => {
         .json({ error: "Password must be at least 6 characters." });
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+
     // 1. Create the user in Supabase Auth
     const { data, error } = await supabase.auth.admin.createUser({
-      email,
+      email: cleanEmail,
       password,
       email_confirm: true, // Bypass Supabase default flow so we handle via nodemailer OTP
       user_metadata: { full_name: fullName },
@@ -92,7 +94,7 @@ router.post("/signup", async (req, res) => {
       await supabase.from("profiles").insert({
         id: data.user.id,
         full_name: fullName,
-        email: email,
+        email: cleanEmail,
         plan: "free",
         is_verified: false,
         verification_otp: otp,
@@ -106,7 +108,7 @@ router.post("/signup", async (req, res) => {
     }
 
     // 4. Send email
-    await sendVerificationEmail(email, otp);
+    await sendVerificationEmail(cleanEmail, otp);
 
     // 5. Log the signup activity
     try {
@@ -139,10 +141,12 @@ router.post("/verify", async (req, res) => {
       return res.status(400).json({ error: "Email and OTP code are required." });
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+
     const { data: profile, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("email", email)
+      .ilike("email", cleanEmail)
       .single();
 
     if (error || !profile) {
@@ -228,22 +232,20 @@ router.post("/google-login", async (req, res) => {
       fullName = email.split("@")[0];
     }
 
-    // 2. Check if user profile exists in profiles table
-    let { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("email", email.trim().toLowerCase())
-      .single();
+    const cleanEmail = email.trim().toLowerCase();
 
-    let userId;
-    let userRole = "user";
-    let userStatus = "active";
+    // 2. Generate magic link to verify if user exists in Supabase Auth
+    let linkRes = await supabase.auth.admin.generateLink({
+      type: "magiclink",
+      email: cleanEmail
+    });
 
-    if (!profile) {
-      // Create user in Supabase auth first
-      const tempPassword = crypto.randomBytes(16).toString("hex"); // Random secure password
+    if (linkRes.error) {
+      console.log(`User not found in Supabase Auth for email: ${cleanEmail}. Creating new user...`);
+      // Create new user in Supabase Auth
+      const tempPassword = crypto.randomBytes(16).toString("hex");
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email,
+        email: cleanEmail,
         password: tempPassword,
         email_confirm: true,
         user_metadata: { full_name: fullName }
@@ -254,17 +256,52 @@ router.post("/google-login", async (req, res) => {
         return res.status(400).json({ error: authError.message });
       }
 
-      userId = authData.user.id;
-      const refCode = generateReferralCode();
+      // Retry generating magic link
+      linkRes = await supabase.auth.admin.generateLink({
+        type: "magiclink",
+        email: cleanEmail
+      });
 
-      // Create profile
+      if (linkRes.error) {
+        console.error("Retry generateLink error:", linkRes.error.message);
+        return res.status(500).json({ error: "Failed to generate session link." });
+      }
+    }
+
+    const linkData = linkRes.data;
+
+    // 3. Verify OTP code to log user in
+    const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
+      email: cleanEmail,
+      token: linkData.properties.email_otp,
+      type: "magiclink"
+    });
+
+    if (sessionError || !sessionData || !sessionData.session) {
+      console.error("Failed to verify Google login session:", sessionError?.message);
+      return res.status(401).json({ error: "Failed to authenticate Google session." });
+    }
+
+    const user = sessionData.user;
+    const userId = user.id;
+
+    // 4. Fetch or create profile
+    let { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("email", cleanEmail)
+      .maybeSingle();
+
+    if (!profile) {
+      // Create new profile
+      const refCode = generateReferralCode();
       const { data: newProfile, error: profileError } = await supabase
         .from("profiles")
         .insert({
           id: userId,
           full_name: fullName,
-          email: email,
-          is_verified: true, // Google login is pre-verified
+          email: cleanEmail,
+          is_verified: true,
           plan: "free",
           referral_code: refCode,
           created_at: new Date().toISOString()
@@ -277,44 +314,22 @@ router.post("/google-login", async (req, res) => {
       }
       profile = newProfile;
     } else {
-      userId = profile.id;
-      userRole = profile.role || "user";
-      userStatus = profile.status || "active";
-
-      // If user profile exists but is not marked verified, set to true (since they authenticated via Google)
-      if (!profile.is_verified) {
-        await supabase
-          .from("profiles")
-          .update({ is_verified: true })
-          .eq("id", userId);
+      // If profile exists, ensure ID matches and verify
+      const updates = { is_verified: true };
+      if (profile.id !== userId) {
+        updates.id = userId;
       }
+      await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("email", cleanEmail);
     }
+
+    const userRole = profile?.role || "user";
+    const userStatus = profile?.status || "active";
 
     if (userStatus === "banned") {
       return res.status(403).json({ error: "Your account has been suspended. Please contact support." });
-    }
-
-    // 3. Generate a magic login link/OTP for this user via Supabase Admin API
-    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-      type: "magiclink",
-      email: email
-    });
-
-    if (linkError || !linkData || !linkData.properties) {
-      console.error("Failed to generate login link for Google user:", linkError?.message);
-      return res.status(500).json({ error: "Failed to generate Google session link." });
-    }
-
-    // 4. Verify the OTP on the backend to sign them in and get a valid session token
-    const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
-      email,
-      token: linkData.properties.email_otp,
-      type: "magiclink"
-    });
-
-    if (sessionError || !sessionData || !sessionData.session) {
-      console.error("Failed to verify Google login session:", sessionError?.message);
-      return res.status(401).json({ error: "Failed to authenticate Google session." });
     }
 
     // Update last login
@@ -328,7 +343,7 @@ router.post("/google-login", async (req, res) => {
       token: sessionData.session.access_token,
       user: {
         id: userId,
-        email,
+        email: cleanEmail,
         fullName: profile?.full_name || fullName,
         role: userRole,
         status: userStatus,
@@ -425,11 +440,13 @@ router.post("/resend-otp", async (req, res) => {
       return res.status(400).json({ error: "Email is required." });
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+
     const { data: profile, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("email", email)
-      .single();
+      .ilike("email", cleanEmail)
+      .maybeSingle();
 
     if (error || !profile) {
       return res.status(400).json({ error: "User profile not found." });
@@ -450,7 +467,7 @@ router.post("/resend-otp", async (req, res) => {
       })
       .eq("id", profile.id);
 
-    await sendVerificationEmail(email, otp);
+    await sendVerificationEmail(cleanEmail, otp);
 
     res.json({ message: "A new verification code has been sent to your email." });
   } catch (err) {
@@ -467,14 +484,16 @@ router.post("/reset-request", async (req, res) => {
       return res.status(400).json({ error: "Email is required." });
     }
 
-    // Check if profile exists
-    const { data: profile } = await supabase
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Check if profile exists case-insensitively
+    const { data: profile, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("email", email.trim().toLowerCase())
-      .single();
+      .ilike("email", cleanEmail)
+      .maybeSingle();
 
-    if (!profile) {
+    if (error || !profile) {
       // Don't leak registered accounts, but return generic success/instruction
       return res.json({ message: "If your email is registered, you will receive a reset code." });
     }
@@ -485,14 +504,14 @@ router.post("/reset-request", async (req, res) => {
     await supabase
       .from("profiles")
       .update({
-        verification_otp: otp, // Reuse verification_otp or store in a specific column. Since we alter profile, we can reuse or just use verification_otp
+        verification_otp: otp, // Reuse verification_otp
         verification_otp_expires: otpExpires
       })
       .eq("id", profile.id);
 
     const mailOptions = {
-      from: process.env.SMTP_USER || process.env.EMAIL_USER || "no-reply@campustutor.com",
-      to: email,
+      from: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER || "no-reply@campustutor.com",
+      to: cleanEmail,
       subject: "Reset Your CampusTutor Password",
       text: `Your password reset code is: ${otp}\n\nThis code will expire in 15 minutes.`,
       html: `<p>Your password reset code is: <strong>${otp}</strong></p><p>This code will expire in 15 minutes.</p>`,
@@ -514,13 +533,15 @@ router.post("/reset-confirm", async (req, res) => {
       return res.status(400).json({ error: "Email, OTP, and password are required." });
     }
 
-    const { data: profile } = await supabase
+    const cleanEmail = email.trim().toLowerCase();
+
+    const { data: profile, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("email", email.trim().toLowerCase())
-      .single();
+      .ilike("email", cleanEmail)
+      .maybeSingle();
 
-    if (!profile) {
+    if (error || !profile) {
       return res.status(400).json({ error: "Invalid request details." });
     }
 
