@@ -18,6 +18,12 @@ const transporter = nodemailer.createTransport({
     user: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER,
     pass: process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.GMAIL_PASSWORD,
   },
+  connectionTimeout: 10000, // 10 seconds timeout
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
+  dnsTimeout: 5000,
+  // Force IPv4 address family to avoid unreachable IPv6 addresses on Render
+  family: 4 
 });
 
 async function sendVerificationEmail(email, otp) {
