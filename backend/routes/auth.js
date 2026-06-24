@@ -430,7 +430,7 @@ router.post("/login", async (req, res) => {
         role: userRole,
         status: userStatus,
         plan: profile?.plan || "free",
-        isVerified: profile ? profile.is_verified : true,
+        isVerified: profile ? profile.is_verified : false,
       },
     });
   } catch (err) {
