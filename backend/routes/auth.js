@@ -203,65 +203,57 @@ router.get("/config", (req, res) => {
 // ── GOOGLE LOGIN ──────────────────────────────────────────────
 router.post("/google-login", async (req, res) => {
   try {
-    let { email, fullName, credential } = req.body;
+    const { credential } = req.body;
 
-    if (credential) {
-      try {
-        const payloadBase64 = credential.split(".")[1];
-        const payload = JSON.parse(Buffer.from(payloadBase64, "base64").toString("utf-8"));
-        email = payload.email;
-        fullName = payload.name || payload.given_name;
-      } catch (e) {
-        console.error("Failed to parse Google credential:", e);
-      }
+    if (!credential) {
+      return res.status(400).json({ error: "Google OAuth credential token is required." });
     }
 
-    if (!email) {
-      return res.status(400).json({ error: "Email is required for Google login." });
-    }
-    if (!fullName) {
-      fullName = email.split("@")[0];
+    // Sign in directly using Google ID token via Supabase
+    const { data: sessionData, error: sessionError } = await supabase.auth.signInWithIdToken({
+      provider: "google",
+      token: credential
+    });
+
+    if (sessionError || !sessionData || !sessionData.user) {
+      console.error("Sign in failed for Google user:", sessionError?.message || "No user returned");
+      return res.status(401).json({ error: "Google authentication failed. Please try again." });
     }
 
-    // 1. Check if user profile exists
+    const user = sessionData.user;
+    const email = user.email;
+    const fullName = user.user_metadata?.full_name || user.user_metadata?.name || email.split("@")[0];
+
+    // Check if user profile exists by user ID
     let { data: profile } = await supabase
       .from("profiles")
       .select("*")
-      .eq("email", email)
+      .eq("id", user.id)
       .single();
 
-    let userId;
+    if (!profile) {
+      // Check if user profile exists by email (if they registered previously via email/password)
+      let { data: emailProfile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("email", email)
+        .single();
+
+      if (emailProfile) {
+        profile = emailProfile;
+      }
+    }
+
     let userRole = "user";
     let userStatus = "active";
 
-    // Deterministic password for Google users
-    const googleUserPassword = crypto
-      .createHmac("sha256", process.env.SUPABASE_SERVICE_KEY || "google_auth_secret")
-      .update(email)
-      .digest("hex");
-
     if (!profile) {
-      // Create user in Supabase auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email,
-        password: googleUserPassword,
-        email_confirm: true,
-        user_metadata: { full_name: fullName }
-      });
-
-      if (authError) {
-        console.error("Google auth user creation error:", authError.message);
-        return res.status(400).json({ error: authError.message });
-      }
-
-      userId = authData.user.id;
       const refCode = generateReferralCode();
-
-      // Create profile
+      // Create new profile
       const { data: newProfile, error: profileError } = await supabase
         .from("profiles")
         .insert({
-          id: userId,
+          id: user.id,
           full_name: fullName,
           email: email,
           is_verified: true, // Google login is pre-verified
@@ -277,36 +269,22 @@ router.post("/google-login", async (req, res) => {
       }
       profile = newProfile;
     } else {
-      userId = profile.id;
       userRole = profile.role || "user";
       userStatus = profile.status || "active";
 
-      // Align password in auth to match deterministic password
-      const { error: updateAuthError } = await supabase.auth.admin.updateUserById(userId, {
-        password: googleUserPassword,
-        email_confirm: true
-      });
-
-      // Auto-heal if the user exists in profiles but is missing from Supabase Auth
-      if (updateAuthError && (updateAuthError.status === 404 || updateAuthError.message.includes("not found"))) {
-        console.log(`Healing missing Auth user for email: ${email}`);
-        const { error: createAuthError } = await supabase.auth.admin.createUser({
-          email,
-          password: googleUserPassword,
-          email_confirm: true,
-          user_metadata: { full_name: profile.full_name || fullName }
-        });
-        if (createAuthError) {
-          console.error("Failed to heal Auth user:", createAuthError.message);
-        }
+      // Mark as verified if not already, and update the ID if they have the same email but different ID
+      const updates = { is_verified: true };
+      if (profile.id !== user.id) {
+        updates.id = user.id;
       }
+      
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("email", email);
 
-      // If user profile exists but is not marked verified, set to true (since they authenticated via Google)
-      if (!profile.is_verified) {
-        await supabase
-          .from("profiles")
-          .update({ is_verified: true })
-          .eq("id", userId);
+      if (updateError) {
+        console.error("Failed to update profile verification/ID:", updateError.message);
       }
     }
 
@@ -314,28 +292,17 @@ router.post("/google-login", async (req, res) => {
       return res.status(403).json({ error: "Your account has been suspended. Please contact support." });
     }
 
-    // Sign in with password
-    const { data: sessionData, error: sessionError } = await supabase.auth.signInWithPassword({
-      email,
-      password: googleUserPassword
-    });
-
-    if (sessionError) {
-      console.error("Sign in failed for Google user:", sessionError.message);
-      return res.status(401).json({ error: "Authentication failed." });
-    }
-
     // Update last login
     await supabase
       .from("profiles")
       .update({ last_login: new Date().toISOString() })
-      .eq("id", userId);
+      .eq("id", user.id);
 
     res.json({
       message: "Login successful!",
       token: sessionData.session.access_token,
       user: {
-        id: userId,
+        id: user.id,
         email,
         fullName: profile?.full_name || fullName,
         role: userRole,

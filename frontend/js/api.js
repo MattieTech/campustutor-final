@@ -40,7 +40,7 @@ async function apiRequest(endpoint, method = "GET", body = null) {
     if (!response.ok) {
       console.warn(`API Error ${response.status}:`, data);
       // Check if session expired (401 Unauthorized)
-      if (response.status === 401) {
+      if (response.status === 401 && !endpoint.includes("/api/auth/")) {
         console.warn("⏰ Session expired. Logging out...");
         localStorage.removeItem("ct_token");
         localStorage.removeItem("ct_user");
