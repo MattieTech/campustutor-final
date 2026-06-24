@@ -624,11 +624,18 @@ router.get("/referrals/stats", authMiddleware, async (req, res) => {
             .from("profiles")
             .update({ id: userId })
             .eq("email", cleanEmail);
-          profile = retryProfile;
+          
+          // Re-query to get updated model
+          const { data: healed } = await supabase
+            .from("profiles")
+            .select("referral_code, referred_by")
+            .eq("id", userId)
+            .single();
+          profile = healed;
         }
       }
       if (!profile) {
-        return res.status(404).json({ error: "User profile not found." });
+        return res.status(404).json({ error: "User profile not found. Please log out and log in again." });
       }
     }
 
