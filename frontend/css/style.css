@@ -641,10 +641,10 @@ img{max-width:100%;display:block;}
     font-size:0.9rem;
     padding:10px 16px;
   }
-}
+  
   .main-content{padding:18px 16px 120px 16px;}
   .hero h1{font-size:2.1rem;}
-  .auth-card{padding:30px 22px;width:95%;max-width:none;}
+  .auth-card{padding:24px 16px;width:95%;max-width:none;}
   .modal{max-width:90vw;max-height:90vh;}
   .flashcard-grid{grid-template-columns:1fr;}
   .footer-bottom{flex-direction:column;text-align:center;}
@@ -656,6 +656,17 @@ img{max-width:100%;display:block;}
   input[type=number]{-moz-appearance:textfield;}
   .dashboard-grid-layout {
     grid-template-columns: 1fr !important;
+  }
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .pricing-options-row {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .plan-card-claude {
+    padding: 20px 16px !important;
   }
 }
 /* Medium screens (769px-1024px) */
