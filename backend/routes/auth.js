@@ -209,51 +209,59 @@ router.post("/google-login", async (req, res) => {
       return res.status(400).json({ error: "Google OAuth credential token is required." });
     }
 
-    // Sign in directly using Google ID token via Supabase
-    const { data: sessionData, error: sessionError } = await supabase.auth.signInWithIdToken({
-      provider: "google",
-      token: credential
-    });
-
-    if (sessionError || !sessionData || !sessionData.user) {
-      console.error("Sign in failed for Google user:", sessionError?.message || "No user returned");
-      return res.status(401).json({ error: "Google authentication failed. Please try again." });
+    // 1. Decode Google credential JWT to get email & name
+    let email, fullName;
+    try {
+      const payloadBase64 = credential.split(".")[1];
+      const payload = JSON.parse(Buffer.from(payloadBase64, "base64").toString("utf-8"));
+      email = payload.email;
+      fullName = payload.name || payload.given_name;
+    } catch (e) {
+      console.error("Failed to parse Google credential:", e);
+      return res.status(400).json({ error: "Invalid Google credential token." });
     }
 
-    const user = sessionData.user;
-    const email = user.email;
-    const fullName = user.user_metadata?.full_name || user.user_metadata?.name || email.split("@")[0];
+    if (!email) {
+      return res.status(400).json({ error: "Email is required for Google login." });
+    }
+    if (!fullName) {
+      fullName = email.split("@")[0];
+    }
 
-    // Check if user profile exists by user ID
+    // 2. Check if user profile exists in profiles table
     let { data: profile } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", user.id)
+      .eq("email", email.trim().toLowerCase())
       .single();
 
-    if (!profile) {
-      // Check if user profile exists by email (if they registered previously via email/password)
-      let { data: emailProfile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("email", email)
-        .single();
-
-      if (emailProfile) {
-        profile = emailProfile;
-      }
-    }
-
+    let userId;
     let userRole = "user";
     let userStatus = "active";
 
     if (!profile) {
+      // Create user in Supabase auth first
+      const tempPassword = crypto.randomBytes(16).toString("hex"); // Random secure password
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email,
+        password: tempPassword,
+        email_confirm: true,
+        user_metadata: { full_name: fullName }
+      });
+
+      if (authError) {
+        console.error("Google auth user creation error:", authError.message);
+        return res.status(400).json({ error: authError.message });
+      }
+
+      userId = authData.user.id;
       const refCode = generateReferralCode();
-      // Create new profile
+
+      // Create profile
       const { data: newProfile, error: profileError } = await supabase
         .from("profiles")
         .insert({
-          id: user.id,
+          id: userId,
           full_name: fullName,
           email: email,
           is_verified: true, // Google login is pre-verified
@@ -269,22 +277,16 @@ router.post("/google-login", async (req, res) => {
       }
       profile = newProfile;
     } else {
+      userId = profile.id;
       userRole = profile.role || "user";
       userStatus = profile.status || "active";
 
-      // Mark as verified if not already, and update the ID if they have the same email but different ID
-      const updates = { is_verified: true };
-      if (profile.id !== user.id) {
-        updates.id = user.id;
-      }
-      
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update(updates)
-        .eq("email", email);
-
-      if (updateError) {
-        console.error("Failed to update profile verification/ID:", updateError.message);
+      // If user profile exists but is not marked verified, set to true (since they authenticated via Google)
+      if (!profile.is_verified) {
+        await supabase
+          .from("profiles")
+          .update({ is_verified: true })
+          .eq("id", userId);
       }
     }
 
@@ -292,17 +294,40 @@ router.post("/google-login", async (req, res) => {
       return res.status(403).json({ error: "Your account has been suspended. Please contact support." });
     }
 
+    // 3. Generate a magic login link/OTP for this user via Supabase Admin API
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: "magiclink",
+      email: email
+    });
+
+    if (linkError || !linkData || !linkData.properties) {
+      console.error("Failed to generate login link for Google user:", linkError?.message);
+      return res.status(500).json({ error: "Failed to generate Google session link." });
+    }
+
+    // 4. Verify the OTP on the backend to sign them in and get a valid session token
+    const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
+      email,
+      token: linkData.properties.email_otp,
+      type: "magiclink"
+    });
+
+    if (sessionError || !sessionData || !sessionData.session) {
+      console.error("Failed to verify Google login session:", sessionError?.message);
+      return res.status(401).json({ error: "Failed to authenticate Google session." });
+    }
+
     // Update last login
     await supabase
       .from("profiles")
       .update({ last_login: new Date().toISOString() })
-      .eq("id", user.id);
+      .eq("id", userId);
 
     res.json({
       message: "Login successful!",
       token: sessionData.session.access_token,
       user: {
-        id: user.id,
+        id: userId,
         email,
         fullName: profile?.full_name || fullName,
         role: userRole,
