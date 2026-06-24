@@ -447,24 +447,25 @@ router.delete("/:id", authMiddleware, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: "Failed to delete document." });
   }
-});
-
-// ── GET USER STATS ────────────────────────────────────────────
-// Auto-heals missing profiles in the database
+});// Auto-heals missing profiles in the database
 async function ensureProfile(userId, email) {
   try {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
+    const cleanEmail = email ? email.trim().toLowerCase() : null;
+    let query = supabase.from("profiles").select("*");
+    if (userId) {
+      query = query.eq("id", userId);
+    } else if (cleanEmail) {
+      query = query.ilike("email", cleanEmail);
+    }
+
+    const { data: profile } = await query.maybeSingle();
 
     if (!profile) {
       const refCode = Math.random().toString(36).substring(2, 8).toUpperCase();
       await supabase.from("profiles").insert({
         id: userId,
         full_name: email ? email.split("@")[0] : "Student",
-        email: email || `${userId}@campustutor.com`,
+        email: cleanEmail || `${userId}@campustutor.com`,
         plan: "free",
         is_verified: true,
         referral_code: refCode,
@@ -476,13 +477,14 @@ async function ensureProfile(userId, email) {
       await supabase
         .from("profiles")
         .update({ referral_code: refCode })
-        .eq("id", userId);
-      console.log(`✅ Added referral code to existing profile for user ${userId}`);
+        .eq("id", profile.id);
+      console.log(`✅ Added referral code to existing profile for user ${profile.id}`);
     }
   } catch (err) {
     console.error("Failed to ensure profile:", err.message);
   }
 }
+
 
 router.get("/stats/:userId", authMiddleware, async (req, res) => {
   try {
@@ -502,9 +504,34 @@ router.get("/stats/:userId", authMiddleware, async (req, res) => {
       console.error("Failed to automatically update streak on stats load:", streakErr.message);
     }
 
-    const stats = await getUserStats(userId);
+    let stats = null;
+    try {
+      stats = await getUserStats(userId);
+    } catch (xpErr) {
+      console.error("XP utility fetch error:", xpErr.message);
+    }
+
     if (!stats) {
-      return res.status(500).json({ error: "Failed to fetch stats." });
+      // Return a basic mock stats response as a safe fallback to prevent page crashing
+      const cleanEmail = req.user.email ? req.user.email.trim().toLowerCase() : "";
+      const { data: fallbackProfile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .maybeSingle();
+
+      stats = {
+        level: fallbackProfile?.level || 1,
+        xp: fallbackProfile?.xp || 0,
+        xpInLevel: (fallbackProfile?.xp || 0) % 100,
+        xpForNextLevel: 100,
+        xpProgressPercent: (fallbackProfile?.xp || 0) % 100,
+        streak: fallbackProfile?.streak || 0,
+        documentsCount: 0,
+        activityCount: 0,
+        plan: fallbackProfile?.plan || 'free',
+        is_verified: fallbackProfile?.is_verified || true
+      };
     }
 
     res.json(stats);
@@ -580,9 +607,27 @@ router.get("/referrals/stats", authMiddleware, async (req, res) => {
       .from("profiles")
       .select("referral_code, referred_by")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
     if (profileErr || !profile) {
+      // Retry lookup using clean email as backup
+      const cleanEmail = req.user.email ? req.user.email.trim().toLowerCase() : null;
+      if (cleanEmail) {
+        const { data: retryProfile } = await supabase
+          .from("profiles")
+          .select("referral_code, referred_by")
+          .ilike("email", cleanEmail)
+          .maybeSingle();
+        if (retryProfile) {
+          return res.json({
+            referral_code: retryProfile.referral_code,
+            referee_count: 0,
+            balance: 0,
+            total_withdrawn: 0,
+            withdrawals: [],
+          });
+        }
+      }
       return res.status(404).json({ error: "User profile not found." });
     }
 
