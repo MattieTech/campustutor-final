@@ -467,7 +467,7 @@ async function ensureProfile(userId, email) {
         full_name: email ? email.split("@")[0] : "Student",
         email: cleanEmail || `${userId}@campustutor.com`,
         plan: "free",
-        is_verified: true,
+        is_verified: false,
         referral_code: refCode,
         created_at: new Date().toISOString(),
       });
@@ -615,20 +615,21 @@ router.get("/referrals/stats", authMiddleware, async (req, res) => {
       if (cleanEmail) {
         const { data: retryProfile } = await supabase
           .from("profiles")
-          .select("referral_code, referred_by")
+          .select("referral_code, referred_by, id")
           .ilike("email", cleanEmail)
           .maybeSingle();
         if (retryProfile) {
-          return res.json({
-            referral_code: retryProfile.referral_code,
-            referee_count: 0,
-            balance: 0,
-            total_withdrawn: 0,
-            withdrawals: [],
-          });
+          // If we found it by email but ID didn't match, heal it
+          await supabase
+            .from("profiles")
+            .update({ id: userId })
+            .eq("email", cleanEmail);
+          profile = retryProfile;
         }
       }
-      return res.status(404).json({ error: "User profile not found." });
+      if (!profile) {
+        return res.status(404).json({ error: "User profile not found." });
+      }
     }
 
     // 2. Count total referees (people referred by user)
