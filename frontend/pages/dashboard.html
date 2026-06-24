@@ -108,7 +108,10 @@
         <i class="fa-solid fa-triangle-exclamation" style="color: var(--orange); font-size: 1.15rem;"></i>
         <span style="font-weight: 600; font-size: 0.9rem; color: var(--label);">Your email address is not verified. Please verify your account to unlock all features.</span>
       </div>
-      <button onclick="openVerificationModal()" class="btn btn-warning btn-sm" style="background: var(--orange); border: none; font-weight: 700; color: #fff; padding: 6px 14px; border-radius: 20px; cursor: pointer;">Verify Email</button>
+      <div style="display: flex; gap: 8px;">
+        <button onclick="openVerificationModal()" class="btn btn-warning btn-sm" style="background: var(--orange); border: none; font-weight: 700; color: #fff; padding: 6px 14px; border-radius: 20px; cursor: pointer;">Verify Email</button>
+        <button onclick="document.getElementById('verificationBanner').style.display='none'" class="btn btn-ghost btn-sm" style="border-radius: 20px; padding: 6px 14px; font-weight: 600;">Verify Later</button>
+      </div>
     </div>
 
     <div class="page-header">

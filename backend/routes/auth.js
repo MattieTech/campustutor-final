@@ -501,8 +501,7 @@ router.post("/reset-request", async (req, res) => {
       .maybeSingle();
 
     if (error || !profile) {
-      // Don't leak registered accounts, but return generic success/instruction
-      return res.json({ message: "If your email is registered, you will receive a reset code." });
+      return res.status(404).json({ error: "No account found with this email address." });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();

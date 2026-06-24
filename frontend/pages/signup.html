@@ -47,19 +47,7 @@
     <button type="submit" class="btn btn-primary btn-full btn-lg" id="signupBtn">Create Free Account →</button>
   </form>
 
-  <!-- Verification OTP Form (hidden by default) -->
-  <form id="verifyForm" style="display: none;">
-    <div style="text-align: center; margin-bottom: 20px;">
-      <i class="fa-solid fa-envelope-circle-check" style="font-size: 2.5rem; color: var(--blue);"></i>
-      <h3 style="margin-top: 10px; font-weight: 700;">Verify Your Email</h3>
-      <p style="font-size: 0.8rem; color: var(--label3); line-height: 1.4; margin-top: 4px;">We've sent a 6-digit confirmation code to your email. Enter it below to activate your account.</p>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Verification OTP</label>
-      <input class="form-input" type="text" id="verificationOtp" placeholder="123456" required maxlength="6" style="text-align: center; font-size: 1.3rem; letter-spacing: 4px; font-weight: 700;"/>
-    </div>
-    <button type="submit" class="btn btn-success btn-full btn-lg" id="verifyBtn">Verify & Activate Account</button>
-  </form>
+
 
   <div class="auth-divider">or</div>
   
@@ -112,32 +100,16 @@ document.getElementById('signupForm').addEventListener('submit',async(e)=>{
     pwd,
     refCodeVal || null
   );
-  if(error){err.textContent=error;err.style.display='block';btn.disabled=false;btn.textContent='Create Free Account →';return;}
-  
-  ok.innerHTML='<i class="fa-solid fa-envelope"></i> Account created! Please check your email for verification OTP.';ok.style.display='block';
-  
-  // Transition to Verification Mode
-  document.getElementById('signupForm').style.display = 'none';
-  document.getElementById('verifyForm').style.display = 'block';
-});
-
-document.getElementById('verifyForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const err=document.getElementById('errMsg'),ok=document.getElementById('okMsg');
-  err.style.display='none'; ok.style.display='none';
-  const otp = document.getElementById('verificationOtp').value.trim();
-  const btn = document.getElementById('verifyBtn');
-  btn.disabled = true; btn.textContent = 'Verifying...';
-
-  const { data, error } = await apiRequest('/api/auth/verify', 'POST', { email: registeredEmail, otp });
-  if (error) {
-    err.textContent = error; err.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Verify & Activate Account';
+  const loginRes = await apiLogin(registeredEmail, pwd);
+  if (loginRes.error) {
+    // If auto login fails for some reason, redirect them to login page manually
+    ok.innerHTML = '<i class="fa-solid fa-circle-check"></i> Account created successfully! Redirecting to login...'; ok.style.display = 'block';
+    setTimeout(() => { window.location.href = '/pages/login.html'; }, 1500);
     return;
   }
-
-  ok.innerHTML = '<i class="fa-solid fa-circle-check"></i> Email verified successfully! Redirecting to login...'; ok.style.display = 'block';
-  setTimeout(() => { window.location.href = '/pages/login.html'; }, 1500);
+  
+  ok.innerHTML = '<i class="fa-solid fa-circle-check"></i> Account created successfully! Redirecting to dashboard...'; ok.style.display = 'block';
+  setTimeout(() => { window.location.href = '/pages/dashboard.html'; }, 1000);
 });
 
 let googleClientId = "";
