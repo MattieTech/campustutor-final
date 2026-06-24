@@ -307,7 +307,8 @@ router.post("/google-login", async (req, res) => {
         fullName: profile?.full_name || fullName,
         role: userRole,
         status: userStatus,
-        plan: profile?.plan || 'free'
+        plan: profile?.plan || 'free',
+        isVerified: true
       }
     });
   } catch (err) {
@@ -349,13 +350,6 @@ router.post("/login", async (req, res) => {
       console.log("Note: profiles table query failed");
     }
 
-    // Check if user is verified
-    if (profile && profile.is_verified === false) {
-      return res
-        .status(403)
-        .json({ error: "Your email has not been verified yet. Please verify using the OTP sent to your email.", unverified: true });
-    }
-
     // Check if user is banned
     const status = profile?.status || data.user.app_metadata?.status;
     if (status === "banned") {
@@ -389,11 +383,154 @@ router.post("/login", async (req, res) => {
         role: userRole,
         status: userStatus,
         plan: profile?.plan || "free",
+        isVerified: profile ? profile.is_verified : true,
       },
     });
   } catch (err) {
     console.error("Login error:", err.message);
     res.status(500).json({ error: "Login failed. Please try again." });
+  }
+});
+
+// ── RESEND VERIFICATION OTP ──────────────────────────────────
+router.post("/resend-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: "Email is required." });
+    }
+
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("email", email)
+      .single();
+
+    if (error || !profile) {
+      return res.status(400).json({ error: "User profile not found." });
+    }
+
+    if (profile.is_verified) {
+      return res.json({ message: "Email is already verified." });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+    await supabase
+      .from("profiles")
+      .update({
+        verification_otp: otp,
+        verification_otp_expires: otpExpires
+      })
+      .eq("id", profile.id);
+
+    await sendVerificationEmail(email, otp);
+
+    res.json({ message: "A new verification code has been sent to your email." });
+  } catch (err) {
+    console.error("Resend OTP error:", err);
+    res.status(500).json({ error: "Failed to resend verification code." });
+  }
+});
+
+// ── PASSWORD RESET REQUEST ────────────────────────────────────
+router.post("/reset-request", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: "Email is required." });
+    }
+
+    // Check if profile exists
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("email", email.trim().toLowerCase())
+      .single();
+
+    if (!profile) {
+      // Don't leak registered accounts, but return generic success/instruction
+      return res.json({ message: "If your email is registered, you will receive a reset code." });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 mins validity
+
+    await supabase
+      .from("profiles")
+      .update({
+        verification_otp: otp, // Reuse verification_otp or store in a specific column. Since we alter profile, we can reuse or just use verification_otp
+        verification_otp_expires: otpExpires
+      })
+      .eq("id", profile.id);
+
+    const mailOptions = {
+      from: process.env.SMTP_USER || process.env.EMAIL_USER || "no-reply@campustutor.com",
+      to: email,
+      subject: "Reset Your CampusTutor Password",
+      text: `Your password reset code is: ${otp}\n\nThis code will expire in 15 minutes.`,
+      html: `<p>Your password reset code is: <strong>${otp}</strong></p><p>This code will expire in 15 minutes.</p>`,
+    };
+    await transporter.sendMail(mailOptions);
+
+    res.json({ message: "Reset code has been sent to your email." });
+  } catch (err) {
+    console.error("Reset request error:", err);
+    res.status(500).json({ error: "Password reset request failed." });
+  }
+});
+
+// ── PASSWORD RESET CONFIRM ────────────────────────────────────
+router.post("/reset-confirm", async (req, res) => {
+  try {
+    const { email, otp, password } = req.body;
+    if (!email || !otp || !password) {
+      return res.status(400).json({ error: "Email, OTP, and password are required." });
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("email", email.trim().toLowerCase())
+      .single();
+
+    if (!profile) {
+      return res.status(400).json({ error: "Invalid request details." });
+    }
+
+    if (profile.verification_otp !== otp) {
+      return res.status(400).json({ error: "Invalid reset code." });
+    }
+
+    if (new Date(profile.verification_otp_expires) < new Date()) {
+      return res.status(400).json({ error: "Reset code has expired. Please request a new code." });
+    }
+
+    // Update password in Supabase Auth
+    const { error: authError } = await supabase.auth.admin.updateUserById(profile.id, {
+      password: password
+    });
+
+    if (authError) {
+      console.error("Auth password reset error:", authError.message);
+      return res.status(400).json({ error: authError.message });
+    }
+
+    // Clear OTP details and auto-verify account since they successfully used their verified email
+    await supabase
+      .from("profiles")
+      .update({
+        is_verified: true,
+        verification_otp: null,
+        verification_otp_expires: null
+      })
+      .eq("id", profile.id);
+
+    res.json({ message: "Password has been reset successfully! You can now log in." });
+  } catch (err) {
+    console.error("Reset confirm error:", err);
+    res.status(500).json({ error: "Failed to reset password." });
   }
 });
 

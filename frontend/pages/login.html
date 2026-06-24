@@ -28,7 +28,10 @@
       <input class="form-input" type="email" id="email" placeholder="you@school.edu.ng" required autocomplete="email"/>
     </div>
     <div class="form-group">
-      <label class="form-label">Password</label>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <label class="form-label" style="margin:0;">Password</label>
+        <a href="/pages/reset.html" style="font-size:0.8rem;color:var(--blue);text-decoration:none;font-weight:600;">Forgot Password?</a>
+      </div>
       <input class="form-input" type="password" id="password" placeholder="Your password" required autocomplete="current-password"/>
     </div>
     <button type="submit" class="btn btn-primary btn-full btn-lg" id="loginBtn">Log In →</button>

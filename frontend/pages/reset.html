@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Reset Password — CampusTutor AI</title>
+<link rel="stylesheet" href="/css/style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body class="auth-page">
+<div class="auth-orb1"></div>
+<div class="auth-orb2"></div>
+<div class="auth-card">
+  <div style="position:absolute;top:16px;right:16px;">
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+  </div>
+  <div class="auth-brand">
+    <div class="auth-brand-icon"><i class="fa-solid fa-key"></i></div>
+    <h1><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></h1>
+    <p>Reset your account password.</p>
+  </div>
+
+  <div class="alert alert-error" id="errMsg" style="display:none;"></div>
+  <div class="alert alert-success" id="okMsg" style="display:none;"></div>
+
+  <!-- Step 1: Request Password Reset -->
+  <form id="requestForm">
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input class="form-input" type="email" id="email" placeholder="you@school.edu.ng" required autocomplete="email"/>
+    </div>
+    <button type="submit" class="btn btn-primary btn-full btn-lg" id="requestBtn">Send Reset Code →</button>
+  </form>
+
+  <!-- Step 2: Verify OTP and Reset Password -->
+  <form id="confirmForm" style="display:none;">
+    <div class="form-group">
+      <label class="form-label">6-Digit Reset Code</label>
+      <input class="form-input" type="text" id="resetOtp" placeholder="123456" required maxlength="6" style="text-align:center;font-size:1.2rem;font-weight:700;letter-spacing:2px;"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">New Password</label>
+      <input class="form-input" type="password" id="newPassword" placeholder="At least 6 characters" required minlength="6" autocomplete="new-password"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Confirm New Password</label>
+      <input class="form-input" type="password" id="confirmNewPassword" placeholder="Repeat your new password" required minlength="6" autocomplete="new-password"/>
+    </div>
+    <button type="submit" class="btn btn-success btn-full btn-lg" id="confirmBtn">Reset Password</button>
+  </form>
+
+  <div class="auth-footer" style="margin-top:20px;"><a href="/pages/login.html">← Back to Log In</a></div>
+  <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:0.5px solid var(--sep);font-size:0.73rem;color:var(--label4);"><i class="fa-solid fa-bolt"></i> Developed & Maintained by MattieTech</div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+const t = localStorage.getItem('ct_theme')||'light';
+document.documentElement.setAttribute('data-theme',t);
+document.getElementById('themeBtn').textContent = t==='dark'?'☀️':'🌙';
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  const c=document.documentElement.getAttribute('data-theme');
+  const n=c==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',n);
+  localStorage.setItem('ct_theme',n);
+  document.getElementById('themeBtn').textContent=n==='dark'?'☀️':'🌙';
+});
+
+let targetEmail = '';
+
+document.getElementById('requestForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  const err = document.getElementById('errMsg'), ok = document.getElementById('okMsg');
+  err.style.display = 'none'; ok.style.display = 'none';
+  
+  const btn = document.getElementById('requestBtn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+
+  const { data, error } = await apiRequest('/api/auth/reset-request', 'POST', { email });
+  if (error) {
+    err.textContent = error; err.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Send Reset Code →';
+    return;
+  }
+
+  targetEmail = email;
+  ok.innerHTML = '<i class="fa-solid fa-envelope"></i> Reset OTP has been sent to your email. Check your inbox!';
+  ok.style.display = 'block';
+
+  document.getElementById('requestForm').style.display = 'none';
+  document.getElementById('confirmForm').style.display = 'block';
+});
+
+document.getElementById('confirmForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const otp = document.getElementById('resetOtp').value.trim();
+  const pwd = document.getElementById('newPassword').value;
+  const confirmPwd = document.getElementById('confirmNewPassword').value;
+  
+  const err = document.getElementById('errMsg'), ok = document.getElementById('okMsg');
+  err.style.display = 'none'; ok.style.display = 'none';
+
+  if (pwd !== confirmPwd) {
+    err.textContent = 'Passwords do not match.'; err.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true; btn.textContent = 'Resetting...';
+
+  const { data, error } = await apiRequest('/api/auth/reset-confirm', 'POST', {
+    email: targetEmail,
+    otp,
+    password: pwd
+  });
+
+  if (error) {
+    err.textContent = error; err.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Reset Password';
+    return;
+  }
+
+  ok.innerHTML = '<i class="fa-solid fa-circle-check"></i> Password reset successful! Redirecting to login...';
+  ok.style.display = 'block';
+  setTimeout(() => { window.location.href = '/pages/login.html'; }, 1800);
+});
+</script>
+</body>
+</html>

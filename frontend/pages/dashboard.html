@@ -102,6 +102,15 @@
 
 
   <main class="main-content">
+    <!-- Email Verification Pending Banner -->
+    <div id="verificationBanner" style="display:none; margin-bottom: 20px; padding: 14px 18px; border-radius: var(--r); background: rgba(255, 159, 67, 0.1); border-left: 4px solid var(--orange); justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-triangle-exclamation" style="color: var(--orange); font-size: 1.15rem;"></i>
+        <span style="font-weight: 600; font-size: 0.9rem; color: var(--label);">Your email address is not verified. Please verify your account to unlock all features.</span>
+      </div>
+      <button onclick="openVerificationModal()" class="btn btn-warning btn-sm" style="background: var(--orange); border: none; font-weight: 700; color: #fff; padding: 6px 14px; border-radius: 20px; cursor: pointer;">Verify Email</button>
+    </div>
+
     <div class="page-header">
       <h1 id="welcomeMsg">Welcome back, Student <i class="fa-solid fa-graduation-cap"></i></h1>
       <p>Your study hub — track progress, manage documents, stay motivated.</p>
@@ -382,10 +391,15 @@ if (urlParams.get('payment') === 'success') {
 }
 
 const user=getUser();
-if(user && user.fullName){
-  const firstName = user.fullName.split(' ')[0];
-  document.getElementById('userGreeting').innerHTML=`Hi, ${firstName} <i class="fa-solid fa-hand"></i>`;
-  document.getElementById('welcomeMsg').innerHTML=`Welcome back, ${firstName} <i class="fa-solid fa-graduation-cap"></i>`;
+if(user){
+  if(user.fullName){
+    const firstName = user.fullName.split(' ')[0];
+    document.getElementById('userGreeting').innerHTML=`Hi, ${firstName} <i class="fa-solid fa-hand"></i>`;
+    document.getElementById('welcomeMsg').innerHTML=`Welcome back, ${firstName} <i class="fa-solid fa-graduation-cap"></i>`;
+  }
+  if(user.isVerified === false){
+    document.getElementById('verificationBanner').style.display = 'flex';
+  }
 }
 
 try {
@@ -1114,6 +1128,61 @@ function initAnnouncementModal(){
 }
 
 document.addEventListener('DOMContentLoaded', initAnnouncementModal);
+
+// ── EMAIL VERIFICATION FUNCTIONS ──────────────────────────────
+function openVerificationModal() {
+  document.getElementById('verifyModal').style.display = 'flex';
+  document.getElementById('modalVerifyErr').style.display = 'none';
+}
+
+function closeVerificationModal() {
+  document.getElementById('verifyModal').style.display = 'none';
+}
+
+async function resendVerificationOtp() {
+  const btn = document.getElementById('resendOtpBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  
+  const { data, error } = await apiRequest('/api/auth/resend-otp', 'POST', { email: user.email });
+  btn.disabled = false;
+  btn.textContent = 'Resend OTP';
+
+  if (error) {
+    showToast(error, 'error');
+    return;
+  }
+  showToast('A new OTP verification code has been sent to your email!', 'success');
+}
+
+document.getElementById('modalVerifyForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const otp = document.getElementById('modalVerificationOtp').value.trim();
+  const errDiv = document.getElementById('modalVerifyErr');
+  const btn = document.getElementById('modalVerifySubmitBtn');
+  errDiv.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Verifying...';
+
+  const { data, error } = await apiRequest('/api/auth/verify', 'POST', { email: user.email, otp });
+  if (error) {
+    errDiv.textContent = error;
+    errDiv.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Verify & Activate';
+    return;
+  }
+
+  showToast('Email verified successfully! Thank you. <i class="fa-solid fa-circle-check"></i>', 'success');
+  
+  // Update local storage
+  user.isVerified = true;
+  localStorage.setItem('ct_user', JSON.stringify(user));
+
+  // Hide modal and banner
+  closeVerificationModal();
+  document.getElementById('verificationBanner').style.display = 'none';
+});
 </script>
 
 <div class="announcement-overlay" id="announcementOverlay">
@@ -1124,6 +1193,29 @@ document.addEventListener('DOMContentLoaded', initAnnouncementModal);
       <button class="announcement-btn announcement-btn-primary" id="announcementJoin"><i class="fa-solid fa-circle" style="color: #25d366;"></i> Join WhatsApp Updates</button>
       <button class="announcement-btn announcement-btn-dismiss" id="announcementDismiss">Close</button>
     </div>
+  </div>
+</div>
+
+<!-- Email Verification Modal -->
+<div id="verifyModal" class="performance-modal-overlay" style="display:none; z-index: 10001;">
+  <div class="card liquid-glass-card" style="max-width:400px; width:100%; border-radius:24px; padding:28px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: var(--gshadow-lg);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h3 style="font-weight:800; font-size:1.1rem; margin:0; color: var(--label);"><i class="fa-solid fa-envelope-circle-check" style="color: var(--blue); margin-right: 8px;"></i> Verify Your Email</h3>
+      <button onclick="closeVerificationModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--label3);">✕</button>
+    </div>
+    <div class="alert alert-error" id="modalVerifyErr" style="display:none; margin-bottom:16px;"></div>
+    <form id="modalVerifyForm">
+      <p style="font-size:0.82rem; color:var(--label3); line-height:1.4; margin-top:0; margin-bottom:16px;">
+        We've sent a 6-digit confirmation code to your email. Enter it below to verify your account.
+      </p>
+      <div class="form-group" style="margin-bottom:20px;">
+        <input class="form-input" type="text" id="modalVerificationOtp" placeholder="123456" required maxlength="6" style="text-align: center; font-size: 1.4rem; letter-spacing: 4px; font-weight: 700;"/>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full btn-lg" id="modalVerifySubmitBtn">Verify & Activate</button>
+      <div style="text-align:center; margin-top:14px; font-size:0.8rem; color: var(--label2);">
+        Didn't receive a code? <button type="button" onclick="resendVerificationOtp()" id="resendOtpBtn" style="background:none; border:none; color:var(--blue); font-weight:700; cursor:pointer; padding:0;">Resend OTP</button>
+      </div>
+    </form>
   </div>
 </div>
 
