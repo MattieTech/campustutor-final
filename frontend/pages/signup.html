@@ -100,9 +100,14 @@ document.getElementById('signupForm').addEventListener('submit',async(e)=>{
     pwd,
     refCodeVal || null
   );
+  if (error) {
+    err.textContent = error; err.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Create Free Account →';
+    return;
+  }
+  
   const loginRes = await apiLogin(registeredEmail, pwd);
   if (loginRes.error) {
-    // If auto login fails for some reason, redirect them to login page manually
     ok.innerHTML = '<i class="fa-solid fa-circle-check"></i> Account created successfully! Redirecting to login...'; ok.style.display = 'block';
     setTimeout(() => { window.location.href = '/pages/login.html'; }, 1500);
     return;
