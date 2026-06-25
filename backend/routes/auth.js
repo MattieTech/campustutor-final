@@ -34,12 +34,9 @@ async function sendVerificationEmail(email, otp) {
     text: `Your verification code is: ${otp}\n\nThis code will expire in 10 minutes.`,
     html: `<p>Your verification code is: <strong>${otp}</strong></p><p>This code will expire in 10 minutes.</p>`,
   };
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`✅ Verification email sent to ${email}`);
-  } catch (error) {
-    console.error("❌ Error sending verification email:", error);
-  }
+  // Propagate errors to the caller so they are explicitly handled in endpoints
+  await transporter.sendMail(mailOptions);
+  console.log(`✅ Verification email sent to ${email}`);
 }
 
 // Helper to generate referral code
@@ -478,7 +475,7 @@ router.post("/resend-otp", async (req, res) => {
     res.json({ message: "A new verification code has been sent to your email." });
   } catch (err) {
     console.error("Resend OTP error:", err);
-    res.status(500).json({ error: "Failed to resend verification code." });
+    res.status(500).json({ error: `Verification code send failed: ${err.message || err}` });
   }
 });
 
@@ -526,7 +523,7 @@ router.post("/reset-request", async (req, res) => {
     res.json({ message: "Reset code has been sent to your email." });
   } catch (err) {
     console.error("Reset request error:", err);
-    res.status(500).json({ error: "Password reset request failed." });
+    res.status(500).json({ error: `Password reset send failed: ${err.message || err}` });
   }
 });
 
