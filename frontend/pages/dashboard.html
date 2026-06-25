@@ -405,21 +405,6 @@ if(user){
   }
 }
 
-try {
-  loadUserStats();
-} catch (e) {
-  console.error("Failed to load user stats:", e);
-}
-try {
-  loadLeaderboard();
-} catch (e) {
-  console.error("Failed to load leaderboard:", e);
-}
-try {
-  loadTriviaQuest();
-} catch (e) {
-  console.error("Failed to load trivia quest:", e);
-}
 
 async function loadUserStats(){
   const userId = user?.id;
@@ -1130,7 +1115,26 @@ function initAnnouncementModal(){
   });
 }
 
-document.addEventListener('DOMContentLoaded', initAnnouncementModal);
+function initDashboard() {
+  initAnnouncementModal();
+  try {
+    loadUserStats();
+  } catch (e) {
+    console.error("Failed to load user stats:", e);
+  }
+  try {
+    loadLeaderboard();
+  } catch (e) {
+    console.error("Failed to load leaderboard:", e);
+  }
+  try {
+    loadTriviaQuest();
+  } catch (e) {
+    console.error("Failed to load trivia quest:", e);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initDashboard);
 
 // ── EMAIL VERIFICATION FUNCTIONS ──────────────────────────────
 function openVerificationModal() {
