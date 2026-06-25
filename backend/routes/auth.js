@@ -94,35 +94,46 @@ router.post("/signup", async (req, res) => {
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
     // 3. Save additional profile info
-    try {
-      await supabase.from("profiles").insert({
-        id: data.user.id,
-        full_name: fullName,
-        email: cleanEmail,
-        plan: "free",
-        is_verified: false,
-        verification_otp: otp,
-        verification_otp_expires: otpExpires,
-        referral_code: userReferralCode,
-        referred_by: referredById,
-        created_at: new Date().toISOString(),
-      });
-    } catch (profileErr) {
-      console.warn("⚠️ Profile table operation failed:", profileErr.message);
+    const { error: profileError } = await supabase.from("profiles").insert({
+      id: data.user.id,
+      full_name: fullName,
+      email: cleanEmail,
+      plan: "free",
+      is_verified: false,
+      verification_otp: otp,
+      verification_otp_expires: otpExpires,
+      referral_code: userReferralCode,
+      referred_by: referredById,
+      created_at: new Date().toISOString(),
+    });
+
+    if (profileError) {
+      console.error("❌ Profile table insertion failed:", profileError);
+      // Clean up the auth user to prevent dangling auth user
+      try {
+        await supabase.auth.admin.deleteUser(data.user.id);
+      } catch (delErr) {
+        console.error("⚠️ Failed to clean up auth user after profile failure:", delErr.message);
+      }
+      return res.status(400).json({ error: `Failed to create user profile in database: ${profileError.message}` });
     }
 
-
+    // 4. Send verification email
+    try {
+      await sendVerificationEmail(cleanEmail, otp);
+    } catch (mailErr) {
+      console.warn("⚠️ Verification email send failed during signup:", mailErr.message || mailErr);
+    }
 
     // 5. Log the signup activity
-    try {
-      await supabase.from("user_activity").insert({
-        user_id: data.user.id,
-        action: "user_signup",
-        details: `New user registered: ${fullName}`,
-        created_at: new Date().toISOString(),
-      });
-    } catch (actErr) {
-      console.log("⚠️ Could not log signup activity:", actErr.message);
+    const { error: actErr } = await supabase.from("user_activity").insert({
+      user_id: data.user.id,
+      action: "user_signup",
+      details: `New user registered: ${fullName}`,
+      created_at: new Date().toISOString(),
+    });
+    if (actErr) {
+      console.warn("⚠️ Could not log signup activity:", actErr.message);
     }
 
     res.status(201).json({
@@ -131,7 +142,7 @@ router.post("/signup", async (req, res) => {
     });
   } catch (err) {
     console.error("Signup error:", err.message);
-    res.status(500).json({ error: "Signup failed. Please try again." });
+    res.status(500).json({ error: `Signup failed: ${err.message}` });
   }
 });
 
@@ -152,7 +163,12 @@ router.post("/verify", async (req, res) => {
       .ilike("email", cleanEmail)
       .maybeSingle();
 
-    if (error || !profile) {
+    if (error) {
+      console.error("❌ Verify OTP profile query database error:", error);
+      return res.status(500).json({ error: `Database error: ${error.message || error}` });
+    }
+
+    if (!profile) {
       return res.status(404).json({ error: `Account profile not found for ${cleanEmail}. Please ensure your email is correct or sign up again.` });
     }
 
@@ -179,7 +195,8 @@ router.post("/verify", async (req, res) => {
       .eq("id", profile.id);
 
     if (updateError) {
-      return res.status(500).json({ error: "Failed to update profile verification status." });
+      console.error("❌ Verify OTP update database error:", updateError);
+      return res.status(500).json({ error: `Failed to update profile verification status: ${updateError.message}` });
     }
 
     // Create referrals table entry if referred_by is set
@@ -381,16 +398,14 @@ router.post("/login", async (req, res) => {
     }
 
     // Try to get user profile
-    let profile = null;
-    try {
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("full_name, role, status, is_verified, plan")
-        .eq("id", data.user.id)
-        .single();
-      profile = profileData;
-    } catch (err) {
-      console.log("Note: profiles table query failed");
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("full_name, role, status, is_verified, plan")
+      .eq("id", data.user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error("❌ Login profiles query failed:", profileError);
     }
 
     // Check if user is banned
@@ -402,13 +417,14 @@ router.post("/login", async (req, res) => {
     }
 
     // Update last login
-    try {
-      await supabase
+    if (profile) {
+      const { error: loginUpdateErr } = await supabase
         .from("profiles")
         .update({ last_login: new Date().toISOString() })
         .eq("id", data.user.id);
-    } catch (err) {
-      console.log("Note: Could not update last_login");
+      if (loginUpdateErr) {
+        console.error("❌ Could not update last_login:", loginUpdateErr);
+      }
     }
 
     const userRole = data.user.app_metadata?.role || profile?.role || "user";
@@ -451,7 +467,12 @@ router.post("/resend-otp", async (req, res) => {
       .ilike("email", cleanEmail)
       .maybeSingle();
 
-    if (error || !profile) {
+    if (error) {
+      console.error("❌ Resend OTP database error:", error);
+      return res.status(500).json({ error: `Database error: ${error.message || error}` });
+    }
+
+    if (!profile) {
       return res.status(404).json({ error: `Account profile not found for ${cleanEmail}. Please ensure your email is correct or sign up again.` });
     }
 
@@ -462,13 +483,18 @@ router.post("/resend-otp", async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-    await supabase
+    const { error: updateError } = await supabase
       .from("profiles")
       .update({
         verification_otp: otp,
         verification_otp_expires: otpExpires
       })
       .eq("id", profile.id);
+
+    if (updateError) {
+      console.error("❌ Resend OTP update database error:", updateError);
+      return res.status(500).json({ error: `Failed to update verification code: ${updateError.message}` });
+    }
 
     await sendVerificationEmail(cleanEmail, otp);
 
@@ -496,20 +522,30 @@ router.post("/reset-request", async (req, res) => {
       .ilike("email", cleanEmail)
       .maybeSingle();
 
-    if (error || !profile) {
+    if (error) {
+      console.error("❌ Reset request database error:", error);
+      return res.status(500).json({ error: `Database error: ${error.message || error}` });
+    }
+
+    if (!profile) {
       return res.status(404).json({ error: "No account found with this email address." });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 mins validity
 
-    await supabase
+    const { error: updateError } = await supabase
       .from("profiles")
       .update({
         verification_otp: otp, // Reuse verification_otp
         verification_otp_expires: otpExpires
       })
       .eq("id", profile.id);
+
+    if (updateError) {
+      console.error("❌ Reset request update database error:", updateError);
+      return res.status(500).json({ error: `Failed to update reset code: ${updateError.message}` });
+    }
 
     const mailOptions = {
       from: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER || "no-reply@campustutor.com",
@@ -543,8 +579,13 @@ router.post("/reset-confirm", async (req, res) => {
       .ilike("email", cleanEmail)
       .maybeSingle();
 
-    if (error || !profile) {
-      return res.status(400).json({ error: "Invalid request details." });
+    if (error) {
+      console.error("❌ Reset confirm database error:", error);
+      return res.status(500).json({ error: `Database error: ${error.message || error}` });
+    }
+
+    if (!profile) {
+      return res.status(404).json({ error: "No account found with this email address." });
     }
 
     if (profile.verification_otp !== otp) {
