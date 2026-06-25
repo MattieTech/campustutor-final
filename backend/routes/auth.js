@@ -153,14 +153,14 @@ router.post("/verify", async (req, res) => {
       .from("profiles")
       .select("*")
       .ilike("email", cleanEmail)
-      .single();
+      .maybeSingle();
 
     if (error || !profile) {
-      return res.status(400).json({ error: "User profile not found." });
+      return res.status(404).json({ error: `Account profile not found for ${cleanEmail}. Please ensure your email is correct or sign up again.` });
     }
 
     if (profile.is_verified) {
-      return res.json({ message: "Email is already verified." });
+      return res.json({ message: "This email address is already verified." });
     }
 
     if (profile.verification_otp !== otp) {
@@ -455,11 +455,11 @@ router.post("/resend-otp", async (req, res) => {
       .maybeSingle();
 
     if (error || !profile) {
-      return res.status(400).json({ error: "User profile not found." });
+      return res.status(404).json({ error: `Account profile not found for ${cleanEmail}. Please ensure your email is correct or sign up again.` });
     }
 
     if (profile.is_verified) {
-      return res.json({ message: "Email is already verified." });
+      return res.json({ message: "This email address is already verified." });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
