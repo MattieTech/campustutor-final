@@ -681,7 +681,10 @@ router.get("/diagnostic", async (req, res) => {
       searchedEmail: email,
       profileFound: !!profile,
       profileData: profile || null,
-      profileError: profileErr ? profileErr.message : null
+      profileError: profileErr ? profileErr.message : null,
+      smtpHost: process.env.SMTP_HOST || "NOT SET",
+      smtpPort: process.env.SMTP_PORT || "NOT SET",
+      smtpUser: process.env.SMTP_USER || "NOT SET"
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
