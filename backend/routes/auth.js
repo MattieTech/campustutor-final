@@ -633,4 +633,37 @@ router.post("/logout", async (req, res) => {
   }
 });
 
+// ── DIAGNOSTIC ROUTE ──────────────────────────────────────────
+router.get("/diagnostic", async (req, res) => {
+  try {
+    const supabaseUrl = process.env.SUPABASE_URL || "NOT SET";
+    const serviceKey = process.env.SUPABASE_SERVICE_KEY ? `${process.env.SUPABASE_SERVICE_KEY.substring(0, 10)}...` : "NOT SET";
+    
+    // Count profiles
+    const { count, error: countErr } = await supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true });
+      
+    // Fetch user profile specifically
+    const email = req.query.email || "comfortolateru234@gmail.com";
+    const { data: profile, error: profileErr } = await supabase
+      .from("profiles")
+      .select("*")
+      .ilike("email", email.trim().toLowerCase())
+      .maybeSingle();
+
+    res.json({
+      supabaseUrl,
+      supabaseServiceKeySnippet: serviceKey,
+      profilesCount: countErr ? `Error: ${countErr.message}` : count,
+      searchedEmail: email,
+      profileFound: !!profile,
+      profileData: profile || null,
+      profileError: profileErr ? profileErr.message : null
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
