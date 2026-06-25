@@ -8,6 +8,8 @@ const supabase = require("../utils/supabase");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 
+const dns = require("dns");
+
 // ── NODEMAILER TRANSPORTER ────────────────────────────────────
 const smtpPort = parseInt(process.env.SMTP_PORT || process.env.EMAIL_PORT || "465");
 const transporter = nodemailer.createTransport({
@@ -23,7 +25,10 @@ const transporter = nodemailer.createTransport({
   socketTimeout: 15000,
   dnsTimeout: 5000,
   // Force IPv4 address family to avoid unreachable IPv6 addresses on Render
-  family: 4 
+  family: 4,
+  lookup: (hostname, options, callback) => {
+    dns.lookup(hostname, { family: 4 }, callback);
+  }
 });
 
 async function sendVerificationEmail(email, otp) {
