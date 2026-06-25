@@ -693,10 +693,22 @@ router.get("/test-smtp", async (req, res) => {
   const results = {};
   const recipient = req.query.to || "mattietechdev@gmail.com";
   
+  const smtpHost = process.env.SMTP_HOST || process.env.EMAIL_HOST || "smtp.gmail.com";
+  let resolvedHost = smtpHost;
+
+  try {
+    const addresses = await dnsPromises.resolve4(smtpHost);
+    if (addresses && addresses.length > 0) {
+      resolvedHost = addresses[0];
+    }
+  } catch (e) {
+    console.warn(`⚠️ DNS resolution for ${smtpHost} failed, using default:`, e.message);
+  }
+
   // Test Port 465 (SSL)
   try {
     const transporter465 = nodemailer.createTransport({
-      host: "smtp.gmail.com",
+      host: resolvedHost,
       port: 465,
       secure: true,
       auth: {
@@ -706,16 +718,16 @@ router.get("/test-smtp", async (req, res) => {
       connectionTimeout: 10000,
       greetingTimeout: 10000,
       socketTimeout: 10000,
-      family: 4,
-      lookup: (hostname, options, callback) => {
-        dns.lookup(hostname, { family: 4 }, callback);
+      tls: {
+        servername: smtpHost,
+        rejectUnauthorized: false
       }
     });
     
     const info = await transporter465.sendMail({
       from: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER || "no-reply@campustutor.com",
       to: recipient,
-      subject: "Render SMTP Test Port 465",
+      subject: `Render SMTP Test Port 465 (${smtpHost})`,
       text: "Testing Port 465.",
     });
     results.port465 = { success: true, response: info.response };
@@ -726,7 +738,7 @@ router.get("/test-smtp", async (req, res) => {
   // Test Port 587 (TLS)
   try {
     const transporter587 = nodemailer.createTransport({
-      host: "smtp.gmail.com",
+      host: resolvedHost,
       port: 587,
       secure: false,
       auth: {
@@ -736,11 +748,8 @@ router.get("/test-smtp", async (req, res) => {
       connectionTimeout: 10000,
       greetingTimeout: 10000,
       socketTimeout: 10000,
-      family: 4,
-      lookup: (hostname, options, callback) => {
-        dns.lookup(hostname, { family: 4 }, callback);
-      },
       tls: {
+        servername: smtpHost,
         rejectUnauthorized: false
       }
     });
@@ -748,7 +757,7 @@ router.get("/test-smtp", async (req, res) => {
     const info = await transporter587.sendMail({
       from: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER || "no-reply@campustutor.com",
       to: recipient,
-      subject: "Render SMTP Test Port 587",
+      subject: `Render SMTP Test Port 587 (${smtpHost})`,
       text: "Testing Port 587.",
     });
     results.port587 = { success: true, response: info.response };
