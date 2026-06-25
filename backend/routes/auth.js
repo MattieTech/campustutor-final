@@ -114,8 +114,7 @@ router.post("/signup", async (req, res) => {
       console.warn("⚠️ Profile table operation failed:", profileErr.message);
     }
 
-    // 4. Send email
-    await sendVerificationEmail(cleanEmail, otp);
+
 
     // 5. Log the signup activity
     try {

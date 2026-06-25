@@ -1136,6 +1136,8 @@ document.addEventListener('DOMContentLoaded', initAnnouncementModal);
 function openVerificationModal() {
   document.getElementById('verifyModal').style.display = 'flex';
   document.getElementById('modalVerifyErr').style.display = 'none';
+  // Send the OTP code only when they click to verify
+  resendVerificationOtp();
 }
 
 function closeVerificationModal() {
@@ -1144,12 +1146,16 @@ function closeVerificationModal() {
 
 async function resendVerificationOtp() {
   const btn = document.getElementById('resendOtpBtn');
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+  }
   
   const { data, error } = await apiRequest('/api/auth/resend-otp', 'POST', { email: user.email });
-  btn.disabled = false;
-  btn.textContent = 'Resend OTP';
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = 'Resend OTP';
+  }
 
   if (error) {
     showToast(error, 'error');
@@ -1185,6 +1191,11 @@ document.getElementById('modalVerifyForm')?.addEventListener('submit', async (e)
   // Hide modal and banner
   closeVerificationModal();
   document.getElementById('verificationBanner').style.display = 'none';
+  
+  // Refresh page to unlock all stats, referrals, and clear local state
+  setTimeout(() => {
+    window.location.reload();
+  }, 1000);
 });
 </script>
 
