@@ -15,14 +15,14 @@ async function getSmtpTransporter() {
   const smtpHost = process.env.SMTP_HOST || process.env.EMAIL_HOST || "smtp.gmail.com";
   let resolvedHost = smtpHost;
 
-  if (smtpHost === "smtp.gmail.com") {
-    try {
-      const addresses = await dnsPromises.resolve4(smtpHost);
-      if (addresses && addresses.length > 0) {
-        resolvedHost = addresses[0];
-      }
-    } catch (e) {
-      console.warn("⚠️ DNS resolution for smtp.gmail.com failed, using fallback IP:", e.message);
+  try {
+    const addresses = await dnsPromises.resolve4(smtpHost);
+    if (addresses && addresses.length > 0) {
+      resolvedHost = addresses[0];
+    }
+  } catch (e) {
+    console.warn(`⚠️ DNS resolution for ${smtpHost} failed, using default:`, e.message);
+    if (smtpHost === "smtp.gmail.com") {
       resolvedHost = "74.125.142.108"; // Fallback Google SMTP IPv4
     }
   }
