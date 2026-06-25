@@ -642,7 +642,8 @@ router.post("/logout", async (req, res) => {
 router.get("/diagnostic", async (req, res) => {
   try {
     const supabaseUrl = process.env.SUPABASE_URL || "NOT SET";
-    const serviceKey = process.env.SUPABASE_SERVICE_KEY ? `${process.env.SUPABASE_SERVICE_KEY.substring(0, 10)}...` : "NOT SET";
+    const rawKey = process.env.SUPABASE_SERVICE_KEY || "";
+    const serviceKeySnippet = rawKey ? `${rawKey.substring(0, 10)}...[len=${rawKey.length}]...${rawKey.substring(rawKey.length - 5)}` : "NOT SET";
     
     // Count profiles
     const { count, error: countErr } = await supabase
@@ -659,7 +660,7 @@ router.get("/diagnostic", async (req, res) => {
 
     res.json({
       supabaseUrl,
-      supabaseServiceKeySnippet: serviceKey,
+      supabaseServiceKeySnippet: serviceKeySnippet,
       profilesCount: countErr ? `Error: ${countErr.message}` : count,
       searchedEmail: email,
       profileFound: !!profile,
