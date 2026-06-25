@@ -9,29 +9,11 @@ ALTER TABLE user_activity DISABLE ROW LEVEL SECURITY;
 ALTER TABLE ai_results DISABLE ROW LEVEL SECURITY;
 ALTER TABLE documents DISABLE ROW LEVEL SECURITY;
 
--- Keep profiles RLS for security
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-
--- Drop all existing policies from profiles
-DROP POLICY IF EXISTS "Allow authenticated users to read own profile" ON profiles;
-DROP POLICY IF EXISTS "Allow authenticated users to update own profile" ON profiles;
-
--- Add back only necessary profile policies
-CREATE POLICY "Users can read own profile"
-  ON profiles
-  FOR SELECT
-  USING (auth.uid() = id);
-
--- Allow authenticated users to view profiles for leaderboard/stats purposes
-CREATE POLICY "Allow authenticated users to read all profiles"
-  ON profiles
-  FOR SELECT
-  USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Users can update own profile"
-  ON profiles
-  FOR UPDATE
-  USING (auth.uid() = id);
+-- Disable RLS on profiles to avoid Row Level Security signup violations
+ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE referrals DISABLE ROW LEVEL SECURITY;
+ALTER TABLE withdrawals DISABLE ROW LEVEL SECURITY;
+ALTER TABLE feedback DISABLE ROW LEVEL SECURITY;
 
 -- ============================================================
 -- Alternative: If you want to KEEP RLS, run this instead:

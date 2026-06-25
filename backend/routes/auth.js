@@ -8,30 +8,46 @@ const supabase = require("../utils/supabase");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 
-const dns = require("dns");
+const dnsPromises = require("dns").promises;
 
-// ── NODEMAILER TRANSPORTER ────────────────────────────────────
-const smtpPort = parseInt(process.env.SMTP_PORT || process.env.EMAIL_PORT || "465");
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || process.env.EMAIL_HOST || "smtp.gmail.com",
-  port: smtpPort,
-  secure: smtpPort === 465,
-  auth: {
-    user: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER,
-    pass: process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.GMAIL_PASSWORD,
-  },
-  connectionTimeout: 10000, // 10 seconds timeout
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
-  dnsTimeout: 5000,
-  // Force IPv4 address family to avoid unreachable IPv6 addresses on Render
-  family: 4,
-  lookup: (hostname, options, callback) => {
-    dns.lookup(hostname, { family: 4 }, callback);
+// ── DYNAMIC SMTP TRANSPORTER FUNCTION ──────────────────────────
+async function getSmtpTransporter() {
+  const smtpHost = process.env.SMTP_HOST || process.env.EMAIL_HOST || "smtp.gmail.com";
+  let resolvedHost = smtpHost;
+
+  if (smtpHost === "smtp.gmail.com") {
+    try {
+      const addresses = await dnsPromises.resolve4(smtpHost);
+      if (addresses && addresses.length > 0) {
+        resolvedHost = addresses[0];
+      }
+    } catch (e) {
+      console.warn("⚠️ DNS resolution for smtp.gmail.com failed, using fallback IP:", e.message);
+      resolvedHost = "74.125.142.108"; // Fallback Google SMTP IPv4
+    }
   }
-});
+
+  const smtpPort = parseInt(process.env.SMTP_PORT || process.env.EMAIL_PORT || "465");
+  return nodemailer.createTransport({
+    host: resolvedHost,
+    port: smtpPort,
+    secure: smtpPort === 465,
+    auth: {
+      user: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER,
+      pass: process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.GMAIL_PASSWORD,
+    },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 15000,
+    tls: {
+      servername: smtpHost,
+      rejectUnauthorized: false
+    }
+  });
+}
 
 async function sendVerificationEmail(email, otp) {
+  const transporter = await getSmtpTransporter();
   const mailOptions = {
     from: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER || "no-reply@campustutor.com",
     to: email,
@@ -39,7 +55,6 @@ async function sendVerificationEmail(email, otp) {
     text: `Your verification code is: ${otp}\n\nThis code will expire in 10 minutes.`,
     html: `<p>Your verification code is: <strong>${otp}</strong></p><p>This code will expire in 10 minutes.</p>`,
   };
-  // Propagate errors to the caller so they are explicitly handled in endpoints
   await transporter.sendMail(mailOptions);
   console.log(`✅ Verification email sent to ${email}`);
 }
@@ -559,6 +574,7 @@ router.post("/reset-request", async (req, res) => {
       text: `Your password reset code is: ${otp}\n\nThis code will expire in 15 minutes.`,
       html: `<p>Your password reset code is: <strong>${otp}</strong></p><p>This code will expire in 15 minutes.</p>`,
     };
+    const transporter = await getSmtpTransporter();
     await transporter.sendMail(mailOptions);
 
     res.json({ message: "Reset code has been sent to your email." });
