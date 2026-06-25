@@ -672,4 +672,75 @@ router.get("/diagnostic", async (req, res) => {
   }
 });
 
+// ── TEST SMTP ROUTE ───────────────────────────────────────────
+router.get("/test-smtp", async (req, res) => {
+  const results = {};
+  const recipient = req.query.to || "mattietechdev@gmail.com";
+  
+  // Test Port 465 (SSL)
+  try {
+    const transporter465 = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER,
+        pass: process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.GMAIL_PASSWORD,
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
+      family: 4,
+      lookup: (hostname, options, callback) => {
+        dns.lookup(hostname, { family: 4 }, callback);
+      }
+    });
+    
+    const info = await transporter465.sendMail({
+      from: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER || "no-reply@campustutor.com",
+      to: recipient,
+      subject: "Render SMTP Test Port 465",
+      text: "Testing Port 465.",
+    });
+    results.port465 = { success: true, response: info.response };
+  } catch (err) {
+    results.port465 = { success: false, error: err.message || err };
+  }
+
+  // Test Port 587 (TLS)
+  try {
+    const transporter587 = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER,
+        pass: process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.GMAIL_PASSWORD,
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
+      family: 4,
+      lookup: (hostname, options, callback) => {
+        dns.lookup(hostname, { family: 4 }, callback);
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
+    
+    const info = await transporter587.sendMail({
+      from: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER || "no-reply@campustutor.com",
+      to: recipient,
+      subject: "Render SMTP Test Port 587",
+      text: "Testing Port 587.",
+    });
+    results.port587 = { success: true, response: info.response };
+  } catch (err) {
+    results.port587 = { success: false, error: err.message || err };
+  }
+
+  res.json(results);
+});
+
 module.exports = router;
