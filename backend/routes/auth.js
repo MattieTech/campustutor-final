@@ -46,17 +46,61 @@ async function getSmtpTransporter() {
   });
 }
 
-async function sendVerificationEmail(email, otp) {
-  const transporter = await getSmtpTransporter();
-  const mailOptions = {
-    from: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER || "no-reply@campustutor.com",
-    to: email,
-    subject: "Verify Your CampusTutor Account",
-    text: `Your verification code is: ${otp}\n\nThis code will expire in 10 minutes.`,
-    html: `<p>Your verification code is: <strong>${otp}</strong></p><p>This code will expire in 10 minutes.</p>`,
+async function sendEmailViaBrevoAPI(email, subject, text, html) {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) {
+    throw new Error("BREVO_API_KEY environment variable is not configured.");
+  }
+
+  // Sender email is usually the verified sender configured in Brevo or our login SMTP_USER
+  const senderEmail = process.env.SMTP_USER || "mattietechdev@gmail.com";
+
+  const payload = {
+    sender: { name: "CampusTutor", email: senderEmail },
+    to: [{ email: email }],
+    subject: subject,
+    textContent: text,
+    htmlContent: html
   };
-  await transporter.sendMail(mailOptions);
-  console.log(`✅ Verification email sent to ${email}`);
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "accept": "application/json",
+      "api-key": apiKey,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Brevo HTTP request failed with status: ${response.status}`);
+  }
+
+  console.log(`✅ Email sent successfully via Brevo API to ${email}`);
+}
+
+async function sendVerificationEmail(email, otp) {
+  const subject = "Verify Your CampusTutor Account";
+  const text = `Your verification code is: ${otp}\n\nThis code will expire in 10 minutes.`;
+  const html = `<p>Your verification code is: <strong>${otp}</strong></p><p>This code will expire in 10 minutes.</p>`;
+  
+  if (process.env.BREVO_API_KEY) {
+    await sendEmailViaBrevoAPI(email, subject, text, html);
+  } else {
+    // Fallback to SMTP if key is not configured (e.g. locally)
+    const transporter = await getSmtpTransporter();
+    const mailOptions = {
+      from: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER || "no-reply@campustutor.com",
+      to: email,
+      subject: subject,
+      text: text,
+      html: html
+    };
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Verification email sent to ${email} (via SMTP fallback)`);
+  }
 }
 
 // Helper to generate referral code
@@ -567,15 +611,23 @@ router.post("/reset-request", async (req, res) => {
       return res.status(500).json({ error: `Failed to update reset code: ${updateError.message}` });
     }
 
-    const mailOptions = {
-      from: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER || "no-reply@campustutor.com",
-      to: cleanEmail,
-      subject: "Reset Your CampusTutor Password",
-      text: `Your password reset code is: ${otp}\n\nThis code will expire in 15 minutes.`,
-      html: `<p>Your password reset code is: <strong>${otp}</strong></p><p>This code will expire in 15 minutes.</p>`,
-    };
-    const transporter = await getSmtpTransporter();
-    await transporter.sendMail(mailOptions);
+    const subject = "Reset Your CampusTutor Password";
+    const text = `Your password reset code is: ${otp}\n\nThis code will expire in 15 minutes.`;
+    const html = `<p>Your password reset code is: <strong>${otp}</strong></p><p>This code will expire in 15 minutes.</p>`;
+
+    if (process.env.BREVO_API_KEY) {
+      await sendEmailViaBrevoAPI(cleanEmail, subject, text, html);
+    } else {
+      const mailOptions = {
+        from: process.env.SMTP_USER || process.env.EMAIL_USER || process.env.GMAIL_USER || "no-reply@campustutor.com",
+        to: cleanEmail,
+        subject: subject,
+        text: text,
+        html: html,
+      };
+      const transporter = await getSmtpTransporter();
+      await transporter.sendMail(mailOptions);
+    }
 
     res.json({ message: "Reset code has been sent to your email." });
   } catch (err) {
