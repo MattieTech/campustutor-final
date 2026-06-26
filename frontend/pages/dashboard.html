@@ -1183,23 +1183,32 @@ document.getElementById('modalVerifyForm')?.addEventListener('submit', async (e)
     errDiv.style.display = 'block';
     btn.disabled = false;
     btn.textContent = 'Verify & Activate';
+    showToast(error, 'error');
     return;
   }
 
   showToast('Email verified successfully! Thank you. <i class="fa-solid fa-circle-check"></i>', 'success');
   
+  // Display success message directly inside modal form to give feedback
+  errDiv.className = 'alert alert-success';
+  errDiv.style.background = 'rgba(52, 199, 89, 0.1)';
+  errDiv.style.color = 'var(--green)';
+  errDiv.style.borderLeft = '4px solid var(--green)';
+  errDiv.textContent = 'Verification successful! Unlocking your dashboard...';
+  errDiv.style.display = 'block';
+  btn.textContent = 'Verified ✓';
+  
   // Update local storage
   user.isVerified = true;
   localStorage.setItem('ct_user', JSON.stringify(user));
 
-  // Hide modal and banner
-  closeVerificationModal();
-  document.getElementById('verificationBanner').style.display = 'none';
-  
-  // Refresh page to unlock all stats, referrals, and clear local state
+  // Wait 1.5 seconds to show verified feedback state before closing
   setTimeout(() => {
+    closeVerificationModal();
+    const banner = document.getElementById('verificationBanner');
+    if (banner) banner.style.display = 'none';
     window.location.reload();
-  }, 1000);
+  }, 1500);
 });
 </script>
 
