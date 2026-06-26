@@ -1149,11 +1149,19 @@ async function submitGift(event) {
   const duration = document.getElementById('giftDuration').value;
   const btn = document.getElementById('giftBtn');
 
+  let durationDays = 30;
+  if (duration === "1w") durationDays = 7;
+  else if (duration === "1m") durationDays = 30;
+  else if (duration === "2m") durationDays = 60;
+  else if (duration === "3m") durationDays = 90;
+  else if (duration === "6m") durationDays = 180;
+  else if (duration === "12m") durationDays = 365;
+
   btn.disabled = true;
   btn.textContent = 'Gifting subscription...';
   showToast('Processing premium gift...', 'info');
 
-  const { error } = await apiRequest('/api/admin/gift-plan', 'POST', { email, plan, duration });
+  const { error } = await apiRequest('/api/admin/gift-plan', 'POST', { email, plan, durationDays });
   btn.disabled = false;
   btn.textContent = 'Gift Plan →';
 
