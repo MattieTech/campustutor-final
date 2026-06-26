@@ -1170,28 +1170,37 @@ async function resendVerificationOtp() {
 
 document.getElementById('modalVerifyForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const otp = document.getElementById('modalVerificationOtp').value.trim();
+  const otpInput = document.getElementById('modalVerificationOtp');
+  const otp = otpInput ? otpInput.value.trim() : "";
   const errDiv = document.getElementById('modalVerifyErr');
   const btn = document.getElementById('modalVerifySubmitBtn');
   
-  errDiv.style.display = 'none';
-  btn.disabled = true;
-  btn.textContent = 'Verifying...';
+  if (errDiv) errDiv.style.display = 'none';
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Verifying...';
+  }
 
   const { data, error } = await apiRequest('/api/auth/verify', 'POST', { email: user.email, otp });
   if (error) {
-    errDiv.textContent = error;
-    errDiv.className = 'alert alert-error';
-    errDiv.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = 'Verify & Activate';
+    if (errDiv) {
+      errDiv.textContent = error;
+      errDiv.className = 'alert alert-error';
+      errDiv.style.display = 'block';
+    }
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Verify & Activate';
+    }
     showToast(error, 'error');
     return;
   }
 
   showToast('Email verified successfully! Thank you. <i class="fa-solid fa-circle-check"></i>', 'success');
   
-  btn.textContent = 'Verified ✓';
+  if (btn) {
+    btn.textContent = 'Verified ✓';
+  }
   
   // Update local storage object and state
   user.isVerified = true;
