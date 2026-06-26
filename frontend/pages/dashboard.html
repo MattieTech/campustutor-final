@@ -1115,8 +1115,62 @@ function initAnnouncementModal(){
   });
 }
 
+function initVerificationForm() {
+  const form = document.getElementById('modalVerifyForm');
+  if (!form) {
+    console.warn("⚠️ modalVerifyForm not found in DOM");
+    return;
+  }
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const otpInput = document.getElementById('modalVerificationOtp');
+    const otp = otpInput ? otpInput.value.trim() : "";
+    const errDiv = document.getElementById('modalVerifyErr');
+    const btn = document.getElementById('modalVerifySubmitBtn');
+    
+    if (errDiv) errDiv.style.display = 'none';
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Verifying...';
+    }
+
+    const { data, error } = await apiRequest('/api/auth/verify', 'POST', { email: user.email, otp });
+    if (error) {
+      if (errDiv) {
+        errDiv.textContent = error;
+        errDiv.className = 'alert alert-error';
+        errDiv.style.display = 'block';
+      }
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Verify & Activate';
+      }
+      showToast(error, 'error');
+      return;
+    }
+
+    showToast('Email verified successfully! Thank you. <i class="fa-solid fa-circle-check"></i>', 'success');
+    
+    if (btn) {
+      btn.textContent = 'Verified ✓';
+    }
+    
+    // Update local storage object and state
+    user.isVerified = true;
+    localStorage.setItem('ct_user', JSON.stringify(user));
+
+    // Hide the verification banner and modal without reloading the browser
+    closeVerificationModal();
+    const banner = document.getElementById('verificationBanner');
+    if (banner) {
+      banner.style.display = 'none';
+    }
+  });
+}
+
 function initDashboard() {
   initAnnouncementModal();
+  initVerificationForm();
   try {
     loadUserStats();
   } catch (e) {
@@ -1167,52 +1221,6 @@ async function resendVerificationOtp() {
   }
   showToast('A new OTP verification code has been sent to your email!', 'success');
 }
-
-document.getElementById('modalVerifyForm')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const otpInput = document.getElementById('modalVerificationOtp');
-  const otp = otpInput ? otpInput.value.trim() : "";
-  const errDiv = document.getElementById('modalVerifyErr');
-  const btn = document.getElementById('modalVerifySubmitBtn');
-  
-  if (errDiv) errDiv.style.display = 'none';
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = 'Verifying...';
-  }
-
-  const { data, error } = await apiRequest('/api/auth/verify', 'POST', { email: user.email, otp });
-  if (error) {
-    if (errDiv) {
-      errDiv.textContent = error;
-      errDiv.className = 'alert alert-error';
-      errDiv.style.display = 'block';
-    }
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = 'Verify & Activate';
-    }
-    showToast(error, 'error');
-    return;
-  }
-
-  showToast('Email verified successfully! Thank you. <i class="fa-solid fa-circle-check"></i>', 'success');
-  
-  if (btn) {
-    btn.textContent = 'Verified ✓';
-  }
-  
-  // Update local storage object and state
-  user.isVerified = true;
-  localStorage.setItem('ct_user', JSON.stringify(user));
-
-  // Hide the verification banner and modal without reloading the browser
-  closeVerificationModal();
-  const banner = document.getElementById('verificationBanner');
-  if (banner) {
-    banner.style.display = 'none';
-  }
-});
 </script>
 
 <div class="announcement-overlay" id="announcementOverlay">
