@@ -736,7 +736,9 @@ router.get("/diagnostic", async (req, res) => {
       profileError: profileErr ? profileErr.message : null,
       smtpHost: process.env.SMTP_HOST || "NOT SET",
       smtpPort: process.env.SMTP_PORT || "NOT SET",
-      smtpUser: process.env.SMTP_USER || "NOT SET"
+      smtpUser: process.env.SMTP_USER || "NOT SET",
+      brevoApiKeyExists: !!process.env.BREVO_API_KEY,
+      brevoApiKeySnippet: process.env.BREVO_API_KEY ? `${process.env.BREVO_API_KEY.substring(0, 5)}...[len=${process.env.BREVO_API_KEY.length}]` : "NOT SET"
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
