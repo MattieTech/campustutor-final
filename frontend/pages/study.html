@@ -915,7 +915,7 @@ function setBtnLoading(btn, text) {
 
 function resetBtn(btn, icon, title, desc) {
   btn.disabled = false;
-  btn.querySelector('.action-icon').textContent  = icon;
+  btn.querySelector('.action-icon').innerHTML = icon;
   btn.querySelector('.action-title').textContent = title;
   btn.querySelector('.action-desc').textContent  = desc;
 }

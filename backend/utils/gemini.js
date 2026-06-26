@@ -19,7 +19,7 @@ if (!GEMINI_API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 // ── SYSTEM PROMPT ─────────────────────────────────────────────
 // This is prepended to every single request. It controls:
@@ -109,10 +109,10 @@ async function askGemini(prompt) {
 
     // Ordered array of free backup models from OpenRouter
     const fallbackChain = [
-      "openai/gpt-oss-120b:free",         // Layer 1: OpenAI Free Variant
-      "meta-llama/llama-4-maverick:free", // Layer 2: Llama/Claude Alternative
-      "deepseek/deepseek-r1:free",        // Layer 3: DeepSeek Reasoning
-      "qwen/qwen-2.5-72b-instruct:free"   // Layer 4: Alibaba Qwen
+      "google/gemma-2-9b-it:free",
+      "meta-llama/llama-3.3-70b-instruct:free",
+      "qwen/qwen-2.5-coder-32b:free",
+      "openrouter/free"
     ];
 
     for (let i = 0; i < fallbackChain.length; i++) {
