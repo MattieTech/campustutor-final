@@ -40,11 +40,21 @@
     </div>
     <div class="form-group">
       <label class="form-label">New Password</label>
-      <input class="form-input" type="password" id="newPassword" placeholder="At least 6 characters" required minlength="6" autocomplete="new-password"/>
+      <div class="password-input-wrapper">
+        <input class="form-input" type="password" id="newPassword" placeholder="At least 6 characters" required minlength="6" autocomplete="new-password"/>
+        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('newPassword', this)" aria-label="Toggle password visibility">
+          <i class="fa-solid fa-eye"></i>
+        </button>
+      </div>
     </div>
     <div class="form-group">
       <label class="form-label">Confirm New Password</label>
-      <input class="form-input" type="password" id="confirmNewPassword" placeholder="Repeat your new password" required minlength="6" autocomplete="new-password"/>
+      <div class="password-input-wrapper">
+        <input class="form-input" type="password" id="confirmNewPassword" placeholder="Repeat your new password" required minlength="6" autocomplete="new-password"/>
+        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('confirmNewPassword', this)" aria-label="Toggle password visibility">
+          <i class="fa-solid fa-eye"></i>
+        </button>
+      </div>
     </div>
     <button type="submit" class="btn btn-success btn-full btn-lg" id="confirmBtn">Reset Password</button>
   </form>

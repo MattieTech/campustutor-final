@@ -32,7 +32,12 @@
         <label class="form-label" style="margin:0;">Password</label>
         <a href="/pages/reset.html" style="font-size:0.8rem;color:var(--blue);text-decoration:none;font-weight:600;">Forgot Password?</a>
       </div>
-      <input class="form-input" type="password" id="password" placeholder="Your password" required autocomplete="current-password"/>
+      <div class="password-input-wrapper">
+        <input class="form-input" type="password" id="password" placeholder="Your password" required autocomplete="current-password"/>
+        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password', this)" aria-label="Toggle password visibility">
+          <i class="fa-solid fa-eye"></i>
+        </button>
+      </div>
     </div>
     <button type="submit" class="btn btn-primary btn-full btn-lg" id="loginBtn">Log In →</button>
   </form>

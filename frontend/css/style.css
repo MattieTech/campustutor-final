@@ -133,6 +133,35 @@ img{max-width:100%;display:block;}
 .form-input::placeholder{color:var(--label4);}
 .form-textarea{resize:vertical;min-height:90px;}
 
+.password-input-wrapper {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+.password-input-wrapper .form-input {
+  padding-right: 44px;
+}
+.password-toggle-btn {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--label3);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: color 0.15s;
+  z-index: 2;
+}
+.password-toggle-btn:hover {
+  color: var(--label);
+}
+
 /* TOAST */
 .toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:calc(100% - 32px);padding:12px 16px;border-radius:12px;font-size:0.87rem;font-weight:600;z-index:9999;backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);box-shadow:0 8px 32px rgba(0,0,0,0.18);animation:toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1),toastOut 0.3s ease 3s forwards;white-space:normal;}
 .toast-success{background:rgba(52,199,89,0.92);color:white;}
