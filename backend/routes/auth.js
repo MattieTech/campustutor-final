@@ -464,7 +464,7 @@ router.post("/login", async (req, res) => {
     // Try to get user profile
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("full_name, role, status, is_verified, plan")
+      .select("full_name, role, status, is_verified, plan, subscription_end")
       .eq("id", data.user.id)
       .maybeSingle();
 
@@ -496,6 +496,19 @@ router.post("/login", async (req, res) => {
 
     console.log("🔐 Login for:", email);
 
+    // Auto-downgrade if subscription has expired
+    let activePlan = profile?.plan || "free";
+    if (activePlan !== "free" && profile?.subscription_end) {
+      const subEnd = new Date(profile.subscription_end);
+      if (subEnd < new Date()) {
+        activePlan = "free";
+        await supabase
+          .from("profiles")
+          .update({ plan: "free", subscription_status: "expired" })
+          .eq("id", data.user.id);
+      }
+    }
+
     res.json({
       message: "Login successful!",
       token: data.session.access_token,
@@ -505,7 +518,7 @@ router.post("/login", async (req, res) => {
         fullName: profile?.full_name || data.user.user_metadata?.full_name || "Student",
         role: userRole,
         status: userStatus,
-        plan: profile?.plan || "free",
+        plan: activePlan,
         isVerified: profile ? profile.is_verified : false,
       },
     });

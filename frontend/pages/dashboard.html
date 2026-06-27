@@ -425,7 +425,24 @@ async function loadUserStats(){
   document.getElementById('statXP').textContent=stats.xp||0;
   document.getElementById('statStreak').innerHTML=(stats.streak||0)+' <i class="fa-solid fa-fire"></i>';
   document.getElementById('statDocs').textContent=stats.documentsCount||0;
-  document.getElementById('statPlan').textContent=(stats.plan||'free').toUpperCase();
+
+  // ── Plan display with color coding ──
+  const currentPlan = (stats.plan || 'free').toLowerCase();
+  const planEl = document.getElementById('statPlan');
+  const planColors = { free: 'var(--green)', plus: '#3b82f6', pro: '#a855f7' };
+  const planIcons  = { free: '', plus: ' <i class="fa-solid fa-bolt" style="font-size:0.7em"></i>', pro: ' <i class="fa-solid fa-crown" style="font-size:0.7em"></i>' };
+  planEl.innerHTML = currentPlan.toUpperCase() + (planIcons[currentPlan] || '');
+  planEl.style.color = planColors[currentPlan] || 'var(--green)';
+
+  // Sync plan into localStorage user object so other pages see it
+  try {
+    const stored = JSON.parse(localStorage.getItem('ct_user') || '{}');
+    if (stored && stored.plan !== currentPlan) {
+      stored.plan = currentPlan;
+      localStorage.setItem('ct_user', JSON.stringify(stored));
+    }
+  } catch(_){}
+
   // If activityCount label is in DOM, update it
   const actCountEl = document.getElementById('activityCount');
   if (actCountEl) actCountEl.textContent=(stats.activityCount||0)+' actions';
@@ -624,6 +641,17 @@ function loadStatsFromLocalStorage(){
 
   const streak=parseInt(localStorage.getItem('ct_streak')||'0');
   document.getElementById('statStreak').innerHTML=streak+' <i class="fa-solid fa-fire"></i>';
+
+  // Plan from localStorage user object
+  try {
+    const stored = JSON.parse(localStorage.getItem('ct_user') || '{}');
+    const lsPlan = (stored.plan || 'free').toLowerCase();
+    const planEl = document.getElementById('statPlan');
+    const planColors = { free: 'var(--green)', plus: '#3b82f6', pro: '#a855f7' };
+    const planIcons  = { free: '', plus: ' <i class="fa-solid fa-bolt" style="font-size:0.7em"></i>', pro: ' <i class="fa-solid fa-crown" style="font-size:0.7em"></i>' };
+    planEl.innerHTML = lsPlan.toUpperCase() + (planIcons[lsPlan] || '');
+    planEl.style.color = planColors[lsPlan] || 'var(--green)';
+  } catch(_){}
 
   const allBadges=[
     {icon:'<i class="fa-solid fa-rocket"></i>',name:'First Upload',key:'first_upload'},

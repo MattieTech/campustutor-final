@@ -421,7 +421,7 @@
     const { data: stats } = await apiGetUserStats(user.id);
     if (stats) {
       const plan = stats.plan || 'free';
-      const expiry = stats.subscription_end;
+      const expiry = stats.subscriptionEnd || stats.subscription_end;
       
       const alertEl = document.getElementById('activePlanAlert');
       const nameEl = document.getElementById('activePlanName');

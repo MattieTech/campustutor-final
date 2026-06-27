@@ -321,7 +321,7 @@ async function getUserStats(userId) {
   try {
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select("xp, level, streak")
+      .select("xp, level, streak, plan, subscription_status, subscription_end")
       .eq("id", userId)
       .single();
 
@@ -355,6 +355,20 @@ async function getUserStats(userId) {
     const xpProgressPercent = Math.min(Math.round((xpInLevel / xpForNextLevel) * 100), 100);
     const xpToNextLevel = Math.max(nextThreshold - xp, 0);
 
+    // ── Resolve active plan (auto-downgrade if subscription expired) ──
+    let activePlan = profile.plan || "free";
+    const subStatus = profile.subscription_status || "inactive";
+    const subEnd = profile.subscription_end ? new Date(profile.subscription_end) : null;
+
+    if (activePlan !== "free" && subEnd && subEnd < new Date()) {
+      // Subscription has expired – silently downgrade in DB
+      activePlan = "free";
+      await supabase
+        .from("profiles")
+        .update({ plan: "free", subscription_status: "expired" })
+        .eq("id", userId);
+    }
+
     return {
       xp: xp,
       level: level,
@@ -367,6 +381,9 @@ async function getUserStats(userId) {
       activityCount: activity?.length || 0,
       achievements: achievements,
       allAchievements: ACHIEVEMENTS,
+      plan: activePlan,
+      subscriptionStatus: subStatus,
+      subscriptionEnd: profile.subscription_end || null,
     };
   } catch (err) {
     console.error("Error getting user stats:", err.message);
