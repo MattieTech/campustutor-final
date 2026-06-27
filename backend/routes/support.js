@@ -63,6 +63,11 @@ router.post("/ticket", authMiddleware, async (req, res) => {
 
     if (error) {
       console.error("❌ Support ticket error:", error.message);
+      if (error.code === "PGRST205" || error.message.includes("find the table")) {
+        return res.status(400).json({ 
+          error: "Support tickets table not set up in Supabase yet. Please run migration SQL." 
+        });
+      }
       return res.status(500).json({ error: "Failed to submit support request." });
     }
 
@@ -85,6 +90,12 @@ router.get("/tickets", authMiddleware, async (req, res) => {
 
     if (error) {
       console.error("❌ Fetch tickets error:", error.message);
+      if (error.code === "PGRST205" || error.message.includes("find the table")) {
+        return res.json({ 
+          tickets: [], 
+          warning: "support_tickets table is missing. Run migration SQL." 
+        });
+      }
       return res.status(500).json({ error: "Failed to fetch support tickets." });
     }
 

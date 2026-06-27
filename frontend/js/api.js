@@ -1150,6 +1150,11 @@ async function loadUserTickets() {
     return;
   }
 
+  if (data.warning) {
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--label3);"><i class="fa-solid fa-triangle-exclamation" style="font-size:1.8rem;color:#f59e0b;margin-bottom:8px;display:block;"></i> Support system is currently being set up. Please try again later.</div>';
+    return;
+  }
+
   const tickets = data.tickets || [];
   if (tickets.length === 0) {
     container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--label3);"><i class="fa-solid fa-circle-info" style="font-size:1.5rem;margin-bottom:8px;display:block;"></i> No inquiries submitted yet. Need help? Create a ticket above.</div>';

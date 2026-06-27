@@ -1047,6 +1047,15 @@ async function loadSupportTickets() {
     return;
   }
 
+  if (data.warning) {
+    tbody.innerHTML = `<tr><td colspan="5" class="adm-empty" style="color:#ef4444;text-align:center;padding:30px;">
+      <i class="fa-solid fa-triangle-exclamation" style="font-size:2rem;margin-bottom:10px;display:block;"></i>
+      <strong>Database Setup Required:</strong> The <code>support_tickets</code> table is missing from Supabase.<br/>
+      Please execute the SQL commands in <code>create_support_tickets_table.sql</code> in your Supabase SQL editor to create it.
+    </td></tr>`;
+    return;
+  }
+
   const tickets = data.tickets || [];
   document.getElementById('ticketsCountLabel').textContent = `${tickets.length} support request${tickets.length !== 1 ? 's' : ''} in system`;
 

@@ -822,6 +822,9 @@ router.get("/tickets", isAdmin, async (req, res) => {
       .order("created_at", { ascending: false });
 
     if (error) {
+      if (error.code === "PGRST205" || error.message.includes("find the table")) {
+        return res.json({ tickets: [], warning: "support_tickets table is missing." });
+      }
       return res.status(500).json({ error: "Failed to fetch support tickets." });
     }
 
