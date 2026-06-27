@@ -929,3 +929,248 @@ function togglePasswordVisibility(inputId, btnEl) {
     }
   }
 }
+
+// ── DYNAMIC GLOBAL INJECTION OF SUPPORT & FEEDBACK ──────────────
+document.addEventListener("DOMContentLoaded", () => {
+  const sidebar = document.querySelector(".sidebar");
+  const mobileMenu = document.querySelector(".mobile-menu");
+
+  if (!sidebar && !mobileMenu) return; // Only run on dashboard and other study pages
+
+  // 1. Inject Sidebar navigation
+  if (sidebar) {
+    // Look for productivity or study tools section
+    const sec = document.createElement("div");
+    sec.className = "sidebar-section";
+    sec.style.marginTop = "8px";
+    sec.textContent = "Help & Support";
+    sidebar.appendChild(sec);
+
+    const btnSupport = document.createElement("button");
+    btnSupport.className = "sidebar-link";
+    btnSupport.style.cssText = "background:none;border:none;width:100%;text-align:left;cursor:pointer;";
+    btnSupport.innerHTML = '<i class="fa-solid fa-circle-question"></i> Help Desk';
+    btnSupport.onclick = openSupportModal;
+    sidebar.appendChild(btnSupport);
+
+    const btnFeedback = document.createElement("button");
+    btnFeedback.className = "sidebar-link";
+    btnFeedback.style.cssText = "background:none;border:none;width:100%;text-align:left;cursor:pointer;";
+    btnFeedback.innerHTML = '<i class="fa-solid fa-star"></i> Give Feedback';
+    btnFeedback.onclick = openFeedbackModal;
+    sidebar.appendChild(btnFeedback);
+  }
+
+  // 2. Inject Mobile menu links
+  if (mobileMenu) {
+    const divider = document.createElement("div");
+    divider.style.cssText = "height:1px;background:var(--sep);margin:8px 0;";
+    mobileMenu.insertBefore(divider, mobileMenu.querySelector(".logout"));
+
+    const itemSupport = document.createElement("button");
+    itemSupport.className = "mobile-menu-item";
+    itemSupport.innerHTML = '<i class="fa-solid fa-circle-question"></i> Help Desk';
+    itemSupport.onclick = () => { closeMobileMenu(); openSupportModal(); };
+    mobileMenu.insertBefore(itemSupport, mobileMenu.querySelector(".logout"));
+
+    const itemFeedback = document.createElement("button");
+    itemFeedback.className = "mobile-menu-item";
+    itemFeedback.innerHTML = '<i class="fa-solid fa-star"></i> Give Feedback';
+    itemFeedback.onclick = () => { closeMobileMenu(); openFeedbackModal(); };
+    mobileMenu.insertBefore(itemFeedback, mobileMenu.querySelector(".logout"));
+  }
+
+  // 3. Inject Modals HTML
+  const modalsWrap = document.createElement("div");
+  modalsWrap.innerHTML = `
+    <!-- FEEDBACK MODAL -->
+    <div class="support-modal-overlay" id="feedbackOverlay">
+      <div class="support-modal-card">
+        <div class="support-modal-header">
+          <h3>Give Feedback <i class="fa-solid fa-star" style="color:#f59e0b;"></i></h3>
+          <button class="support-modal-close" onclick="closeSupportModal('feedbackOverlay')">✕</button>
+        </div>
+        <div class="support-modal-body">
+          <p style="font-size:0.9rem;color:var(--label3);text-align:center;margin-bottom:12px;">How would you rate your experience with CampusTutor?</p>
+          <div class="star-rating" id="feedbackStars">
+            <i class="fa-solid fa-star" data-val="1"></i>
+            <i class="fa-solid fa-star" data-val="2"></i>
+            <i class="fa-solid fa-star" data-val="3"></i>
+            <i class="fa-solid fa-star" data-val="4"></i>
+            <i class="fa-solid fa-star" data-val="5"></i>
+          </div>
+          <form id="feedbackForm" onsubmit="submitUserFeedback(event)">
+            <input type="hidden" id="feedbackRating" value="5"/>
+            <div class="form-group">
+              <label class="form-label">Review / Comments</label>
+              <textarea id="feedbackComments" class="form-input" style="min-height:90px;resize:vertical;" placeholder="Tell us what you like or how we can improve..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;margin-top:12px;">Submit Feedback</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- HELP & SUPPORT MODAL -->
+    <div class="support-modal-overlay" id="supportOverlay">
+      <div class="support-modal-card" style="max-width:550px;">
+        <div class="support-modal-header">
+          <h3>Customer Help Desk <i class="fa-solid fa-circle-question" style="color:var(--blue);"></i></h3>
+          <button class="support-modal-close" onclick="closeSupportModal('supportOverlay')">✕</button>
+        </div>
+        <div class="support-modal-body">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+            <h4 style="margin:0;font-size:1rem;">Your Tickets</h4>
+            <button class="btn btn-sm btn-glass" onclick="toggleNewTicketForm(true)" id="btnNewTicket">Create Ticket +</button>
+          </div>
+
+          <!-- New Ticket Form -->
+          <div id="newTicketBox" style="display:none;background:rgba(118,118,128,0.05);padding:16px;border-radius:12px;margin-bottom:18px;border:0.5px solid var(--sep);">
+            <h5 style="margin:0 0 12px;font-size:0.9rem;">Submit Inquire / Issue</h5>
+            <form id="supportTicketForm" onsubmit="submitSupportTicket(event)">
+              <div class="form-group" style="margin-bottom:10px;">
+                <label class="form-label" style="font-size:0.75rem;">Subject</label>
+                <input type="text" id="ticketSubject" class="form-input" placeholder="e.g. Note Summarization issue" required/>
+              </div>
+              <div class="form-group" style="margin-bottom:10px;">
+                <label class="form-label" style="font-size:0.75rem;">Message / Inquiry Details</label>
+                <textarea id="ticketMessage" class="form-input" style="min-height:80px;resize:vertical;" placeholder="Describe your request in detail..." required></textarea>
+              </div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" class="btn btn-sm btn-glass" onclick="toggleNewTicketForm(false)">Cancel</button>
+                <button type="submit" class="btn btn-sm btn-primary">Submit Ticket</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tickets Container -->
+          <div id="ticketsContainer" style="max-height:350px;overflow-y:auto;">
+            <div class="adm-loading"><div class="spinner"></div> Loading support history...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modalsWrap);
+
+  // Hook interactive stars rating clicks
+  const stars = document.querySelectorAll("#feedbackStars i");
+  stars.forEach(s => {
+    s.addEventListener("click", (e) => {
+      const val = parseInt(e.target.getAttribute("data-val"));
+      document.getElementById("feedbackRating").value = val;
+      updateStarsDisplay(val);
+    });
+  });
+
+  function updateStarsDisplay(val) {
+    stars.forEach(st => {
+      const v = parseInt(st.getAttribute("data-val"));
+      if (v <= val) {
+        st.classList.add("active");
+      } else {
+        st.classList.remove("active");
+      }
+    });
+  }
+
+  // Initialize display
+  updateStarsDisplay(5);
+});
+
+// Modal open/close functions
+function openFeedbackModal() {
+  document.getElementById("feedbackOverlay").style.display = "flex";
+  document.getElementById("feedbackComments").value = "";
+}
+
+function openSupportModal() {
+  document.getElementById("supportOverlay").style.display = "flex";
+  toggleNewTicketForm(false);
+  loadUserTickets();
+}
+
+function closeSupportModal(id) {
+  document.getElementById(id).style.display = "none";
+}
+
+function toggleNewTicketForm(show) {
+  const box = document.getElementById("newTicketBox");
+  const btn = document.getElementById("btnNewTicket");
+  if (show) {
+    box.style.display = "block";
+    btn.style.display = "none";
+    document.getElementById("ticketSubject").value = "";
+    document.getElementById("ticketMessage").value = "";
+  } else {
+    box.style.display = "none";
+    btn.style.display = "block";
+  }
+}
+
+// Submit Feedback to API
+async function submitUserFeedback(event) {
+  event.preventDefault();
+  const rating = document.getElementById("feedbackRating").value;
+  const comments = document.getElementById("feedbackComments").value.trim();
+
+  const { error } = await apiRequest("/api/support/feedback", "POST", { rating, comments });
+  if (error) {
+    showToast(error, "error");
+  } else {
+    showToast("Feedback submitted! Thank you so much! <i class='fa-solid fa-circle-check'></i>", "success");
+    closeSupportModal("feedbackOverlay");
+  }
+}
+
+// Submit Support ticket to API
+async function submitSupportTicket(event) {
+  event.preventDefault();
+  const subject = document.getElementById("ticketSubject").value.trim();
+  const message = document.getElementById("ticketMessage").value.trim();
+
+  const { error } = await apiRequest("/api/support/ticket", "POST", { subject, message });
+  if (error) {
+    showToast(error, "error");
+  } else {
+    showToast("Support request sent! We will reply shortly. <i class='fa-solid fa-circle-check'></i>", "success");
+    toggleNewTicketForm(false);
+    loadUserTickets();
+  }
+}
+
+// Load tickets list
+async function loadUserTickets() {
+  const container = document.getElementById("ticketsContainer");
+  container.innerHTML = '<div style="text-align:center;padding:20px;"><div class="spinner" style="margin:0 auto 10px;"></div>Loading ticket history...</div>';
+
+  const { data, error } = await apiRequest("/api/support/tickets");
+  if (error || !data) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--label3);">Failed to load tickets history.</div>';
+    return;
+  }
+
+  const tickets = data.tickets || [];
+  if (tickets.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--label3);"><i class="fa-solid fa-circle-info" style="font-size:1.5rem;margin-bottom:8px;display:block;"></i> No inquiries submitted yet. Need help? Create a ticket above.</div>';
+    return;
+  }
+
+  container.innerHTML = tickets.map(t => `
+    <div class="ticket-item">
+      <div class="ticket-header">
+        <span class="ticket-subject">${escapeHtml(t.subject)}</span>
+        <span class="ticket-status ${t.status}">${t.status}</span>
+      </div>
+      <div class="ticket-msg">${escapeHtml(t.message)}</div>
+      ${t.reply ? `
+        <div class="ticket-reply">
+          <strong>Response from Help Desk:</strong>
+          <div>${escapeHtml(t.reply)}</div>
+        </div>
+      ` : ''}
+      <div class="ticket-date">${formatDateTime(t.created_at)}</div>
+    </div>
+  `).join('');
+}
+

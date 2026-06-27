@@ -792,4 +792,87 @@ router.post("/fix-rls", isAdmin, async (req, res) => {
   }
 });
 
+// ── GET USER FEEDBACK ─────────────────────────────────────────
+// GET /api/admin/feedback
+router.get("/feedback", isAdmin, async (req, res) => {
+  try {
+    const { data: feedback, error } = await supabase
+      .from("feedback")
+      .select("*, profiles(full_name, email)")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      return res.status(500).json({ error: "Failed to fetch feedback." });
+    }
+
+    res.json({ feedback: feedback || [] });
+  } catch (err) {
+    console.error("Get feedback error:", err);
+    res.status(500).json({ error: "Failed to fetch feedback." });
+  }
+});
+
+// ── GET SUPPORT TICKETS ───────────────────────────────────────
+// GET /api/admin/tickets
+router.get("/tickets", isAdmin, async (req, res) => {
+  try {
+    const { data: tickets, error } = await supabase
+      .from("support_tickets")
+      .select("*, profiles(full_name, email)")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      return res.status(500).json({ error: "Failed to fetch support tickets." });
+    }
+
+    res.json({ tickets: tickets || [] });
+  } catch (err) {
+    console.error("Get support tickets error:", err);
+    res.status(500).json({ error: "Failed to fetch support tickets." });
+  }
+});
+
+// ── REPLY TO SUPPORT TICKET ───────────────────────────────────
+// POST /api/admin/tickets/:id/reply
+router.post("/tickets/:id/reply", isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reply } = req.body;
+
+    if (!reply || !reply.trim()) {
+      return res.status(400).json({ error: "Reply message cannot be empty." });
+    }
+
+    const { data: ticket, error: findError } = await supabase
+      .from("support_tickets")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (findError || !ticket) {
+      return res.status(404).json({ error: "Support ticket not found." });
+    }
+
+    const { error: updateError } = await supabase
+      .from("support_tickets")
+      .update({
+        reply: reply.trim(),
+        status: "resolved",
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", id);
+
+    if (updateError) {
+      return res.status(500).json({ error: "Failed to reply to ticket." });
+    }
+
+    await logActivity(req.adminId, "reply_support_ticket", ticket.user_id, `Replied to support ticket: "${ticket.subject}"`);
+
+    res.json({ message: "Reply sent and ticket marked as resolved." });
+  } catch (err) {
+    console.error("Reply support ticket error:", err);
+    res.status(500).json({ error: "Failed to send reply." });
+  }
+});
+
 module.exports = router;

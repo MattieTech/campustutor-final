@@ -123,6 +123,41 @@ const REQUIRED_TABLES = {
       CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created_at DESC);
     `,
   },
+  feedback: {
+    name: "feedback",
+    description: "User ratings and feedback",
+    sql: `
+      CREATE TABLE IF NOT EXISTS feedback (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+        rating INTEGER NOT NULL,
+        comments TEXT,
+        category VARCHAR(100),
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_feedback_user_id ON feedback(user_id);
+      CREATE INDEX IF NOT EXISTS idx_feedback_created_at ON feedback(created_at DESC);
+    `,
+  },
+  support_tickets: {
+    name: "support_tickets",
+    description: "Customer support tickets",
+    sql: `
+      CREATE TABLE IF NOT EXISTS support_tickets (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+        subject VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        status VARCHAR(50) DEFAULT 'open',
+        reply TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_support_tickets_user_id ON support_tickets(user_id);
+      CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status);
+      CREATE INDEX IF NOT EXISTS idx_support_tickets_created_at ON support_tickets(created_at DESC);
+    `,
+  },
 };
 
 // ── TABLE EXISTENCE CHECK ──────────────────────────────────────
