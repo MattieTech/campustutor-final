@@ -197,17 +197,19 @@ async function apiGetResults(documentId, options = {}) {
   return fetchAndCacheAIResults(documentId, options);
 }
 
-function renderQuizCorrections(reviewData) {
-  if (!reviewData || !Array.isArray(reviewData.quizItems) || !reviewData.quizItems.length) {
-    return '<div style="padding:16px 0;color:#666;">No correction data is available for this quiz yet.</div>';
-  }
-
-  const escapeHTML = (value) => String(value ?? '')
+function escapeHTML(value) {
+  return String(value ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function renderQuizCorrections(reviewData) {
+  if (!reviewData || !Array.isArray(reviewData.quizItems) || !reviewData.quizItems.length) {
+    return '<div style="padding:16px 0;color:#666;">No correction data is available for this quiz yet.</div>';
+  }
 
   const renderAnswerLine = (label, value, tone = 'neutral') => {
     const background = tone === 'good' ? 'rgba(46,213,115,0.14)' : tone === 'bad' ? 'rgba(255,77,77,0.14)' : 'rgba(0,0,0,0.04)';
@@ -1164,14 +1166,14 @@ async function loadUserTickets() {
   container.innerHTML = tickets.map(t => `
     <div class="ticket-item">
       <div class="ticket-header">
-        <span class="ticket-subject">${escapeHtml(t.subject)}</span>
+        <span class="ticket-subject">${escapeHTML(t.subject)}</span>
         <span class="ticket-status ${t.status}">${t.status}</span>
       </div>
-      <div class="ticket-msg">${escapeHtml(t.message)}</div>
+      <div class="ticket-msg">${escapeHTML(t.message)}</div>
       ${t.reply ? `
         <div class="ticket-reply">
           <strong>Response from Help Desk:</strong>
-          <div>${escapeHtml(t.reply)}</div>
+          <div>${escapeHTML(t.reply)}</div>
         </div>
       ` : ''}
       <div class="ticket-date">${formatDateTime(t.created_at)}</div>
