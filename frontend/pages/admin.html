@@ -378,6 +378,8 @@
 <nav class="mobile-menu" id="mobileMenu">
   <button class="mobile-menu-item" onclick="showPanel('overview',this);closeAdminMobileMenu();"><i class="fa-solid fa-house"></i> Overview</button>
   <button class="mobile-menu-item" onclick="showPanel('users',this);closeAdminMobileMenu();"><i class="fa-solid fa-users"></i> Users</button>
+  <button class="mobile-menu-item" onclick="showPanel('premium',this);closeAdminMobileMenu();"><i class="fa-solid fa-crown"></i> Premium Users</button>
+  <button class="mobile-menu-item" onclick="showPanel('verified',this);closeAdminMobileMenu();"><i class="fa-solid fa-circle-check"></i> Verified Users</button>
   <button class="mobile-menu-item" onclick="showPanel('gift',this);closeAdminMobileMenu();"><i class="fa-solid fa-gift"></i> Gift Premium</button>
   <button class="mobile-menu-item" onclick="showPanel('withdrawals',this);closeAdminMobileMenu();"><i class="fa-solid fa-money-bill-transfer"></i> Payouts</button>
   <button class="mobile-menu-item logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
@@ -396,6 +398,12 @@
     <div class="adm-sidebar-section" style="margin-top:8px;">Users</div>
     <button class="adm-nav-link" data-panel="users" onclick="showPanel('users',this)">
       <i class="fa-solid fa-users"></i> All Users
+    </button>
+    <button class="adm-nav-link" data-panel="premium" onclick="showPanel('premium',this)">
+      <i class="fa-solid fa-crown"></i> Premium Users
+    </button>
+    <button class="adm-nav-link" data-panel="verified" onclick="showPanel('verified',this)">
+      <i class="fa-solid fa-circle-check"></i> Verified Users
     </button>
 
     <div class="adm-sidebar-section" style="margin-top:8px;">Premium & Payouts</div>
@@ -452,6 +460,16 @@
           <div class="adm-stat-icon"><i class="fa-solid fa-robot"></i></div>
           <div class="adm-stat-num" id="st-ai" style="color:var(--adm-purple);">—</div>
           <div class="adm-stat-label">AI Generations</div>
+        </div>
+        <div class="adm-stat" style="cursor:pointer;" onclick="showPanel('premium')">
+          <div class="adm-stat-icon"><i class="fa-solid fa-crown"></i></div>
+          <div class="adm-stat-num" id="st-premium" style="color:#f59e0b;">—</div>
+          <div class="adm-stat-label">Premium Users</div>
+        </div>
+        <div class="adm-stat" style="cursor:pointer;" onclick="showPanel('verified')">
+          <div class="adm-stat-icon"><i class="fa-solid fa-user-check"></i></div>
+          <div class="adm-stat-num" id="st-verified" style="color:#10b981;">—</div>
+          <div class="adm-stat-label">Verified Users</div>
         </div>
       </div>
 
@@ -520,6 +538,76 @@
           </thead>
           <tbody id="usersBody">
             <tr><td colspan="6" class="adm-loading"><div class="spinner"></div> Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── PREMIUM SUBSCRIBERS PANEL ── -->
+    <div class="adm-panel" id="panel-premium">
+      <div class="adm-header">
+        <h1>Premium Subscribers <i class="fa-solid fa-crown" style="color:#f59e0b;"></i></h1>
+        <p>All users currently subscribed to Plus or Pro plans.</p>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
+        <div class="adm-stat" style="flex:1;min-width:140px;">
+          <div class="adm-stat-icon"><i class="fa-solid fa-bolt" style="color:#3b82f6;"></i></div>
+          <div class="adm-stat-num" id="premPlusCount" style="color:#3b82f6;">—</div>
+          <div class="adm-stat-label">Plus Plan</div>
+        </div>
+        <div class="adm-stat" style="flex:1;min-width:140px;">
+          <div class="adm-stat-icon"><i class="fa-solid fa-crown" style="color:#a855f7;"></i></div>
+          <div class="adm-stat-num" id="premProCount" style="color:#a855f7;">—</div>
+          <div class="adm-stat-label">Pro Plan</div>
+        </div>
+        <div class="adm-stat" style="flex:1;min-width:140px;">
+          <div class="adm-stat-icon"><i class="fa-solid fa-users" style="color:#f59e0b;"></i></div>
+          <div class="adm-stat-num" id="premTotalCount" style="color:#f59e0b;">—</div>
+          <div class="adm-stat-label">Total Premium</div>
+        </div>
+      </div>
+
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Plan</th>
+              <th>Status</th>
+              <th>Expires</th>
+            </tr>
+          </thead>
+          <tbody id="premiumBody">
+            <tr><td colspan="5" class="adm-loading"><div class="spinner"></div> Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── VERIFIED USERS PANEL ── -->
+    <div class="adm-panel" id="panel-verified">
+      <div class="adm-header">
+        <h1>Verified Users <i class="fa-solid fa-circle-check" style="color:#10b981;"></i></h1>
+        <p>All users who have verified their account via OTP email or Google authentication.</p>
+      </div>
+
+      <div style="font-size:.8rem;color:var(--label3);margin-bottom:10px;" id="verifiedCountLabel"></div>
+
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Plan</th>
+              <th>Last Login</th>
+              <th>Joined</th>
+            </tr>
+          </thead>
+          <tbody id="verifiedBody">
+            <tr><td colspan="5" class="adm-loading"><div class="spinner"></div> Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -668,6 +756,8 @@ function showPanel(name, btn) {
 
   if (name === 'users') loadUsers();
   if (name === 'overview') loadStats();
+  if (name === 'premium') loadPremiumSubscribers();
+  if (name === 'verified') loadVerifiedUsers();
   if (name === 'withdrawals') loadPayoutQueue();
 }
 
@@ -690,6 +780,8 @@ async function loadStats() {
   document.getElementById('st-banned').textContent = data.bannedUsers || 0;
   document.getElementById('st-docs').textContent   = data.totalDocuments || 0;
   document.getElementById('st-ai').textContent     = data.totalAIGenerations || 0;
+  document.getElementById('st-premium').textContent = data.premiumSubscribers || 0;
+  document.getElementById('st-verified').textContent = data.verifiedUsers || 0;
   document.getElementById('overviewSub').textContent =
     `Platform overview · Last updated ${new Date().toLocaleTimeString()}`;
 
@@ -753,6 +845,87 @@ function escapeHtml(text) {
 }
 
 loadStats(); // Run on page load
+
+// ── LOAD PREMIUM SUBSCRIBERS ──────────────────────────────────
+async function loadPremiumSubscribers() {
+  const tbody = document.getElementById('premiumBody');
+  tbody.innerHTML = '<tr><td colspan="5" class="adm-loading"><div class="spinner"></div> Loading...</td></tr>';
+
+  const { data, error } = await apiRequest('/api/admin/premium-subscribers');
+  if (error || !data) {
+    tbody.innerHTML = '<tr><td colspan="5" class="adm-empty">Failed to load premium subscribers.</td></tr>';
+    return;
+  }
+
+  const subs = data.subscribers || [];
+  const plusCount = subs.filter(s => s.plan === 'plus').length;
+  const proCount  = subs.filter(s => s.plan === 'pro').length;
+
+  document.getElementById('premPlusCount').textContent  = plusCount;
+  document.getElementById('premProCount').textContent   = proCount;
+  document.getElementById('premTotalCount').textContent  = subs.length;
+
+  if (subs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="adm-empty">No premium subscribers yet.</td></tr>';
+    return;
+  }
+
+  const planBadge = (plan) => {
+    const colors = { plus: 'background:#3b82f620;color:#3b82f6;', pro: 'background:#a855f720;color:#a855f7;' };
+    const icons  = { plus: '<i class="fa-solid fa-bolt"></i> ', pro: '<i class="fa-solid fa-crown"></i> ' };
+    return `<span class="adm-badge" style="${colors[plan] || ''};padding:3px 10px;border-radius:20px;font-weight:600;font-size:.78rem;">${icons[plan] || ''}${(plan || 'free').toUpperCase()}</span>`;
+  };
+
+  const statusBadge = (status) => {
+    const isActive = status === 'active';
+    return `<span class="adm-badge" style="background:${isActive ? 'rgba(16,185,129,.1)' : 'rgba(239,68,68,.1)'};color:${isActive ? '#10b981' : '#ef4444'};padding:3px 10px;border-radius:20px;font-size:.78rem;">${isActive ? '<i class="fa-solid fa-circle-check"></i> Active' : '<i class="fa-solid fa-clock"></i> Expired'}</span>`;
+  };
+
+  tbody.innerHTML = subs.map(s => `
+    <tr>
+      <td><strong>${esc(s.fullName)}</strong></td>
+      <td>${esc(s.email)}</td>
+      <td>${planBadge(s.plan)}</td>
+      <td>${statusBadge(s.subscriptionStatus)}</td>
+      <td>${s.subscriptionEnd ? new Date(s.subscriptionEnd).toLocaleDateString() : '—'}</td>
+    </tr>`).join('');
+}
+
+// ── LOAD VERIFIED USERS ───────────────────────────────────────
+async function loadVerifiedUsers() {
+  const tbody = document.getElementById('verifiedBody');
+  tbody.innerHTML = '<tr><td colspan="5" class="adm-loading"><div class="spinner"></div> Loading...</td></tr>';
+
+  const { data, error } = await apiRequest('/api/admin/verified-users');
+  if (error || !data) {
+    tbody.innerHTML = '<tr><td colspan="5" class="adm-empty">Failed to load verified users.</td></tr>';
+    return;
+  }
+
+  const users = data.users || [];
+  document.getElementById('verifiedCountLabel').textContent = `${users.length} verified user${users.length !== 1 ? 's' : ''} found`;
+
+  if (users.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="adm-empty">No verified users yet.</td></tr>';
+    return;
+  }
+
+  const planBadge = (plan) => {
+    const p = (plan || 'free').toLowerCase();
+    const colors = { free: 'background:rgba(16,185,129,.1);color:#10b981;', plus: 'background:#3b82f620;color:#3b82f6;', pro: 'background:#a855f720;color:#a855f7;' };
+    const icons  = { free: '', plus: '<i class="fa-solid fa-bolt"></i> ', pro: '<i class="fa-solid fa-crown"></i> ' };
+    return `<span class="adm-badge" style="${colors[p] || colors.free};padding:3px 10px;border-radius:20px;font-weight:600;font-size:.78rem;">${icons[p] || ''}${p.toUpperCase()}</span>`;
+  };
+
+  tbody.innerHTML = users.map(u => `
+    <tr>
+      <td><strong>${esc(u.fullName)}</strong></td>
+      <td>${esc(u.email)}</td>
+      <td>${planBadge(u.plan)}</td>
+      <td>${u.lastLogin ? formatDateTime(u.lastLogin) : '—'}</td>
+      <td>${formatDate(u.createdAt)}</td>
+    </tr>`).join('');
+}
 
 // ── LOAD USERS ────────────────────────────────────────────────
 let searchTimeout;

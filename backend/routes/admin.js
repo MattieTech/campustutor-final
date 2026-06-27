@@ -134,12 +134,34 @@ router.get("/stats", isAdmin, async (req, res) => {
       }
     }
 
+    // Count premium subscribers (plan != 'free' and subscription_status = 'active')
+    let premiumSubscribers = 0;
+    let verifiedUsers = 0;
+    try {
+      const { count: premCount, error: premErr } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .neq("plan", "free")
+        .eq("subscription_status", "active");
+      if (!premErr) premiumSubscribers = premCount || 0;
+    } catch (_) {}
+
+    try {
+      const { count: verCount, error: verErr } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("is_verified", true);
+      if (!verErr) verifiedUsers = verCount || 0;
+    } catch (_) {}
+
     const stats = {
       totalUsers,
       activeUsers: Math.max(0, activeUsers),
       bannedUsers,
       totalDocuments,
       totalAIGenerations,
+      premiumSubscribers,
+      verifiedUsers,
     };
 
     res.json(stats);
@@ -151,7 +173,74 @@ router.get("/stats", isAdmin, async (req, res) => {
       bannedUsers: 0,
       totalDocuments: 0,
       totalAIGenerations: 0,
+      premiumSubscribers: 0,
+      verifiedUsers: 0,
     });
+  }
+});
+
+// ── PREMIUM SUBSCRIBERS LIST ─────────────────────────────────
+// GET /api/admin/premium-subscribers
+router.get("/premium-subscribers", isAdmin, async (req, res) => {
+  try {
+    const { data: subscribers, error } = await supabase
+      .from("profiles")
+      .select("id, email, full_name, plan, subscription_status, subscription_end, created_at")
+      .neq("plan", "free")
+      .order("subscription_end", { ascending: false })
+      .range(0, 999);
+
+    if (error) {
+      return res.status(500).json({ error: "Failed to fetch premium subscribers." });
+    }
+
+    res.json({
+      total: subscribers?.length || 0,
+      subscribers: (subscribers || []).map(s => ({
+        id: s.id,
+        email: s.email,
+        fullName: s.full_name || "Unknown",
+        plan: s.plan,
+        subscriptionStatus: s.subscription_status || "unknown",
+        subscriptionEnd: s.subscription_end,
+        createdAt: s.created_at,
+      })),
+    });
+  } catch (err) {
+    console.error("Premium subscribers error:", err);
+    res.status(500).json({ error: "Failed to fetch premium subscribers." });
+  }
+});
+
+// ── VERIFIED USERS LIST ──────────────────────────────────────
+// GET /api/admin/verified-users
+router.get("/verified-users", isAdmin, async (req, res) => {
+  try {
+    const { data: verified, error } = await supabase
+      .from("profiles")
+      .select("id, email, full_name, is_verified, plan, created_at, last_login")
+      .eq("is_verified", true)
+      .order("created_at", { ascending: false })
+      .range(0, 999);
+
+    if (error) {
+      return res.status(500).json({ error: "Failed to fetch verified users." });
+    }
+
+    res.json({
+      total: verified?.length || 0,
+      users: (verified || []).map(u => ({
+        id: u.id,
+        email: u.email,
+        fullName: u.full_name || "Unknown",
+        plan: u.plan || "free",
+        createdAt: u.created_at,
+        lastLogin: u.last_login,
+      })),
+    });
+  } catch (err) {
+    console.error("Verified users error:", err);
+    res.status(500).json({ error: "Failed to fetch verified users." });
   }
 });
 
