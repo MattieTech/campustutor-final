@@ -73,7 +73,14 @@ document.getElementById('loginForm').addEventListener('submit',async(e)=>{
   const btn=document.getElementById('loginBtn');
   btn.disabled=true; btn.textContent='Logging in...';
   const {data,error}=await apiLogin(document.getElementById('email').value.trim(),document.getElementById('password').value);
-  showToast(`Welcome back, ${data.user.fullName}! <i class="fa-solid fa-hand"></i>`,'success');
+  if (error || !data || !data.user) {
+    err.textContent = error || 'Invalid email or password.';
+    err.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Log In';
+    return;
+  }
+  showToast(`Welcome back, ${data.user.fullName || 'Scholar'}! <i class="fa-solid fa-hand"></i>`,'success');
   const role = data.user?.app_metadata?.role || data.user?.role;
   if (role === 'admin') {
     setTimeout(()=>{window.location.href='/pages/dashboard.html';},800);

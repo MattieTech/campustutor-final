@@ -24,7 +24,7 @@ async function getUserCoinBalance(userId) {
     const canClaimDaily = !lastClaim || lastClaim !== todayStr;
 
     return {
-      coins: Number(profile.coins ?? 20),
+      coins: Number(profile.coins ?? 5),
       canClaimDaily,
       streak: profile.daily_streak_count || 1,
       lastClaim,
@@ -154,9 +154,9 @@ async function claimDailyBonus(userId) {
       }
     }
 
-    // Reward scaling based on streak (e.g. Day 1: 5 coins, Day 7: 20 coins)
-    const baseReward = 5;
-    const streakBonus = Math.min(newStreak * 2, 15);
+    // Expensive coin economy: 3 coins for daily check-in (streak scales gently 3 -> 5 max)
+    const baseReward = 3;
+    const streakBonus = Math.min(Math.floor((newStreak - 1) / 2), 2); // Day 1-2: 3, Day 3-4: 4, Day 5+: 5
     const totalCoinsAwarded = baseReward + streakBonus;
 
     const currentCoins = Number(profile.coins ?? 0);

@@ -1271,7 +1271,8 @@ function updateCoinUIElements() {
   if (claimBoxBtn) {
     if (userCoinState.canClaimDaily) {
       claimBoxBtn.disabled = false;
-      claimBoxBtn.innerHTML = `🎁 Claim Day ${userCoinState.streak} Bonus (+${5 + Math.min(userCoinState.streak * 2, 15)} Coins)`;
+      const bonusEstimate = 3 + Math.min(Math.floor(((userCoinState.streak || 1) - 1) / 2), 2);
+      claimBoxBtn.innerHTML = `🎁 Claim Day ${userCoinState.streak} Bonus (+${bonusEstimate} Coins)`;
     } else {
       claimBoxBtn.disabled = true;
       claimBoxBtn.innerHTML = `✓ Day ${userCoinState.streak} Claimed! Next reward tomorrow`;
@@ -1351,7 +1352,7 @@ function injectCoinsModal() {
           <div class="coin-chest-box">
             <div style="font-size:2rem;margin-bottom:6px;">🎁</div>
             <h4 style="font-size:1.05rem;font-weight:800;margin-bottom:4px;">Daily Study Reward</h4>
-            <p style="font-size:0.82rem;color:var(--label2);margin-bottom:14px;">Log in daily to maintain your study streak and earn free CampusCoins!</p>
+            <p style="font-size:0.82rem;color:var(--label2);margin-bottom:14px;">Check in daily to maintain your study streak and earn 3 CampusCoins!</p>
             <button class="btn btn-warning" id="btnClaimChest" onclick="claimDailyBonusAction()" style="background:linear-gradient(135deg,#ffb020,#d97806);color:#fff;border:none;font-weight:800;padding:10px 22px;border-radius:var(--r-pill);">
               🎁 Claim Today's Bonus
             </button>
@@ -1370,7 +1371,7 @@ function injectCoinsModal() {
             <div class="coin-pack-card" onclick="buyCoinPackAction('starter')">
               <div class="coin-amount-title">🪙 100</div>
               <div style="font-size:0.75rem;color:var(--label3);">Starter Stash</div>
-              <div class="coin-price-tag">₦500</div>
+              <div class="coin-price-tag">₦1,500</div>
               <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;">Buy Pack</button>
             </div>
 
@@ -1379,7 +1380,7 @@ function injectCoinsModal() {
               <span class="coin-pack-badge">Popular</span>
               <div class="coin-amount-title">🪙 250</div>
               <div style="font-size:0.75rem;color:var(--label3);">Scholar Pack</div>
-              <div class="coin-price-tag">₦1,000</div>
+              <div class="coin-price-tag">₦3,500</div>
               <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;background:#d97806;border:none;">Buy Pack</button>
             </div>
 
@@ -1387,7 +1388,7 @@ function injectCoinsModal() {
             <div class="coin-pack-card" onclick="buyCoinPackAction('pro')">
               <div class="coin-amount-title">🪙 600</div>
               <div style="font-size:0.75rem;color:var(--green);font-weight:700;">+100 Bonus Coins</div>
-              <div class="coin-price-tag">₦2,000</div>
+              <div class="coin-price-tag">₦7,500</div>
               <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;">Buy Pack</button>
             </div>
 
@@ -1395,7 +1396,7 @@ function injectCoinsModal() {
             <div class="coin-pack-card" onclick="buyCoinPackAction('vip')">
               <div class="coin-amount-title">🪙 1,600</div>
               <div style="font-size:0.75rem;color:var(--purple);font-weight:700;">+350 Bonus Coins</div>
-              <div class="coin-price-tag">₦4,500</div>
+              <div class="coin-price-tag">₦18,000</div>
               <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;">Buy Pack</button>
             </div>
           </div>

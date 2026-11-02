@@ -3,9 +3,9 @@
 -- Run this in your Supabase SQL Editor.
 -- ============================================================
 
--- 1. Add coin & daily bonus tracking columns to profiles
+-- 1. Add coin & daily bonus tracking columns to profiles (scarce coin economy: starting 5 coins)
 ALTER TABLE profiles
-  ADD COLUMN IF NOT EXISTS coins               INT DEFAULT 20,
+  ADD COLUMN IF NOT EXISTS coins               INT DEFAULT 5,
   ADD COLUMN IF NOT EXISTS last_daily_bonus    DATE,
   ADD COLUMN IF NOT EXISTS daily_streak_count  INT DEFAULT 1;
 

@@ -11,13 +11,19 @@ const supabase = require("../utils/supabase");
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || "sk_test_mockkey";
 
-// Coin packages definition
+// Expensive coin packages definition (100 coins = ₦1,500)
 const COIN_PACKAGES = {
-  starter: { id: "starter", name: "Starter Stash", coins: 100, priceNGN: 500, amountKobo: 50000 },
-  popular: { id: "popular", name: "Scholar Pack", coins: 250, priceNGN: 1000, amountKobo: 100000 },
-  pro:     { id: "pro",     name: "Campus Master", coins: 600, priceNGN: 2000, amountKobo: 200000 },
-  vip:     { id: "vip",     name: "Semester Pass", coins: 1600, priceNGN: 4500, amountKobo: 450000 },
+  starter: { id: "starter", name: "Starter Stash", coins: 100, priceNGN: 1500, amountKobo: 150000 },
+  popular: { id: "popular", name: "Scholar Pack", coins: 250, priceNGN: 3500, amountKobo: 350000 },
+  pro:     { id: "pro",     name: "Campus Master", coins: 600, priceNGN: 7500, amountKobo: 750000 },
+  vip:     { id: "vip",     name: "Semester Pass", coins: 1600, priceNGN: 18000, amountKobo: 1800000 },
 };
+
+// ── GET AVAILABLE PACKAGES ────────────────────────────────────
+// GET /api/coins/packages
+router.get("/packages", (req, res) => {
+  res.json({ packages: Object.values(COIN_PACKAGES) });
+});
 
 // ── GET USER COIN BALANCE ─────────────────────────────────────
 // GET /api/coins/balance
@@ -48,11 +54,29 @@ router.post("/claim-daily", authMiddleware, async (req, res) => {
 // POST /api/coins/buy-package
 router.post("/buy-package", authMiddleware, async (req, res) => {
   try {
-    const { packageId } = req.body;
-    const pkg = COIN_PACKAGES[packageId];
+    let { packageId, coins, amountNgn } = req.body;
+    let pkg = null;
 
+    if (packageId && COIN_PACKAGES[packageId]) {
+      pkg = COIN_PACKAGES[packageId];
+    } else if (coins) {
+      // Find matching package by coins
+      pkg = Object.values(COIN_PACKAGES).find(p => p.coins === Number(coins));
+    }
+
+    // Fallback if custom or direct
     if (!pkg) {
-      return res.status(400).json({ error: "Invalid coin package selected." });
+      if (coins && amountNgn) {
+        pkg = {
+          id: `custom_${coins}`,
+          name: `${coins} CampusCoins`,
+          coins: Number(coins),
+          priceNGN: Number(amountNgn),
+          amountKobo: Number(amountNgn) * 100,
+        };
+      } else {
+        return res.status(400).json({ error: "Invalid coin package selected." });
+      }
     }
 
     const userId = req.user.id;
