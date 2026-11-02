@@ -280,6 +280,17 @@
         <p>Choose the subscription plan that works for you</p>
       </div>
 
+      <!-- Paywall / New User Banner -->
+      <div id="paywallBanner" style="display:none; margin-bottom: 28px; padding: 18px 22px; border-radius: 16px; background: linear-gradient(135deg, rgba(0, 122, 255, 0.12), rgba(88, 86, 214, 0.12)); border: 1.5px solid rgba(0, 122, 255, 0.35); box-shadow: 0 4px 18px rgba(0, 122, 255, 0.08);">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="font-size:2rem;" id="paywallBannerIcon">🔒</div>
+          <div>
+            <div style="font-weight:800; font-size:1.05rem; color:var(--label);" id="paywallBannerTitle">Subscription Required</div>
+            <div style="font-size:0.88rem; color:var(--label2); margin-top:2px;" id="paywallBannerDesc">CampusTutor AI is a premium service. Subscribe below to unlock your study tools.</div>
+          </div>
+        </div>
+      </div>
+
       <div style="margin-bottom: 32px; padding: 14px 18px; border-radius: var(--r); background: rgba(52, 199, 89, 0.08); border-left: 4px solid var(--green); display: none;" id="activePlanAlert">
         <span style="font-weight: 700; color: var(--green);">Current Subscription: </span>
         <span id="activePlanName" style="font-weight: 600;">Free Trial</span>
@@ -471,6 +482,39 @@
     
     // Redirect user to Paystack payment gateway
     window.location.href = data.authorization_url;
+  }
+
+  // Check URL parameters for paywall or payment returns
+  const urlParams = new URLSearchParams(window.location.search);
+  const ref = urlParams.get('reference') || urlParams.get('trxref');
+  const isNewUser = urlParams.get('new_user') === 'true';
+  const reason = urlParams.get('reason');
+
+  if (ref) {
+    showToast('Verifying payment with Paystack...', 'info');
+    apiRequest(`/api/paystack/verify/${encodeURIComponent(ref)}`).then(({ data, error }) => {
+      if (data && data.success) {
+        showToast(`🎉 Payment verified! Welcome to ${data.plan.toUpperCase()}! Redirecting to dashboard...`, 'success');
+        setTimeout(() => { window.location.href = '/pages/dashboard.html'; }, 1500);
+      } else {
+        showToast(error || 'Could not verify payment.', 'error');
+      }
+    });
+  }
+
+  const banner = document.getElementById('paywallBanner');
+  if (banner) {
+    if (isNewUser) {
+      banner.style.display = 'block';
+      document.getElementById('paywallBannerIcon').textContent = '🎉';
+      document.getElementById('paywallBannerTitle').textContent = 'Welcome! Choose Your Plan to Get Started';
+      document.getElementById('paywallBannerDesc').textContent = 'Activate your account by choosing a flexible Plus or Pro plan below.';
+    } else if (reason === 'paywall') {
+      banner.style.display = 'block';
+      document.getElementById('paywallBannerIcon').textContent = '🔒';
+      document.getElementById('paywallBannerTitle').textContent = 'Subscription Required to Access CampusTutor AI';
+      document.getElementById('paywallBannerDesc').textContent = 'You need an active subscription to access the dashboard, upload lecture slides, and generate AI study content.';
+    }
   }
 
   // Load subscriptions on init

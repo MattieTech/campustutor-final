@@ -7,6 +7,7 @@ const router = express.Router();
 const { askGemini } = require("../utils/gemini");
 const supabase = require("../utils/supabase");
 const authMiddleware = require("../middleware/authMiddleware");
+const subscriptionMiddleware = require("../middleware/subscriptionMiddleware");
 const { awardXP, updateStreak } = require("../utils/xp");
 
 // Helper: fetch document text from Supabase and verify ownership
@@ -586,8 +587,12 @@ function handleAIError(err, res) {
   res.status(500).json({ error: err.message || "Failed to process your request." });
 }
 
+// All AI study routes require authentication and active paid subscription
+router.use(authMiddleware);
+router.use(subscriptionMiddleware);
+
 // ── SUMMARIZE ─────────────────────────────────────────────────
-router.post("/summarize", authMiddleware, async (req, res) => {
+router.post("/summarize", async (req, res) => {
   try {
     const { documentId, summarySize } = req.body;
     if (!documentId) {

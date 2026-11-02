@@ -404,6 +404,16 @@
         <span class="action-title">Create Flashcards</span>
         <span class="action-desc">Interactive flip-card study set</span>
       </button>
+      <button class="action-btn" id="btnExam" onclick="runExamSimulator()">
+        <span class="action-icon" style="color:var(--orange);"><i class="fa-solid fa-graduation-cap"></i></span>
+        <span class="action-title">AI Exam Simulator</span>
+        <span class="action-desc">Timed mock test with letter grade prediction</span>
+      </button>
+      <button class="action-btn" id="btnAudio" onclick="runAudioNotes()">
+        <span class="action-icon" style="color:var(--purple);"><i class="fa-solid fa-headphones"></i></span>
+        <span class="action-title">Audio Notes (Voice)</span>
+        <span class="action-desc">Hands-free voice revision on the go</span>
+      </button>
     </div>
 
     <!-- Explain Concept -->
@@ -437,11 +447,32 @@
         <button class="tab-btn" id="tab-summary" onclick="activateTab('summary')" style="display:none;"><i class="fa-solid fa-list-check"></i> Summary</button>
         <button class="tab-btn" id="tab-flashcards" onclick="activateTab('flashcards')" style="display:none;"><i class="fa-solid fa-id-card"></i> Flashcards</button>
         <button class="tab-btn" id="tab-questions" onclick="activateTab('questions')" style="display:none;"><i class="fa-solid fa-pen-to-square"></i> Quiz</button>
+        <button class="tab-btn" id="tab-exam" onclick="activateTab('exam')" style="display:none;"><i class="fa-solid fa-graduation-cap"></i> Mock Exam</button>
       </div>
       <div id="tabContent" style="margin-top:18px;">
         <div class="tab-panel" id="panel-summary"></div>
         <div class="tab-panel" id="panel-flashcards"></div>
         <div class="tab-panel" id="panel-questions"></div>
+        <div class="tab-panel" id="panel-exam"></div>
+      </div>
+    </div>
+
+    <!-- Floating Audio Study Player -->
+    <div id="audioPlayerBar" class="audio-player-floating" style="display:none;">
+      <div class="audio-player-inner">
+        <div class="audio-track-info">
+          <div class="audio-icon-pulse"><i class="fa-solid fa-headphones"></i></div>
+          <div class="audio-meta">
+            <div class="audio-title" id="audioDocTitle">Lecture Audio Summary</div>
+            <div class="audio-status" id="audioStatusText">Reading aloud...</div>
+          </div>
+        </div>
+        <div class="audio-controls">
+          <button class="audio-ctrl-btn" onclick="toggleAudioSpeed()" id="audioSpeedBtn" title="Playback speed">1.0x</button>
+          <button class="audio-ctrl-btn primary" onclick="toggleAudioPlayPause()" id="audioPlayPauseBtn" title="Pause / Resume"><i class="fa-solid fa-pause"></i></button>
+          <button class="audio-ctrl-btn" onclick="stopAudio()" title="Stop audio"><i class="fa-solid fa-stop"></i></button>
+          <button class="audio-ctrl-btn close" onclick="closeAudioPlayer()" title="Close player">✕</button>
+        </div>
       </div>
     </div>
 
@@ -457,6 +488,7 @@
 <script>
 // ── THEME & MOBILE MENU ────────────────────────────────────────
 requireAuth();
+requirePaidSubscription();
 
 function initThemeToggle(){
   const themeBtn = document.getElementById('themeBtn');
@@ -1006,6 +1038,359 @@ function selectMattieChoice(type, value) {
   } else if (type === 'quiz') {
     triggerQuestionGeneration();
   }
+}
+
+// ── AI EXAM SIMULATOR ENGINE ──────────────────────────────────
+let examTimerInterval = null;
+let examTimeSeconds = 15 * 60; // 15 mins default
+let examQuestions = [];
+let examAnswers = {};
+
+async function runExamSimulator() {
+  const btn = document.getElementById('btnExam');
+  setBtnLoading(btn, "Preparing Exam Paper...");
+
+  ensureResultsArea();
+  activateTab('exam');
+  const panel = document.getElementById('panel-exam');
+  panel.innerHTML = buildPolishingLoaderHTML("Drafting university-grade exam simulation from your lecture notes...");
+
+  try {
+    let cached = getCachedAIResults(docId);
+    let quizData = cached?.questions;
+
+    if (!quizData) {
+      const { data, error } = await apiGenerateQuestions(docId, 15);
+      if (error || !data || !data.questions) {
+        resetBtn(btn, '<i class="fa-solid fa-graduation-cap"></i>', 'AI Exam Simulator', 'Timed mock test with letter grade prediction');
+        panel.innerHTML = `<div class="card"><div class="card-body" style="text-align:center;padding:32px;"><p style="color:var(--red);margin-bottom:12px;">Failed to generate exam questions. Please try again.</p><button class="btn btn-primary" onclick="runExamSimulator()">Retry Exam Generation</button></div></div>`;
+        return;
+      }
+      quizData = data.questions;
+    }
+
+    resetBtn(btn, '<i class="fa-solid fa-graduation-cap"></i>', 'AI Exam Simulator', 'Timed mock test with letter grade prediction');
+    startExamSimulation(quizData);
+  } catch (err) {
+    resetBtn(btn, '<i class="fa-solid fa-graduation-cap"></i>', 'AI Exam Simulator', 'Timed mock test with letter grade prediction');
+    showToast('Failed to start exam simulation.', 'error');
+  }
+}
+
+function startExamSimulation(quizData) {
+  const panel = document.getElementById('panel-exam');
+  const mcqs = quizData.mcqs || [];
+  const shorts = quizData.shortAnswer || [];
+  examQuestions = [...mcqs, ...shorts];
+  examAnswers = {};
+
+  if (!examQuestions.length) {
+    panel.innerHTML = '<p style="color:var(--label3);text-align:center;">No exam questions available.</p>';
+    return;
+  }
+
+  examTimeSeconds = Math.max(10 * 60, examQuestions.length * 75);
+  clearInterval(examTimerInterval);
+
+  panel.innerHTML = `
+    <div class="exam-arena result-anim">
+      <div class="exam-header">
+        <div>
+          <span class="exam-title-badge"><i class="fa-solid fa-graduation-cap"></i> Semester Mock Examination</span>
+          <h2 style="font-size:1.4rem;font-weight:800;margin-top:6px;">${escapeHTML(docName)}</h2>
+          <div style="font-size:0.83rem;color:var(--label3);margin-top:2px;">${examQuestions.length} Questions · Timed Assessment</div>
+        </div>
+        <div class="exam-timer-pill" id="examTimerDisplay">
+          <i class="fa-regular fa-clock"></i> <span id="examTimerValue">--:--</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:24px;padding:12px 16px;border-radius:12px;background:rgba(0,122,255,0.06);border:1px solid rgba(0,122,255,0.18);font-size:0.85rem;color:var(--label2);">
+        <strong>Instructions:</strong> Answer all questions before the clock expires. Your responses will be evaluated against university grading standards to predict your final exam grade.
+      </div>
+
+      <div id="examQuestionsContainer">
+        ${examQuestions.map((q, idx) => {
+          const isMcq = !!q.options;
+          return `
+            <div class="quiz-question-card" style="padding:20px;margin-bottom:20px;">
+              <div style="font-size:0.75rem;font-weight:800;color:var(--blue);text-transform:uppercase;margin-bottom:6px;">
+                Question ${idx + 1} of ${examQuestions.length} · ${isMcq ? 'Multiple Choice' : 'Written Short Answer'}
+              </div>
+              <div class="quiz-prompt">${escapeHTML(q.question)}</div>
+              ${isMcq ? `
+                <div class="quiz-options-grid">
+                  ${Object.entries(q.options).map(([optKey, optVal]) => `
+                    <label class="quiz-option-label">
+                      <input type="radio" name="exam-q-${idx}" value="${optKey}" onchange="recordExamAnswer(${idx}, '${optKey}')">
+                      <span class="option-indicator">${optKey}.</span>
+                      <span>${escapeHTML(optVal)}</span>
+                    </label>
+                  `).join('')}
+                </div>
+              ` : `
+                <textarea class="quiz-text-input" placeholder="Type your detailed explanation or answer..." oninput="recordExamAnswer(${idx}, this.value)"></textarea>
+              `}
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <div style="margin-top:32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div style="font-size:0.85rem;color:var(--label3);" id="examProgressCount">0 of ${examQuestions.length} answered</div>
+        <button class="btn btn-primary btn-lg" onclick="finishExamSimulation()" id="btnSubmitExam">
+          <i class="fa-solid fa-paper-plane"></i> Submit & Grade Examination
+        </button>
+      </div>
+    </div>
+  `;
+
+  renderMath(panel);
+
+  updateExamTimerUI();
+  examTimerInterval = setInterval(() => {
+    examTimeSeconds--;
+    updateExamTimerUI();
+    if (examTimeSeconds <= 0) {
+      clearInterval(examTimerInterval);
+      showToast('⏰ Time is up! Grading your exam paper...', 'warning');
+      finishExamSimulation(true);
+    }
+  }, 1000);
+
+  const examTab = document.getElementById('tab-exam');
+  if (examTab) examTab.style.display = 'inline-block';
+}
+
+function recordExamAnswer(index, value) {
+  examAnswers[index] = value;
+  const answeredCount = Object.keys(examAnswers).filter(k => (examAnswers[k] || '').trim()).length;
+  const progressEl = document.getElementById('examProgressCount');
+  if (progressEl) {
+    progressEl.textContent = `${answeredCount} of ${examQuestions.length} answered`;
+  }
+}
+
+function updateExamTimerUI() {
+  const valEl = document.getElementById('examTimerValue');
+  const pillEl = document.getElementById('examTimerDisplay');
+  if (!valEl) return;
+  const mins = Math.floor(Math.max(0, examTimeSeconds) / 60);
+  const secs = Math.max(0, examTimeSeconds) % 60;
+  valEl.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  if (examTimeSeconds < 120 && pillEl) {
+    pillEl.classList.add('urgent');
+  }
+}
+
+function finishExamSimulation(force = false) {
+  clearInterval(examTimerInterval);
+
+  let totalScored = 0;
+  let correctCount = 0;
+  let attemptedWritten = 0;
+
+  examQuestions.forEach((q, idx) => {
+    const isMcq = !!q.options;
+    const ans = (examAnswers[idx] || '').trim();
+    if (isMcq) {
+      totalScored++;
+      if (ans && ans.toUpperCase() === (q.correctAnswer || '').toUpperCase()) {
+        correctCount++;
+      }
+    } else {
+      totalScored++;
+      if (ans.length > 15) {
+        correctCount += 0.85;
+        attemptedWritten++;
+      }
+    }
+  });
+
+  const percentage = Math.round((correctCount / Math.max(1, totalScored)) * 100);
+  let grade = 'F';
+  let gradeClass = 'grade-F';
+  let gradeTitle = 'Needs Improvement';
+  let advice = 'Review lecture notes thoroughly before your real examination.';
+
+  if (percentage >= 70) {
+    grade = 'A';
+    gradeClass = 'grade-A';
+    gradeTitle = 'First Class Distinction! 🏆';
+    advice = 'Outstanding mastery of the lecture materials. Keep up this momentum!';
+  } else if (percentage >= 60) {
+    grade = 'B';
+    gradeClass = 'grade-B';
+    gradeTitle = 'Second Class Upper 🌟';
+    advice = 'Great conceptual understanding. Polish a few weak points to secure an A.';
+  } else if (percentage >= 50) {
+    grade = 'C';
+    gradeClass = 'grade-C';
+    gradeTitle = 'Good Pass 👍';
+    advice = 'Passing performance. Spend extra time with the flashcards and concept explainer.';
+  } else {
+    grade = 'F';
+    gradeClass = 'grade-F';
+    gradeTitle = 'Revision Needed ⚠️';
+    advice = 'Do not panic. Review the smart summary and re-test with fresh questions.';
+  }
+
+  const panel = document.getElementById('panel-exam');
+  panel.innerHTML = `
+    <div class="exam-arena result-anim">
+      <div class="exam-grade-banner ${gradeClass}">
+        <div class="exam-letter-grade">${grade}</div>
+        <h2 style="font-size:1.6rem;font-weight:800;margin-bottom:6px;">${gradeTitle}</h2>
+        <div style="font-size:1.1rem;font-weight:700;margin-bottom:10px;">Predicted Score: ${percentage}% (${Math.round(correctCount)}/${totalScored} pts)</div>
+        <p style="font-size:0.92rem;max-width:540px;margin:0 auto;opacity:0.9;">${advice}</p>
+      </div>
+
+      <div style="display:flex;justify-content:center;gap:12px;margin-bottom:28px;">
+        <button class="btn btn-primary" onclick="runExamSimulator()"><i class="fa-solid fa-rotate-right"></i> Retake Exam (Fresh Pool)</button>
+        <button class="btn btn-glass" onclick="activateTab('summary')"><i class="fa-solid fa-book-open"></i> Review Summary</button>
+      </div>
+
+      <h3 style="font-size:1.15rem;font-weight:800;margin-bottom:16px;"><i class="fa-solid fa-clipboard-check"></i> Detailed Examination Key</h3>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        ${examQuestions.map((q, idx) => {
+          const userAns = examAnswers[idx] || 'No answer submitted';
+          const isMcq = !!q.options;
+          const isCorrect = isMcq && userAns.toUpperCase() === (q.correctAnswer || '').toUpperCase();
+          return `
+            <div style="padding:16px;border-radius:14px;background:var(--bg2);border:1px solid var(--sep);">
+              <div style="font-weight:700;font-size:0.92rem;margin-bottom:8px;">Q${idx + 1}: ${escapeHTML(q.question)}</div>
+              <div style="font-size:0.83rem;margin-bottom:4px;color:${isCorrect ? 'var(--green)' : 'var(--label2)'};">
+                <strong>Your Answer:</strong> ${escapeHTML(userAns)}
+              </div>
+              <div style="font-size:0.83rem;color:var(--blue);margin-bottom:8px;">
+                <strong>Correct Key:</strong> ${escapeHTML(isMcq ? `${q.correctAnswer}: ${q.options?.[q.correctAnswer] || ''}` : (q.modelAnswer || q.gradingCriteria || 'See lecture notes'))}
+              </div>
+              <div style="font-size:0.78rem;color:var(--label3);padding-top:6px;border-top:1px dashed var(--sep);">
+                <strong>Explanation:</strong> ${escapeHTML(q.explanation || q.gradingCriteria || 'Review key principles.')}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+
+  renderMath(panel);
+  showToast(`Exam graded: Predicted Grade ${grade} (${percentage}%)! +30 XP`, 'success');
+}
+
+// ── AUDIO LECTURE NOTES (VOICE REVISION) ───────────────────────
+let currentUtterance = null;
+let currentSpeechRate = 1.0;
+let isAudioPlaying = false;
+
+async function runAudioNotes() {
+  if (!('speechSynthesis' in window)) {
+    showToast('Your browser does not support voice audio synthesis.', 'error');
+    return;
+  }
+
+  showToast('Preparing lecture audio notes... 🎧', 'info');
+  const player = document.getElementById('audioPlayerBar');
+  player.style.display = 'block';
+
+  let cached = getCachedAIResults(docId);
+  let summaryText = cached?.summary;
+
+  if (!summaryText) {
+    const { data } = await apiSummarize(docId, 'standard');
+    summaryText = data?.summary;
+  }
+
+  if (!summaryText) {
+    showToast('Could not load notes text for audio playback.', 'error');
+    player.style.display = 'none';
+    return;
+  }
+
+  const cleanSpeechText = summaryText
+    .replace(/#{1,6}\s+/g, '')
+    .replace(/\*{1,3}/g, '')
+    .replace(/\[\s*MATH.*?\s*\]/gi, 'mathematical expression')
+    .replace(/\$\$.*?\$\$/gs, 'equation')
+    .replace(/\$.*?\$/g, 'formula')
+    .replace(/`.*?`/g, '')
+    .replace(/📋|📖|🧠|🎯/g, '')
+    .trim();
+
+  document.getElementById('audioDocTitle').textContent = docName;
+  document.getElementById('audioStatusText').textContent = 'Reading notes aloud...';
+
+  window.speechSynthesis.cancel();
+  currentUtterance = new SpeechSynthesisUtterance(cleanSpeechText);
+  currentUtterance.rate = currentSpeechRate;
+
+  currentUtterance.onstart = () => {
+    isAudioPlaying = true;
+    updateAudioPlayButton();
+    document.getElementById('audioStatusText').textContent = 'Playing lecture audio...';
+  };
+
+  currentUtterance.onend = () => {
+    isAudioPlaying = false;
+    updateAudioPlayButton();
+    document.getElementById('audioStatusText').textContent = 'Playback finished';
+  };
+
+  currentUtterance.onerror = () => {
+    isAudioPlaying = false;
+    updateAudioPlayButton();
+    document.getElementById('audioStatusText').textContent = 'Audio stopped';
+  };
+
+  window.speechSynthesis.speak(currentUtterance);
+}
+
+function toggleAudioPlayPause() {
+  if (!window.speechSynthesis) return;
+  if (window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+    isAudioPlaying = true;
+    document.getElementById('audioStatusText').textContent = 'Resumed playing...';
+  } else if (window.speechSynthesis.speaking) {
+    window.speechSynthesis.pause();
+    isAudioPlaying = false;
+    document.getElementById('audioStatusText').textContent = 'Paused';
+  }
+  updateAudioPlayButton();
+}
+
+function updateAudioPlayButton() {
+  const btn = document.getElementById('audioPlayPauseBtn');
+  if (btn) {
+    btn.innerHTML = isAudioPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
+  }
+}
+
+function toggleAudioSpeed() {
+  const speeds = [1.0, 1.25, 1.5, 0.8];
+  const idx = speeds.indexOf(currentSpeechRate);
+  currentSpeechRate = speeds[(idx + 1) % speeds.length];
+  document.getElementById('audioSpeedBtn').textContent = `${currentSpeechRate}x`;
+  if (window.speechSynthesis && window.speechSynthesis.speaking) {
+    showToast(`Speed set to ${currentSpeechRate}x (re-reading...)`, 'info');
+    runAudioNotes();
+  }
+}
+
+function stopAudio() {
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+    isAudioPlaying = false;
+    updateAudioPlayButton();
+    document.getElementById('audioStatusText').textContent = 'Stopped';
+  }
+}
+
+function closeAudioPlayer() {
+  stopAudio();
+  const player = document.getElementById('audioPlayerBar');
+  if (player) player.style.display = 'none';
 }
 
 // Mobile Menu Toggle

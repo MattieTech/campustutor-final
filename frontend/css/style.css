@@ -979,4 +979,186 @@ img{max-width:100%;display:block;}
   margin-top: 4px;
 }
 
+/* ── FLOATING AUDIO PLAYER ── */
+.audio-player-floating {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: calc(100% - 40px);
+  max-width: 540px;
+  background: var(--glass-hv);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--glass-b);
+  border-radius: var(--r-xl);
+  padding: 14px 20px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.22), 0 4px 16px rgba(0,0,0,0.1);
+  animation: slideUpAudio 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slideUpAudio {
+  from { transform: translate(-50%, 40px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+.audio-player-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.audio-track-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.audio-icon-pulse {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 14px rgba(0,122,255,0.35);
+  flex-shrink: 0;
+  animation: audioPulse 1.8s infinite ease-in-out;
+}
+@keyframes audioPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); box-shadow: 0 6px 20px rgba(175,82,222,0.45); }
+}
+.audio-meta {
+  min-width: 0;
+}
+.audio-title {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--label);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.audio-status {
+  font-size: 0.74rem;
+  color: var(--label3);
+}
+.audio-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.audio-ctrl-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--sep);
+  background: rgba(118,118,128,0.08);
+  color: var(--label);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+.audio-ctrl-btn:hover {
+  background: rgba(0,122,255,0.12);
+  color: var(--blue);
+  transform: scale(1.05);
+}
+.audio-ctrl-btn.primary {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+}
+.audio-ctrl-btn.primary:hover {
+  background: #0066d6;
+}
+.audio-ctrl-btn.close {
+  border: none;
+  background: transparent;
+  color: var(--label3);
+}
+.audio-ctrl-btn.close:hover {
+  color: var(--red);
+}
+
+/* ── EXAM SIMULATOR STYLES ── */
+.exam-arena {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-b);
+  border-radius: var(--r-xl);
+  padding: 28px;
+  box-shadow: var(--gshadow-lg);
+  margin-top: 20px;
+}
+.exam-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--sep);
+  margin-bottom: 24px;
+}
+.exam-title-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(255, 149, 0, 0.12);
+  color: var(--orange);
+  border-radius: var(--r-pill);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.exam-timer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--red);
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-family: monospace;
+  border: 1px solid rgba(255, 59, 48, 0.25);
+}
+.exam-timer-pill.urgent {
+  animation: pulseUrgent 1s infinite alternate;
+}
+@keyframes pulseUrgent {
+  from { background: rgba(255, 59, 48, 0.15); transform: scale(1); }
+  to { background: rgba(255, 59, 48, 0.35); transform: scale(1.04); }
+}
+.exam-grade-banner {
+  padding: 28px;
+  border-radius: var(--r-xl);
+  text-align: center;
+  margin-bottom: 28px;
+  border: 1.5px solid;
+}
+.grade-A { background: linear-gradient(135deg, rgba(52, 199, 89, 0.14), rgba(48, 209, 88, 0.05)); border-color: var(--green); color: var(--green); }
+.grade-B { background: linear-gradient(135deg, rgba(0, 122, 255, 0.14), rgba(90, 200, 250, 0.05)); border-color: var(--blue); color: var(--blue); }
+.grade-C { background: linear-gradient(135deg, rgba(255, 149, 0, 0.14), rgba(255, 204, 0, 0.05)); border-color: var(--orange); color: var(--orange); }
+.grade-F { background: linear-gradient(135deg, rgba(255, 59, 48, 0.14), rgba(255, 107, 107, 0.05)); border-color: var(--red); color: var(--red); }
+.exam-letter-grade {
+  font-size: 4rem;
+  font-weight: 900;
+  line-height: 1;
+  font-family: var(--font-d);
+  margin-bottom: 6px;
+}
+
 

@@ -64,6 +64,20 @@ async function apiRequest(endpoint, method = "GET", body = null) {
           banned: true
         };
       }
+
+      // Check if subscription required (403 with subscriptionRequired flag)
+      if (response.status === 403 && data.subscriptionRequired) {
+        console.warn("💳 Active subscription required. Redirecting to pricing...");
+        if (!window.location.pathname.includes("pricing.html")) {
+          window.location.href = "/pages/pricing.html?reason=paywall";
+        }
+        return {
+          data: null,
+          error: data.error || "Active subscription required.",
+          status: response.status,
+          subscriptionRequired: true
+        };
+      }
       
       // Pass along the status code for better error handling (especially 429)
       return { 
@@ -328,6 +342,37 @@ function showToast(message, type = "info") {
 function requireAuth() {
   if (!isLoggedIn()) window.location.href = "/pages/login.html";
 }
+
+async function requirePaidSubscription() {
+  if (!isLoggedIn()) {
+    window.location.href = "/pages/login.html";
+    return false;
+  }
+  const user = getUser();
+  const role = user?.app_metadata?.role || user?.role;
+  if (role === "admin") return true;
+
+  try {
+    const { data: stats } = await apiRequest(`/api/upload/stats/${user.id}`);
+    if (stats) {
+      const plan = (stats.plan || "free").toLowerCase();
+      const status = (stats.subscription_status || "active").toLowerCase();
+      const isExpired = stats.subscription_end
+        ? new Date(stats.subscription_end).getTime() < Date.now()
+        : false;
+
+      if (plan === "free" || status !== "active" || isExpired) {
+        window.location.href = "/pages/pricing.html?reason=paywall";
+        return false;
+      }
+      return true;
+    }
+  } catch (err) {
+    console.warn("Could not check subscription:", err);
+  }
+  return true;
+}
+window.requirePaidSubscription = requirePaidSubscription;
 
 function requireAdmin() {
   console.log("🔐 Checking admin access...");

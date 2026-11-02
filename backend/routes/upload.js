@@ -8,6 +8,7 @@ const multer = require("multer");
 const pdfParse = require("pdf-parse");
 const supabase = require("../utils/supabase");
 const authMiddleware = require("../middleware/authMiddleware");
+const subscriptionMiddleware = require("../middleware/subscriptionMiddleware");
 const { awardXP, updateStreak } = require("../utils/xp");
 const { warmDocumentStudyAssets } = require("./ai");
 const { ocrScannedPDF } = require("../utils/gemini");
@@ -75,7 +76,7 @@ async function uploadFileToStorage(userId, file, fileType) {
 }
 
 // ── UPLOAD PDF & PPTX ──────────────────────────────────────────
-router.post("/pdf", authMiddleware, upload.single("pdf"), async (req, res) => {
+router.post("/pdf", authMiddleware, subscriptionMiddleware, upload.single("pdf"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No document file was uploaded." });
@@ -90,23 +91,13 @@ router.post("/pdf", authMiddleware, upload.single("pdf"), async (req, res) => {
     }
 
     const userId = req.user.id;
-    
-    // Enforce Plan Boundaries
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("plan")
-      .eq("id", userId)
-      .single();
-    const userPlan = profile?.plan || 'free';
+    const userPlan = req.userPlan || 'plus';
 
     if (userPlan === 'free') {
-      const { count: totalDocs } = await supabase
-        .from("documents")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId);
-      if (totalDocs >= 2) {
-        return res.status(403).json({ error: "Free Trial tier limits reached (maximum 2 documents total). Please upgrade your plan." });
-      }
+      return res.status(403).json({ 
+        error: "Active subscription required. Please subscribe to Plus or Pro to upload documents.",
+        subscriptionRequired: true 
+      });
     } else if (userPlan === 'plus') {
       const startOfMonth = new Date();
       startOfMonth.setUTCDate(1);
@@ -242,6 +233,7 @@ router.post("/pdf", authMiddleware, upload.single("pdf"), async (req, res) => {
 router.post(
   "/image",
   authMiddleware,
+  subscriptionMiddleware,
   upload.single("image"),
   async (req, res) => {
     try {

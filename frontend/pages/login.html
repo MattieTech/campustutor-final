@@ -73,9 +73,20 @@ document.getElementById('loginForm').addEventListener('submit',async(e)=>{
   const btn=document.getElementById('loginBtn');
   btn.disabled=true; btn.textContent='Logging in...';
   const {data,error}=await apiLogin(document.getElementById('email').value.trim(),document.getElementById('password').value);
-  if(error){err.textContent=error;err.style.display='block';btn.disabled=false;btn.textContent='Log In →';return;}
   showToast(`Welcome back, ${data.user.fullName}! <i class="fa-solid fa-hand"></i>`,'success');
-  setTimeout(()=>{window.location.href='/pages/dashboard.html';},800);
+  const role = data.user?.app_metadata?.role || data.user?.role;
+  if (role === 'admin') {
+    setTimeout(()=>{window.location.href='/pages/dashboard.html';},800);
+    return;
+  }
+  const { data: stats } = await apiRequest(`/api/upload/stats/${data.user.id}`);
+  const plan = (stats?.plan || 'free').toLowerCase();
+  const isExpired = stats?.subscription_end ? (new Date(stats.subscription_end).getTime() < Date.now()) : false;
+  if (plan === 'free' || isExpired) {
+    setTimeout(()=>{window.location.href='/pages/pricing.html?reason=paywall';},800);
+  } else {
+    setTimeout(()=>{window.location.href='/pages/dashboard.html';},800);
+  }
 });
 
 let googleClientId = "";
@@ -131,7 +142,19 @@ async function handleCredentialResponse(response) {
   localStorage.setItem("ct_token", data.token);
   localStorage.setItem("ct_user", JSON.stringify(data.user));
   showToast(`Welcome back, ${data.user.fullName}! <i class="fa-solid fa-circle-check"></i>`, 'success');
-  setTimeout(() => { window.location.href = '/pages/dashboard.html'; }, 1000);
+  const role = data.user?.app_metadata?.role || data.user?.role;
+  if (role === 'admin') {
+    setTimeout(() => { window.location.href = '/pages/dashboard.html'; }, 800);
+    return;
+  }
+  const { data: stats } = await apiRequest(`/api/upload/stats/${data.user.id}`);
+  const plan = (stats?.plan || 'free').toLowerCase();
+  const isExpired = stats?.subscription_end ? (new Date(stats.subscription_end).getTime() < Date.now()) : false;
+  if (plan === 'free' || isExpired) {
+    setTimeout(() => { window.location.href = '/pages/pricing.html?reason=paywall'; }, 800);
+  } else {
+    setTimeout(() => { window.location.href = '/pages/dashboard.html'; }, 800);
+  }
 }
 
 window.addEventListener('load', () => {

@@ -112,7 +112,7 @@ document.getElementById('signupForm').addEventListener('submit',async(e)=>{
   );
   if (error) {
     err.textContent = error; err.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Create Free Account →';
+    btn.disabled = false; btn.textContent = 'Create Account & Choose Plan →';
     return;
   }
   
@@ -123,8 +123,8 @@ document.getElementById('signupForm').addEventListener('submit',async(e)=>{
     return;
   }
   
-  ok.innerHTML = '<i class="fa-solid fa-circle-check"></i> Account created successfully! Redirecting to dashboard...'; ok.style.display = 'block';
-  setTimeout(() => { window.location.href = '/pages/dashboard.html'; }, 1000);
+  ok.innerHTML = '<i class="fa-solid fa-circle-check"></i> Account created! Redirecting to select your plan...'; ok.style.display = 'block';
+  setTimeout(() => { window.location.href = '/pages/pricing.html?new_user=true'; }, 1000);
 });
 
 let googleClientId = "";
@@ -180,7 +180,13 @@ async function handleCredentialResponse(response) {
   localStorage.setItem("ct_token", data.token);
   localStorage.setItem("ct_user", JSON.stringify(data.user));
   showToast(`Welcome to CampusTutor, ${data.user.fullName}! <i class="fa-solid fa-circle-check"></i>`, 'success');
-  setTimeout(() => { window.location.href = '/pages/dashboard.html'; }, 1000);
+  const { data: stats } = await apiRequest(`/api/upload/stats/${data.user.id}`);
+  const plan = (stats?.plan || 'free').toLowerCase();
+  if (plan === 'free') {
+    setTimeout(() => { window.location.href = '/pages/pricing.html?new_user=true'; }, 1000);
+  } else {
+    setTimeout(() => { window.location.href = '/pages/dashboard.html'; }, 1000);
+  }
 }
 
 window.addEventListener('load', () => {

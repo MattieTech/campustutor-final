@@ -111,6 +111,91 @@ router.post("/initialize", authMiddleware, async (req, res) => {
   }
 });
 
+// ── VERIFY TRANSACTION DIRECTLY ───────────────────────────────
+// GET /api/paystack/verify/:reference
+router.get("/verify/:reference", authMiddleware, async (req, res) => {
+  try {
+    const { reference } = req.params;
+    const userId = req.user.id;
+
+    if (!reference) {
+      return res.status(400).json({ error: "Reference parameter is required." });
+    }
+
+    const options = {
+      hostname: "api.paystack.co",
+      port: 443,
+      path: `/transaction/verify/${encodeURIComponent(reference)}`,
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${PAYSTACK_SECRET}`,
+      },
+    };
+
+    const verifyReq = https.request(options, (verifyRes) => {
+      let data = "";
+      verifyRes.on("data", (chunk) => {
+        data += chunk;
+      });
+
+      verifyRes.on("end", async () => {
+        try {
+          const response = JSON.parse(data);
+          if (response.status && response.data && response.data.status === "success") {
+            const meta = response.data.metadata || {};
+            const planName = (meta.planName || meta.planType || "plus").toLowerCase();
+            const durationMonths = parseInt(meta.duration || "1") || 1;
+
+            const subscriptionEnd = new Date();
+            subscriptionEnd.setMonth(subscriptionEnd.getMonth() + durationMonths);
+
+            const { data: updatedProfile, error: updateErr } = await supabase
+              .from("profiles")
+              .update({
+                plan: planName,
+                subscription_status: "active",
+                subscription_end: subscriptionEnd.toISOString(),
+              })
+              .eq("id", userId)
+              .select()
+              .single();
+
+            if (updateErr) {
+              console.error("Failed to update profile after payment verification:", updateErr.message);
+              return res.status(500).json({ error: "Failed to activate subscription in database." });
+            }
+
+            return res.json({
+              success: true,
+              message: `Successfully upgraded to ${planName.toUpperCase()} plan!`,
+              plan: planName,
+              subscriptionEnd: subscriptionEnd.toISOString(),
+            });
+          } else {
+            return res.status(400).json({
+              success: false,
+              error: response.data?.gateway_response || response.message || "Payment verification failed or incomplete.",
+            });
+          }
+        } catch (parseErr) {
+          console.error("Parse verification error:", parseErr);
+          res.status(500).json({ error: "Failed to parse verification response." });
+        }
+      });
+    });
+
+    verifyReq.on("error", (err) => {
+      console.error("Paystack verify API error:", err);
+      res.status(500).json({ error: "Failed to communicate with Paystack." });
+    });
+
+    verifyReq.end();
+  } catch (err) {
+    console.error("Verification endpoint error:", err);
+    res.status(500).json({ error: "Failed to verify transaction." });
+  }
+});
+
 // ── PAYSTACK WEBHOOK ──────────────────────────────────────────
 // POST /api/paystack/webhook
 router.post("/webhook", async (req, res) => {
@@ -134,15 +219,16 @@ router.post("/webhook", async (req, res) => {
 
     if (event.event === "charge.success") {
       const metadata = event.data.metadata;
-      const { userId, planName } = metadata || {};
+      const { userId, planName, duration } = metadata || {};
 
       if (!userId || !planName) {
         console.warn("⚠️ Webhook event missing metadata (userId/planName).");
         return res.sendStatus(200); // return 200 to prevent Paystack retries
       }
 
+      const durationMonths = parseInt(duration || "1") || 1;
       const subscriptionEnd = new Date();
-      subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 1);
+      subscriptionEnd.setMonth(subscriptionEnd.getMonth() + durationMonths);
 
       // 1. Upgrade user plan in profiles
       const { data: profile, error: updateErr } = await supabase

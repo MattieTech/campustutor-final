@@ -316,7 +316,22 @@
 <script>
 requireAuth();
 
-// ── THEME TOGGLE ──────────────────────────────────────────────
+// Verify payment if returning from Paystack & Enforce Paid Subscription
+(async function handleAuthAndPayment() {
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get('reference') || params.get('trxref');
+  if (ref) {
+    showToast('Verifying payment with Paystack...', 'info');
+    const { data, error } = await apiRequest(`/api/paystack/verify/${encodeURIComponent(ref)}`);
+    if (data && data.success) {
+      showToast(`🎉 Payment verified! Welcome to ${data.plan.toUpperCase()} Plan!`, 'success');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (error) {
+      showToast(error || 'Could not verify payment.', 'error');
+    }
+  }
+  await requirePaidSubscription();
+})();
 function initThemeToggle(){
   const themeBtn = document.getElementById('themeBtn');
   if(!themeBtn){
