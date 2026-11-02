@@ -143,6 +143,20 @@ router.get("/verify/:reference", authMiddleware, async (req, res) => {
           const response = JSON.parse(data);
           if (response.status && response.data && response.data.status === "success") {
             const meta = response.data.metadata || {};
+
+            // If this transaction was for purchasing coins
+            if (meta.type === "coins" || meta.coinsAwarded) {
+              const coinsToAdd = Number(meta.coinsAwarded || 100);
+              const { addCoins } = require("../utils/coins");
+              await addCoins(userId, coinsToAdd, "buy_coins", `Purchased coin pack (+${coinsToAdd} coins)`);
+              return res.json({
+                success: true,
+                type: "coins",
+                coinsAdded: coinsToAdd,
+                message: `🎉 +${coinsToAdd} CampusCoins added to your wallet!`,
+              });
+            }
+
             const planName = (meta.planName || meta.planType || "plus").toLowerCase();
             const durationMonths = parseInt(meta.duration || "1") || 1;
 
@@ -219,11 +233,25 @@ router.post("/webhook", async (req, res) => {
 
     if (event.event === "charge.success") {
       const metadata = event.data.metadata;
-      const { userId, planName, duration } = metadata || {};
+      const { userId, planName, duration, type, coinsAwarded } = metadata || {};
 
-      if (!userId || !planName) {
-        console.warn("⚠️ Webhook event missing metadata (userId/planName).");
-        return res.sendStatus(200); // return 200 to prevent Paystack retries
+      if (!userId) {
+        console.warn("⚠️ Webhook event missing userId.");
+        return res.sendStatus(200);
+      }
+
+      // Handle coin purchases in webhook
+      if (type === "coins" || coinsAwarded) {
+        const { addCoins } = require("../utils/coins");
+        const count = Number(coinsAwarded || 100);
+        await addCoins(userId, count, "buy_coins", `Webhook: Purchased coin pack (+${count} coins)`);
+        console.log(`🪙 Webhook: Added ${count} coins to User ${userId}`);
+        return res.sendStatus(200);
+      }
+
+      if (!planName) {
+        console.warn("⚠️ Webhook event missing planName.");
+        return res.sendStatus(200);
       }
 
       const durationMonths = parseInt(duration || "1") || 1;

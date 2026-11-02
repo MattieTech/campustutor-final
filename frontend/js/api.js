@@ -150,6 +150,17 @@ async function apiSummarize(documentId, summarySize = 'standard')           { re
 async function apiExplain(documentId, concept)    { return apiRequest("/api/ai/explain", "POST", { documentId, concept }); }
 async function apiGenerateQuestions(documentId, quizSize = 10)   { return apiRequest("/api/ai/questions", "POST", { documentId, quizSize }); }
 async function apiGenerateFlashcards(documentId, flashcardSize = 25)  { return apiRequest("/api/ai/flashcards", "POST", { documentId, flashcardSize }); }
+
+// ── CAMPUS COINS & ECONOMY ─────────────────────────────────────
+async function apiGetCoinBalance() { return apiRequest("/api/coins/balance"); }
+async function apiClaimDailyBonus() { return apiRequest("/api/coins/claim-daily", "POST"); }
+async function apiBuyCoinPackage(packageId) { return apiRequest("/api/coins/buy-package", "POST", { packageId }); }
+async function apiGetCoinHistory() { return apiRequest("/api/coins/history"); }
+
+// ── PROBLEM SOLVER & ESSAY POLISH ─────────────────────────────
+async function apiSolveProblem(question, subject = "General") { return apiRequest("/api/ai/solve-problem", "POST", { question, subject }); }
+async function apiPolishEssay(text, citationStyle = "APA 7th Edition") { return apiRequest("/api/ai/polish-essay", "POST", { text, citationStyle }); }
+
 window.studyAssetCache = window.studyAssetCache || {};
 
 function setStudyAssetCache(documentId, results) {
@@ -1225,4 +1236,219 @@ async function loadUserTickets() {
     </div>
   `).join('');
 }
+
+// ── CAMPUS COINS & DAILY STREAK WALLET SYSTEM ─────────────────
+let userCoinState = { coins: 0, canClaimDaily: false, streak: 1 };
+
+async function refreshUserCoins() {
+  if (!isLoggedIn()) return;
+  const { data } = await apiGetCoinBalance();
+  if (data) {
+    userCoinState = data;
+    updateCoinUIElements();
+  }
+}
+
+function updateCoinUIElements() {
+  const coinDisplay = document.getElementById("navCoinCount");
+  if (coinDisplay) coinDisplay.textContent = userCoinState.coins;
+
+  const modalBal = document.getElementById("modalCoinBalance");
+  if (modalBal) modalBal.textContent = `${userCoinState.coins} Coins`;
+
+  const dailyBtn = document.getElementById("navDailyGiftBtn");
+  if (dailyBtn) {
+    if (userCoinState.canClaimDaily) {
+      dailyBtn.classList.add("has-bonus");
+      dailyBtn.title = "Daily study reward ready to claim!";
+    } else {
+      dailyBtn.classList.remove("has-bonus");
+      dailyBtn.title = `Streak active (Day ${userCoinState.streak})`;
+    }
+  }
+
+  const claimBoxBtn = document.getElementById("btnClaimChest");
+  if (claimBoxBtn) {
+    if (userCoinState.canClaimDaily) {
+      claimBoxBtn.disabled = false;
+      claimBoxBtn.innerHTML = `🎁 Claim Day ${userCoinState.streak} Bonus (+${5 + Math.min(userCoinState.streak * 2, 15)} Coins)`;
+    } else {
+      claimBoxBtn.disabled = true;
+      claimBoxBtn.innerHTML = `✓ Day ${userCoinState.streak} Claimed! Next reward tomorrow`;
+    }
+  }
+}
+
+function openCoinsModal() {
+  const modal = document.getElementById("coinsWalletModal");
+  if (!modal) injectCoinsModal();
+  document.getElementById("coinsWalletModal").style.display = "flex";
+  refreshUserCoins();
+}
+
+function closeCoinsModal() {
+  const modal = document.getElementById("coinsWalletModal");
+  if (modal) modal.style.display = "none";
+}
+
+async function claimDailyBonusAction() {
+  const btn = document.getElementById("btnClaimChest");
+  if (btn) btn.disabled = true;
+  showToast("Opening your daily study reward... 🎁", "info");
+
+  const { data, error } = await apiClaimDailyBonus();
+  if (error || !data) {
+    showToast(error || "Could not claim bonus right now.", "error");
+    if (btn) btn.disabled = false;
+    return;
+  }
+
+  showToast(data.message, "success");
+  await refreshUserCoins();
+}
+
+async function buyCoinPackAction(packageId) {
+  showToast("Connecting to Paystack checkout...", "info");
+  const { data, error } = await apiBuyCoinPackage(packageId);
+
+  if (error || !data || !data.checkoutUrl) {
+    showToast(error || "Failed to initialize payment.", "error");
+    return;
+  }
+
+  window.location.href = data.checkoutUrl;
+}
+
+function injectCoinsModal() {
+  if (document.getElementById("coinsWalletModal")) return;
+
+  const wrap = document.createElement("div");
+  wrap.innerHTML = `
+    <!-- CAMPUS COINS WALLET MODAL -->
+    <div class="support-modal-overlay" id="coinsWalletModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(12px);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+      <div class="support-modal-card" style="max-width:560px;width:100%;max-height:90vh;overflow-y:auto;">
+        <div class="support-modal-header" style="border-bottom:1px solid var(--sep);padding-bottom:14px;">
+          <div>
+            <h3 style="font-size:1.25rem;font-weight:800;display:flex;align-items:center;gap:8px;">
+              🪙 CampusCoins Wallet
+            </h3>
+            <p style="font-size:0.83rem;color:var(--label3);margin-top:2px;">Fund your account or claim daily educational study rewards</p>
+          </div>
+          <button class="support-modal-close" onclick="closeCoinsModal()">✕</button>
+        </div>
+
+        <div class="support-modal-body" style="padding-top:20px;">
+          <!-- Current Balance Bar -->
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:linear-gradient(135deg,rgba(255,176,32,0.15),rgba(255,149,0,0.22));border-radius:var(--r);border:1px solid rgba(255,176,32,0.4);margin-bottom:20px;">
+            <div>
+              <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--label3);letter-spacing:0.05em;">Your Balance</div>
+              <div id="modalCoinBalance" style="font-size:1.6rem;font-weight:900;color:#d97806;font-family:var(--font-d);">-- Coins</div>
+            </div>
+            <a href="/pages/pricing.html" class="btn btn-sm btn-glass" style="font-size:0.78rem;">Or Get Unlimited Plan →</a>
+          </div>
+
+          <!-- Daily Streak Chest -->
+          <div class="coin-chest-box">
+            <div style="font-size:2rem;margin-bottom:6px;">🎁</div>
+            <h4 style="font-size:1.05rem;font-weight:800;margin-bottom:4px;">Daily Study Reward</h4>
+            <p style="font-size:0.82rem;color:var(--label2);margin-bottom:14px;">Log in daily to maintain your study streak and earn free CampusCoins!</p>
+            <button class="btn btn-warning" id="btnClaimChest" onclick="claimDailyBonusAction()" style="background:linear-gradient(135deg,#ffb020,#d97806);color:#fff;border:none;font-weight:800;padding:10px 22px;border-radius:var(--r-pill);">
+              🎁 Claim Today's Bonus
+            </button>
+          </div>
+
+          <!-- Top-Up Coin Packs -->
+          <div style="margin-bottom:10px;">
+            <h4 style="font-size:0.95rem;font-weight:800;display:flex;align-items:center;gap:6px;">
+              <i class="fa-solid fa-cart-shopping" style="color:var(--blue);"></i> Top-Up Coin Packages
+            </h4>
+            <p style="font-size:0.8rem;color:var(--label3);">Coins never expire. Use them for step-by-step problem solutions, mock exams, or note summaries.</p>
+          </div>
+
+          <div class="coins-modal-grid">
+            <!-- 100 Coins -->
+            <div class="coin-pack-card" onclick="buyCoinPackAction('starter')">
+              <div class="coin-amount-title">🪙 100</div>
+              <div style="font-size:0.75rem;color:var(--label3);">Starter Stash</div>
+              <div class="coin-price-tag">₦500</div>
+              <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;">Buy Pack</button>
+            </div>
+
+            <!-- 250 Coins (Popular) -->
+            <div class="coin-pack-card featured" onclick="buyCoinPackAction('popular')">
+              <span class="coin-pack-badge">Popular</span>
+              <div class="coin-amount-title">🪙 250</div>
+              <div style="font-size:0.75rem;color:var(--label3);">Scholar Pack</div>
+              <div class="coin-price-tag">₦1,000</div>
+              <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;background:#d97806;border:none;">Buy Pack</button>
+            </div>
+
+            <!-- 600 Coins -->
+            <div class="coin-pack-card" onclick="buyCoinPackAction('pro')">
+              <div class="coin-amount-title">🪙 600</div>
+              <div style="font-size:0.75rem;color:var(--green);font-weight:700;">+100 Bonus Coins</div>
+              <div class="coin-price-tag">₦2,000</div>
+              <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;">Buy Pack</button>
+            </div>
+
+            <!-- 1,600 Coins -->
+            <div class="coin-pack-card" onclick="buyCoinPackAction('vip')">
+              <div class="coin-amount-title">🪙 1,600</div>
+              <div style="font-size:0.75rem;color:var(--purple);font-weight:700;">+350 Bonus Coins</div>
+              <div class="coin-price-tag">₦4,500</div>
+              <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;">Buy Pack</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+}
+
+// Global initialization on DOM ready
+document.addEventListener("DOMContentLoaded", () => {
+  injectCoinsModal();
+
+  // If user is logged in, inject coin pill in navbar
+  if (isLoggedIn()) {
+    const navRight = document.querySelector(".navbar-right");
+    if (navRight && !document.getElementById("navCoinPill")) {
+      const coinBtn = document.createElement("button");
+      coinBtn.id = "navCoinPill";
+      coinBtn.className = "coin-nav-pill";
+      coinBtn.innerHTML = `🪙 <span id="navCoinCount">--</span> <span class="coin-plus">+</span>`;
+      coinBtn.title = "CampusCoins Wallet — Click to top up or view balance";
+      coinBtn.onclick = openCoinsModal;
+      navRight.insertBefore(coinBtn, navRight.firstChild);
+
+      const dailyBtn = document.createElement("button");
+      dailyBtn.id = "navDailyGiftBtn";
+      dailyBtn.className = "daily-gift-nav-btn";
+      dailyBtn.innerHTML = `🎁 Daily Gift`;
+      dailyBtn.onclick = openCoinsModal;
+      navRight.insertBefore(dailyBtn, coinBtn.nextSibling);
+    }
+
+    refreshUserCoins();
+  }
+
+  // Check URL parameters for coin payment return
+  const urlParams = new URLSearchParams(window.location.search);
+  const paymentType = urlParams.get("payment");
+  const ref = urlParams.get("reference") || urlParams.get("trxref");
+  if (paymentType === "coins_success" && ref) {
+    showToast("Verifying your coin purchase with Paystack... 🪙", "info");
+    apiRequest(`/api/paystack/verify/${encodeURIComponent(ref)}`).then(({ data, error }) => {
+      if (data && data.success) {
+        showToast(data.message || "🎉 CampusCoins credited to your wallet!", "success");
+        window.history.replaceState({}, document.title, window.location.pathname);
+        refreshUserCoins();
+      } else {
+        showToast(error || "Coin verification failed.", "error");
+      }
+    });
+  }
+});
+
 

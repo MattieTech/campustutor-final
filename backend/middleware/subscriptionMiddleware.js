@@ -18,10 +18,10 @@ async function subscriptionMiddleware(req, res, next) {
 
     const userId = req.user.id;
 
-    // Fetch user profile to check subscription status
+    // Fetch user profile to check subscription status and coin balance
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select("id, role, plan, subscription_status, subscription_end")
+      .select("id, role, plan, subscription_status, subscription_end, coins")
       .eq("id", userId)
       .single();
 
@@ -36,6 +36,8 @@ async function subscriptionMiddleware(req, res, next) {
     if (profile.role === "admin") {
       req.userProfile = profile;
       req.userPlan = "pro";
+      req.hasSubscription = true;
+      req.userCoins = 9999;
       return next();
     }
 
@@ -45,19 +47,26 @@ async function subscriptionMiddleware(req, res, next) {
       ? new Date(profile.subscription_end).getTime() < Date.now()
       : false;
 
-    // Reject free plan or inactive/expired subscriptions
-    if (plan === "free" || status !== "active" || hasExpired) {
+    const hasActiveSubscription = plan !== "free" && status === "active" && !hasExpired;
+    const userCoins = Number(profile.coins ?? 0);
+
+    // If neither active subscription nor coins available
+    if (!hasActiveSubscription && userCoins <= 0) {
       return res.status(403).json({
-        error: "Active subscription required. Please subscribe to CampusTutor AI to unlock this feature.",
+        error: "Active subscription or CampusCoins required. Please choose a plan or top up coins to continue.",
         subscriptionRequired: true,
+        coinsNeeded: true,
+        coins: userCoins,
         plan: plan,
         status: hasExpired ? "expired" : status,
       });
     }
 
-    // Attach profile and verified plan to request
+    // Attach profile and verified status to request
     req.userProfile = profile;
-    req.userPlan = plan;
+    req.userPlan = hasActiveSubscription ? plan : "coins";
+    req.hasSubscription = hasActiveSubscription;
+    req.userCoins = userCoins;
     next();
   } catch (err) {
     console.error("Subscription middleware error:", err.message);

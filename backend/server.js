@@ -16,6 +16,7 @@ const adminRoutes    = require("./routes/admin");
 const contactRoutes  = require("./routes/contact");
 const paystackRoutes = require("./routes/paystack");
 const supportRoutes  = require("./routes/support");
+const coinsRoutes    = require("./routes/coins");
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use("/api/admin",    adminRoutes);
 app.use("/api/contact",  contactRoutes);
 app.use("/api/paystack", paystackRoutes);
 app.use("/api/support",  supportRoutes);
+app.use("/api/coins",    coinsRoutes);
 
 // ── FRONTEND CATCH-ALL ────────────────────────────────────────
 app.get("/", (req, res) => {

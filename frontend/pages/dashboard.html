@@ -157,6 +157,64 @@
           </div>
         </div>
 
+        <!-- AI Assignment & Problem Solver Widget -->
+        <div class="card liquid-glass-card" style="margin:0; border: 1.5px solid rgba(0, 122, 255, 0.25);">
+          <div class="card-body">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:1.4rem; color:var(--blue);"><i class="fa-solid fa-calculator"></i></span>
+                <div>
+                  <div style="font-weight:700;font-size:0.95rem;">Step-by-Step Problem Solver</div>
+                  <div style="font-size:0.78rem;color:var(--label3);">Math, physics, engineering & coding solutions</div>
+                </div>
+              </div>
+              <span class="badge" style="background:rgba(245, 158, 11, 0.15); color:#d97706; font-weight:700; font-size:0.75rem;">
+                🪙 5 Coins / Free on Pro
+              </span>
+            </div>
+            <textarea class="form-input" id="solverProblemInput" placeholder="Paste your assignment question, math formula, or engineering problem here..." rows="3" style="width:100%; resize:vertical; margin-bottom:8px; font-family:inherit;"></textarea>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+              <button onclick="solveAssignmentProblem()" id="btnSolveProblem" class="btn btn-primary" style="font-weight:700;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Solve with Step-by-Step Work
+              </button>
+            </div>
+            <div id="solverResult" style="display:none;margin-top:14px;padding:16px;background:rgba(0,122,255,0.05);border:1px solid rgba(0,122,255,0.2);border-radius:var(--r,12px);font-size:0.9rem;max-height:400px;overflow-y:auto;line-height:1.6;"></div>
+          </div>
+        </div>
+
+        <!-- Thesis & Academic Essay Polisher Widget -->
+        <div class="card liquid-glass-card" style="margin:0; border: 1.5px solid rgba(175, 82, 222, 0.25);">
+          <div class="card-body">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:1.4rem; color:var(--purple);"><i class="fa-solid fa-feather-pointed"></i></span>
+                <div>
+                  <div style="font-weight:700;font-size:0.95rem;">Thesis & Coursework Polisher</div>
+                  <div style="font-size:0.78rem;color:var(--label3);">Elevate tone, structure, grammar & academic rigor</div>
+                </div>
+              </div>
+              <span class="badge" style="background:rgba(175, 82, 222, 0.15); color:var(--purple); font-weight:700; font-size:0.75rem;">
+                🪙 8 Coins / Free on Pro
+              </span>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:8px;">
+              <select class="form-input" id="polisherStyle" style="width: auto; font-size: 0.82rem; padding: 6px 10px;">
+                <option value="academic">Academic / Scholarly</option>
+                <option value="persuasive">Persuasive / Argumentative</option>
+                <option value="concise">Concise & Punchy</option>
+                <option value="literature_review">Literature Review Standard</option>
+              </select>
+            </div>
+            <textarea class="form-input" id="polisherDraftInput" placeholder="Paste your essay paragraph, abstract, or project draft..." rows="3" style="width:100%; resize:vertical; margin-bottom:8px; font-family:inherit;"></textarea>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+              <button onclick="polishAcademicEssay()" id="btnPolishEssay" class="btn btn-primary" style="background:var(--purple); border-color:var(--purple); font-weight:700;">
+                <i class="fa-solid fa-sparkles"></i> Polish & Elevate Draft
+              </button>
+            </div>
+            <div id="polisherResult" style="display:none;margin-top:14px;padding:16px;background:rgba(175,82,222,0.05);border:1px solid rgba(175,82,222,0.2);border-radius:var(--r,12px);font-size:0.9rem;max-height:400px;overflow-y:auto;line-height:1.6;"></div>
+          </div>
+        </div>
+
         <!-- Daily Brain Teaser Widget (Hidden) -->
         <div class="card liquid-glass-card" style="display:none; margin:0; border: 1px solid rgba(0, 122, 255, 0.15);">
           <div class="card-body">
@@ -1123,6 +1181,118 @@ async function explainConcept(){
     console.error('Explain function error:', err);
     const errDetail=err.message||String(err);
     resultDiv.innerHTML=`<div style="color:var(--red);">⚠️ Error: ${errDetail}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:24px;display:inline-block;">Close</button>`;
+  }
+}
+
+// ── PROBLEM SOLVER ENGINE (5 COINS / FREE ON PRO) ──────────────
+async function solveAssignmentProblem(){
+  const problem = document.getElementById('solverProblemInput').value.trim();
+  if(!problem){
+    showToast('Please enter an assignment problem or question.', 'error');
+    return;
+  }
+  const resultDiv = document.getElementById('solverResult');
+  const btn = document.getElementById('btnSolveProblem');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Solving Step-by-Step...';
+  resultDiv.innerHTML = '<div style="text-align:center;color:var(--label3);"><i class="fa-solid fa-brain fa-bounce" style="margin-right: 8px; color: var(--blue);"></i>Analyzing equations & formulating verified solution...</div>';
+  resultDiv.style.display = 'block';
+
+  try {
+    const res = await apiRequest('/api/ai/solve-problem', 'POST', { problemText: problem });
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Solve with Step-by-Step Work';
+
+    if(res.error){
+      if(res.needCoins){
+        resultDiv.innerHTML = `
+          <div style="color:var(--orange); font-weight:700; margin-bottom:8px;">🪙 Insufficient CampusCoins</div>
+          <p style="font-size:0.85rem; color:var(--label2); margin-bottom:12px;">Solving problems requires 5 CampusCoins (or an active Pro subscription). Top up your wallet to continue.</p>
+          <button class="btn btn-primary btn-sm" onclick="openCoinsModal()" style="background:#f59e0b; border-color:#d97706; color:#000; font-weight:800;">
+            <i class="fa-solid fa-coins"></i> Top Up CampusCoins
+          </button>
+        `;
+        return;
+      }
+      resultDiv.innerHTML = `<div style="color:var(--red);">⚠️ ${res.error}</div>`;
+      return;
+    }
+
+    const solution = res.data?.solution || res.data || 'No solution provided.';
+    resultDiv.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(0,122,255,0.15); padding-bottom:6px;">
+        <span style="font-weight:700; color:var(--blue); font-size:0.9rem;"><i class="fa-solid fa-check-circle"></i> Verified Step-by-Step Solution</span>
+        <button onclick="document.getElementById('solverResult').style.display='none'" class="btn btn-ghost btn-sm" style="padding:2px 8px;">✕</button>
+      </div>
+      <div>${parseWithMath(solution)}</div>
+    `;
+
+    if(res.coinsRemaining !== undefined && window.refreshUserCoins){
+      window.refreshUserCoins();
+    }
+    awardXP(15);
+    if(window.MathJax && typeof window.MathJax.typesetPromise === 'function'){
+      window.MathJax.typesetPromise([resultDiv]).catch(e => console.log('MathJax error:', e));
+    }
+  } catch(err) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Solve with Step-by-Step Work';
+    resultDiv.innerHTML = `<div style="color:var(--red);">⚠️ Error: ${err.message || String(err)}</div>`;
+  }
+}
+
+// ── THESIS & ESSAY POLISHER ENGINE (8 COINS / FREE ON PRO) ─────
+async function polishAcademicEssay(){
+  const draft = document.getElementById('polisherDraftInput').value.trim();
+  const style = document.getElementById('polisherStyle')?.value || 'academic';
+  if(!draft){
+    showToast('Please paste your draft or paragraph to polish.', 'error');
+    return;
+  }
+  const resultDiv = document.getElementById('polisherResult');
+  const btn = document.getElementById('btnPolishEssay');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Polishing & Elevating...';
+  resultDiv.innerHTML = '<div style="text-align:center;color:var(--label3);"><i class="fa-solid fa-feather fa-bounce" style="margin-right: 8px; color: var(--purple);"></i>Refining scholarly tone, syntax, and flow...</div>';
+  resultDiv.style.display = 'block';
+
+  try {
+    const res = await apiRequest('/api/ai/polish-essay', 'POST', { draftText: draft, style });
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-sparkles"></i> Polish & Elevate Draft';
+
+    if(res.error){
+      if(res.needCoins){
+        resultDiv.innerHTML = `
+          <div style="color:var(--orange); font-weight:700; margin-bottom:8px;">🪙 Insufficient CampusCoins</div>
+          <p style="font-size:0.85rem; color:var(--label2); margin-bottom:12px;">Thesis polishing requires 8 CampusCoins (or an active Pro subscription). Top up your wallet to continue.</p>
+          <button class="btn btn-primary btn-sm" onclick="openCoinsModal()" style="background:#f59e0b; border-color:#d97706; color:#000; font-weight:800;">
+            <i class="fa-solid fa-coins"></i> Top Up CampusCoins
+          </button>
+        `;
+        return;
+      }
+      resultDiv.innerHTML = `<div style="color:var(--red);">⚠️ ${res.error}</div>`;
+      return;
+    }
+
+    const polished = res.data?.polished || res.data || 'No response provided.';
+    resultDiv.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(175,82,222,0.15); padding-bottom:6px;">
+        <span style="font-weight:700; color:var(--purple); font-size:0.9rem;"><i class="fa-solid fa-award"></i> Polished Scholarly Version</span>
+        <button onclick="document.getElementById('polisherResult').style.display='none'" class="btn btn-ghost btn-sm" style="padding:2px 8px;">✕</button>
+      </div>
+      <div>${parseWithMath(polished)}</div>
+    `;
+
+    if(res.coinsRemaining !== undefined && window.refreshUserCoins){
+      window.refreshUserCoins();
+    }
+    awardXP(15);
+  } catch(err) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-sparkles"></i> Polish & Elevate Draft';
+    resultDiv.innerHTML = `<div style="color:var(--red);">⚠️ Error: ${err.message || String(err)}</div>`;
   }
 }
 

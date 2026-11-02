@@ -753,6 +753,121 @@ router.post("/flashcards", authMiddleware, async (req, res) => {
   }
 });
 
+// ── AI ASSIGNMENT & PROBLEM SOLVER (STEP-BY-STEP) ─────────────
+// POST /api/ai/solve-problem
+router.post("/solve-problem", async (req, res) => {
+  try {
+    const { question, subject } = req.body;
+    if (!question || !question.trim()) {
+      return res.status(400).json({ error: "Please provide a question or problem to solve." });
+    }
+
+    const userId = req.user.id;
+    const { deductCoins } = require("../utils/coins");
+
+    // Coin check: If user does not have active subscription, deduct 5 coins
+    if (!req.hasSubscription) {
+      const coinRes = await deductCoins(userId, 5, "problem_solver", `Solved: "${question.substring(0, 30)}..."`);
+      if (!coinRes.success) {
+        return res.status(403).json({
+          error: coinRes.error || "5 CampusCoins required to solve this problem.",
+          insufficientCoins: true,
+          needed: 5,
+          currentCoins: req.userCoins || 0,
+        });
+      }
+    }
+
+    const prompt = `
+You are CampusTutor AI Master Problem Solver.
+Subject / Context: ${subject || "General Academic Problem"}
+
+Problem to Solve:
+"""
+${question.trim()}
+"""
+
+Provide an exhaustive, crystal-clear, step-by-step academic solution.
+Rules:
+1. State the underlying concepts, laws, or formulas first.
+2. Provide step-by-step mathematical working or conceptual derivation.
+3. Box the final answer clearly: **Final Answer: ...**
+4. Include an "💡 Examiner Tip" explaining how university markers award points for this type of question.
+5. Format ALL mathematical expressions in LaTeX (\( ... \) for inline, \[ ... \] for display blocks).
+
+Language: Clear, encouraging, textbook standard.
+`.trim();
+
+    const solution = await askGemini(prompt);
+
+    res.json({
+      success: true,
+      solution,
+      coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : (req.userCoins - 5),
+    });
+  } catch (err) {
+    console.error("Problem solver error:", err.message);
+    handleAIError(err, res);
+  }
+});
+
+// ── AI ESSAY & COURSEWORK POLISHER ────────────────────────────
+// POST /api/ai/polish-essay
+router.post("/polish-essay", async (req, res) => {
+  try {
+    const { text, citationStyle } = req.body;
+    if (!text || text.trim().length < 50) {
+      return res.status(400).json({ error: "Please provide an essay or draft with at least 50 characters." });
+    }
+
+    const userId = req.user.id;
+    const { deductCoins } = require("../utils/coins");
+
+    // Coin check: If user does not have active subscription, deduct 8 coins
+    if (!req.hasSubscription) {
+      const coinRes = await deductCoins(userId, 8, "essay_polish", `Polished coursework draft`);
+      if (!coinRes.success) {
+        return res.status(403).json({
+          error: coinRes.error || "8 CampusCoins required to polish this coursework.",
+          insufficientCoins: true,
+          needed: 8,
+          currentCoins: req.userCoins || 0,
+        });
+      }
+    }
+
+    const prompt = `
+You are CampusTutor AI Academic Editor and University Professor.
+Citation Format Preferred: ${citationStyle || "APA 7th Edition"}
+
+Student Essay / Coursework Draft:
+"""
+${text.trim()}
+"""
+
+Conduct a rigorous, constructive academic review:
+1. **Academic Tone & Vocabulary Elevation:** Identify informal phrasings and upgrade them to university-level academic phrasing.
+2. **Structural Coherence & Thesis Strength:** Analyze if arguments flow logically between paragraphs.
+3. **Plagiarism Risk & Originality Advice:** Point out cliches or generic statements that need cited evidence.
+4. **Polished Exemplar Version:** Provide a beautifully revised, grammatically flawless version of the excerpt.
+5. **Citations:** Provide template citations in ${citationStyle || "APA 7th Edition"} format for references mentioned.
+
+Format in clean markdown with structured headings.
+`.trim();
+
+    const review = await askGemini(prompt);
+
+    res.json({
+      success: true,
+      review,
+      coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : (req.userCoins - 8),
+    });
+  } catch (err) {
+    console.error("Essay polish error:", err.message);
+    handleAIError(err, res);
+  }
+});
+
 // ── GET SAVED RESULTS ─────────────────────────────────────────
 router.get("/results/:documentId", authMiddleware, async (req, res) => {
   try {
