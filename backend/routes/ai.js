@@ -755,9 +755,11 @@ router.post("/flashcards", authMiddleware, async (req, res) => {
 
 // ── AI ASSIGNMENT & PROBLEM SOLVER (STEP-BY-STEP) ─────────────
 // POST /api/ai/solve-problem
-router.post("/solve-problem", async (req, res) => {
+router.post("/solve-problem", authMiddleware, subscriptionMiddleware, async (req, res) => {
   try {
-    const { question, subject } = req.body;
+    const question = req.body.problemText || req.body.question || req.body.problem;
+    const subject = req.body.subject || "General Academic Problem";
+
     if (!question || !question.trim()) {
       return res.status(400).json({ error: "Please provide a question or problem to solve." });
     }
@@ -772,6 +774,7 @@ router.post("/solve-problem", async (req, res) => {
         return res.status(403).json({
           error: coinRes.error || "5 CampusCoins required to solve this problem.",
           insufficientCoins: true,
+          needCoins: true,
           needed: 5,
           currentCoins: req.userCoins || 0,
         });
@@ -780,7 +783,7 @@ router.post("/solve-problem", async (req, res) => {
 
     const prompt = `
 You are CampusTutor AI Master Problem Solver.
-Subject / Context: ${subject || "General Academic Problem"}
+Subject / Context: ${subject}
 
 Problem to Solve:
 """
@@ -803,7 +806,7 @@ Language: Clear, encouraging, textbook standard.
     res.json({
       success: true,
       solution,
-      coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : (req.userCoins - 5),
+      coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : ((req.userCoins || 0) - 5),
     });
   } catch (err) {
     console.error("Problem solver error:", err.message);
@@ -813,11 +816,13 @@ Language: Clear, encouraging, textbook standard.
 
 // ── AI ESSAY & COURSEWORK POLISHER ────────────────────────────
 // POST /api/ai/polish-essay
-router.post("/polish-essay", async (req, res) => {
+router.post("/polish-essay", authMiddleware, subscriptionMiddleware, async (req, res) => {
   try {
-    const { text, citationStyle } = req.body;
-    if (!text || text.trim().length < 50) {
-      return res.status(400).json({ error: "Please provide an essay or draft with at least 50 characters." });
+    const text = req.body.draftText || req.body.text || req.body.draft;
+    const citationStyle = req.body.style || req.body.citationStyle || "APA 7th Edition";
+
+    if (!text || text.trim().length < 30) {
+      return res.status(400).json({ error: "Please provide an essay or draft with at least 30 characters." });
     }
 
     const userId = req.user.id;
@@ -830,6 +835,7 @@ router.post("/polish-essay", async (req, res) => {
         return res.status(403).json({
           error: coinRes.error || "8 CampusCoins required to polish this coursework.",
           insufficientCoins: true,
+          needCoins: true,
           needed: 8,
           currentCoins: req.userCoins || 0,
         });
@@ -838,7 +844,7 @@ router.post("/polish-essay", async (req, res) => {
 
     const prompt = `
 You are CampusTutor AI Academic Editor and University Professor.
-Citation Format Preferred: ${citationStyle || "APA 7th Edition"}
+Citation Format Preferred: ${citationStyle}
 
 Student Essay / Coursework Draft:
 """
@@ -850,7 +856,7 @@ Conduct a rigorous, constructive academic review:
 2. **Structural Coherence & Thesis Strength:** Analyze if arguments flow logically between paragraphs.
 3. **Plagiarism Risk & Originality Advice:** Point out cliches or generic statements that need cited evidence.
 4. **Polished Exemplar Version:** Provide a beautifully revised, grammatically flawless version of the excerpt.
-5. **Citations:** Provide template citations in ${citationStyle || "APA 7th Edition"} format for references mentioned.
+5. **Citations:** Provide template citations in ${citationStyle} format for references mentioned.
 
 Format in clean markdown with structured headings.
 `.trim();
@@ -860,10 +866,122 @@ Format in clean markdown with structured headings.
     res.json({
       success: true,
       review,
-      coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : (req.userCoins - 8),
+      polished: review,
+      coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : ((req.userCoins || 0) - 8),
     });
   } catch (err) {
     console.error("Essay polish error:", err.message);
+    handleAIError(err, res);
+  }
+});
+
+// ── FINAL YEAR PROJECT & PROPOSAL ARCHITECT (10 COINS) ────────
+// POST /api/ai/project-proposals
+router.post("/project-proposals", authMiddleware, subscriptionMiddleware, async (req, res) => {
+  try {
+    const field = req.body.field || req.body.department || "Computer Science / Engineering";
+    const interests = req.body.interests || "Modern applied systems and AI";
+    const level = req.body.level || "Undergraduate / BSc";
+
+    const userId = req.user.id;
+    const { deductCoins } = require("../utils/coins");
+
+    // Deduct 10 coins if not on active subscription
+    if (!req.hasSubscription) {
+      const coinRes = await deductCoins(userId, 10, "project_proposals", `Project proposals in ${field}`);
+      if (!coinRes.success) {
+        return res.status(403).json({
+          error: coinRes.error || "10 CampusCoins required to architect project proposals.",
+          insufficientCoins: true,
+          needCoins: true,
+          needed: 10,
+          currentCoins: req.userCoins || 0,
+        });
+      }
+    }
+
+    const prompt = `
+You are CampusTutor AI University Thesis Committee Chair and Academic Research Supervisor.
+Degree Level: ${level}
+Department / Field of Study: ${field}
+Specific Area of Interest: ${interests}
+
+Generate 3 high-impact, committee-approvable, original thesis/final year project proposals.
+For each project topic provide:
+1. **Official Project Title** (Research-grade, professional phrasing).
+2. **Background & Problem Statement** (The real-world gap this research solves).
+3. **Research Objectives (Aim + 3 Specific Objectives)**.
+4. **Proposed Methodology & Tools/Tech Stack** (Data collection, algorithms, hardware/software tools).
+5. **Expected Deliverables & Academic Contribution**.
+6. **Supervisor Approval Probability & Feasibility Rating** (Rated out of 10 with reasons).
+
+Format in rich markdown with clean cards/dividers.
+`.trim();
+
+    const proposals = await askGemini(prompt);
+
+    res.json({
+      success: true,
+      proposals,
+      coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : ((req.userCoins || 0) - 10),
+    });
+  } catch (err) {
+    console.error("Project proposals error:", err.message);
+    handleAIError(err, res);
+  }
+});
+
+// ── VIVA & THESIS ORAL DEFENSE DRILL SIMULATOR (12 COINS) ──────
+// POST /api/ai/viva-defense
+router.post("/viva-defense", authMiddleware, subscriptionMiddleware, async (req, res) => {
+  try {
+    const projectTitle = req.body.projectTitle || req.body.title;
+    const abstractText = req.body.abstract || req.body.text || "";
+
+    if (!projectTitle || projectTitle.trim().length < 5) {
+      return res.status(400).json({ error: "Please provide your project/thesis title." });
+    }
+
+    const userId = req.user.id;
+    const { deductCoins } = require("../utils/coins");
+
+    // Deduct 12 coins if not on active subscription
+    if (!req.hasSubscription) {
+      const coinRes = await deductCoins(userId, 12, "viva_defense", `Viva defense prep for: "${projectTitle.substring(0, 30)}..."`);
+      if (!coinRes.success) {
+        return res.status(403).json({
+          error: coinRes.error || "12 CampusCoins required for Viva Oral Defense Simulation.",
+          insufficientCoins: true,
+          needCoins: true,
+          needed: 12,
+          currentCoins: req.userCoins || 0,
+        });
+      }
+    }
+
+    const prompt = `
+You are a formidable, seasoned External University Examiner conducting a Project/Thesis Oral Defense (Viva Voce).
+Project Title: "${projectTitle.trim()}"
+${abstractText ? `Project Abstract / Scope:\n"""\n${abstractText.trim()}\n"""` : ""}
+
+Generate a high-stakes Oral Defense Preparation Dossier:
+1. **The 5 Toughest Technical Questions** the panel will ask about methodology, limitations, and design trade-offs.
+2. **Model High-Scoring Defense Responses** showing how to answer each tough question calmly and authoritatively.
+3. **Trap Warning: 3 Things NEVER to say** during this project defense.
+4. **Confidence Checklist & 2-Minute Opening Pitch Script** (Ready-to-memorize introduction for the student).
+
+Format in rich, highly structured markdown with clear callout blocks.
+`.trim();
+
+    const defenseDossier = await askGemini(prompt);
+
+    res.json({
+      success: true,
+      defenseDossier,
+      coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : ((req.userCoins || 0) - 12),
+    });
+  } catch (err) {
+    console.error("Viva defense error:", err.message);
     handleAIError(err, res);
   }
 });

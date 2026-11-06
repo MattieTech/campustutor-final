@@ -215,6 +215,60 @@
           </div>
         </div>
 
+        <!-- Final Year Project Topic & Proposal Architect -->
+        <div class="card liquid-glass-card" style="margin:0; border: 1.5px solid rgba(52, 199, 89, 0.25);">
+          <div class="card-body">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:1.4rem; color:var(--green);"><i class="fa-solid fa-graduation-cap"></i></span>
+                <div>
+                  <div style="font-weight:700;font-size:0.95rem;">Project & Proposal Architect</div>
+                  <div style="font-size:0.78rem;color:var(--label3);">Original topics, problem statements & methodology</div>
+                </div>
+              </div>
+              <span class="badge" style="background:rgba(52, 199, 89, 0.15); color:var(--green); font-weight:700; font-size:0.75rem;">
+                🪙 10 Coins / Free on Pro
+              </span>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+              <input type="text" class="form-input" id="projectFieldInput" placeholder="Department (e.g. Computer Science)" style="font-size:0.85rem;" />
+              <input type="text" class="form-input" id="projectInterestsInput" placeholder="Interests (e.g. Cybersecurity, AI)" style="font-size:0.85rem;" />
+            </div>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+              <button onclick="generateProjectProposals()" id="btnGenerateProposals" class="btn btn-primary" style="background:var(--green); border-color:var(--green); font-weight:700;">
+                <i class="fa-solid fa-lightbulb"></i> Architect 3 Project Proposals
+              </button>
+            </div>
+            <div id="proposalsResult" style="display:none;margin-top:14px;padding:16px;background:rgba(52,199,89,0.05);border:1px solid rgba(52,199,89,0.2);border-radius:var(--r,12px);font-size:0.9rem;max-height:450px;overflow-y:auto;line-height:1.6;"></div>
+          </div>
+        </div>
+
+        <!-- Viva & Oral Defense Drill Simulator -->
+        <div class="card liquid-glass-card" style="margin:0; border: 1.5px solid rgba(255, 149, 0, 0.25);">
+          <div class="card-body">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:1.4rem; color:var(--orange);"><i class="fa-solid fa-user-shield"></i></span>
+                <div>
+                  <div style="font-weight:700;font-size:0.95rem;">Viva Defense Panel Drill</div>
+                  <div style="font-size:0.78rem;color:var(--label3);">Tough examiner questions, model answers & trap alerts</div>
+                </div>
+              </div>
+              <span class="badge" style="background:rgba(255, 149, 0, 0.15); color:var(--orange); font-weight:700; font-size:0.75rem;">
+                🪙 12 Coins / Free on Pro
+              </span>
+            </div>
+            <input type="text" class="form-input" id="vivaProjectTitle" placeholder="Project / Thesis Title..." style="width:100%; margin-bottom:8px; font-size:0.85rem;" />
+            <textarea class="form-input" id="vivaAbstract" placeholder="Brief abstract or scope (optional but recommended)..." rows="2" style="width:100%; resize:vertical; margin-bottom:8px; font-family:inherit;"></textarea>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+              <button onclick="runVivaDefenseDrill()" id="btnRunViva" class="btn btn-primary" style="background:var(--orange); border-color:var(--orange); color:#fff; font-weight:700;">
+                <i class="fa-solid fa-shield-halved"></i> Generate Defense Dossier
+              </button>
+            </div>
+            <div id="vivaResult" style="display:none;margin-top:14px;padding:16px;background:rgba(255,149,0,0.05);border:1px solid rgba(255,149,0,0.2);border-radius:var(--r,12px);font-size:0.9rem;max-height:450px;overflow-y:auto;line-height:1.6;"></div>
+          </div>
+        </div>
+
         <!-- Daily Brain Teaser Widget (Hidden) -->
         <div class="card liquid-glass-card" style="display:none; margin:0; border: 1px solid rgba(0, 122, 255, 0.15);">
           <div class="card-body">
@@ -1292,6 +1346,115 @@ async function polishAcademicEssay(){
   } catch(err) {
     btn.disabled = false;
     btn.innerHTML = '<i class="fa-solid fa-sparkles"></i> Polish & Elevate Draft';
+    resultDiv.innerHTML = `<div style="color:var(--red);">⚠️ Error: ${err.message || String(err)}</div>`;
+  }
+}
+
+// ── PROJECT PROPOSALS ARCHITECT (10 COINS / FREE ON PRO) ──────
+async function generateProjectProposals(){
+  const field = document.getElementById('projectFieldInput').value.trim() || 'Computer Science / Engineering';
+  const interests = document.getElementById('projectInterestsInput').value.trim() || 'Applied systems & modern tech';
+  const resultDiv = document.getElementById('proposalsResult');
+  const btn = document.getElementById('btnGenerateProposals');
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Formulating Topics & Methodologies...';
+  resultDiv.innerHTML = '<div style="text-align:center;color:var(--label3);"><i class="fa-solid fa-graduation-cap fa-bounce" style="margin-right: 8px; color: var(--green);"></i>Conducting research gap analysis & architecting proposals...</div>';
+  resultDiv.style.display = 'block';
+
+  try {
+    const res = await apiRequest('/api/ai/project-proposals', 'POST', { field, interests });
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-lightbulb"></i> Architect 3 Project Proposals';
+
+    if(res.error){
+      if(res.needCoins || res.insufficientCoins){
+        resultDiv.innerHTML = `
+          <div style="color:var(--orange); font-weight:700; margin-bottom:8px;">🪙 Insufficient CampusCoins</div>
+          <p style="font-size:0.85rem; color:var(--label2); margin-bottom:12px;">Generating thesis proposals requires 10 CampusCoins (or an active Pro subscription). Top up your wallet to continue.</p>
+          <button class="btn btn-primary btn-sm" onclick="openCoinsModal()" style="background:#f59e0b; border-color:#d97706; color:#000; font-weight:800;">
+            <i class="fa-solid fa-coins"></i> Top Up CampusCoins
+          </button>
+        `;
+        return;
+      }
+      resultDiv.innerHTML = `<div style="color:var(--red);">⚠️ ${res.error}</div>`;
+      return;
+    }
+
+    const proposals = res.data?.proposals || res.proposals || 'No proposals received.';
+    resultDiv.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(52,199,89,0.2); padding-bottom:6px;">
+        <span style="font-weight:700; color:var(--green); font-size:0.9rem;"><i class="fa-solid fa-award"></i> 3 Committee-Ready Research Proposals</span>
+        <button onclick="document.getElementById('proposalsResult').style.display='none'" class="btn btn-ghost btn-sm" style="padding:2px 8px;">✕</button>
+      </div>
+      <div>${parseWithMath(proposals)}</div>
+    `;
+
+    if(res.coinsRemaining !== undefined && window.refreshUserCoins){
+      window.refreshUserCoins();
+    }
+    awardXP(20);
+  } catch(err) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-lightbulb"></i> Architect 3 Project Proposals';
+    resultDiv.innerHTML = `<div style="color:var(--red);">⚠️ Error: ${err.message || String(err)}</div>`;
+  }
+}
+
+// ── VIVA DEFENSE DRILL (12 COINS / FREE ON PRO) ─────────────────
+async function runVivaDefenseDrill(){
+  const projectTitle = document.getElementById('vivaProjectTitle').value.trim();
+  const abstract = document.getElementById('vivaAbstract').value.trim();
+  if(!projectTitle){
+    showToast('Please enter your project or thesis title.', 'error');
+    return;
+  }
+
+  const resultDiv = document.getElementById('vivaResult');
+  const btn = document.getElementById('btnRunViva');
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Convening Examiner Panel...';
+  resultDiv.innerHTML = '<div style="text-align:center;color:var(--label3);"><i class="fa-solid fa-user-shield fa-bounce" style="margin-right: 8px; color: var(--orange);"></i>Simulating oral defense examination questions...</div>';
+  resultDiv.style.display = 'block';
+
+  try {
+    const res = await apiRequest('/api/ai/viva-defense', 'POST', { projectTitle, abstract });
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Generate Defense Dossier';
+
+    if(res.error){
+      if(res.needCoins || res.insufficientCoins){
+        resultDiv.innerHTML = `
+          <div style="color:var(--orange); font-weight:700; margin-bottom:8px;">🪙 Insufficient CampusCoins</div>
+          <p style="font-size:0.85rem; color:var(--label2); margin-bottom:12px;">Viva Defense Drill requires 12 CampusCoins (or an active Pro subscription). Top up your wallet to continue.</p>
+          <button class="btn btn-primary btn-sm" onclick="openCoinsModal()" style="background:#f59e0b; border-color:#d97706; color:#000; font-weight:800;">
+            <i class="fa-solid fa-coins"></i> Top Up CampusCoins
+          </button>
+        `;
+        return;
+      }
+      resultDiv.innerHTML = `<div style="color:var(--red);">⚠️ ${res.error}</div>`;
+      return;
+    }
+
+    const dossier = res.data?.defenseDossier || res.defenseDossier || 'No defense dossier received.';
+    resultDiv.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(255,149,0,0.2); padding-bottom:6px;">
+        <span style="font-weight:700; color:var(--orange); font-size:0.9rem;"><i class="fa-solid fa-shield-halved"></i> Oral Defense (Viva Voce) Prep Dossier</span>
+        <button onclick="document.getElementById('vivaResult').style.display='none'" class="btn btn-ghost btn-sm" style="padding:2px 8px;">✕</button>
+      </div>
+      <div>${parseWithMath(dossier)}</div>
+    `;
+
+    if(res.coinsRemaining !== undefined && window.refreshUserCoins){
+      window.refreshUserCoins();
+    }
+    awardXP(25);
+  } catch(err) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Generate Defense Dossier';
     resultDiv.innerHTML = `<div style="color:var(--red);">⚠️ Error: ${err.message || String(err)}</div>`;
   }
 }
