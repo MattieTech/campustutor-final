@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Study Tools — CampusTutor AI 2.0</title>
+<link rel="stylesheet" href="/css/style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<script src="https://cdn.lordicon.com/lordicon.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<meta name="theme-color" content="#060d24"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="CampusTutor"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-192.png"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+
+<style>
+/* ── TOOLS SUITE EXCLUSIVE STYLING (Pixel-Perfect to Reference Screenshots) ── */
+.ct-tools-page-body {
+  padding-bottom: 84px;
+}
+
+/* ── Top Hero Panoramic Banner ── */
+.ct-tool-hero-banner {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 45%, #bfdbfe 100%);
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  border-radius: 24px;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 82, 255, 0.08);
+  margin-bottom: 20px;
+}
+[data-theme="dark"] .ct-tool-hero-banner {
+  background: linear-gradient(135deg, #091e42 0%, #0052cc 60%, #172b4d 100%);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.4);
+}
+
+.ct-tool-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex: 1;
+  min-width: 0;
+  z-index: 2;
+}
+.ct-tool-hero-quill-img {
+  width: 96px;
+  height: 96px;
+  border-radius: 20px;
+  object-fit: cover;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  flex-shrink: 0;
+}
+.ct-tool-hero-title-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.ct-tool-hero-title {
+  font-family: var(--font-ui);
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: 6px;
+}
+[data-theme="dark"] .ct-tool-hero-title { color: #ffffff; }
+.ct-tool-hero-title span.blue-highlight {
+  color: #0052FF;
+}
+
+.ct-tool-hero-tagline {
+  font-size: 0.95rem;
+  color: #475569;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+[data-theme="dark"] .ct-tool-hero-tagline { color: rgba(255,255,255,0.85); }
+
+.ct-tool-hero-chips {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ct-tool-hero-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #15803d;
+  background: rgba(34, 197, 94, 0.12);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+[data-theme="dark"] .ct-tool-hero-chip {
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.2);
+}
+
+.ct-tool-hero-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  z-index: 2;
+}
+.ct-tool-cost-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: rgba(254, 240, 138, 0.95);
+  color: #854d0e;
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  border: 1px solid rgba(234, 179, 8, 0.4);
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.2);
+  cursor: pointer;
+  white-space: nowrap;
+}
+[data-theme="dark"] .ct-tool-cost-badge {
+  background: rgba(120, 53, 15, 0.7);
+  color: #fef08a;
+  border-color: rgba(234, 179, 8, 0.4);
+}
+
+/* ── Mode Pill Selectors ── */
+.tool-mode-pill-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.tool-mode-pill-group::-webkit-scrollbar { display: none; }
+
+.tool-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--r-pill);
+  font-size: 0.88rem;
+  font-weight: 700;
+  background: var(--bg2);
+  color: var(--label);
+  border: 1px solid var(--sep);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+.tool-mode-pill:hover {
+  transform: translateY(-1px);
+  border-color: var(--blue-lt);
+}
+.tool-mode-pill.active {
+  background: #0052FF;
+  color: #ffffff;
+  border-color: #0052FF;
+  box-shadow: 0 4px 16px rgba(0, 82, 255, 0.35);
+}
+
+/* ── Editor Card ── */
+.ct-content-editor-card {
+  background: var(--bg2);
+  border: 1px solid var(--sep);
+  border-radius: 22px;
+  padding: 20px 24px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  margin-bottom: 18px;
+}
+.ct-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.ct-editor-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--label);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ct-clear-btn {
+  background: none;
+  border: none;
+  color: var(--label3);
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s;
+}
+.ct-clear-btn:hover { color: var(--red); }
+
+.ct-editor-textarea {
+  width: 100%;
+  min-height: 140px;
+  border: none;
+  background: transparent;
+  color: var(--label);
+  font-family: inherit;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+}
+
+/* ── Dropzone Box ── */
+.ct-dropzone-box {
+  margin-top: 14px;
+  padding: 22px 16px;
+  border: 2px dashed rgba(59, 130, 246, 0.45);
+  border-radius: 18px;
+  background: rgba(239, 246, 255, 0.5);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+[data-theme="dark"] .ct-dropzone-box {
+  background: rgba(30, 58, 138, 0.15);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+.ct-dropzone-box:hover {
+  background: rgba(239, 246, 255, 0.9);
+  border-color: var(--blue);
+  transform: translateY(-1px);
+}
+.ct-dropzone-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #0052FF;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 1.25rem;
+  box-shadow: 0 4px 14px rgba(0, 82, 255, 0.35);
+}
+.ct-dropzone-title {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--label);
+}
+.ct-dropzone-subtitle {
+  font-size: 0.76rem;
+  color: var(--label3);
+}
+
+/* ── Advanced Options ── */
+.ct-advanced-card {
+  background: var(--bg2);
+  border: 1px solid var(--sep);
+  border-radius: 20px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+.ct-advanced-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--label);
+}
+.ct-advanced-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+.ct-option-input-wrap label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--label3);
+  margin-bottom: 6px;
+}
+.ct-option-select {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(118, 118, 128, 0.05);
+  border: 1px solid var(--sep);
+  color: var(--label);
+  font-size: 0.88rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ── Primary Action Bar ── */
+.ct-tool-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.ct-tool-security-note {
+  font-size: 0.84rem;
+  color: var(--label3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.ct-tool-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  border-radius: var(--r-pill);
+  background: #0052FF;
+  color: #ffffff;
+  border: none;
+  font-size: 0.98rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 82, 255, 0.4);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ct-tool-submit-btn:hover {
+  background: #0045d8;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 28px rgba(0, 82, 255, 0.45);
+}
+
+/* ── Right Column Sidebar Cards ── */
+.ct-side-card {
+  background: var(--bg2);
+  border: 1px solid var(--sep);
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+  margin-bottom: 18px;
+}
+.ct-side-card-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--label);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.ct-benefit-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.ct-benefit-row:last-child { margin-bottom: 0; }
+.ct-benefit-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.ct-benefit-title {
+  font-weight: 800;
+  font-size: 0.88rem;
+  color: var(--label);
+  line-height: 1.2;
+}
+.ct-benefit-desc {
+  font-size: 0.76rem;
+  color: var(--label3);
+  margin-top: 2px;
+}
+
+.ct-use-case-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.84rem;
+  color: var(--label2);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.ct-use-case-item i {
+  color: #0052FF;
+  font-size: 0.85rem;
+}
+
+/* ── Mobile Responsive Overrides (Matches Mobile Screenshot) ── */
+@media (max-width: 768px) {
+  .ct-tool-hero-banner {
+    padding: 16px !important;
+    position: relative !important;
+  }
+  .ct-tool-hero-left {
+    flex-direction: row !important;
+    gap: 12px !important;
+  }
+  .ct-tool-hero-quill-img {
+    width: 68px !important;
+    height: 68px !important;
+    border-radius: 14px !important;
+  }
+  .ct-tool-hero-title {
+    font-size: 1.3rem !important;
+  }
+  .ct-tool-hero-tagline {
+    font-size: 0.78rem !important;
+    margin-bottom: 6px !important;
+  }
+  .ct-tool-hero-chips {
+    gap: 5px !important;
+  }
+  .ct-tool-hero-chip {
+    font-size: 0.68rem !important;
+    padding: 2px 7px !important;
+  }
+  .ct-tool-hero-right {
+    position: absolute !important;
+    top: 12px !important;
+    right: 12px !important;
+  }
+  .ct-tool-cost-badge {
+    font-size: 0.65rem !important;
+    padding: 3px 8px !important;
+  }
+
+  .ct-advanced-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* Mobile "Why Use This Tool?" Horizontal Card with 3D Illustration */
+  .ct-mobile-why-card {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: linear-gradient(135deg, rgba(239, 246, 255, 0.95), rgba(219, 234, 254, 0.6)) !important;
+    border: 1px solid rgba(191, 219, 254, 0.85) !important;
+    border-radius: 20px !important;
+    padding: 16px !important;
+    margin-bottom: 20px !important;
+    overflow: hidden !important;
+  }
+  [data-theme="dark"] .ct-mobile-why-card {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.3), rgba(30, 64, 175, 0.15)) !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+  }
+  .ct-mobile-why-left {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+  .ct-mobile-why-title {
+    font-weight: 800 !important;
+    font-size: 0.95rem !important;
+    color: var(--label) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-bottom: 10px !important;
+  }
+  .ct-mobile-why-bullet {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    color: var(--label2) !important;
+    margin-bottom: 6px !important;
+  }
+  .ct-mobile-why-bullet i {
+    color: #0052FF !important;
+  }
+  .ct-mobile-why-img {
+    width: 90px !important;
+    height: 90px !important;
+    border-radius: 16px !important;
+    object-fit: cover !important;
+    flex-shrink: 0 !important;
+    margin-left: 10px !important;
+  }
+
+  /* Full Width Action Button on Mobile */
+  .ct-tool-action-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .ct-tool-submit-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 14px 20px !important;
+    font-size: 1rem !important;
+    order: 1 !important;
+  }
+  .ct-tool-security-note {
+    justify-content: center !important;
+    order: 2 !important;
+    font-size: 0.78rem !important;
+  }
+
+  /* Hide Desktop Sidebar Cards on Mobile, show Mobile Why Card instead */
+  .ct-desktop-side-card {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .ct-mobile-why-card {
+    display: none !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="ct-sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileMenu()"></div>
+
+<div class="ct-dashboard-app">
+  <!-- LEFT SIDEBAR -->
+  <aside class="ct-sidebar" id="dashboardSidebar">
+    <!-- Brand Header -->
+    <a href="/pages/dashboard.html" class="ct-sidebar-brand">
+      <div class="ct-brand-icon-box">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <div class="ct-brand-text-wrap">
+        <div class="ct-brand-title-row">
+          <span class="ct-brand-name">CampusTutor</span>
+          <span class="ct-brand-version-badge">2.0</span>
+        </div>
+        <span class="ct-brand-tagline">Learn • Practice • Excel</span>
+      </div>
+    </a>
+
+    <!-- Primary Nav Links -->
+    <div class="ct-nav-group">
+      <a href="/pages/dashboard.html" class="ct-nav-link">
+        <i class="fa-solid fa-house"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="/pages/history.html" class="ct-nav-link">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span>History</span>
+      </a>
+      <a href="/pages/upload.html" class="ct-nav-link">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <span>Upload PDF</span>
+      </a>
+      <a href="/pages/pricing.html" class="ct-nav-link">
+        <i class="fa-solid fa-crown" style="color:#fbbf24;"></i>
+        <span>Upgrade Plan</span>
+      </a>
+      <a href="/pages/referral.html" class="ct-nav-link">
+        <i class="fa-solid fa-users"></i>
+        <span>Refer & Earn</span>
+      </a>
+    </div>
+
+    <!-- Specialized Academic Tools (Matches Desktop Reference Screenshot) -->
+    <div class="ct-nav-group">
+      <div class="ct-nav-section-title">TOOLS</div>
+      <button type="button" class="ct-nav-link active" id="sideBtnPolisher" onclick="switchAcademicTool('polisher', this)">
+        <i class="fa-solid fa-feather-pointed" style="color:#38bdf8;"></i>
+        <span>Thesis & Coursework Polisher</span>
+      </button>
+      <button type="button" class="ct-nav-link" id="sideBtnProposals" onclick="switchAcademicTool('proposals', this)">
+        <i class="fa-solid fa-briefcase" style="color:#10b981;"></i>
+        <span>Project & Proposal Architect</span>
+      </button>
+      <button type="button" class="ct-nav-link" id="sideBtnViva" onclick="switchAcademicTool('viva', this)">
+        <i class="fa-solid fa-shield-halved" style="color:#f97316;"></i>
+        <span>Viva Defense Panel Drill</span>
+      </button>
+      <button type="button" class="ct-nav-link" id="sideBtnHumanizer" onclick="switchAcademicTool('humanizer', this)">
+        <i class="fa-solid fa-fingerprint" style="color:#a855f7;"></i>
+        <span>Turnitin Humanizer</span>
+      </button>
+    </div>
+
+    <!-- Productivity -->
+    <div class="ct-nav-group">
+      <div class="ct-nav-section-title">Productivity</div>
+      <button type="button" class="ct-nav-link" onclick="openPomodoro()">
+        <i class="fa-solid fa-stopwatch" style="color:#38bdf8;"></i>
+        <span>Focus Timer</span>
+      </button>
+    </div>
+
+    <!-- Bottom Upgrade CTA Card -->
+    <div class="ct-sidebar-upgrade-card">
+      <div class="ct-upgrade-card-title">
+        <i class="fa-solid fa-crown anim-crown" style="color:#fbbf24;"></i>
+        <span>Upgrade to Pro</span>
+      </div>
+      <div class="ct-upgrade-card-desc">
+        Unlock premium features and get the best experience.
+      </div>
+      <a href="/pages/pricing.html" class="ct-upgrade-card-btn">
+        <span>Upgrade Now</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT COLUMN -->
+  <div class="ct-main-layout">
+    <!-- TOP NAVBAR -->
+    <header class="ct-navbar-header">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <!-- Animated Hamburger Button for Mobile -->
+        <button id="mobileMenuBtn" class="ct-hamburger-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">
+          <span class="ct-hamburger-bar ct-bar-top"></span>
+          <span class="ct-hamburger-bar ct-bar-mid"></span>
+          <span class="ct-hamburger-bar ct-bar-bot"></span>
+        </button>
+
+        <!-- Brand in navbar for mobile -->
+        <a href="/pages/dashboard.html" class="ct-mobile-nav-brand" id="mobileNavBrand">
+          <div class="ct-brand-icon-box">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div class="ct-brand-text-wrap">
+            <div class="ct-brand-title-row">
+              <span class="ct-brand-name">CampusTutor AI</span>
+              <span class="ct-brand-version-badge">2.0</span>
+            </div>
+            <span class="ct-brand-tagline">Learn • Practice • Excel</span>
+          </div>
+        </a>
+
+        <!-- Search Bar -->
+        <div class="ct-nav-search-wrap">
+          <i class="fa-solid fa-magnifying-glass" style="color:#94a3b8; font-size:0.9rem;"></i>
+          <input type="text" id="navSearchInput" class="ct-nav-search-input" placeholder="Search for topics, tools or documents..." />
+        </div>
+      </div>
+
+      <!-- Right Navbar Actions -->
+      <div class="ct-nav-right-actions">
+        <!-- Notification Bell -->
+        <button class="ct-nav-circle-btn" aria-label="Notifications" onclick="openActivityModal()" title="Notifications & Activity">
+          <i class="fa-solid fa-bell"></i>
+          <span class="ct-nav-bell-badge">2</span>
+        </button>
+
+        <!-- Daily Gift Button -->
+        <button class="ct-daily-gift-btn" onclick="openCoinsModal()" title="Claim your daily study coins bonus">
+          <i class="fa-solid fa-gift anim-gift"></i>
+          <span>Daily Gift</span>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button class="ct-nav-circle-btn theme-btn" id="themeBtn" aria-label="Toggle dark mode" title="Toggle theme">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+
+        <!-- User Avatar & Greeting -->
+        <div class="ct-nav-user-avatar" onclick="window.location.href='/pages/dashboard.html#profile'">
+          <div class="ct-avatar-circle" id="userAvatarCircle">
+            <span id="userAvatarInitials">ST</span>
+            <span class="ct-avatar-status-dot"></span>
+          </div>
+          <i class="fa-solid fa-chevron-down" style="font-size:0.72rem; color:#94a3b8;"></i>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN BODY -->
+    <main class="ct-dashboard-body ct-tools-page-body">
+      <!-- 1. PANORAMIC HERO BANNER (Matches Reference Screenshots) -->
+      <div class="ct-tool-hero-banner" id="toolHeroBanner">
+        <div class="ct-tool-hero-left">
+          <img src="/images/quill_feather_books.jpg" alt="3D Quill and Textbooks" class="ct-tool-hero-quill-img" id="toolHeroIconImg" fetchpriority="high" loading="eager" />
+          <div class="ct-tool-hero-title-wrap">
+            <h1 class="ct-tool-hero-title" id="toolTitleDisplay">
+              Thesis & Coursework <span class="blue-highlight">Polisher</span>
+            </h1>
+            <p class="ct-tool-hero-tagline" id="toolTaglineDisplay">
+              Elevate tone, structure, grammar & academic rigor.
+            </p>
+            <div class="ct-tool-hero-chips" id="toolChipsDisplay">
+              <span class="ct-tool-hero-chip"><i class="fa-solid fa-circle-check"></i> Improve your writing</span>
+              <span class="ct-tool-hero-chip"><i class="fa-solid fa-circle-check"></i> Fix grammar & style</span>
+              <span class="ct-tool-hero-chip"><i class="fa-solid fa-circle-check"></i> Get academic results</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ct-tool-hero-right">
+          <div class="ct-tool-cost-badge" onclick="openCoinsModal()" id="toolCostBadge" title="View CampusCoins Wallet">
+            <i class="fa-solid fa-star" style="color:#eab308;"></i>
+            <span id="toolCostText">8 COINS / FREE ON PRO</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. SUB-MODE SELECTOR TABS (AI Polisher, Paraphraser, Summarizer, Grammar Checker) -->
+      <div class="tool-mode-pill-group">
+        <button type="button" class="tool-mode-pill active" onclick="switchToolSubMode('polisher', this)">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span>AI Polisher</span>
+        </button>
+        <button type="button" class="tool-mode-pill" onclick="switchToolSubMode('paraphraser', this)">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span>Paraphraser</span>
+        </button>
+        <button type="button" class="tool-mode-pill" onclick="switchToolSubMode('summarizer', this)">
+          <i class="fa-solid fa-list-check"></i>
+          <span>Summarizer</span>
+        </button>
+        <button type="button" class="tool-mode-pill" onclick="switchToolSubMode('grammar', this)">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>Grammar Checker</span>
+        </button>
+      </div>
+
+      <!-- 3. TWO-COLUMN WORKSPACE GRID -->
+      <div class="ct-grid-2col">
+        <!-- LEFT COLUMN: Main Content Input, Dropzone, Options & Submit -->
+        <div>
+          <!-- Content Editor Card -->
+          <div class="ct-content-editor-card">
+            <div class="ct-editor-header">
+              <div class="ct-editor-title">
+                <i class="fa-solid fa-file-lines" style="color:#0052FF;"></i>
+                <span>Your Content</span>
+              </div>
+              <button type="button" class="ct-clear-btn" onclick="clearToolContent()">
+                <i class="fa-solid fa-trash-can"></i>
+                <span>Clear</span>
+              </button>
+            </div>
+
+            <!-- Text Input Area -->
+            <textarea class="ct-editor-textarea" id="toolInputText" placeholder="Paste your essay, thesis, or coursework here...&#10;(or upload a file)" rows="6"></textarea>
+
+            <!-- Inner Dashed Upload Document Dropzone -->
+            <div class="ct-dropzone-box" onclick="document.getElementById('toolFileInput').click()" id="toolDropzone">
+              <input type="file" id="toolFileInput" accept=".pdf,.doc,.docx,.txt" style="display:none;" onchange="handleToolFileSelect(this)" />
+              <div class="ct-dropzone-icon">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+              </div>
+              <div class="ct-dropzone-title" id="dropzoneTitle">Upload Document</div>
+              <div class="ct-dropzone-subtitle" id="dropzoneSubtitle">PDF, DOC, DOCX (Max 10MB)</div>
+            </div>
+          </div>
+
+          <!-- Advanced Options (Optional) Collapsible -->
+          <div class="ct-advanced-card">
+            <div class="ct-advanced-header" onclick="toggleAdvancedOptions()">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-gear" style="color:var(--blue);"></i>
+                <span>Advanced Options (Optional)</span>
+              </div>
+              <i class="fa-solid fa-chevron-down" id="advChevron" style="transition:transform 0.2s;"></i>
+            </div>
+
+            <div class="ct-advanced-grid" id="advOptionsGrid">
+              <div class="ct-option-input-wrap">
+                <label>Tone</label>
+                <select class="ct-option-select" id="optTone">
+                  <option value="academic" selected>🎓 Academic</option>
+                  <option value="scholarly">📚 Scholarly & Formal</option>
+                  <option value="persuasive">💡 Persuasive</option>
+                  <option value="concise">⚡ Concise & Punchy</option>
+                  <option value="literature_review">🔬 Literature Review</option>
+                </select>
+              </div>
+
+              <div class="ct-option-input-wrap">
+                <label>Focus Area</label>
+                <select class="ct-option-select" id="optFocus">
+                  <option value="overall" selected>🎯 Overall Improvement</option>
+                  <option value="grammar">✍ Grammar & Syntax</option>
+                  <option value="vocabulary">📖 Academic Vocabulary</option>
+                  <option value="flow">🌊 Transitions & Flow</option>
+                </select>
+              </div>
+
+              <div class="ct-option-input-wrap">
+                <label>Language</label>
+                <select class="ct-option-select" id="optLang">
+                  <option value="en-US" selected>🌐 English (US)</option>
+                  <option value="en-UK">🇬🇧 English (UK)</option>
+                  <option value="en-CA">🇨🇦 English (Canada)</option>
+                  <option value="academic">📘 Global Academic</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mobile Only "Why Use This Tool?" Card (Exact Screenshot Match) -->
+          <div class="ct-mobile-why-card">
+            <div class="ct-mobile-why-left">
+              <div class="ct-mobile-why-title">
+                <i class="fa-solid fa-star" style="color:#0052FF;"></i>
+                <span>Why Use This Tool?</span>
+              </div>
+              <div class="ct-mobile-why-bullet">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Improve quality and clarity</span>
+              </div>
+              <div class="ct-mobile-why-bullet">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Meet academic standards</span>
+              </div>
+              <div class="ct-mobile-why-bullet">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Save time and boost grades</span>
+              </div>
+            </div>
+            <img src="/images/campus_banner.jpg" alt="Academic Excellence" class="ct-mobile-why-img" />
+          </div>
+
+          <!-- Action Bar: Security Note + Submit Button -->
+          <div class="ct-tool-action-bar">
+            <div class="ct-tool-security-note">
+              <i class="fa-solid fa-shield-halved" style="color:#0052FF; font-size:1rem;"></i>
+              <span>Your content is safe with us. We never share your data.</span>
+            </div>
+            <button type="button" class="ct-tool-submit-btn" id="btnSubmitTool" onclick="executeCurrentTool()">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span id="btnSubmitText">Polish My Content →</span>
+            </button>
+          </div>
+
+          <!-- Live Output Result Container -->
+          <div id="toolResultCard" style="display:none; margin-top:20px; background:var(--bg2); border:1px solid var(--sep); border-radius:22px; padding:24px; box-shadow:0 8px 30px rgba(0,0,0,0.04);">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; border-bottom:1px solid var(--sep); padding-bottom:12px;">
+              <h3 style="font-size:1.1rem; font-weight:800; color:var(--label); display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-sparkles" style="color:#0052FF;"></i> AI Generated Output
+              </h3>
+              <div style="display:flex; gap:8px;">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="copyToolResult()" id="btnCopyResult" style="border-radius:14px; font-weight:700;">
+                  <i class="fa-solid fa-copy"></i> Copy
+                </button>
+              </div>
+            </div>
+            <div id="toolOutputBody" style="font-size:0.95rem; line-height:1.75; color:var(--label); max-height:550px; overflow-y:auto;"></div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Desktop Sidebar Cards (Why Use This Tool? & Sample Use Cases) -->
+        <div class="ct-desktop-side-card">
+          <!-- Card 1: Why Use This Tool? -->
+          <div class="ct-side-card">
+            <div class="ct-side-card-title">
+              <i class="fa-solid fa-circle-check" style="color:#10b981;"></i>
+              <span>Why Use This Tool?</span>
+            </div>
+
+            <div class="ct-benefit-row">
+              <div class="ct-benefit-icon" style="background:#faf5ff; color:#a855f7;">
+                <i class="fa-solid fa-bolt"></i>
+              </div>
+              <div>
+                <div class="ct-benefit-title">Improve Quality</div>
+                <div class="ct-benefit-desc">Make your writing clearer, sharper, and more professional.</div>
+              </div>
+            </div>
+
+            <div class="ct-benefit-row">
+              <div class="ct-benefit-icon" style="background:#f0fdf4; color:#10b981;">
+                <i class="fa-solid fa-graduation-cap"></i>
+              </div>
+              <div>
+                <div class="ct-benefit-title">Meet Academic Standards</div>
+                <div class="ct-benefit-desc">Produce well-structured and original academic research.</div>
+              </div>
+            </div>
+
+            <div class="ct-benefit-row">
+              <div class="ct-benefit-icon" style="background:#eff6ff; color:#2563eb;">
+                <i class="fa-solid fa-clock"></i>
+              </div>
+              <div>
+                <div class="ct-benefit-title">Save Time</div>
+                <div class="ct-benefit-desc">Get instant, comprehensive feedback in seconds.</div>
+              </div>
+            </div>
+
+            <div class="ct-benefit-row">
+              <div class="ct-benefit-icon" style="background:#fefce8; color:#eab308;">
+                <i class="fa-solid fa-star"></i>
+              </div>
+              <div>
+                <div class="ct-benefit-title">Boost Your Grades</div>
+                <div class="ct-benefit-desc">Submit your coursework and defense thesis with total confidence.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Sample Use Cases -->
+          <div class="ct-side-card" style="position:relative; overflow:hidden;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <div class="ct-side-card-title" style="margin-bottom:0;">
+                <i class="fa-solid fa-lightbulb anim-bulb" style="color:#eab308;"></i>
+                <span>Sample Use Cases</span>
+              </div>
+              <a href="/pages/dashboard.html" style="font-size:0.78rem; font-weight:700; color:#0052FF;">View More →</a>
+            </div>
+
+            <div class="ct-use-case-item">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Polish an essay for university submission</span>
+            </div>
+            <div class="ct-use-case-item">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Elevate and refine a thesis chapter</span>
+            </div>
+            <div class="ct-use-case-item">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Fix grammar and vocabulary in project reports</span>
+            </div>
+            <div class="ct-use-case-item">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Simulate tough viva oral defense questions</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- FIXED MOBILE BOTTOM NAVIGATION BAR -->
+<nav class="ct-mobile-bottom-nav" id="mobileBottomNav">
+  <a href="/pages/dashboard.html" class="ct-mob-nav-item">
+    <i class="fa-solid fa-house"></i>
+    <span>Home</span>
+  </a>
+  <a href="/pages/tools.html" class="ct-mob-nav-item active">
+    <i class="fa-solid fa-table-cells-large"></i>
+    <span>Tools</span>
+    <div class="ct-mob-indicator"></div>
+  </a>
+  <button type="button" class="ct-mob-nav-item" onclick="openActivityModal()">
+    <i class="fa-solid fa-chart-simple"></i>
+    <span>Progress</span>
+  </button>
+  <a href="/pages/dashboard.html#profile" class="ct-mob-nav-item">
+    <i class="fa-solid fa-gear"></i>
+    <span>Settings</span>
+  </a>
+</nav>
+
+<script src="/js/api.js"></script>
+<script>
+requireAuth();
+const user = getUser();
+
+let currentToolKey = 'polisher';
+let currentSubMode = 'polisher';
+
+const TOOL_CONFIGS = {
+  polisher: {
+    title: 'Thesis & Coursework <span class="blue-highlight">Polisher</span>',
+    tagline: 'Elevate tone, structure, grammar & academic rigor.',
+    cost: '8 COINS / FREE ON PRO',
+    chips: [
+      '<i class="fa-solid fa-circle-check"></i> Improve your writing',
+      '<i class="fa-solid fa-circle-check"></i> Fix grammar & style',
+      '<i class="fa-solid fa-circle-check"></i> Get academic results'
+    ],
+    btnText: 'Polish My Content →',
+    placeholder: 'Paste your essay, thesis, or coursework here...\n(or upload a file)'
+  },
+  proposals: {
+    title: 'Project & Proposal <span class="blue-highlight">Architect</span>',
+    tagline: 'Generate research topics, problem statements & methodology.',
+    cost: '10 COINS / FREE ON PRO',
+    chips: [
+      '<i class="fa-solid fa-circle-check"></i> 3 Original Topic Ideas',
+      '<i class="fa-solid fa-circle-check"></i> Literature Framework',
+      '<i class="fa-solid fa-circle-check"></i> Methodology Design'
+    ],
+    btnText: 'Architect 3 Proposals →',
+    placeholder: 'Enter your field of study, department, or research interests...\n(e.g., Computer Science, Machine Learning, Public Health)'
+  },
+  viva: {
+    title: 'Viva Defense <span class="blue-highlight">Panel Drill</span>',
+    tagline: 'Tough examiner questions, model answers & trap alerts.',
+    cost: '12 COINS / FREE ON PRO',
+    chips: [
+      '<i class="fa-solid fa-circle-check"></i> Defense Dossier',
+      '<i class="fa-solid fa-circle-check"></i> Examiner Trap Alerts',
+      '<i class="fa-solid fa-circle-check"></i> Model Answers'
+    ],
+    btnText: 'Generate Defense Dossier →',
+    placeholder: 'Paste your project title, thesis abstract, or research scope...'
+  },
+  humanizer: {
+    title: 'Turnitin Originality <span class="blue-highlight">Humanizer</span>',
+    tagline: 'Bypass AI detectors & eliminate plagiarism flags.',
+    cost: '10 COINS / FREE ON PRO',
+    chips: [
+      '<i class="fa-solid fa-circle-check"></i> Natural Human Voice',
+      '<i class="fa-solid fa-circle-check"></i> Turnitin Shield',
+      '<i class="fa-solid fa-circle-check"></i> Retain Academic Meaning'
+    ],
+    btnText: 'Humanize & Shield →',
+    placeholder: 'Paste your AI-generated draft, essay, or literature review to humanize...'
+  }
+};
+
+function switchAcademicTool(toolKey, clickedBtn) {
+  currentToolKey = toolKey;
+  const cfg = TOOL_CONFIGS[toolKey] || TOOL_CONFIGS.polisher;
+
+  // Update Sidebar active state
+  document.querySelectorAll('.ct-sidebar .ct-nav-link').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  if (clickedBtn) {
+    clickedBtn.classList.add('active');
+  }
+
+  // Update Hero elements
+  document.getElementById('toolTitleDisplay').innerHTML = cfg.title;
+  document.getElementById('toolTaglineDisplay').textContent = cfg.tagline;
+  document.getElementById('toolCostText').textContent = cfg.cost;
+  document.getElementById('toolChipsDisplay').innerHTML = cfg.chips.map(c => '<span class="ct-tool-hero-chip">' + c + '</span>').join('');
+  document.getElementById('btnSubmitText').textContent = cfg.btnText;
+  document.getElementById('toolInputText').placeholder = cfg.placeholder;
+
+  // Clear output
+  document.getElementById('toolResultCard').style.display = 'none';
+}
+
+function switchToolSubMode(subMode, btn) {
+  currentSubMode = subMode;
+  document.querySelectorAll('.tool-mode-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  if (subMode === 'paraphraser') {
+    document.getElementById('btnSubmitText').textContent = 'Paraphrase Content →';
+  } else if (subMode === 'summarizer') {
+    document.getElementById('btnSubmitText').textContent = 'Summarize Content →';
+  } else if (subMode === 'grammar') {
+    document.getElementById('btnSubmitText').textContent = 'Check Grammar & Style →';
+  } else {
+    document.getElementById('btnSubmitText').textContent = 'Polish My Content →';
+  }
+}
+
+function toggleAdvancedOptions() {
+  const grid = document.getElementById('advOptionsGrid');
+  const chev = document.getElementById('advChevron');
+  if (grid.style.display === 'none') {
+    grid.style.display = 'grid';
+    chev.style.transform = 'rotate(0deg)';
+  } else {
+    grid.style.display = 'none';
+    chev.style.transform = 'rotate(-90deg)';
+  }
+}
+
+function clearToolContent() {
+  document.getElementById('toolInputText').value = '';
+  document.getElementById('dropzoneTitle').textContent = 'Upload Document';
+  document.getElementById('dropzoneSubtitle').textContent = 'PDF, DOC, DOCX (Max 10MB)';
+  document.getElementById('toolFileInput').value = '';
+  document.getElementById('toolResultCard').style.display = 'none';
+}
+
+function handleToolFileSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  document.getElementById('dropzoneTitle').textContent = file.name;
+  document.getElementById('dropzoneSubtitle').textContent = (file.size / 1024).toFixed(1) + ' KB · Ready to process';
+  showToast('Attached file: ' + file.name, 'success');
+}
+
+async function executeCurrentTool() {
+  const text = document.getElementById('toolInputText').value.trim();
+  const fileInput = document.getElementById('toolFileInput');
+  const file = fileInput.files[0];
+
+  if (!text && !file) {
+    showToast('Please paste your text or upload a document to proceed.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btnSubmitTool');
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+  const tone = document.getElementById('optTone').value;
+  const focus = document.getElementById('optFocus').value;
+  const lang = document.getElementById('optLang').value;
+
+  try {
+    let resultMarkdown = '';
+
+    if (currentToolKey === 'polisher' || currentSubMode === 'polisher') {
+      const res = await apiRequest('/api/ai/polish-essay', 'POST', {
+        text: text || file?.name,
+        style: tone,
+        focus: focus,
+        lang: lang
+      });
+      if (res.needCoins) {
+        showCoinsAlert(8);
+        return;
+      }
+      resultMarkdown = res.data?.polished || res.data?.content || res.error || 'Done';
+    } else if (currentToolKey === 'proposals') {
+      const res = await apiRequest('/api/ai/generate-proposals', 'POST', {
+        field: text || 'Computer Science & AI',
+        interests: focus
+      });
+      if (res.needCoins) {
+        showCoinsAlert(10);
+        return;
+      }
+      resultMarkdown = res.data?.proposals || res.data?.content || res.error || 'Done';
+    } else if (currentToolKey === 'viva') {
+      const res = await apiRequest('/api/ai/viva-drill', 'POST', {
+        title: text || 'Thesis Research Scope',
+        abstract: focus
+      });
+      if (res.needCoins) {
+        showCoinsAlert(12);
+        return;
+      }
+      resultMarkdown = res.data?.dossier || res.data?.content || res.error || 'Done';
+    } else if (currentToolKey === 'humanizer') {
+      const res = await apiRequest('/api/ai/humanize-text', 'POST', {
+        text: text
+      });
+      if (res.needCoins) {
+        showCoinsAlert(10);
+        return;
+      }
+      resultMarkdown = res.data?.humanized || res.data?.content || res.error || 'Done';
+    }
+
+    // Render result
+    const resultCard = document.getElementById('toolResultCard');
+    const resultBody = document.getElementById('toolOutputBody');
+    resultCard.style.display = 'block';
+    resultBody.innerHTML = marked ? marked.parse(resultMarkdown) : resultMarkdown;
+    resultCard.scrollIntoView({ behavior: 'smooth' });
+
+    showToast('Generated successfully!', 'success');
+    if (window.refreshUserCoins) window.refreshUserCoins();
+  } catch (err) {
+    console.error('Tool execution error:', err);
+    showToast(err.message || 'Error processing request.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+}
+
+function showCoinsAlert(requiredCoins) {
+  showToast('Requires ' + requiredCoins + ' CampusCoins (or Pro Plan). Top up to continue!', 'error');
+  openCoinsModal();
+}
+
+function copyToolResult() {
+  const body = document.getElementById('toolOutputBody');
+  navigator.clipboard.writeText(body.innerText).then(() => {
+    const btn = document.getElementById('btnCopyResult');
+    btn.innerHTML = '<i class="fa-solid fa-circle-check" style="color:var(--green);"></i> Copied!';
+    setTimeout(() => {
+      btn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy';
+    }, 2000);
+  });
+}
+
+// Check URL param for ?tool=
+window.addEventListener('DOMContentLoaded', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const toolParam = urlParams.get('tool');
+  if (toolParam && TOOL_CONFIGS[toolParam]) {
+    const btnId = {
+      polisher: 'sideBtnPolisher',
+      proposals: 'sideBtnProposals',
+      viva: 'sideBtnViva',
+      humanizer: 'sideBtnHumanizer'
+    }[toolParam];
+    switchAcademicTool(toolParam, document.getElementById(btnId));
+  }
+
+  // Populate avatar initials
+  const initialsEl = document.getElementById('userAvatarInitials');
+  if (initialsEl && user?.full_name) {
+    initialsEl.textContent = user.full_name.substring(0, 2).toUpperCase();
+  }
+});
+</script>
+
+</body>
+</html>
