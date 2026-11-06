@@ -269,6 +269,57 @@
           </div>
         </div>
 
+        <!-- Exam Past Questions & Probability Predictor Widget -->
+        <div class="card liquid-glass-card" style="margin:0; border: 1.5px solid rgba(255, 59, 48, 0.25);">
+          <div class="card-body">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:1.4rem; color:var(--red);"><i class="fa-solid fa-fire"></i></span>
+                <div>
+                  <div style="font-weight:700;font-size:0.95rem;">Exam & Past Question Predictor</div>
+                  <div style="font-size:0.78rem;color:var(--label3);">Recurring questions, CBT drill & lecturer marking traps</div>
+                </div>
+              </div>
+              <span class="badge" style="background:rgba(255, 59, 48, 0.15); color:var(--red); font-weight:700; font-size:0.75rem;">
+                🪙 15 Coins / Free on Pro
+              </span>
+            </div>
+            <input type="text" class="form-input" id="predictCourseCode" placeholder="Course Code (e.g. MTH101, CHM201, LAW301)..." style="width:100%; margin-bottom:8px; font-size:0.85rem;" />
+            <textarea class="form-input" id="predictTopics" placeholder="Key topics or syllabus chapters covered by your lecturer..." rows="2" style="width:100%; resize:vertical; margin-bottom:8px; font-family:inherit;"></textarea>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+              <button onclick="predictExamPastQuestions()" id="btnPredictExam" class="btn btn-primary" style="background:var(--red); border-color:var(--red); color:#fff; font-weight:700;">
+                <i class="fa-solid fa-bullseye"></i> Predict High-Yield Questions
+              </button>
+            </div>
+            <div id="predictResult" style="display:none;margin-top:14px;padding:16px;background:rgba(255,59,48,0.05);border:1px solid rgba(255,59,48,0.2);border-radius:var(--r,12px);font-size:0.9rem;max-height:450px;overflow-y:auto;line-height:1.6;"></div>
+          </div>
+        </div>
+
+        <!-- Turnitin Plagiarism Bypasser & Humanizer Widget -->
+        <div class="card liquid-glass-card" style="margin:0; border: 1.5px solid rgba(0, 122, 255, 0.25);">
+          <div class="card-body">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:1.4rem; color:var(--blue);"><i class="fa-solid fa-fingerprint"></i></span>
+                <div>
+                  <div style="font-weight:700;font-size:0.95rem;">Turnitin Humanizer & Originality Shield</div>
+                  <div style="font-size:0.78rem;color:var(--label3);">Bypass AI detectors & eliminate plagiarism flags</div>
+                </div>
+              </div>
+              <span class="badge" style="background:rgba(0, 122, 255, 0.15); color:var(--blue); font-weight:700; font-size:0.75rem;">
+                🪙 10 Coins / Free on Pro
+              </span>
+            </div>
+            <textarea class="form-input" id="humanizeInput" placeholder="Paste your essay, literature review, or paragraph to rewrite and humanize..." rows="3" style="width:100%; resize:vertical; margin-bottom:8px; font-family:inherit;"></textarea>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+              <button onclick="humanizeAcademicText()" id="btnHumanizeText" class="btn btn-primary" style="background:var(--blue); border-color:var(--blue); color:#fff; font-weight:700;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Humanize & Shield Originality
+              </button>
+            </div>
+            <div id="humanizeResult" style="display:none;margin-top:14px;padding:16px;background:rgba(0,122,255,0.05);border:1px solid rgba(0,122,255,0.2);border-radius:var(--r,12px);font-size:0.9rem;max-height:450px;overflow-y:auto;line-height:1.6;"></div>
+          </div>
+        </div>
+
         <!-- Daily Brain Teaser Widget (Hidden) -->
         <div class="card liquid-glass-card" style="display:none; margin:0; border: 1px solid rgba(0, 122, 255, 0.15);">
           <div class="card-body">
@@ -1455,6 +1506,122 @@ async function runVivaDefenseDrill(){
   } catch(err) {
     btn.disabled = false;
     btn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Generate Defense Dossier';
+    resultDiv.innerHTML = `<div style="color:var(--red);">⚠️ Error: ${err.message || String(err)}</div>`;
+  }
+}
+
+// ── EXAM & PAST QUESTIONS PREDICTOR (15 COINS / FREE ON PRO) ───
+async function predictExamPastQuestions(){
+  const courseCode = document.getElementById('predictCourseCode').value.trim();
+  const syllabus = document.getElementById('predictTopics').value.trim();
+  if(!courseCode){
+    showToast('Please enter the course code (e.g. MTH101, CSC302).', 'error');
+    return;
+  }
+
+  const resultDiv = document.getElementById('predictResult');
+  const btn = document.getElementById('btnPredictExam');
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mining Exam Question Patterns...';
+  resultDiv.innerHTML = '<div style="text-align:center;color:var(--label3);"><i class="fa-solid fa-fire fa-bounce" style="margin-right: 8px; color: var(--red);"></i>Analyzing historical university exams & formulating high-probability questions...</div>';
+  resultDiv.style.display = 'block';
+
+  try {
+    const res = await apiRequest('/api/ai/predict-past-questions', 'POST', { courseCode, syllabus });
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-bullseye"></i> Predict High-Yield Questions';
+
+    if(res.error){
+      if(res.needCoins || res.insufficientCoins){
+        resultDiv.innerHTML = `
+          <div style="color:var(--orange); font-weight:700; margin-bottom:8px;">🪙 Insufficient CampusCoins</div>
+          <p style="font-size:0.85rem; color:var(--label2); margin-bottom:12px;">Exam prediction requires 15 CampusCoins (or an active Pro subscription). Top up your wallet to continue.</p>
+          <button class="btn btn-primary btn-sm" onclick="openCoinsModal()" style="background:#f59e0b; border-color:#d97706; color:#000; font-weight:800;">
+            <i class="fa-solid fa-coins"></i> Top Up CampusCoins
+          </button>
+        `;
+        return;
+      }
+      resultDiv.innerHTML = `<div style="color:var(--red);">⚠️ ${res.error}</div>`;
+      return;
+    }
+
+    const dossier = res.data?.predictionDossier || res.predictionDossier || 'No exam prediction generated.';
+    resultDiv.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(255,59,48,0.2); padding-bottom:6px;">
+        <span style="font-weight:700; color:var(--red); font-size:0.9rem;"><i class="fa-solid fa-bullseye"></i> High-Yield Exam Master Dossier</span>
+        <button onclick="document.getElementById('predictResult').style.display='none'" class="btn btn-ghost btn-sm" style="padding:2px 8px;">✕</button>
+      </div>
+      <div>${parseWithMath(dossier)}</div>
+    `;
+
+    if(res.coinsRemaining !== undefined && window.refreshUserCoins){
+      window.refreshUserCoins();
+    }
+    awardXP(30);
+    if(window.MathJax && typeof window.MathJax.typesetPromise === 'function'){
+      window.MathJax.typesetPromise([resultDiv]).catch(e => console.log('MathJax error:', e));
+    }
+  } catch(err) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-bullseye"></i> Predict High-Yield Questions';
+    resultDiv.innerHTML = `<div style="color:var(--red);">⚠️ Error: ${err.message || String(err)}</div>`;
+  }
+}
+
+// ── TURNITIN HUMANIZER & SHIELD (10 COINS / FREE ON PRO) ───────
+async function humanizeAcademicText(){
+  const text = document.getElementById('humanizeInput').value.trim();
+  if(!text){
+    showToast('Please paste the essay or literature text to humanize.', 'error');
+    return;
+  }
+
+  const resultDiv = document.getElementById('humanizeResult');
+  const btn = document.getElementById('btnHumanizeText');
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Stripping AI Phrasing & De-Plagiarizing...';
+  resultDiv.innerHTML = '<div style="text-align:center;color:var(--label3);"><i class="fa-solid fa-fingerprint fa-bounce" style="margin-right: 8px; color: var(--blue);"></i>Humanizing sentence cadence & boosting originality score...</div>';
+  resultDiv.style.display = 'block';
+
+  try {
+    const res = await apiRequest('/api/ai/humanize-rewrite', 'POST', { text });
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Humanize & Shield Originality';
+
+    if(res.error){
+      if(res.needCoins || res.insufficientCoins){
+        resultDiv.innerHTML = `
+          <div style="color:var(--orange); font-weight:700; margin-bottom:8px;">🪙 Insufficient CampusCoins</div>
+          <p style="font-size:0.85rem; color:var(--label2); margin-bottom:12px;">Humanizing text requires 10 CampusCoins (or an active Pro subscription). Top up your wallet to continue.</p>
+          <button class="btn btn-primary btn-sm" onclick="openCoinsModal()" style="background:#f59e0b; border-color:#d97706; color:#000; font-weight:800;">
+            <i class="fa-solid fa-coins"></i> Top Up CampusCoins
+          </button>
+        `;
+        return;
+      }
+      resultDiv.innerHTML = `<div style="color:var(--red);">⚠️ ${res.error}</div>`;
+      return;
+    }
+
+    const rewritten = res.data?.humanizedResult || res.humanizedResult || 'No rewrite received.';
+    resultDiv.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(0,122,255,0.2); padding-bottom:6px;">
+        <span style="font-weight:700; color:var(--blue); font-size:0.9rem;"><i class="fa-solid fa-shield-check"></i> Turnitin-Ready Humanized Version</span>
+        <button onclick="document.getElementById('humanizeResult').style.display='none'" class="btn btn-ghost btn-sm" style="padding:2px 8px;">✕</button>
+      </div>
+      <div>${parseWithMath(rewritten)}</div>
+    `;
+
+    if(res.coinsRemaining !== undefined && window.refreshUserCoins){
+      window.refreshUserCoins();
+    }
+    awardXP(20);
+  } catch(err) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Humanize & Shield Originality';
     resultDiv.innerHTML = `<div style="color:var(--red);">⚠️ Error: ${err.message || String(err)}</div>`;
   }
 }

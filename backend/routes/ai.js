@@ -986,6 +986,120 @@ Format in rich, highly structured markdown with clear callout blocks.
   }
 });
 
+// ── EXAM PAST QUESTIONS & HIGH-PROBABILITY PREDICTOR (15 COINS) ──
+// POST /api/ai/predict-past-questions
+router.post("/predict-past-questions", authMiddleware, subscriptionMiddleware, async (req, res) => {
+  try {
+    const courseCode = req.body.courseCode || req.body.course || "General University Course";
+    const syllabusOrTopics = req.body.syllabus || req.body.topics || "";
+
+    if (!courseCode || courseCode.trim().length < 2) {
+      return res.status(400).json({ error: "Please provide the course code or title (e.g. MTH101, CSC302)." });
+    }
+
+    const userId = req.user.id;
+    const { deductCoins } = require("../utils/coins");
+
+    // Deduct 15 coins if not on active subscription
+    if (!req.hasSubscription) {
+      const coinRes = await deductCoins(userId, 15, "exam_predict", `Exam predictions for: ${courseCode}`);
+      if (!coinRes.success) {
+        return res.status(403).json({
+          error: coinRes.error || "15 CampusCoins required for Past Question & Exam Predictor.",
+          insufficientCoins: true,
+          needCoins: true,
+          needed: 15,
+          currentCoins: req.userCoins || 0,
+        });
+      }
+    }
+
+    const prompt = `
+You are CampusTutor AI Chief University Examination Board Predictor.
+Course Code / Title: "${courseCode.trim()}"
+${syllabusOrTopics ? `Lecture Topics / Key Themes:\n"""\n${syllabusOrTopics.trim()}\n"""` : ""}
+
+Generate a high-probability "Exam Master Dossier" based on standard university examination patterns:
+1. **Top 5 High-Probability Theoretical / Essay Questions** that examiners love to repeat, complete with detailed marking guide points.
+2. **Top 5 Critical Calculation / Problem Questions** with full step-by-step model workings and standard formulas in LaTeX (\( ... \) or \[ ... \]).
+3. **10 CBT Rapid-Fire Practice MCQs** with correct options and brief explanations.
+4. **"Lecturer's Trap Alert":** 3 areas where over 60% of students lose marks on this course.
+
+Format in clean, high-density markdown with distinct section cards.
+`.trim();
+
+    const predictionDossier = await askGemini(prompt);
+
+    res.json({
+      success: true,
+      predictionDossier,
+      coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : ((req.userCoins || 0) - 15),
+    });
+  } catch (err) {
+    console.error("Exam predictor error:", err.message);
+    handleAIError(err, res);
+  }
+});
+
+// ── AI TURNITIN PLAGIARISM BYPASSER & HUMANIZER (10 COINS) ─────
+// POST /api/ai/humanize-rewrite
+router.post("/humanize-rewrite", authMiddleware, subscriptionMiddleware, async (req, res) => {
+  try {
+    const rawText = req.body.text || req.body.draftText || "";
+    if (!rawText || rawText.trim().length < 40) {
+      return res.status(400).json({ error: "Please provide at least 40 characters of text to humanize." });
+    }
+
+    const userId = req.user.id;
+    const { deductCoins } = require("../utils/coins");
+
+    // Deduct 10 coins if not on active subscription
+    if (!req.hasSubscription) {
+      const coinRes = await deductCoins(userId, 10, "humanize_rewrite", `Turnitin humanizer & originality rewrite`);
+      if (!coinRes.success) {
+        return res.status(403).json({
+          error: coinRes.error || "10 CampusCoins required for Turnitin Plagiarism Reducer & Humanizer.",
+          insufficientCoins: true,
+          needCoins: true,
+          needed: 10,
+          currentCoins: req.userCoins || 0,
+        });
+      }
+    }
+
+    const prompt = `
+You are CampusTutor AI Academic Writing Stylist and Originality Specialist.
+Text to Humanize & De-Plagiarize:
+"""
+${rawText.trim()}
+"""
+
+Task:
+1. Rewrite this excerpt completely to make it sound authentic, deeply human, and academically sophisticated.
+2. Strip out robotic AI phrasing (e.g. "delve", "testament to", "it is crucial to note", "tapestry", "in conclusion").
+3. Vary sentence cadence: blend punchy short observations with complex compound academic assertions (burstiness and perplexity).
+4. Preserve all technical meanings, data points, and core citations faithfully.
+5. Provide:
+   - **Originality Confidence Score** (0-100%).
+   - **The Fully Humanized, Submission-Ready Rewrite**.
+   - **Key Stylistic Transformations Applied** (Summary of how sentence structures were reformed).
+
+Format cleanly in markdown.
+`.trim();
+
+    const humanizedResult = await askGemini(prompt);
+
+    res.json({
+      success: true,
+      humanizedResult,
+      coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : ((req.userCoins || 0) - 10),
+    });
+  } catch (err) {
+    console.error("Humanize rewrite error:", err.message);
+    handleAIError(err, res);
+  }
+});
+
 // ── GET SAVED RESULTS ─────────────────────────────────────────
 router.get("/results/:documentId", authMiddleware, async (req, res) => {
   try {
