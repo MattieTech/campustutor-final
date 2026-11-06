@@ -98,6 +98,22 @@ async function apiSignup(fullName, email, password, referredBy = null) {
   return apiRequest("/api/auth/signup", "POST", { fullName, email, password, referredBy });
 }
 
+
+// ── FETCH CURRENT USER PROFILE ────────────────────────────────
+async function apiGetMe() {
+  const res = await apiRequest("/api/auth/me");
+  if (res.data && res.data.user) {
+    localStorage.setItem("ct_user", JSON.stringify(res.data.user));
+    if (res.data.user.coins !== undefined) {
+      userCoinState.coins = Number(res.data.user.coins);
+      updateCoinNavPill();
+    }
+    return res.data.user;
+  }
+  return null;
+}
+window.apiGetMe = apiGetMe;
+
 async function apiLogin(email, password) {
   const result = await apiRequest("/api/auth/login", "POST", { email, password });
   if (result.data) {
@@ -359,7 +375,13 @@ async function requirePaidSubscription() {
     window.location.href = "/pages/login.html";
     return false;
   }
-  // Free and paid users can access their dashboard and spend CampusCoins or upgrade
+  // Sync latest user profile from server in background to ensure upgraded status is recognized
+  try {
+    const user = getUser();
+    if (user && user.plan === 'free') {
+      apiGetMe().catch(() => {});
+    }
+  } catch(e) {}
   return true;
 }
 window.requirePaidSubscription = requirePaidSubscription;
@@ -1446,3 +1468,90 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+
+
+// ── PWA SERVICE WORKER & APP INSTALL PROMPT ────────────────────
+let deferredPWAInstallPrompt = null;
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((reg) => console.log('📱 PWA Service Worker registered:', reg.scope))
+      .catch((err) => console.warn('PWA SW registration failed:', err));
+  });
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPWAInstallPrompt = e;
+  showPWAInstallPromptUI();
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPWAInstallPrompt = null;
+  const banner = document.getElementById('pwaInstallBanner');
+  if (banner) banner.remove();
+  showToast('🎉 CampusTutor AI installed successfully on your device!', 'success');
+});
+
+function showPWAInstallPromptUI() {
+  if (document.getElementById('pwaInstallBanner')) return;
+
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (isStandalone) return;
+
+  const banner = document.createElement('div');
+  banner.id = 'pwaInstallBanner';
+  banner.className = 'ct-pwa-install-banner';
+  banner.innerHTML = `
+    <div class="ct-pwa-banner-content">
+      <div class="ct-pwa-icon-box">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <div class="ct-pwa-text">
+        <div class="ct-pwa-title">Install CampusTutor App</div>
+        <div class="ct-pwa-desc">Instant 1-tap mobile access to summaries, flashcards & solver!</div>
+      </div>
+      <div class="ct-pwa-actions">
+        <button id="pwaInstallBtn" class="ct-pwa-install-btn"><i class="fa-solid fa-download"></i> Install App</button>
+        <button id="pwaDismissBtn" class="ct-pwa-dismiss-btn" title="Dismiss"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(banner);
+
+  document.getElementById('pwaInstallBtn').addEventListener('click', async () => {
+    if (deferredPWAInstallPrompt) {
+      deferredPWAInstallPrompt.prompt();
+      const choice = await deferredPWAInstallPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        banner.remove();
+      }
+      deferredPWAInstallPrompt = null;
+    } else {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (isIOS) {
+        showToast('To install: Tap Share <i class="fa-solid fa-arrow-up-from-bracket"></i> and select "Add to Home Screen" <i class="fa-solid fa-square-plus"></i>', 'info');
+      } else {
+        showToast('Open browser menu (⋮) and tap "Install app" or "Add to Home screen"', 'info');
+      }
+    }
+  });
+
+  document.getElementById('pwaDismissBtn').addEventListener('click', () => {
+    banner.remove();
+  });
+}
+
+window.installCampusTutorPWA = function() {
+  if (deferredPWAInstallPrompt) {
+    deferredPWAInstallPrompt.prompt();
+  } else {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (isIOS) {
+      showToast('Install on iOS: Tap Share <i class="fa-solid fa-arrow-up-from-bracket"></i> and select "Add to Home Screen" <i class="fa-solid fa-square-plus"></i>', 'info');
+    } else {
+      showToast('Open browser menu (⋮) and tap "Install app" or "Add to Home screen"', 'info');
+    }
+  }
+};

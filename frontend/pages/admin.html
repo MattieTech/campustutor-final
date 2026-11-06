@@ -358,6 +358,16 @@
   .adm-action-btn{width:24px;height:24px;padding:2px;}
 }
 </style>
+
+<meta name="theme-color" content="#060d24"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="CampusTutor"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-192.png"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+
 </head>
 <body>
 
@@ -1295,7 +1305,7 @@ async function openUserModal(u) {
           </div>
         </div>
         <div style="display:flex;gap:6px;">
-          <button class="btn btn-glass btn-xs" style="font-size:0.8rem;" onclick="alert('View feature coming soon')"><i class="fa-solid fa-eye"></i> View</button>
+          <button class="btn btn-glass btn-xs" style="font-size:0.8rem;" onclick="showToast('View feature coming soon', 'info')"><i class="fa-solid fa-eye"></i> View</button>
           <button class="btn btn-glass btn-xs" style="font-size:0.8rem;" onclick="downloadUserFile('${f.id}','${esc(f.name)}')"><i class="fa-solid fa-download"></i> Download</button>
         </div>
       </div>`).join('');
@@ -1307,7 +1317,7 @@ async function downloadUserFile(fileId, fileName) {
     const token = getToken();
     
     if (!token) {
-      alert('<i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> You must be logged in to download files');
+      showToast('You must be logged in to download files', 'error');
       return;
     }
 
@@ -1352,7 +1362,7 @@ async function downloadUserFile(fileId, fileName) {
     
   } catch (err) {
     console.error('❌ Download error:', err);
-    alert('<i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> Error downloading file: ' + err.message);
+    showToast('Error downloading file: ' + err.message, 'error');
   }
 }
 

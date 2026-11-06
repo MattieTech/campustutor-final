@@ -49,6 +49,16 @@
   .score-circle.perf-low { background: linear-gradient(135deg, #ff5a66, #c81f3c); box-shadow: 0 0 30px rgba(255,90,102,0.34); }
 </style>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<meta name="theme-color" content="#060d24"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="CampusTutor"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-192.png"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+
 </head>
 <body>
 
@@ -128,7 +138,12 @@
     </div>
 
     <!-- Bottom Upgrade CTA Card -->
-    <div class="ct-sidebar-upgrade-card">
+    
+      <button class="ct-nav-link" onclick="installCampusTutorPWA()" style="color:#38bdf8;margin-bottom:12px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.25);">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+        <span>Install Mobile App</span>
+      </button>
+      <div class="ct-sidebar-upgrade-card">
       <div class="ct-upgrade-card-title">
         <i class="fa-solid fa-crown anim-crown" style="color:#fbbf24;"></i>
         <span>Upgrade to Pro</span>
@@ -772,7 +787,7 @@ requireAuth();
 function initThemeToggle(){
   const themeBtn = document.getElementById('themeBtn');
   if(!themeBtn){
-    console.warn('<i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> Theme button not found');
+    console.warn('Theme button not found');
     return;
   }
   

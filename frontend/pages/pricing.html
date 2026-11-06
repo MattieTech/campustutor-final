@@ -242,6 +242,16 @@
     box-shadow: 0 4px 12px rgba(52, 199, 89, 0.25);
   }
 </style>
+
+<meta name="theme-color" content="#060d24"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="CampusTutor"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-192.png"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+
 </head>
 <body>
 <nav class="navbar">
@@ -590,7 +600,15 @@
     showToast('Verifying payment with Paystack...', 'info');
     apiRequest(`/api/paystack/verify/${encodeURIComponent(ref)}`).then(({ data, error }) => {
       if (data && data.success) {
-        showToast(`Payment verified! Welcome to ${data.plan.toUpperCase()}! Redirecting to dashboard...`, 'success');
+        if (data.user) {
+          localStorage.setItem('ct_user', JSON.stringify(data.user));
+        } else if (data.plan) {
+          const cur = getUser() || {};
+          cur.plan = data.plan;
+          localStorage.setItem('ct_user', JSON.stringify(cur));
+        }
+        const planTitle = data.plan ? data.plan.toUpperCase() : 'COINS';
+        showToast(`Payment verified! Welcome to ${planTitle}! Redirecting to dashboard...`, 'success');
         setTimeout(() => { window.location.href = '/pages/dashboard.html'; }, 1500);
       } else {
         showToast(error || 'Could not verify payment.', 'error');

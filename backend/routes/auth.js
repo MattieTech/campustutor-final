@@ -5,6 +5,7 @@
 const express = require("express");
 const router = express.Router();
 const supabase = require("../utils/supabase");
+const authMiddleware = require("../middleware/authMiddleware");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 
@@ -278,6 +279,43 @@ router.post("/verify", async (req, res) => {
   } catch (err) {
     console.error("Verification error:", err);
     res.status(500).json({ error: "Verification failed." });
+  }
+});
+
+// ── GET CURRENT USER PROFILE (/me) ────────────────────────────
+router.get("/me", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("id, full_name, email, role, plan, subscription_status, subscription_end, coins, is_verified, referral_code, streak, xp, level, created_at")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error || !profile) {
+      return res.status(404).json({ error: "User profile not found." });
+    }
+
+    res.json({
+      user: {
+        id: profile.id,
+        email: profile.email || req.user.email,
+        fullName: profile.full_name,
+        role: profile.role || "student",
+        plan: (profile.plan || "free").toLowerCase(),
+        subscriptionStatus: profile.subscription_status || "inactive",
+        subscriptionEnd: profile.subscription_end || null,
+        coins: Number(profile.coins || 0),
+        isVerified: profile.is_verified ?? true,
+        referralCode: profile.referral_code,
+        streak: profile.streak || 0,
+        xp: profile.xp || 0,
+        level: profile.level || 1,
+      }
+    });
+  } catch (err) {
+    console.error("Fetch /me error:", err);
+    res.status(500).json({ error: "Failed to fetch user profile." });
   }
 });
 

@@ -113,13 +113,24 @@ router.post("/initialize", authMiddleware, async (req, res) => {
 
 // ── VERIFY TRANSACTION DIRECTLY ───────────────────────────────
 // GET /api/paystack/verify/:reference
-router.get("/verify/:reference", authMiddleware, async (req, res) => {
+router.get("/verify/:reference", async (req, res) => {
   try {
     const { reference } = req.params;
-    const userId = req.user.id;
-
     if (!reference) {
       return res.status(400).json({ error: "Reference parameter is required." });
+    }
+
+    // Recover userId from Auth Token or Fallback to Paystack transaction metadata
+    let tokenUserId = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      try {
+        const token = authHeader.split(" ")[1];
+        const { data: { user }, error: tokenErr } = await supabase.auth.getUser(token);
+        if (!tokenErr && user) {
+          tokenUserId = user.id;
+        }
+      } catch (e) {}
     }
 
     const options = {
@@ -143,16 +154,31 @@ router.get("/verify/:reference", authMiddleware, async (req, res) => {
           const response = JSON.parse(data);
           if (response.status && response.data && response.data.status === "success") {
             const meta = response.data.metadata || {};
+            const effectiveUserId = tokenUserId || meta.userId;
+
+            if (!effectiveUserId) {
+              return res.status(400).json({ error: "Could not associate payment with a user profile." });
+            }
 
             // If this transaction was for purchasing coins
             if (meta.type === "coins" || meta.coinsAwarded) {
               const coinsToAdd = Number(meta.coinsAwarded || 100);
               const { addCoins } = require("../utils/coins");
-              await addCoins(userId, coinsToAdd, "buy_coins", `Purchased coin pack (+${coinsToAdd} coins)`);
+              await addCoins(effectiveUserId, coinsToAdd, "buy_coins", `Purchased coin pack (+${coinsToAdd} coins)`);
+              
+              const { data: freshProfile } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", effectiveUserId)
+                .maybeSingle();
+
               return res.json({
                 success: true,
                 type: "coins",
+                plan: (freshProfile?.plan || "free").toLowerCase(),
                 coinsAdded: coinsToAdd,
+                user: freshProfile,
+                coins: freshProfile?.coins || 0,
                 message: `🎉 +${coinsToAdd} CampusCoins added to your wallet!`,
               });
             }
@@ -170,7 +196,7 @@ router.get("/verify/:reference", authMiddleware, async (req, res) => {
                 subscription_status: "active",
                 subscription_end: subscriptionEnd.toISOString(),
               })
-              .eq("id", userId)
+              .eq("id", effectiveUserId)
               .select()
               .single();
 
@@ -183,7 +209,9 @@ router.get("/verify/:reference", authMiddleware, async (req, res) => {
               success: true,
               message: `Successfully upgraded to ${planName.toUpperCase()} plan!`,
               plan: planName,
+              type: "plan",
               subscriptionEnd: subscriptionEnd.toISOString(),
+              user: updatedProfile,
             });
           } else {
             return res.status(400).json({
