@@ -1423,6 +1423,13 @@ img{max-width:100%;display:block;}
   padding: 3px 8px;
   border-radius: 999px;
   box-shadow: 0 1px 4px rgba(245, 158, 11, 0.15);
+  transition: all 0.25s ease;
+}
+
+.coin-badge-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  border-color: #f59e0b;
 }
 
 [data-theme="dark"] .coin-badge-pill {
@@ -1430,6 +1437,47 @@ img{max-width:100%;display:block;}
   border-color: rgba(245, 158, 11, 0.45);
   color: #fbbf24;
 }
+
+/* Lordicon custom element alignment & sizing */
+lord-icon {
+  display: inline-block;
+  vertical-align: middle;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+lord-icon:hover {
+  transform: scale(1.1);
+}
+
+/* Premium Icon Badges / Floating Circles */
+.icon-circle-glass {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass);
+  border: 1px solid var(--glass-b);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.icon-circle-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent 70%);
+  pointer-events: none;
+}
+
+.icon-circle-glass:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 24px rgba(0, 122, 255, 0.2);
+  border-color: var(--blue);
+}
+
 
 
 

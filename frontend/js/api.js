@@ -1350,7 +1350,9 @@ function injectCoinsModal() {
 
           <!-- Daily Streak Chest -->
           <div class="coin-chest-box">
-            <div style="font-size:2.2rem;margin-bottom:6px;"><i class="fa-solid fa-gift anim-gift"></i></div>
+            <div style="display:flex;justify-content:center;margin-bottom:6px;">
+              <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="hover" colors="primary:#ffb020,secondary:#d97806" style="width:64px;height:64px"></lord-icon>
+            </div>
             <h4 style="font-size:1.05rem;font-weight:800;margin-bottom:4px;">Daily Study Reward</h4>
             <p style="font-size:0.82rem;color:var(--label2);margin-bottom:14px;">Check in daily to maintain your study streak and earn 3 CampusCoins!</p>
             <button class="btn btn-warning" id="btnClaimChest" onclick="claimDailyBonusAction()" style="background:linear-gradient(135deg,#ffb020,#d97806);color:#fff;border:none;font-weight:800;padding:10px 22px;border-radius:var(--r-pill);">
@@ -1369,7 +1371,10 @@ function injectCoinsModal() {
           <div class="coins-modal-grid">
             <!-- 100 Coins -->
             <div class="coin-pack-card" onclick="buyCoinPackAction('starter')">
-              <div class="coin-amount-title"><i class="fa-solid fa-coins anim-coin"></i> 100</div>
+              <div style="display:flex;justify-content:center;margin-bottom:4px;">
+                <lord-icon src="https://cdn.lordicon.com/qhgmphtg.json" trigger="hover" colors="primary:#f59e0b,secondary:#d97706" style="width:42px;height:42px"></lord-icon>
+              </div>
+              <div class="coin-amount-title">100 Coins</div>
               <div style="font-size:0.75rem;color:var(--label3);">Starter Stash</div>
               <div class="coin-price-tag">₦1,500</div>
               <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;">Buy Pack</button>
@@ -1378,7 +1383,10 @@ function injectCoinsModal() {
             <!-- 250 Coins (Popular) -->
             <div class="coin-pack-card featured" onclick="buyCoinPackAction('popular')">
               <span class="coin-pack-badge">Popular</span>
-              <div class="coin-amount-title"><i class="fa-solid fa-sack-dollar anim-coin"></i> 250</div>
+              <div style="display:flex;justify-content:center;margin-bottom:4px;">
+                <lord-icon src="https://cdn.lordicon.com/webtefou.json" trigger="hover" colors="primary:#007AFF,secondary:#5ac8fa" style="width:42px;height:42px"></lord-icon>
+              </div>
+              <div class="coin-amount-title">250 Coins</div>
               <div style="font-size:0.75rem;color:var(--label3);">Scholar Pack</div>
               <div class="coin-price-tag">₦3,500</div>
               <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;background:#d97806;border:none;">Buy Pack</button>
@@ -1386,7 +1394,10 @@ function injectCoinsModal() {
 
             <!-- 600 Coins -->
             <div class="coin-pack-card" onclick="buyCoinPackAction('pro')">
-              <div class="coin-amount-title"><i class="fa-solid fa-gem anim-gem"></i> 600</div>
+              <div style="display:flex;justify-content:center;margin-bottom:4px;">
+                <lord-icon src="https://cdn.lordicon.com/lbjtvqiv.json" trigger="hover" colors="primary:#34c759,secondary:#30b0c7" style="width:42px;height:42px"></lord-icon>
+              </div>
+              <div class="coin-amount-title">600 Coins</div>
               <div style="font-size:0.75rem;color:var(--green);font-weight:700;">+100 Bonus Coins</div>
               <div class="coin-price-tag">₦7,500</div>
               <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;">Buy Pack</button>
@@ -1394,7 +1405,10 @@ function injectCoinsModal() {
 
             <!-- 1,600 Coins -->
             <div class="coin-pack-card" onclick="buyCoinPackAction('vip')">
-              <div class="coin-amount-title"><i class="fa-solid fa-crown anim-crown"></i> 1,600</div>
+              <div style="display:flex;justify-content:center;margin-bottom:4px;">
+                <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="hover" colors="primary:#af52de,secondary:#f59e0b" style="width:42px;height:42px"></lord-icon>
+              </div>
+              <div class="coin-amount-title">1,600 Coins</div>
               <div style="font-size:0.75rem;color:var(--purple);font-weight:700;">+350 Bonus Coins</div>
               <div class="coin-price-tag">₦18,000</div>
               <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;">Buy Pack</button>
