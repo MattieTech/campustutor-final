@@ -2,8 +2,8 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Dashboard — CampusTutor AI</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>CampusTutor AI — Study Hub</title>
 <link rel="stylesheet" href="/css/style.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <script src="https://cdn.lordicon.com/lordicon.js"></script>
@@ -20,34 +20,6 @@
     }
   };
 </script>
-<style>
-  /* ── INTERACTIVE QUIZ ENGINE STYLES ── */
-  .quiz-engine-workspace { margin-top: 24px; padding: 24px; background: var(--bg2); border-radius: var(--r-lg); border: 1px solid var(--sep); }
-  .quiz-section h3 { font-size: 1rem; font-weight: 700; margin: 24px 0 12px; color: var(--blue); }
-  .quiz-question-card { background: var(--glass); border: 1px solid var(--glass-b); border-radius: var(--r); margin-bottom: 16px; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-  .quiz-question-card:hover { transform: translateY(-2px); box-shadow: var(--gshadow); }
-  .quiz-prompt { font-size: 0.95rem; margin-bottom: 12px; line-height: 1.5; font-weight: 600; }
-  .quiz-options-grid { display: flex; flex-direction: column; gap: 8px; }
-  .quiz-option-label { display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(118,118,128,0.05); border-radius: var(--r); cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
-  .quiz-option-label:hover { background: rgba(0,122,255,0.08); }
-  .quiz-option-label input[type="radio"] { width: 18px; height: 18px; accent-color: var(--blue); margin: 0; }
-  .option-indicator { font-weight: 700; color: var(--blue); min-width: 20px; }
-  .quiz-text-input { width: 100%; min-height: 120px; padding: 12px; border-radius: var(--r); border: 1px solid var(--sep); background: var(--bg); color: var(--label); font-family: inherit; font-size: 0.92rem; resize: vertical; }
-  
-  /* ── PERFORMANCE FEEDBACK MODAL ── */
-  .performance-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .performance-card { max-width: 480px; width: 100%; border-radius: var(--r-2xl); box-shadow: 0 24px 80px rgba(0,0,0,0.4); overflow: hidden; }
-  .score-circle { width: 110px; height: 110px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem; font-weight: 800; color: white; }
-  .performance-modal-overlay.perf-high { background: rgba(26, 83, 51, 0.68); }
-  .performance-modal-overlay.perf-mid { background: rgba(122, 64, 7, 0.68); }
-  .performance-modal-overlay.perf-low { background: rgba(113, 18, 31, 0.72); }
-  .performance-card.perf-high { background: linear-gradient(180deg, rgba(14, 80, 42, 0.96), rgba(7, 45, 27, 0.98)); }
-  .performance-card.perf-mid { background: linear-gradient(180deg, rgba(122, 64, 7, 0.96), rgba(68, 34, 4, 0.98)); }
-  .performance-card.perf-low { background: linear-gradient(180deg, rgba(113, 18, 31, 0.96), rgba(64, 7, 15, 0.98)); }
-  .score-circle.perf-high { background: linear-gradient(135deg, #34d058, #18823b); box-shadow: 0 0 30px rgba(52,208,88,0.35); }
-  .score-circle.perf-mid { background: linear-gradient(135deg, #ffb020, #d97806); box-shadow: 0 0 30px rgba(255,176,32,0.36); }
-  .score-circle.perf-low { background: linear-gradient(135deg, #ff5a66, #c81f3c); box-shadow: 0 0 30px rgba(255,90,102,0.34); }
-</style>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
 <meta name="theme-color" content="#060d24"/>
@@ -59,844 +31,1047 @@
 <link rel="apple-touch-icon" href="/icons/icon-192.png"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 
+<style>
+  /* ── EXACT SCREENSHOT STYLING ── */
+  :root {
+    --ct-blue: #2563eb;
+    --ct-blue-dark: #1d4ed8;
+    --ct-cyan: #38bdf8;
+    --ct-bg-soft: #f4f7fc;
+    --ct-card-bg: #ffffff;
+    --ct-border-soft: #edf2f7;
+    --ct-text-dark: #0f172a;
+    --ct-text-gray: #64748b;
+  }
+  [data-theme="dark"] {
+    --ct-bg-soft: #080e1e;
+    --ct-card-bg: #11192e;
+    --ct-border-soft: rgba(255,255,255,0.08);
+    --ct-text-dark: #f8fafc;
+    --ct-text-gray: #94a3b8;
+  }
+
+  body {
+    background: var(--ct-bg-soft);
+    background-image: 
+      radial-gradient(circle at 10% 5%, rgba(191, 219, 254, 0.35) 0%, transparent 35%),
+      radial-gradient(circle at 90% 12%, rgba(233, 213, 255, 0.35) 0%, transparent 35%);
+    background-attachment: fixed;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+    color: var(--ct-text-dark);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Exact Centered Layout Container */
+  .ct-dashboard-container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 16px 16px 90px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-sizing: border-box;
+  }
+
+  /* Top Header matching reference */
+  .ct-exact-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0 2px 0;
+  }
+  .ct-exact-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .ct-exact-brand-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    display: grid;
+    place-items: center;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    flex-shrink: 0;
+  }
+  .ct-exact-brand-text {
+    display: flex;
+    flex-direction: column;
+  }
+  .ct-exact-brand-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--ct-text-dark);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  .ct-exact-badge {
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+  }
+  .ct-exact-brand-sub {
+    font-size: 0.72rem;
+    color: var(--ct-text-gray);
+    font-weight: 500;
+    margin-top: 1px;
+  }
+
+  /* Header Right Actions */
+  .ct-exact-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .ct-exact-bell-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--ct-card-bg);
+    border: 1px solid var(--ct-border-soft);
+    display: grid;
+    place-items: center;
+    color: var(--ct-text-dark);
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: transform 0.15s;
+  }
+  .ct-exact-bell-btn:active {
+    transform: scale(0.94);
+  }
+  .ct-exact-bell-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--ct-card-bg);
+  }
+  .ct-exact-user-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 999px;
+  }
+  .ct-exact-avatar-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border: 2px solid #ffffff;
+    overflow: hidden;
+  }
+  .ct-exact-avatar-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .ct-exact-chevron-icon {
+    font-size: 0.75rem;
+    color: var(--ct-text-gray);
+  }
+
+  /* ── Hero Banner (Exact match to screenshot) ── */
+  .ct-exact-hero {
+    background: linear-gradient(125deg, #021132 0%, #082975 48%, #1e40af 100%);
+    border-radius: 24px;
+    padding: 20px 22px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(8, 41, 117, 0.28);
+  }
+  .ct-exact-hero-left {
+    flex: 1 1 60%;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .ct-exact-hero-welcome {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ffffff;
+  }
+  .ct-exact-hero-username {
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: #38bdf8;
+    letter-spacing: -0.02em;
+    margin: 2px 0 6px 0;
+    line-height: 1.15;
+    word-break: break-word;
+  }
+  .ct-exact-hero-tagline {
+    font-size: 0.78rem;
+    color: #cbd5e1;
+    line-height: 1.38;
+    margin: 0 0 10px 0;
+  }
+  .ct-exact-quote-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    color: #f8fafc;
+    font-weight: 500;
+    width: fit-content;
+  }
+  .ct-exact-hero-right {
+    flex: 0 0 38%;
+    max-width: 145px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+  .ct-exact-hero-img {
+    width: 100%;
+    height: auto;
+    max-height: 120px;
+    object-fit: cover;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  /* ── 4 Stat Cards in ONE horizontal row ── */
+  .ct-exact-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .ct-exact-stat-card {
+    background: var(--ct-card-bg);
+    border: 1px solid var(--ct-border-soft);
+    border-radius: 16px;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s;
+  }
+  .ct-exact-stat-card:active {
+    transform: scale(0.96);
+  }
+  .ct-exact-stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 1rem;
+    margin-bottom: 5px;
+  }
+  .ct-exact-stat-val {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--ct-text-dark);
+    line-height: 1.1;
+  }
+  .ct-exact-stat-lbl {
+    font-size: 0.65rem;
+    color: var(--ct-text-gray);
+    font-weight: 600;
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+  .ct-exact-stat-arrow {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    font-size: 0.62rem;
+    color: #94a3b8;
+  }
+
+  /* ── Explain a Concept Card ── */
+  .ct-exact-concept-card {
+    background: var(--ct-card-bg);
+    border: 1px solid var(--ct-border-soft);
+    border-radius: 20px;
+    padding: 16px 18px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .ct-exact-concept-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .ct-exact-concept-img {
+    width: 74px;
+    height: 74px;
+    border-radius: 14px;
+    object-fit: cover;
+    flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(37,99,235,0.12);
+  }
+  .ct-exact-concept-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .ct-exact-concept-title {
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: var(--ct-text-dark);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+  }
+  .ct-exact-concept-sub {
+    font-size: 0.72rem;
+    color: var(--ct-text-gray);
+    margin: 3px 0 8px 0;
+  }
+  .ct-exact-concept-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ct-exact-concept-input {
+    flex: 1;
+    background: #f1f5f9;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 9px 14px;
+    font-size: 0.8rem;
+    color: var(--ct-text-dark);
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  [data-theme="dark"] .ct-exact-concept-input {
+    background: rgba(255,255,255,0.06);
+    color: #ffffff;
+  }
+  .ct-exact-concept-input:focus {
+    border-color: #2563eb;
+    background: #ffffff;
+  }
+  [data-theme="dark"] .ct-exact-concept-input:focus {
+    background: rgba(255,255,255,0.1);
+  }
+  .ct-exact-concept-btn {
+    background: #2563eb;
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    padding: 9px 18px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+    transition: transform 0.15s, background 0.15s;
+  }
+  .ct-exact-concept-btn:active {
+    transform: scale(0.96);
+  }
+
+  /* ── Quick Tools Section ── */
+  .ct-exact-tools-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 2px;
+  }
+  .ct-exact-tools-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--ct-text-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ct-exact-tools-viewall {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #2563eb;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* 2x2 Grid */
+  .ct-exact-tools-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .ct-exact-tool-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 18px;
+    text-decoration: none;
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s;
+  }
+  .ct-exact-tool-card:active {
+    transform: scale(0.97);
+  }
+  .ct-exact-tool-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    color: #ffffff;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .ct-exact-tool-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .ct-exact-tool-name {
+    font-weight: 800;
+    font-size: 0.92rem;
+    color: var(--ct-text-dark);
+    line-height: 1.2;
+  }
+  .ct-exact-tool-desc {
+    font-size: 0.72rem;
+    color: var(--ct-text-gray);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ct-exact-tool-arrow {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    margin-left: auto;
+  }
+
+  /* Card Color Themes matching screenshot */
+  .ct-exact-tool-blue {
+    background: linear-gradient(135deg, rgba(239, 246, 255, 0.95), rgba(219, 234, 254, 0.7));
+    border: 1px solid rgba(191, 219, 254, 0.85);
+  }
+  .ct-exact-tool-purple {
+    background: linear-gradient(135deg, rgba(250, 245, 255, 0.95), rgba(243, 232, 255, 0.7));
+    border: 1px solid rgba(233, 213, 255, 0.85);
+  }
+  .ct-exact-tool-amber {
+    background: linear-gradient(135deg, rgba(254, 252, 232, 0.95), rgba(254, 243, 199, 0.7));
+    border: 1px solid rgba(253, 230, 138, 0.85);
+  }
+  .ct-exact-tool-green {
+    background: linear-gradient(135deg, rgba(240, 253, 244, 0.95), rgba(220, 252, 231, 0.7));
+    border: 1px solid rgba(187, 247, 208, 0.85);
+  }
+
+  [data-theme="dark"] .ct-exact-tool-blue {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.35), rgba(30, 64, 175, 0.2));
+    border-color: rgba(59, 130, 246, 0.3);
+  }
+  [data-theme="dark"] .ct-exact-tool-purple {
+    background: linear-gradient(135deg, rgba(88, 28, 135, 0.35), rgba(107, 33, 168, 0.2));
+    border-color: rgba(168, 85, 247, 0.3);
+  }
+  [data-theme="dark"] .ct-exact-tool-amber {
+    background: linear-gradient(135deg, rgba(120, 53, 15, 0.35), rgba(146, 64, 14, 0.2));
+    border-color: rgba(245, 158, 11, 0.3);
+  }
+  [data-theme="dark"] .ct-exact-tool-green {
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.35), rgba(6, 95, 70, 0.2));
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+
+  /* ── Upgrade to Pro Banner ── */
+  .ct-exact-pro-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 20px;
+    background: linear-gradient(90deg, #7c3aed 0%, #4f46e5 50%, #1e1b4b 100%);
+    color: #ffffff;
+    box-shadow: 0 10px 28px rgba(79, 70, 229, 0.28);
+  }
+  .ct-exact-pro-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+  .ct-exact-pro-crown {
+    font-size: 1.6rem;
+    color: #fbbf24;
+    filter: drop-shadow(0 2px 8px rgba(251, 191, 36, 0.5));
+    flex-shrink: 0;
+  }
+  .ct-exact-pro-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .ct-exact-pro-title {
+    font-weight: 800;
+    font-size: 0.98rem;
+    color: #ffffff;
+    line-height: 1.2;
+  }
+  .ct-exact-pro-desc {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.85);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ct-exact-pro-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #1e1b4b;
+    font-weight: 800;
+    font-size: 0.8rem;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    transition: transform 0.15s;
+  }
+  .ct-exact-pro-btn:active {
+    transform: scale(0.96);
+  }
+
+  /* ── Fixed Mobile Bottom Navigation Bar ── */
+  .ct-exact-dock {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 680px;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    border-left: 1px solid rgba(0, 0, 0, 0.05);
+    border-right: 1px solid rgba(0, 0, 0, 0.05);
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 8px calc(env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+    box-sizing: border-box;
+  }
+  [data-theme="dark"] .ct-exact-dock {
+    background: rgba(17, 25, 46, 0.92);
+    border-top-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35);
+  }
+  .ct-exact-dock-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: #94a3b8;
+    text-decoration: none;
+    background: none;
+    border: none;
+    font-size: 0.72rem;
+    font-weight: 600;
+    flex: 1;
+    height: 100%;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+  }
+  .ct-exact-dock-item i {
+    font-size: 1.25rem;
+  }
+  .ct-exact-dock-item.active {
+    color: #2563eb;
+    font-weight: 700;
+  }
+  .ct-exact-dock-indicator {
+    position: absolute;
+    bottom: 5px;
+    width: 24px;
+    height: 3px;
+    border-radius: 3px;
+    background: #2563eb;
+  }
+
+  /* ── Interactive Concept Result Box ── */
+  #conceptResult {
+    display: none;
+    padding: 16px;
+    background: rgba(37,99,235,0.04);
+    border: 1px solid rgba(37,99,235,0.18);
+    border-radius: 16px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    max-height: 420px;
+    overflow-y: auto;
+    color: var(--ct-text-dark);
+  }
+</style>
 </head>
 <body>
 
-<div class="ct-sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileMenu()"></div>
+<!-- DASHBOARD MAIN CONTAINER (Matches exact screenshot layout) -->
+<div class="ct-dashboard-container">
 
-<div class="ct-dashboard-app">
-  <!-- LEFT SIDEBAR -->
-  <aside class="ct-sidebar" id="dashboardSidebar">
-    <!-- Brand Header -->
-    <a href="/" class="ct-sidebar-brand">
-      <div class="ct-brand-icon-box">
+  <!-- TOP HEADER -->
+  <header class="ct-exact-header">
+    <a href="/pages/dashboard.html" class="ct-exact-brand">
+      <div class="ct-exact-brand-icon">
         <i class="fa-solid fa-graduation-cap"></i>
       </div>
-      <div class="ct-brand-text-wrap">
-        <div class="ct-brand-title-row">
-          <span class="ct-brand-name">CampusTutor</span>
-          <span class="ct-brand-version-badge">2.0</span>
+      <div class="ct-exact-brand-text">
+        <div class="ct-exact-brand-title">
+          <span>CampusTutor AI</span>
+          <span class="ct-exact-badge">2.0</span>
         </div>
-        <span class="ct-brand-tagline">Learn • Practice • Excel</span>
+        <span class="ct-exact-brand-sub">Learn • Practice • Excel</span>
       </div>
     </a>
 
-    <!-- Primary Nav Links -->
-    <div class="ct-nav-group">
-      <a href="/pages/dashboard.html" class="ct-nav-link active">
-        <i class="fa-solid fa-house"></i>
-        <span>Dashboard</span>
-      </a>
-      <a href="/pages/history.html" class="ct-nav-link">
-        <i class="fa-solid fa-clock-rotate-left"></i>
-        <span>History</span>
-      </a>
-      <a href="/pages/upload.html" class="ct-nav-link">
-        <i class="fa-solid fa-cloud-arrow-up"></i>
-        <span>Upload PDF</span>
-      </a>
-      <a href="/pages/pricing.html" class="ct-nav-link">
-        <i class="fa-solid fa-credit-card"></i>
-        <span>Upgrade Plan</span>
-      </a>
-      <a href="/pages/referral.html" class="ct-nav-link">
-        <i class="fa-solid fa-users"></i>
-        <span>Refer & Earn</span>
-      </a>
-    </div>
-
-    <!-- TOOLS (Matches Reference Screenshot) -->
-    <div class="ct-nav-group">
-      <div class="ct-nav-section-title">TOOLS</div>
-      <a href="/pages/tools.html?tool=polisher" class="ct-nav-link" id="sideBtnPolisher">
-        <i class="fa-solid fa-feather-pointed" style="color:#38bdf8;"></i>
-        <span>Thesis & Coursework Polisher</span>
-      </a>
-      <a href="/pages/tools.html?tool=proposals" class="ct-nav-link" id="sideBtnProposals">
-        <i class="fa-solid fa-briefcase" style="color:#10b981;"></i>
-        <span>Project & Proposal Architect</span>
-      </a>
-      <a href="/pages/tools.html?tool=viva" class="ct-nav-link" id="sideBtnViva">
-        <i class="fa-solid fa-shield-halved" style="color:#f97316;"></i>
-        <span>Viva Defense Panel Drill</span>
-      </a>
-      <a href="/pages/tools.html?tool=humanizer" class="ct-nav-link" id="sideBtnHumanizer">
-        <i class="fa-solid fa-fingerprint" style="color:#a855f7;"></i>
-        <span>Turnitin Humanizer</span>
-      </a>
-    </div>
-
-    <!-- Social & Stats -->
-    <div class="ct-nav-group">
-      <div class="ct-nav-section-title">Social & Stats</div>
-      <button type="button" class="ct-nav-link" onclick="openLeaderboardModal()">
-        <i class="fa-solid fa-trophy" style="color:#f59e0b;"></i>
-        <span>Leaderboard</span>
+    <div class="ct-exact-header-right">
+      <!-- Notification Bell -->
+      <button class="ct-exact-bell-btn" aria-label="Notifications" onclick="openActivityModal()" title="Notifications & Activity">
+        <i class="fa-solid fa-bell"></i>
+        <span class="ct-exact-bell-badge">2</span>
       </button>
-      <button type="button" class="ct-nav-link" onclick="openActivityModal()">
-        <i class="fa-solid fa-chart-line" style="color:#10b981;"></i>
-        <span>Activity Log</span>
-      </button>
-    </div>
 
-    <!-- Study Tools & Recent Files -->
-    <div class="ct-nav-group">
-      <div class="ct-nav-section-title">Study Tools</div>
-      <div id="sidebarDocs" style="display:flex; flex-direction:column; gap:2px;"></div>
-    </div>
-
-    <!-- Productivity -->
-    <div class="ct-nav-group">
-      <div class="ct-nav-section-title">Productivity</div>
-      <button type="button" class="ct-nav-link" onclick="openPomodoro()">
-        <i class="fa-solid fa-stopwatch" style="color:#38bdf8;"></i>
-        <span>Focus Timer</span>
-      </button>
-      <a href="/pages/dashboard.html#profile" class="ct-nav-link">
-        <i class="fa-solid fa-bookmark" style="color:#a855f7;"></i>
-        <span>Bookmarks</span>
-      </a>
-    </div>
-
-    <!-- Bottom Upgrade CTA Card -->
-    
-      <button class="ct-nav-link" onclick="installCampusTutorPWA()" style="color:#38bdf8;margin-bottom:12px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.25);">
-        <i class="fa-solid fa-mobile-screen-button"></i>
-        <span>Install Mobile App</span>
-      </button>
-      <div class="ct-sidebar-upgrade-card">
-      <div class="ct-upgrade-card-title">
-        <i class="fa-solid fa-crown anim-crown" style="color:#fbbf24;"></i>
-        <span>Upgrade to Pro</span>
+      <!-- User Avatar with Dropdown Chevron -->
+      <div class="ct-exact-user-pill" onclick="openSettingsModal()" title="Account & Settings">
+        <div class="ct-exact-avatar-circle" id="userAvatarCircle">
+          <span id="userAvatarInitials">ST</span>
+        </div>
+        <i class="fa-solid fa-chevron-down ct-exact-chevron-icon"></i>
       </div>
-      <div class="ct-upgrade-card-desc">
-        Unlock premium features and get the best experience.
+    </div>
+  </header>
+
+  <!-- Email Verification Pending Banner (Only shows if unverified) -->
+  <div id="verificationBanner" style="display:none; padding:12px 16px; border-radius:16px; background:rgba(255,159,67,0.12); border-left:4px solid #f97316; justify-content:space-between; align-items:center; gap:10px; font-size:0.84rem;">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <i class="fa-solid fa-triangle-exclamation" style="color:#f97316;"></i>
+      <span>Please verify your email address to unlock full AI capabilities.</span>
+    </div>
+    <button onclick="openVerificationModal()" style="background:#f97316; color:#fff; border:none; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.75rem; cursor:pointer;">Verify</button>
+  </div>
+
+  <!-- HERO BANNER CARD (Matches reference screenshot) -->
+  <div class="ct-exact-hero">
+    <div class="ct-exact-hero-left">
+      <span class="ct-exact-hero-welcome">Welcome back,</span>
+      <h1 id="welcomeMsg" class="ct-exact-hero-username">matthewaliu001</h1>
+      <p class="ct-exact-hero-tagline">Your study hub – track progress, manage documents and stay motivated.</p>
+      <div class="ct-exact-quote-pill">
+        <span>❝ Dream big, study smart, achieve more.</span>
       </div>
-      <a href="/pages/pricing.html" class="ct-upgrade-card-btn">
-        <span>Upgrade Now</span>
+    </div>
+
+    <div class="ct-exact-hero-right">
+      <img src="/images/campus_banner.jpg" alt="Campus & Books Illustration" class="ct-exact-hero-img" loading="eager" fetchpriority="high" />
+    </div>
+  </div>
+
+  <!-- 4 STAT CARDS IN SINGLE HORIZONTAL ROW -->
+  <div class="ct-exact-stats-row">
+    <!-- 1. Documents -->
+    <div class="ct-exact-stat-card" onclick="openDocumentsModal()" title="View your uploaded documents">
+      <div class="ct-exact-stat-icon" style="background:#eff6ff; color:#2563eb;">
+        <i class="fa-solid fa-file-lines"></i>
+      </div>
+      <div class="ct-exact-stat-val" id="statDocs">19</div>
+      <div class="ct-exact-stat-lbl">Documents</div>
+      <div class="ct-exact-stat-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+    </div>
+
+    <!-- 2. Day Streak -->
+    <div class="ct-exact-stat-card" onclick="openCoinsModal()" title="View your daily study streak & rewards">
+      <div class="ct-exact-stat-icon" style="background:#fff7ed; color:#f97316;">
+        <i class="fa-solid fa-fire anim-fire"></i>
+      </div>
+      <div class="ct-exact-stat-val" id="statStreak">10</div>
+      <div class="ct-exact-stat-lbl">Day Streak</div>
+      <div class="ct-exact-stat-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+    </div>
+
+    <!-- 3. Total XP / Coins -->
+    <div class="ct-exact-stat-card" onclick="openLeaderboardModal()" title="View leaderboard & XP">
+      <div class="ct-exact-stat-icon" style="background:#faf5ff; color:#a855f7;">
+        <i class="fa-solid fa-star"></i>
+      </div>
+      <div class="ct-exact-stat-val" id="statXP">175</div>
+      <div class="ct-exact-stat-lbl">Total XP</div>
+      <div class="ct-exact-stat-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+    </div>
+
+    <!-- 4. Plan -->
+    <a href="/pages/pricing.html" class="ct-exact-stat-card" title="View or upgrade your subscription plan">
+      <div class="ct-exact-stat-icon" style="background:#f0fdf4; color:#10b981;">
+        <i class="fa-solid fa-crown anim-crown"></i>
+      </div>
+      <div class="ct-exact-stat-val" id="statPlan" style="font-size:0.95rem; color:#10b981;">PLUS ⚡</div>
+      <div class="ct-exact-stat-lbl">Plan</div>
+      <div class="ct-exact-stat-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+    </a>
+  </div>
+
+  <!-- EXPLAIN A CONCEPT CARD (Matches reference screenshot) -->
+  <div class="ct-exact-concept-card">
+    <div class="ct-exact-concept-main">
+      <img src="/images/lightbulb_concept.jpg" alt="3D Glowing Lightbulb on Open Book" class="ct-exact-concept-img" loading="eager" fetchpriority="high" />
+      <div class="ct-exact-concept-content">
+        <h2 class="ct-exact-concept-title">
+          <i class="fa-solid fa-sparkles" style="color:#2563eb;"></i>
+          <span>Explain a Concept</span>
+        </h2>
+        <div class="ct-exact-concept-sub">Ask the AI to explain any topic or concept instantly</div>
+
+        <div class="ct-exact-concept-input-row">
+          <input type="text" class="ct-exact-concept-input" id="conceptInput" placeholder="e.g., Photosynthesis, Newton's Laws..." onkeydown="if(event.key==='Enter') explainConcept()" />
+          <button type="button" onclick="explainConcept()" class="ct-exact-concept-btn" id="btnSendConcept">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Send</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expandable Concept Result Box -->
+    <div id="conceptResult"></div>
+  </div>
+
+  <!-- QUICK TOOLS SECTION (Matches reference screenshot) -->
+  <div>
+    <div class="ct-exact-tools-header">
+      <div class="ct-exact-tools-title">
+        <i class="fa-solid fa-table-cells-large" style="color:#2563eb;"></i>
+        <span>Quick Tools</span>
+      </div>
+      <a href="/pages/tools.html" class="ct-exact-tools-viewall">
+        <span>View All</span>
         <i class="fa-solid fa-arrow-right"></i>
       </a>
     </div>
-  </aside>
 
-  <!-- MAIN CONTENT COLUMN -->
-  <div class="ct-main-layout">
-    <!-- TOP NAVBAR -->
-    <header class="ct-navbar-header">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <!-- Animated Hamburger Button -->
-        <button id="mobileMenuBtn" class="ct-hamburger-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">
-          <span class="ct-hamburger-bar ct-bar-top"></span>
-          <span class="ct-hamburger-bar ct-bar-mid"></span>
-          <span class="ct-hamburger-bar ct-bar-bot"></span>
-        </button>
-
-        <!-- Brand in navbar for mobile (Matches Reference Design) -->
-        <a href="/pages/dashboard.html" class="ct-mobile-nav-brand" id="mobileNavBrand">
-          <div class="ct-brand-icon-box">
-            <i class="fa-solid fa-graduation-cap"></i>
-          </div>
-          <div class="ct-brand-text-wrap">
-            <div class="ct-brand-title-row">
-              <span class="ct-brand-name">CampusTutor AI</span>
-              <span class="ct-brand-version-badge">2.0</span>
-            </div>
-            <span class="ct-brand-tagline">Learn • Practice • Excel</span>
-          </div>
-        </a>
-
-        <!-- Search Bar -->
-        <div class="ct-nav-search-wrap">
-          <i class="fa-solid fa-magnifying-glass" style="color:#94a3b8; font-size:0.9rem;"></i>
-          <input type="text" id="navSearchInput" class="ct-nav-search-input" placeholder="Search for topics, notes, or documents..." oninput="filterDashboardDocs(this.value)" />
-          <span class="ct-nav-search-key">Ctrl + K</span>
+    <div class="ct-exact-tools-grid" style="margin-top:10px;">
+      <!-- Card 1: Upload PDF -->
+      <a href="/pages/upload.html" class="ct-exact-tool-card ct-exact-tool-blue">
+        <div class="ct-exact-tool-icon" style="background:linear-gradient(135deg, #3b82f6, #1d4ed8);">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
         </div>
+        <div class="ct-exact-tool-text">
+          <div class="ct-exact-tool-name">Upload PDF</div>
+          <div class="ct-exact-tool-desc">Study your PDFs</div>
+        </div>
+        <div class="ct-exact-tool-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+      </a>
+
+      <!-- Card 2: Study Tools -->
+      <a href="/pages/tools.html" class="ct-exact-tool-card ct-exact-tool-purple">
+        <div class="ct-exact-tool-icon" style="background:linear-gradient(135deg, #a855f7, #7c3aed);">
+          <i class="fa-solid fa-briefcase"></i>
+        </div>
+        <div class="ct-exact-tool-text">
+          <div class="ct-exact-tool-name">Study Tools</div>
+          <div class="ct-exact-tool-desc">Boost your learning</div>
+        </div>
+        <div class="ct-exact-tool-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+      </a>
+
+      <!-- Card 3: Leaderboard -->
+      <div onclick="openLeaderboardModal()" class="ct-exact-tool-card ct-exact-tool-amber">
+        <div class="ct-exact-tool-icon" style="background:linear-gradient(135deg, #fbbf24, #f59e0b);">
+          <i class="fa-solid fa-trophy"></i>
+        </div>
+        <div class="ct-exact-tool-text">
+          <div class="ct-exact-tool-name">Leaderboard</div>
+          <div class="ct-exact-tool-desc">See top learners</div>
+        </div>
+        <div class="ct-exact-tool-arrow"><i class="fa-solid fa-chevron-right"></i></div>
       </div>
 
-      <!-- Right Navbar Actions -->
-      <div class="ct-nav-right-actions">
-        <!-- Notification Bell -->
-        <button class="ct-nav-circle-btn" aria-label="Notifications" onclick="openActivityModal()" title="Notifications & Activity">
-          <i class="fa-solid fa-bell"></i>
-          <span class="ct-nav-bell-badge">2</span>
-        </button>
-
-        <!-- Daily Gift Button -->
-        <button class="ct-daily-gift-btn" onclick="openCoinsModal()" title="Claim your daily study coins bonus">
-          <i class="fa-solid fa-gift anim-gift"></i>
-          <span>Daily Gift</span>
-        </button>
-
-        <!-- Theme Toggle -->
-        <button class="ct-nav-circle-btn theme-btn" id="themeBtn" aria-label="Toggle dark mode" title="Toggle theme">
-          <i class="fa-solid fa-moon"></i>
-        </button>
-
-        <!-- User Avatar & Greeting -->
-        <div class="ct-nav-user-avatar" onclick="window.location.href='/pages/dashboard.html#profile'">
-          <div class="ct-avatar-circle" id="userAvatarCircle">
-            <span id="userAvatarInitials">ST</span>
-            <span class="ct-avatar-status-dot"></span>
-          </div>
-          <span id="userGreeting" style="font-size:0.86rem; font-weight:700; color:var(--ct-text-main); display:inline-block;">Hi, Student</span>
-          <i class="fa-solid fa-chevron-down" style="font-size:0.72rem; color:#94a3b8;"></i>
+      <!-- Card 4: Activity Log -->
+      <div onclick="openActivityModal()" class="ct-exact-tool-card ct-exact-tool-green">
+        <div class="ct-exact-tool-icon" style="background:linear-gradient(135deg, #34d399, #10b981);">
+          <i class="fa-solid fa-clock-rotate-left"></i>
         </div>
-
-        <!-- Desktop Logout -->
-        <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop" style="border-radius:20px; font-size:0.78rem; padding:6px 14px;">Log Out</button>
+        <div class="ct-exact-tool-text">
+          <div class="ct-exact-tool-name">Activity Log</div>
+          <div class="ct-exact-tool-desc">Track your progress</div>
+        </div>
+        <div class="ct-exact-tool-arrow"><i class="fa-solid fa-chevron-right"></i></div>
       </div>
-    </header>
+    </div>
+  </div>
 
-    <!-- DASHBOARD BODY -->
-    <main class="ct-dashboard-body">
-      <!-- Email Verification Pending Banner -->
-      <div id="verificationBanner" style="display:none; padding:14px 18px; border-radius:var(--r); background:rgba(255,159,67,0.12); border-left:4px solid var(--orange); justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <i class="fa-solid fa-triangle-exclamation" style="color:var(--orange); font-size:1.15rem;"></i>
-          <span style="font-weight:600; font-size:0.9rem; color:var(--label);">Your email address is not verified. Please verify your account to unlock all features.</span>
-        </div>
-        <div style="display:flex; gap:8px;">
-          <button onclick="openVerificationModal()" class="btn btn-warning btn-sm" style="background:var(--orange); border:none; font-weight:700; color:#fff; padding:6px 14px; border-radius:20px; cursor:pointer;">Verify Email</button>
-          <button onclick="document.getElementById('verificationBanner').style.display='none'" class="btn btn-ghost btn-sm" style="border-radius:20px; padding:6px 14px; font-weight:600;">Verify Later</button>
-        </div>
+  <!-- UPGRADE TO PRO BANNER (Matches reference screenshot) -->
+  <div class="ct-exact-pro-banner">
+    <div class="ct-exact-pro-left">
+      <div class="ct-exact-pro-crown">
+        <i class="fa-solid fa-crown anim-crown"></i>
       </div>
-
-      <!-- PANORAMIC HERO BANNER (Matches Reference Screenshot) -->
-      <div class="ct-hero-banner">
-        <div class="ct-hero-left">
-          <span class="ct-hero-welcome-sub">Welcome back,</span>
-          <h1 id="welcomeMsg" class="ct-hero-user-name">matthewaliu001</h1>
-          <p class="ct-hero-tagline">Your study hub — track progress, manage documents, and stay motivated.</p>
-          <div class="ct-hero-quote-pill">
-            <span>❝ Dream big, study smart, achieve more.</span>
-          </div>
-        </div>
-
-        <!-- Hero Right 3D Illustration (Stacked Textbooks & Graduation Cap) -->
-        <div class="ct-hero-illustration-box">
-          <img src="/images/campus_banner.jpg" alt="Campus & Books Hero" class="ct-hero-campus-img" fetchpriority="high" loading="eager" />
-        </div>
-
-        <!-- Hero Gamification Box (Desktop Only) -->
-        <div class="ct-hero-gamification-box">
-          <div>
-            <div class="ct-hero-level-row" style="margin-bottom:8px;">
-              <span class="ct-hero-level-chip">
-                <i class="fa-solid fa-coins anim-coin"></i> CampusCoins
-              </span>
-              <span class="ct-hero-xp-val"><span id="heroCoinsDisplay">50</span> Coins</span>
-            </div>
-            <div class="ct-hero-xp-track">
-              <div class="ct-hero-xp-bar" id="xpFill" style="width: 50%; background: linear-gradient(90deg, #f59e0b, #d97706);"></div>
-            </div>
-          </div>
-
-          <!-- Daily Study Quest Progress -->
-          <div class="ct-hero-quest-row">
-            <div class="ct-hero-quest-gauge">
-              <svg width="48" height="48" viewBox="0 0 48 48">
-                <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="4.5"></circle>
-                <circle cx="24" cy="24" r="20" fill="none" stroke="#38bdf8" stroke-width="4.5" stroke-dasharray="125.6" stroke-dashoffset="0" id="dailyGoalCircle" stroke-linecap="round" style="transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset 0.6s ease;"></circle>
-              </svg>
-              <div class="ct-gauge-center-text" id="dailyGoalPct">100%</div>
-            </div>
-            <div class="ct-hero-quest-info">
-              <div class="ct-hero-quest-title">Daily Study Quest</div>
-              <div class="ct-hero-quest-desc" id="dailyGoalText">Streak active · Daily reward ready</div>
-            </div>
-            <div class="ct-hero-quest-check" onclick="openCoinsModal()" style="cursor:pointer;" title="Claim study reward">
-              <i class="fa-solid fa-gift anim-gift"></i>
-            </div>
-          </div>
-        </div>
+      <div class="ct-exact-pro-text">
+        <div class="ct-exact-pro-title">Upgrade to Pro</div>
+        <div class="ct-exact-pro-desc">Unlock premium features and get the best experience.</div>
       </div>
+    </div>
+    <a href="/pages/pricing.html" class="ct-exact-pro-btn">
+      <span>Upgrade Now</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+  </div>
 
-      <!-- 4 STATS ROW CARDS (Single Horizontal Row) -->
-      <div class="ct-stats-grid-4">
-        <!-- 1. Documents -->
-        <a href="#documentsSection" class="ct-stat-pill-card">
-          <div class="ct-stat-card-left">
-            <div class="ct-stat-icon-square" style="background:#eff6ff; color:#2563eb;">
-              <i class="fa-solid fa-file-lines"></i>
-            </div>
-            <div class="ct-stat-data">
-              <div class="ct-stat-number" id="statDocs">19</div>
-              <div class="ct-stat-name">Documents</div>
-            </div>
-          </div>
-          <div class="ct-stat-arrow-btn">
-            <i class="fa-solid fa-chevron-right"></i>
-          </div>
-        </a>
+</div>
 
-        <!-- 2. Day Streak -->
-        <div class="ct-stat-pill-card" onclick="openCoinsModal()">
-          <div class="ct-stat-card-left">
-            <div class="ct-stat-icon-square" style="background:#fff7ed; color:#f97316;">
-              <i class="fa-solid fa-fire anim-fire"></i>
-            </div>
-            <div class="ct-stat-data">
-              <div class="ct-stat-number" id="statStreak">10</div>
-              <div class="ct-stat-name">Day Streak</div>
-            </div>
-          </div>
-          <div class="ct-stat-arrow-btn">
-            <i class="fa-solid fa-chevron-right"></i>
-          </div>
-        </div>
+<!-- FIXED BOTTOM NAVIGATION BAR DOCK (Matches reference screenshot) -->
+<nav class="ct-exact-dock" id="mobileBottomNav">
+  <a href="/pages/dashboard.html" class="ct-exact-dock-item active">
+    <i class="fa-solid fa-house"></i>
+    <span>Home</span>
+    <div class="ct-exact-dock-indicator"></div>
+  </a>
+  <a href="/pages/tools.html" class="ct-exact-dock-item">
+    <i class="fa-solid fa-book-open"></i>
+    <span>Tools</span>
+  </a>
+  <button type="button" class="ct-exact-dock-item" onclick="openActivityModal()">
+    <i class="fa-solid fa-chart-simple"></i>
+    <span>Progress</span>
+  </button>
+  <button type="button" class="ct-exact-dock-item" onclick="openSettingsModal()">
+    <i class="fa-solid fa-gear"></i>
+    <span>Settings</span>
+  </button>
+</nav>
 
-        <!-- 3. CampusCoins (Replaces Total XP per instruction) -->
-        <div class="ct-stat-pill-card" onclick="openCoinsModal()" title="View CampusCoins Wallet">
-          <div class="ct-stat-card-left">
-            <div class="ct-stat-icon-square" style="background:#fefce8; color:#eab308;">
-              <i class="fa-solid fa-coins anim-coin"></i>
-            </div>
-            <div class="ct-stat-data">
-              <div class="ct-stat-number" id="statCoins">50</div>
-              <div class="ct-stat-name">CampusCoins</div>
-            </div>
-          </div>
-          <div class="ct-stat-arrow-btn">
-            <i class="fa-solid fa-chevron-right"></i>
-          </div>
-        </div>
+<!-- ── ALL MODALS FOR FULL FUNCTIONALITY ── -->
 
-        <!-- 4. Plan -->
-        <a href="/pages/pricing.html" class="ct-stat-pill-card">
-          <div class="ct-stat-card-left">
-            <div class="ct-stat-icon-square" style="background:#f0fdf4; color:#10b981;">
-              <i class="fa-solid fa-crown anim-crown"></i>
-            </div>
-            <div class="ct-stat-data">
-              <div class="ct-stat-number" id="statPlan" style="font-size:1.15rem; color:#10b981;">PLUS ⚡</div>
-              <div class="ct-stat-name">Plan</div>
-            </div>
-          </div>
-          <div class="ct-stat-arrow-btn">
-            <i class="fa-solid fa-chevron-right"></i>
-          </div>
-        </a>
+<!-- 1. DOCUMENTS DRAWER MODAL -->
+<div id="documentsOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);z-index:900;align-items:center;justify-content:center;padding:16px;">
+  <div class="card" style="max-width:480px;width:100%;border-radius:24px;background:var(--ct-card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+    <div style="padding:20px;border-bottom:1px solid var(--ct-border-soft);display:flex;justify-content:space-between;align-items:center;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <i class="fa-solid fa-file-pdf" style="color:#ef4444;font-size:1.15rem;"></i>
+        <h3 style="font-size:1.1rem;font-weight:800;margin:0;">My Study Documents</h3>
       </div>
-
-      <!-- TWO COLUMN MAIN GRID -->
-      <div class="ct-grid-2col">
-        <!-- LEFT COLUMN: Main AI Tools & Documents -->
-        <div style="display:flex; flex-direction:column; gap:20px;">
-          <!-- 1. EXPLAIN A CONCEPT WIDGET (3D Lightbulb & Book) -->
-          <div class="ct-card">
-            <div class="ct-concept-hero-card">
-              <img src="/images/lightbulb_concept.jpg" alt="3D Glowing Lightbulb on Open Book" class="ct-concept-illustration" loading="eager" fetchpriority="high" />
-              <div class="ct-concept-content-wrap">
-                <div>
-                  <div class="ct-card-title-group" style="margin-bottom:4px;">
-                    <i class="fa-solid fa-sparkles" style="color:#007AFF; font-size:1.15rem;"></i>
-                    <h2 class="ct-card-title-text" style="font-weight:800; font-size:1.15rem;">Explain a Concept</h2>
-                  </div>
-                  <div class="ct-card-subtitle-text">Ask the AI to explain any topic or concept instantly</div>
-                </div>
-
-                <!-- Input & Send Pill Button -->
-                <div class="ct-prompt-input-row">
-                  <input type="text" class="ct-prompt-input-field" id="conceptInput" placeholder="e.g., Photosynthesis, Newton's Laws, Data Structures..." onkeydown="if(event.key==='Enter') explainConcept()" />
-                  <button type="button" onclick="explainConcept()" class="ct-send-pill-btn">
-                    <i class="fa-solid fa-paper-plane"></i>
-                    <span>Send</span>
-                  </button>
-                </div>
-
-                <!-- Quick Action Chips -->
-                <div class="ct-quick-chips-row">
-                  <button type="button" class="ct-action-chip" onclick="applyConceptChip('Summarize: ')">
-                    <i class="fa-solid fa-list-check" style="color:#2563eb;"></i> Summarize
-                  </button>
-                  <button type="button" class="ct-action-chip" onclick="applyConceptChip('Get Detailed Study Notes: ')">
-                    <i class="fa-solid fa-book-open" style="color:#8b5cf6;"></i> Get Notes
-                  </button>
-                  <button type="button" class="ct-action-chip" onclick="applyConceptChip('Solve Step-by-Step: ')">
-                    <i class="fa-solid fa-calculator" style="color:#f59e0b;"></i> Solve Problem
-                  </button>
-                  <button type="button" class="ct-action-chip" onclick="applyConceptChip('Explain in Simple Terms: ')">
-                    <i class="fa-solid fa-lightbulb anim-bulb" style="color:#10b981;"></i> Explain Topic
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Concept Result Container -->
-            <div id="conceptResult" style="display:none; margin-top:16px; padding:20px; background:rgba(37,99,235,0.04); border:1px solid rgba(37,99,235,0.15); border-radius:18px; color:var(--ct-text-main); font-size:0.92rem; max-height:450px; overflow-y:auto; line-height:1.65;"></div>
-          </div>
-
-          <!-- QUICK TOOLS SECTION (Matches Reference Screenshot) -->
-          <div class="ct-quick-tools-section">
-            <div class="ct-section-header-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-              <h3 style="font-size:1.1rem; font-weight:800; color:var(--ct-text-main); display:flex; align-items:center; gap:8px;">
-                <i class="fa-solid fa-table-cells-large" style="color:#2563eb;"></i> Quick Tools
-              </h3>
-              <a href="/pages/tools.html" style="font-size:0.82rem; font-weight:700; color:#2563eb; display:flex; align-items:center; gap:4px;">
-                View All <i class="fa-solid fa-arrow-right"></i>
-              </a>
-            </div>
-
-            <div class="ct-quick-tools-grid">
-              <!-- Card 1: Upload PDF -->
-              <a href="/pages/upload.html" class="ct-tool-card ct-tool-blue">
-                <div class="ct-tool-card-icon" style="background:linear-gradient(135deg, #3b82f6, #1d4ed8);">
-                  <i class="fa-solid fa-cloud-arrow-up"></i>
-                </div>
-                <div class="ct-tool-card-text">
-                  <div class="ct-tool-card-title">Upload PDF</div>
-                  <div class="ct-tool-card-desc">Study your PDFs</div>
-                </div>
-                <div class="ct-tool-card-arrow">
-                  <i class="fa-solid fa-chevron-right"></i>
-                </div>
-              </a>
-
-              <!-- Card 2: Study Tools -->
-              <a href="/pages/tools.html" class="ct-tool-card ct-tool-purple">
-                <div class="ct-tool-card-icon" style="background:linear-gradient(135deg, #a855f7, #7c3aed);">
-                  <i class="fa-solid fa-briefcase"></i>
-                </div>
-                <div class="ct-tool-card-text">
-                  <div class="ct-tool-card-title">Study Tools</div>
-                  <div class="ct-tool-card-desc">Boost your learning</div>
-                </div>
-                <div class="ct-tool-card-arrow">
-                  <i class="fa-solid fa-chevron-right"></i>
-                </div>
-              </a>
-
-              <!-- Card 3: Leaderboard -->
-              <div onclick="openLeaderboardModal()" class="ct-tool-card ct-tool-amber" style="cursor:pointer;">
-                <div class="ct-tool-card-icon" style="background:linear-gradient(135deg, #fbbf24, #f59e0b);">
-                  <i class="fa-solid fa-trophy"></i>
-                </div>
-                <div class="ct-tool-card-text">
-                  <div class="ct-tool-card-title">Leaderboard</div>
-                  <div class="ct-tool-card-desc">See top learners</div>
-                </div>
-                <div class="ct-tool-card-arrow">
-                  <i class="fa-solid fa-chevron-right"></i>
-                </div>
-              </div>
-
-              <!-- Card 4: Activity Log -->
-              <div onclick="openActivityModal()" class="ct-tool-card ct-tool-green" style="cursor:pointer;">
-                <div class="ct-tool-card-icon" style="background:linear-gradient(135deg, #34d399, #10b981);">
-                  <i class="fa-solid fa-clock-rotate-left"></i>
-                </div>
-                <div class="ct-tool-card-text">
-                  <div class="ct-tool-card-title">Activity Log</div>
-                  <div class="ct-tool-card-desc">Track your progress</div>
-                </div>
-                <div class="ct-tool-card-arrow">
-                  <i class="fa-solid fa-chevron-right"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- UPGRADE TO PRO BANNER CARD (Matches Reference Screenshot) -->
-          <div class="ct-pro-banner-card">
-            <div class="ct-pro-banner-left">
-              <div class="ct-pro-banner-crown">
-                <i class="fa-solid fa-crown anim-crown"></i>
-              </div>
-              <div class="ct-pro-banner-text">
-                <div class="ct-pro-banner-title">Upgrade to Pro</div>
-                <div class="ct-pro-banner-desc">Unlock premium features and get the best experience.</div>
-              </div>
-            </div>
-            <a href="/pages/pricing.html" class="ct-pro-banner-btn">
-              Upgrade Now <i class="fa-solid fa-arrow-right"></i>
-            </a>
-          </div>
-
-          <!-- 2. STEP-BY-STEP PROBLEM SOLVER WIDGET -->
-          <div class="ct-card" style="border-color:rgba(16,185,129,0.3);">
-            <div class="ct-card-header-row" style="margin-bottom:12px;">
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:36px; height:36px; background:#f0fdf4; color:#10b981; border-radius:10px; display:grid; place-items:center; font-size:1.15rem;">
-                  <i class="fa-solid fa-circle-check"></i>
-                </div>
-                <div>
-                  <h3 class="ct-card-title-text" style="font-size:1.05rem;">Step-by-Step Problem Solver</h3>
-                  <div class="ct-card-subtitle-text">Math, physics, engineering & coding solutions</div>
-                </div>
-              </div>
-              <span class="coin-badge-pill">
-                <i class="fa-solid fa-coins anim-coin"></i> 5 COINS / FREE ON PRO
-              </span>
-            </div>
-
-            <div class="ct-solver-hero-card">
-              <img src="/images/calculator_ruler.jpg" alt="Calculator and Ruler" class="ct-solver-illustration" />
-              <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
-                <textarea class="form-input" id="solverProblemInput" placeholder="Paste your assignment question, math formula, or engineering problem here..." rows="3" style="width:100%; resize:vertical; font-family:inherit; border-radius:16px;"></textarea>
-                <div style="display:flex; justify-content:flex-end;">
-                  <button type="button" onclick="solveAssignmentProblem()" id="btnSolveProblem" class="ct-send-pill-btn" style="background:linear-gradient(135deg, #1d4ed8, #2563eb); font-weight:700;">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    <span>Solve with Step-by-Step Work</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Solver Result Container -->
-            <div id="solverResult" style="display:none; margin-top:16px; padding:20px; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2); border-radius:18px; font-size:0.92rem; max-height:450px; overflow-y:auto; line-height:1.65;"></div>
-          </div>
-
-          <!-- 3. ADDITIONAL AI STUDY TOOLS ACCORDION -->
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-            <h3 style="font-size:1.05rem; font-weight:800; color:var(--ct-text-main); display:flex; align-items:center; gap:8px;">
-              <i class="fa-solid fa-toolbox" style="color:#2563eb;"></i> Specialized Academic Tools
-            </h3>
-            <span style="font-size:0.75rem; color:var(--ct-text-muted); font-weight:600;">Full University Suite</span>
-          </div>
-
-          <!-- Thesis & Coursework Polisher -->
-          <div class="ct-card" style="padding:18px 20px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:36px; height:36px; border-radius:10px; background:#faf5ff; color:#a855f7; display:grid; place-items:center; font-size:1.1rem;">
-                  <i class="fa-solid fa-feather-pointed"></i>
-                </div>
-                <div>
-                  <div style="font-weight:800; font-size:0.95rem; color:var(--ct-text-main);">Thesis & Coursework Polisher</div>
-                  <div style="font-size:0.75rem; color:var(--ct-text-muted);">Elevate tone, structure, grammar & academic rigor</div>
-                </div>
-              </div>
-              <span class="coin-badge-pill"><i class="fa-solid fa-coins anim-coin"></i> 8 Coins / Free on Pro</span>
-            </div>
-            <div style="display:flex; gap:10px; margin-bottom:8px;">
-              <select class="form-input" id="polisherStyle" style="width:auto; font-size:0.82rem; padding:6px 12px; border-radius:12px;">
-                <option value="academic">Academic / Scholarly</option>
-                <option value="persuasive">Persuasive / Argumentative</option>
-                <option value="concise">Concise & Punchy</option>
-                <option value="literature_review">Literature Review Standard</option>
-              </select>
-            </div>
-            <textarea class="form-input" id="polisherDraftInput" placeholder="Paste your essay paragraph, abstract, or project draft..." rows="2" style="width:100%; resize:vertical; margin-bottom:8px; border-radius:14px; font-family:inherit;"></textarea>
-            <div style="display:flex; justify-content:flex-end;">
-              <button onclick="polishAcademicEssay()" id="btnPolishEssay" class="btn btn-primary btn-sm" style="background:#8b5cf6; border-color:#8b5cf6; font-weight:700; border-radius:20px;">
-                <i class="fa-solid fa-sparkles"></i> Polish & Elevate Draft
-              </button>
-            </div>
-            <div id="polisherResult" style="display:none; margin-top:12px; padding:16px; background:rgba(175,82,222,0.05); border:1px solid rgba(175,82,222,0.2); border-radius:14px; font-size:0.9rem; max-height:400px; overflow-y:auto; line-height:1.6;"></div>
-          </div>
-
-          <!-- Final Year Project Topic & Proposal Architect -->
-          <div class="ct-card" style="padding:18px 20px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:36px; height:36px; border-radius:10px; background:#f0fdf4; color:#10b981; display:grid; place-items:center; font-size:1.1rem;">
-                  <i class="fa-solid fa-graduation-cap"></i>
-                </div>
-                <div>
-                  <div style="font-weight:800; font-size:0.95rem; color:var(--ct-text-main);">Project & Proposal Architect</div>
-                  <div style="font-size:0.75rem; color:var(--ct-text-muted);">Original topics, problem statements & methodology</div>
-                </div>
-              </div>
-              <span class="coin-badge-pill"><i class="fa-solid fa-coins anim-coin"></i> 10 Coins / Free on Pro</span>
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-              <input type="text" class="form-input" id="projectFieldInput" placeholder="Department (e.g. Computer Science)" style="font-size:0.85rem; border-radius:12px;" />
-              <input type="text" class="form-input" id="projectInterestsInput" placeholder="Interests (e.g. Cybersecurity, AI)" style="font-size:0.85rem; border-radius:12px;" />
-            </div>
-            <div style="display:flex; justify-content:flex-end;">
-              <button onclick="generateProjectProposals()" id="btnGenerateProposals" class="btn btn-primary btn-sm" style="background:#10b981; border-color:#10b981; font-weight:700; border-radius:20px;">
-                <i class="fa-solid fa-lightbulb anim-bulb"></i> Architect 3 Project Proposals
-              </button>
-            </div>
-            <div id="proposalsResult" style="display:none; margin-top:12px; padding:16px; background:rgba(52,199,89,0.05); border:1px solid rgba(52,199,89,0.2); border-radius:14px; font-size:0.9rem; max-height:450px; overflow-y:auto; line-height:1.6;"></div>
-          </div>
-
-          <!-- Viva & Oral Defense Drill Simulator -->
-          <div class="ct-card" style="padding:18px 20px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:36px; height:36px; border-radius:10px; background:#fff7ed; color:#f97316; display:grid; place-items:center; font-size:1.1rem;">
-                  <i class="fa-solid fa-user-shield"></i>
-                </div>
-                <div>
-                  <div style="font-weight:800; font-size:0.95rem; color:var(--ct-text-main);">Viva Defense Panel Drill</div>
-                  <div style="font-size:0.75rem; color:var(--ct-text-muted);">Tough examiner questions, model answers & trap alerts</div>
-                </div>
-              </div>
-              <span class="coin-badge-pill"><i class="fa-solid fa-coins anim-coin"></i> 12 Coins / Free on Pro</span>
-            </div>
-            <input type="text" class="form-input" id="vivaProjectTitle" placeholder="Project / Thesis Title..." style="width:100%; margin-bottom:8px; font-size:0.85rem; border-radius:12px;" />
-            <textarea class="form-input" id="vivaAbstract" placeholder="Brief abstract or scope (optional but recommended)..." rows="2" style="width:100%; resize:vertical; margin-bottom:8px; font-family:inherit; border-radius:12px;"></textarea>
-            <div style="display:flex; justify-content:flex-end;">
-              <button onclick="runVivaDefenseDrill()" id="btnRunViva" class="btn btn-primary btn-sm" style="background:#f97316; border-color:#f97316; color:#fff; font-weight:700; border-radius:20px;">
-                <i class="fa-solid fa-shield-halved"></i> Generate Defense Dossier
-              </button>
-            </div>
-            <div id="vivaResult" style="display:none; margin-top:12px; padding:16px; background:rgba(255,149,0,0.05); border:1px solid rgba(255,149,0,0.2); border-radius:14px; font-size:0.9rem; max-height:450px; overflow-y:auto; line-height:1.6;"></div>
-          </div>
-
-          <!-- Exam Past Questions & Probability Predictor -->
-          <div class="ct-card" style="padding:18px 20px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:36px; height:36px; border-radius:10px; background:#fef2f2; color:#ef4444; display:grid; place-items:center; font-size:1.1rem;">
-                  <i class="fa-solid fa-fire anim-fire"></i>
-                </div>
-                <div>
-                  <div style="font-weight:800; font-size:0.95rem; color:var(--ct-text-main);">Exam & Past Question Predictor</div>
-                  <div style="font-size:0.75rem; color:var(--ct-text-muted);">Recurring questions, CBT drill & lecturer marking traps</div>
-                </div>
-              </div>
-              <span class="coin-badge-pill"><i class="fa-solid fa-coins anim-coin"></i> 15 Coins / Free on Pro</span>
-            </div>
-            <input type="text" class="form-input" id="predictCourseCode" placeholder="Course Code (e.g. MTH101, CHM201, LAW301)..." style="width:100%; margin-bottom:8px; font-size:0.85rem; border-radius:12px;" />
-            <textarea class="form-input" id="predictTopics" placeholder="Key topics or syllabus chapters covered by your lecturer..." rows="2" style="width:100%; resize:vertical; margin-bottom:8px; font-family:inherit; border-radius:12px;"></textarea>
-            <div style="display:flex; justify-content:flex-end;">
-              <button onclick="predictExamPastQuestions()" id="btnPredictExam" class="btn btn-primary btn-sm" style="background:#ef4444; border-color:#ef4444; color:#fff; font-weight:700; border-radius:20px;">
-                <i class="fa-solid fa-bullseye"></i> Predict High-Yield Questions
-              </button>
-            </div>
-            <div id="predictResult" style="display:none; margin-top:12px; padding:16px; background:rgba(255,59,48,0.05); border:1px solid rgba(255,59,48,0.2); border-radius:14px; font-size:0.9rem; max-height:450px; overflow-y:auto; line-height:1.6;"></div>
-          </div>
-
-          <!-- Turnitin Plagiarism Bypasser & Humanizer -->
-          <div class="ct-card" style="padding:18px 20px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:36px; height:36px; border-radius:10px; background:#eff6ff; color:#2563eb; display:grid; place-items:center; font-size:1.1rem;">
-                  <i class="fa-solid fa-fingerprint"></i>
-                </div>
-                <div>
-                  <div style="font-weight:800; font-size:0.95rem; color:var(--ct-text-main);">Turnitin Humanizer & Originality Shield</div>
-                  <div style="font-size:0.75rem; color:var(--ct-text-muted);">Bypass AI detectors & eliminate plagiarism flags</div>
-                </div>
-              </div>
-              <span class="coin-badge-pill"><i class="fa-solid fa-coins anim-coin"></i> 10 Coins / Free on Pro</span>
-            </div>
-            <textarea class="form-input" id="humanizeInput" placeholder="Paste your essay, literature review, or paragraph to rewrite and humanize..." rows="2" style="width:100%; resize:vertical; margin-bottom:8px; font-family:inherit; border-radius:12px;"></textarea>
-            <div style="display:flex; justify-content:flex-end;">
-              <button onclick="humanizeAcademicText()" id="btnHumanizeText" class="btn btn-primary btn-sm" style="background:#2563eb; border-color:#2563eb; color:#fff; font-weight:700; border-radius:20px;">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> Humanize & Shield Originality
-              </button>
-            </div>
-            <div id="humanizeResult" style="display:none; margin-top:12px; padding:16px; background:rgba(0,122,255,0.05); border:1px solid rgba(0,122,255,0.2); border-radius:14px; font-size:0.9rem; max-height:450px; overflow-y:auto; line-height:1.6;"></div>
-          </div>
-
-          <!-- Documents Section -->
-          <div id="documentsSection" style="margin-top:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-              <h2 style="font-size:1.15rem; font-weight:800; color:var(--ct-text-main); display:flex; align-items:center; gap:8px;">
-                <i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> Your Documents
-              </h2>
-              <a href="/pages/upload.html" class="btn btn-primary btn-sm" style="border-radius:20px; font-weight:700;">+ Upload New</a>
-            </div>
-            <div id="emptyState" style="display:none;" class="empty-state">
-              <div class="empty-state-icon"><i class="fa-solid fa-folder-open"></i></div>
-              <h3>No documents yet</h3>
-              <p>Upload your first PDF lecture note to start studying with AI assistance.</p>
-              <a href="/pages/upload.html" class="btn btn-primary" style="border-radius:20px;"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Your First PDF</a>
-            </div>
-            <div class="doc-grid" id="docGrid"></div>
-          </div>
-        </div>
-
-        <!-- RIGHT COLUMN: Quick Access & Recent Activity -->
-        <div style="display:flex; flex-direction:column; gap:20px;">
-          <!-- 1. QUICK ACCESS 2x2 CARD -->
-          <div class="ct-card">
-            <div class="ct-card-header-row">
-              <h3 class="ct-card-title-text" style="font-size:1.05rem;">Quick Access</h3>
-              <a href="/pages/upload.html" style="font-size:0.8rem; font-weight:700; color:#2563eb; display:flex; align-items:center; gap:4px;">
-                View All <i class="fa-solid fa-arrow-right"></i>
-              </a>
-            </div>
-
-            <div class="ct-quick-access-grid">
-              <!-- Tile 1: Upload PDF -->
-              <a href="/pages/upload.html" class="ct-quick-tile ct-tile-blue">
-                <div class="ct-quick-tile-icon-box" style="background:#2563eb;">
-                  <i class="fa-solid fa-cloud-arrow-up"></i>
-                </div>
-                <span class="ct-quick-tile-label">Upload PDF</span>
-              </a>
-
-              <!-- Tile 2: Study Tools -->
-              <a href="/pages/study.html" class="ct-quick-tile ct-tile-purple">
-                <div class="ct-quick-tile-icon-box" style="background:#a855f7;">
-                  <i class="fa-solid fa-briefcase"></i>
-                </div>
-                <span class="ct-quick-tile-label">Study Tools</span>
-              </a>
-
-              <!-- Tile 3: Leaderboard -->
-              <div class="ct-quick-tile ct-tile-amber" onclick="openLeaderboardModal()">
-                <div class="ct-quick-tile-icon-box" style="background:#f59e0b;">
-                  <i class="fa-solid fa-trophy"></i>
-                </div>
-                <span class="ct-quick-tile-label">Leaderboard</span>
-              </div>
-
-              <!-- Tile 4: Activity Log -->
-              <div class="ct-quick-tile ct-tile-green" onclick="openActivityModal()">
-                <div class="ct-quick-tile-icon-box" style="background:#10b981;">
-                  <i class="fa-solid fa-clock-rotate-left"></i>
-                </div>
-                <span class="ct-quick-tile-label">Activity Log</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. RECENT ACTIVITY CARD -->
-          <div class="ct-card">
-            <div class="ct-card-header-row">
-              <h3 class="ct-card-title-text" style="font-size:1.05rem; display:flex; align-items:center; gap:6px;">
-                <i class="fa-solid fa-chart-line" style="color:#2563eb;"></i> Recent Activity
-              </h3>
-              <button type="button" onclick="openActivityModal()" style="background:none; border:none; font-size:0.8rem; font-weight:700; color:#2563eb; cursor:pointer; display:flex; align-items:center; gap:4px;">
-                View All <i class="fa-solid fa-arrow-right"></i>
-              </button>
-            </div>
-
-            <div class="ct-activity-feed" id="recentActivityQuickFeed">
-              <div class="ct-activity-item">
-                <div class="ct-act-icon-box" style="background:#eff6ff; color:#2563eb;">
-                  <i class="fa-solid fa-file-lines"></i>
-                </div>
-                <div class="ct-act-info">
-                  <div class="ct-act-title" id="recentDocActivityTitle">CSC141 SLIDE.pptx</div>
-                  <div class="ct-act-time" id="recentDocActivityTime">Uploaded 2 hours ago</div>
-                </div>
-                <div class="ct-act-status-badge">
-                  <i class="fa-solid fa-circle-check"></i>
-                </div>
-              </div>
-
-              <div class="ct-activity-item">
-                <div class="ct-act-icon-box" style="background:#faf5ff; color:#a855f7;">
-                  <i class="fa-solid fa-graduation-cap"></i>
-                </div>
-                <div class="ct-act-info">
-                  <div class="ct-act-title">Daily Study Quest</div>
-                  <div class="ct-act-time">Completed today</div>
-                </div>
-                <div class="ct-act-status-badge">
-                  <i class="fa-solid fa-circle-check"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 3. TODAY'S CHALLENGE CARD -->
-          <div class="ct-card" style="border: 1.5px solid rgba(37,99,235,0.25); cursor:pointer;" onclick="window.location.href='/pages/upload.html'">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-              <span style="font-size:1.4rem; color:#2563eb;"><i class="fa-solid fa-bullseye"></i></span>
-              <div>
-                <div style="font-weight:800; font-size:0.95rem; color:var(--ct-text-main);">Today's Challenge</div>
-                <div style="font-size:0.75rem; color:var(--ct-text-muted);">Upload a PDF and generate flashcards to earn +50 XP</div>
-              </div>
-            </div>
-            <div class="progress-bar" style="height:6px; border-radius:4px; margin:10px 0;">
-              <div class="progress-fill" style="width: 50%; background:linear-gradient(90deg, #2563eb, #38bdf8);"></div>
-            </div>
-            <button class="btn btn-primary btn-sm btn-full" style="border-radius:20px; font-weight:700; margin-top:6px;" onclick="event.stopPropagation(); window.location.href='/pages/upload.html'">
-              Start Challenge <i class="fa-solid fa-rocket anim-rocket"></i>
-            </button>
-          </div>
-
-          <!-- 4. ACHIEVEMENTS CARD -->
-          <div class="ct-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-              <h3 style="font-size:1rem; font-weight:800; color:var(--ct-text-main); display:flex; align-items:center; gap:8px;">
-                <i class="fa-solid fa-trophy" style="color:#f59e0b;"></i> Achievements
-              </h3>
-              <span class="badge badge-blue" id="badgeCount">0 / 6 Unlocked</span>
-            </div>
-            <div class="badges-grid" id="badgesGrid"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quiz Workspace Container -->
-      <div id="quizWorkspace" style="display:none; margin-bottom: 24px;"></div>
-    </main>
+      <button onclick="closeDocumentsModal()" class="btn btn-ghost btn-sm" style="border:none;font-size:1.1rem;padding:4px;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div style="padding:16px;max-height:380px;overflow-y:auto;" id="docListContainer">
+      <div style="text-align:center;padding:20px;color:var(--ct-text-gray);">Loading documents...</div>
+    </div>
+    <div style="padding:14px 20px;background:rgba(0,0,0,0.02);border-top:1px solid var(--ct-border-soft);display:flex;justify-content:space-between;align-items:center;">
+      <a href="/pages/upload.html" class="btn btn-primary btn-sm" style="border-radius:999px;font-weight:700;"><i class="fa-solid fa-cloud-arrow-up"></i> Upload New PDF</a>
+      <button onclick="closeDocumentsModal()" class="btn btn-ghost btn-sm" style="border-radius:999px;">Close</button>
+    </div>
   </div>
 </div>
 
-<div id="pomoOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);z-index:800;align-items:center;justify-content:center;">
-  <div class="card" style="max-width:320px;width:100%;margin:20px;">
-    <div class="card-body" style="text-align:center;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <h3 style="font-size:1rem;font-weight:700;"><i class="fa-solid fa-stopwatch"></i> Focus Timer</h3>
-        <button onclick="closePomodoro()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-xmark"></i></button>
+<!-- 2. LEADERBOARD MODAL -->
+<div id="leaderboardOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);z-index:900;align-items:center;justify-content:center;padding:16px;">
+  <div class="card" style="max-width:440px;width:100%;border-radius:24px;background:var(--ct-card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+    <div style="padding:20px;border-bottom:1px solid var(--ct-border-soft);display:flex;justify-content:space-between;align-items:center;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <i class="fa-solid fa-trophy" style="color:#f59e0b;font-size:1.15rem;"></i>
+        <h3 style="font-size:1.1rem;font-weight:800;margin:0;">Weekly Leaderboard</h3>
       </div>
-      <div class="pomo-circle">
+      <button onclick="closeLeaderboardModal()" class="btn btn-ghost btn-sm" style="border:none;font-size:1.1rem;padding:4px;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div style="padding:16px;max-height:360px;overflow-y:auto;" id="leaderboardList">
+      <div style="text-align:center;padding:20px;color:var(--ct-text-gray);">Loading ranks...</div>
+    </div>
+  </div>
+</div>
+
+<!-- 3. ACTIVITY LOG MODAL -->
+<div id="activityOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);z-index:900;align-items:center;justify-content:center;padding:16px;">
+  <div class="card" style="max-width:480px;width:100%;border-radius:24px;background:var(--ct-card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+    <div style="padding:20px;border-bottom:1px solid var(--ct-border-soft);display:flex;justify-content:space-between;align-items:center;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <i class="fa-solid fa-clock-rotate-left" style="color:#2563eb;font-size:1.15rem;"></i>
+        <h3 style="font-size:1.1rem;font-weight:800;margin:0;">Activity History</h3>
+      </div>
+      <button onclick="closeActivityModal()" class="btn btn-ghost btn-sm" style="border:none;font-size:1.1rem;padding:4px;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div style="padding:16px;max-height:380px;overflow-y:auto;" id="activityLog">
+      <div id="activityList" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="text-align:center;padding:20px;color:var(--ct-text-gray);">Loading activity history...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4. USER SETTINGS & PROFILE MODAL -->
+<div id="settingsOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);z-index:900;align-items:center;justify-content:center;padding:16px;">
+  <div class="card" style="max-width:420px;width:100%;border-radius:24px;background:var(--ct-card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+    <div style="padding:20px;border-bottom:1px solid var(--ct-border-soft);display:flex;justify-content:space-between;align-items:center;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <i class="fa-solid fa-user-gear" style="color:#2563eb;font-size:1.15rem;"></i>
+        <h3 style="font-size:1.1rem;font-weight:800;margin:0;">Account & Settings</h3>
+      </div>
+      <button onclick="closeSettingsModal()" class="btn btn-ghost btn-sm" style="border:none;font-size:1.1rem;padding:4px;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <!-- Profile Header -->
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(37,99,235,0.06);border-radius:16px;">
+        <div class="ct-exact-avatar-circle" style="width:46px;height:46px;font-size:1.1rem;">
+          <span id="modalAvatarInitials">ST</span>
+        </div>
         <div>
-          <div class="pomo-time" id="pomoTime">25:00</div>
-          <div style="font-size:0.7rem;color:var(--label3);">Focus</div>
+          <div id="modalUserName" style="font-weight:800;font-size:0.95rem;color:var(--ct-text-dark);">Student</div>
+          <div id="modalUserEmail" style="font-size:0.75rem;color:var(--ct-text-gray);">student@example.com</div>
         </div>
       </div>
-      <div class="pomo-label" id="pomoStatus">Ready to focus?</div>
-      <div class="pomo-btns">
-        <button class="btn btn-primary" id="pomoStart" onclick="togglePomo()">▶ Start</button>
-        <button class="btn btn-ghost" onclick="resetPomo()">↺ Reset</button>
+
+      <!-- Quick Settings Buttons -->
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button onclick="toggleTheme()" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--ct-border-soft);font-weight:600;">
+          <span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-moon"></i> Appearance</span>
+          <span id="themeLabelText" style="font-size:0.75rem;color:var(--ct-text-gray);">Light Mode</span>
+        </button>
+
+        <a href="/pages/pricing.html" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--ct-border-soft);font-weight:600;text-decoration:none;color:inherit;">
+          <span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-crown" style="color:#f59e0b;"></i> Subscription Plan</span>
+          <span id="modalPlanBadge" style="font-size:0.75rem;font-weight:700;color:#10b981;">PLUS ⚡</span>
+        </a>
+
+        <button onclick="openCoinsModal(); closeSettingsModal();" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--ct-border-soft);font-weight:600;">
+          <span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-coins" style="color:#eab308;"></i> CampusCoins Wallet</span>
+          <span id="modalCoinsVal" style="font-size:0.75rem;font-weight:700;color:#eab308;">50 Coins</span>
+        </button>
+
+        <a href="https://chat.whatsapp.com/CNlccvf5Eue6ZvE4Pz3JGX" target="_blank" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--ct-border-soft);font-weight:600;text-decoration:none;color:inherit;">
+          <span style="display:flex;align-items:center;gap:8px;"><i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i> WhatsApp Student Support</span>
+          <span style="font-size:0.75rem;color:#22c55e;font-weight:700;">Join Group</span>
+        </a>
+
+        <button onclick="installCampusTutorPWA()" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--ct-border-soft);font-weight:600;">
+          <span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-mobile-screen-button" style="color:#38bdf8;"></i> Install Mobile App (PWA)</span>
+          <span style="font-size:0.75rem;color:#38bdf8;font-weight:700;">Install</span>
+        </button>
       </div>
-      <div style="margin-top:16px;font-size:0.75rem;color:var(--label3);">25 min focus · 5 min break</div>
+
+      <button onclick="logout()" class="btn btn-danger btn-sm btn-full" style="border-radius:999px;font-weight:700;margin-top:6px;padding:10px;">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+      </button>
     </div>
   </div>
 </div>
 
-<!-- LEADERBOARD OVERLAY MODAL -->
-<div id="leaderboardOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);z-index:800;align-items:center;justify-content:center;">
-  <div class="card" style="max-width:440px;width:100%;margin:20px;">
-    <div class="card-body" style="padding:24px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <h3 style="font-size:1.1rem;font-weight:700;"><i class="fa-solid fa-trophy" style="color:var(--orange);"></i> Weekly Leaderboard</h3>
-        <button onclick="closeLeaderboardModal()" class="btn btn-ghost btn-sm" style="border:none;font-size:1.1rem;padding:4px;"><i class="fa-solid fa-xmark"></i></button>
+<!-- 5. EMAIL VERIFICATION MODAL -->
+<div id="verifyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);z-index:10001;align-items:center;justify-content:center;padding:16px;">
+  <div class="card" style="max-width:400px;width:100%;border-radius:24px;padding:28px;background:var(--ct-card-bg);box-shadow:0 24px 70px rgba(0,0,0,0.35);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="font-weight:800;font-size:1.1rem;margin:0;"><i class="fa-solid fa-envelope-circle-check" style="color:#2563eb;margin-right:8px;"></i> Verify Your Email</h3>
+      <button onclick="closeVerificationModal()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ct-text-gray);"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="alert alert-error" id="modalVerifyErr" style="display:none;margin-bottom:14px;"></div>
+    <form id="modalVerifyForm">
+      <p style="font-size:0.82rem;color:var(--ct-text-gray);line-height:1.4;margin:0 0 16px 0;">
+        Enter the 6-digit confirmation code sent to your email to verify your account.
+      </p>
+      <input class="form-input" type="text" id="modalVerificationOtp" placeholder="123456" required maxlength="6" style="text-align:center;font-size:1.4rem;letter-spacing:4px;font-weight:800;margin-bottom:18px;border-radius:14px;"/>
+      <button type="submit" class="btn btn-primary btn-full btn-lg" id="modalVerifySubmitBtn" style="border-radius:999px;font-weight:700;">Verify & Activate</button>
+      <div style="text-align:center;margin-top:14px;font-size:0.8rem;color:var(--ct-text-gray);">
+        Didn't receive a code? <button type="button" onclick="resendVerificationOtp()" id="resendOtpBtn" style="background:none;border:none;color:#2563eb;font-weight:700;cursor:pointer;padding:0;">Resend OTP</button>
       </div>
-      <div style="display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto;" id="leaderboardList">
-        <div style="font-size:0.8rem; color:var(--label3); text-align:center; padding:10px;">Loading ranks...</div>
-      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 6. WHATSAPP ANNOUNCEMENT MODAL -->
+<div class="announcement-overlay" id="announcementOverlay">
+  <div class="announcement-modal" style="border-radius:24px;">
+    <div class="announcement-header"><i class="fa-solid fa-bullhorn"></i> Important Announcement!</div>
+    <div class="announcement-text">Join the official CampusTutor AI community on WhatsApp to get exam updates, early feature access, and study tips!</div>
+    <div class="announcement-buttons">
+      <button class="announcement-btn announcement-btn-primary" id="announcementJoin" style="border-radius:999px;"><i class="fa-solid fa-circle" style="color:#25d366;"></i> Join WhatsApp Updates</button>
+      <button class="announcement-btn announcement-btn-dismiss" id="announcementDismiss" style="border-radius:999px;">Close</button>
     </div>
   </div>
 </div>
 
-<!-- ACTIVITY LOG OVERLAY MODAL -->
-<div id="activityOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);z-index:800;align-items:center;justify-content:center;">
-  <div class="card" style="max-width:480px;width:100%;margin:20px;">
-    <div class="card-body" style="padding:24px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <h3 style="font-size:1.1rem;font-weight:700;"><i class="fa-solid fa-clock-rotate-left" style="color:var(--blue);"></i> Activity History</h3>
-        <button onclick="closeActivityModal()" class="btn btn-ghost btn-sm" style="border:none;font-size:1.1rem;padding:4px;"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div id="activityLoading" style="display:none; text-align:center; padding:20px; color:var(--label3);">
-        Loading activity...
-      </div>
-      <div id="activityEmpty" style="display:none; text-align:center; padding:20px; color:var(--label3); font-size:0.85rem;">
-        No activity yet. Start by uploading a document or generating AI content!
-      </div>
-      <div id="activityLog" style="display:none; max-height:360px; overflow-y:auto;">
-        <div id="activityList" style="display:flex;flex-direction:column;gap:8px;"></div>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- FLOATING WHATSAPP FAB -->
+<a href="https://chat.whatsapp.com/CNlccvf5Eue6ZvE4Pz3JGX" class="whatsapp-fab" title="WhatsApp Support" target="_blank"><i class="fa-solid fa-comment-dots"></i></a>
 
-<a href="https://chat.whatsapp.com/CNlccvf5Eue6ZvE4Pz3JGX" class="whatsapp-fab" title="WhatsApp Support"><i class="fa-solid fa-comment-dots"></i></a>
-
-
+<!-- SCRIPTS & LOGIC -->
 <script src="/js/api.js"></script>
 <script>
 requireAuth();
 
-// Verify payment if returning from Paystack & Enforce Paid Subscription
+// Payment verification handler
 (async function handleAuthAndPayment() {
   const params = new URLSearchParams(window.location.search);
   const ref = params.get('reference') || params.get('trxref');
   if (ref) {
     showToast('Verifying payment with Paystack...', 'info');
-    const { data, error } = await apiRequest(`/api/paystack/verify/${encodeURIComponent(ref)}`);
+    const { data, error } = await apiRequest('/api/paystack/verify/' + encodeURIComponent(ref));
     if (data && data.success) {
-      showToast(`<i class="fa-solid fa-cake-candles anim-party" style="margin-right:4px;"></i> Payment verified! Welcome to ${data.plan.toUpperCase()} Plan!`, 'success');
+      showToast('<i class="fa-solid fa-cake-candles anim-party" style="margin-right:4px;"></i> Payment verified! Welcome to ' + (data.plan ? data.plan.toUpperCase() : 'PRO') + ' Plan!', 'success');
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (error) {
       showToast(error || 'Could not verify payment.', 'error');
@@ -904,1235 +1079,364 @@ requireAuth();
   }
   await requirePaidSubscription();
 })();
-function initThemeToggle(){
-  const themeBtn = document.getElementById('themeBtn');
-  if(!themeBtn){
-    console.warn('Theme button not found');
-    return;
-  }
-  
-  const t = localStorage.getItem('ct_theme') || 'light';
-  document.documentElement.setAttribute('data-theme', t);
-  themeBtn.innerHTML = t === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
-  
-  themeBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const c = document.documentElement.getAttribute('data-theme');
-    const n = c === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', n);
-    localStorage.setItem('ct_theme', n);
-    themeBtn.innerHTML = n === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
-    showToast(`Switched to ${n} mode <i class="fa-solid fa-wand-magic-sparkles"></i>`, 'success');
-  });
-}
 
-// ── ANIMATED HAMBURGER MENU & DRAWER TOGGLE ────────────────────
-function toggleMobileMenu(){
-  const btn = document.getElementById('mobileMenuBtn');
-  const sidebar = document.getElementById('dashboardSidebar') || document.querySelector('.ct-sidebar');
-  const backdrop = document.getElementById('sidebarBackdrop');
-  if(!btn || !sidebar) return;
-  const isOpen = sidebar.classList.toggle('is-open');
-  btn.classList.toggle('is-active', isOpen);
-  if(backdrop) backdrop.classList.toggle('is-active', isOpen);
-}
-
-function closeMobileMenu(){
-  const btn = document.getElementById('mobileMenuBtn');
-  const sidebar = document.getElementById('dashboardSidebar') || document.querySelector('.ct-sidebar');
-  const backdrop = document.getElementById('sidebarBackdrop');
-  if(sidebar) sidebar.classList.remove('is-open');
-  if(btn) btn.classList.remove('is-active');
-  if(backdrop) backdrop.classList.remove('is-active');
-}
-
-function initMobileMenu(){
-  const sidebar = document.getElementById('dashboardSidebar') || document.querySelector('.ct-sidebar');
-  if(!sidebar) return;
-  sidebar.querySelectorAll('a, button').forEach(el => {
-    el.addEventListener('click', () => {
-      if(window.innerWidth <= 900){
-        closeMobileMenu();
-      }
-    });
-  });
-}
-
-function applyConceptChip(prefix) {
-  const input = document.getElementById('conceptInput');
-  if (!input) return;
-  input.value = prefix;
-  input.focus();
-}
-
-function filterDashboardDocs(query) {
-  query = (query || '').toLowerCase().trim();
-  const docCards = document.querySelectorAll('#docGrid .doc-card');
-  docCards.forEach(card => {
-    const text = card.textContent.toLowerCase();
-    card.style.display = text.includes(query) ? '' : 'none';
-  });
-}
-
-document.addEventListener('keydown', (e) => {
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-    e.preventDefault();
-    const search = document.getElementById('navSearchInput') || document.getElementById('conceptInput');
-    if (search) search.focus();
-  }
-});
-
-const t=localStorage.getItem('ct_theme')||'light';
-document.documentElement.setAttribute('data-theme',t);
-initThemeToggle();
-initMobileMenu();
-
-// Check for payment success parameter in URL
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('payment') === 'success') {
-  const plan = urlParams.get('plan') || '';
-  const displayPlan = plan.charAt(0).toUpperCase() + plan.slice(1);
-  showToast(`Subscription successful! Your account has been upgraded to ${displayPlan} Plan. <i class="fa-solid fa-circle-check"></i>`, 'success');
-  const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-  window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
-}
-
-const user=getUser();
-if(user){
+const user = getUser();
+if (user) {
   const name = user.fullName || user.email || 'Student';
-  const firstName = name.split(' ')[0];
-  const userGreeting = document.getElementById('userGreeting');
-  if (userGreeting) userGreeting.innerHTML = `Hi, ${firstName}`;
   const welcomeMsg = document.getElementById('welcomeMsg');
-  if (welcomeMsg) welcomeMsg.textContent = user.fullName || user.email?.split('@')[0] || 'Student';
+  if (welcomeMsg) welcomeMsg.textContent = user.fullName || user.email?.split('@')[0] || 'matthewaliu001';
   
   const initials = name.substring(0, 2).toUpperCase();
   const avatarInitials = document.getElementById('userAvatarInitials');
   if (avatarInitials) avatarInitials.textContent = initials;
+  const modalAvatarInitials = document.getElementById('modalAvatarInitials');
+  if (modalAvatarInitials) modalAvatarInitials.textContent = initials;
+  const modalUserName = document.getElementById('modalUserName');
+  if (modalUserName) modalUserName.textContent = name;
+  const modalUserEmail = document.getElementById('modalUserEmail');
+  if (modalUserEmail) modalUserEmail.textContent = user.email || '';
 
-  if(user.isVerified === false){
+  if (user.isVerified === false) {
     const banner = document.getElementById('verificationBanner');
     if (banner) banner.style.display = 'flex';
   }
 }
 
-async function loadUserStats(){
+// ── THEME TOGGLE ──
+function initTheme() {
+  const t = localStorage.getItem('ct_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  const lbl = document.getElementById('themeLabelText');
+  if (lbl) lbl.textContent = t === 'dark' ? 'Dark Mode' : 'Light Mode';
+}
+function toggleTheme() {
+  const c = document.documentElement.getAttribute('data-theme');
+  const n = c === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', n);
+  localStorage.setItem('ct_theme', n);
+  const lbl = document.getElementById('themeLabelText');
+  if (lbl) lbl.textContent = n === 'dark' ? 'Dark Mode' : 'Light Mode';
+  showToast('Switched to ' + n + ' mode', 'success');
+}
+initTheme();
+
+// ── USER STATS LOADER ──
+async function loadUserStats() {
   const userId = user?.id;
-  if(!userId) return;
-  
-  const {data:stats, error} = await apiGetUserStats(userId);
-  
-  if(error || !stats){
-    console.log('Note: Could not load stats from backend, using localStorage');
+  if (!userId) return;
+  const { data: stats, error } = await apiGetUserStats(userId);
+  if (error || !stats) {
+    console.log('Using local user stats');
     loadStatsFromLocalStorage();
     return;
   }
-  
-  document.getElementById('xpLevel').textContent=stats.level||1;
-  document.getElementById('xpCur').textContent=stats.xpInLevel||0;
-  document.getElementById('xpMax').textContent=stats.xpForNextLevel||100;
-  document.getElementById('xpFill').style.width=(stats.xpProgressPercent||0)+'%';
+
+  const statDocs = document.getElementById('statDocs');
+  if (statDocs) statDocs.textContent = stats.documentsCount || 0;
+
+  const statStreak = document.getElementById('statStreak');
+  if (statStreak) statStreak.textContent = stats.streak || 0;
+
+  const statXP = document.getElementById('statXP');
+  if (statXP) statXP.textContent = stats.xp || 175;
+
+  const currentPlan = (stats.plan || 'plus').toLowerCase();
+  const statPlan = document.getElementById('statPlan');
+  if (statPlan) {
+    const planText = currentPlan === 'pro' ? 'PRO 👑' : (currentPlan === 'plus' ? 'PLUS ⚡' : 'FREE');
+    statPlan.textContent = planText;
+    statPlan.style.color = currentPlan === 'free' ? '#10b981' : (currentPlan === 'plus' ? '#2563eb' : '#a855f7');
+  }
+  const modalPlan = document.getElementById('modalPlanBadge');
+  if (modalPlan) {
+    modalPlan.textContent = currentPlan.toUpperCase();
+    modalPlan.style.color = currentPlan === 'free' ? '#10b981' : (currentPlan === 'plus' ? '#2563eb' : '#a855f7');
+  }
+
   const liveCoins = (window.userCoinState && window.userCoinState.coins !== undefined) ? window.userCoinState.coins : (stats.coins !== undefined ? stats.coins : 50);
-  const statCoinsEl = document.getElementById('statCoins');
-  if (statCoinsEl) statCoinsEl.textContent = liveCoins;
-  const heroCoinsEl = document.getElementById('heroCoinsDisplay');
-  if (heroCoinsEl) heroCoinsEl.textContent = liveCoins;
-  document.getElementById('statStreak').innerHTML=(stats.streak||0)+' <i class="fa-solid fa-fire"></i>';
-  document.getElementById('statDocs').textContent=stats.documentsCount||0;
-
-  // ── Plan display with color coding ──
-  const currentPlan = (stats.plan || 'free').toLowerCase();
-  const planEl = document.getElementById('statPlan');
-  const planColors = { free: 'var(--green)', plus: '#3b82f6', pro: '#a855f7' };
-  const planIcons  = { free: '', plus: ' <i class="fa-solid fa-bolt" style="font-size:0.7em"></i>', pro: ' <i class="fa-solid fa-crown" style="font-size:0.7em"></i>' };
-  planEl.innerHTML = currentPlan.toUpperCase() + (planIcons[currentPlan] || '');
-  planEl.style.color = planColors[currentPlan] || 'var(--green)';
-
-  // Sync plan into localStorage user object so other pages see it
-  try {
-    const stored = JSON.parse(localStorage.getItem('ct_user') || '{}');
-    if (stored && stored.plan !== currentPlan) {
-      stored.plan = currentPlan;
-      localStorage.setItem('ct_user', JSON.stringify(stored));
-    }
-  } catch(_){}
-
-  // If activityCount label is in DOM, update it
-  const actCountEl = document.getElementById('activityCount');
-  if (actCountEl) actCountEl.textContent=(stats.activityCount||0)+' actions';
-
-  // Calculate daily quest progress ring
-  // Goal: 50 XP per day. Let's map how much they have earned today towards 50 XP
-  // We can count XP or just mock a dynamic interactive progress based on documents count / activity count.
-  const docsCount = stats.documentsCount || 0;
-  const activityCount = stats.activityCount || 0;
-  let dailyGoalXp = Math.min((docsCount * 15) + (activityCount * 5), 50);
-  const dailyGoalPct = Math.round((dailyGoalXp / 50) * 100);
-  document.getElementById('dailyGoalPct').textContent = dailyGoalPct + '%';
-  document.getElementById('dailyGoalText').textContent = `Earned ${dailyGoalXp} / 50 XP today`;
-  
-  // Calculate SVG stroke offset. Radius is 18, circumference is 113.
-  const offset = 113 - (113 * Math.min(dailyGoalPct, 100)) / 100;
-  document.getElementById('dailyGoalCircle').style.strokeDashoffset = offset;
-  
-  const badgeIconMap = {
-    'first_upload': '<i class="fa-solid fa-rocket"></i>',
-    'first_summary': '<i class="fa-solid fa-list-check"></i>',
-    'first_flash': '<i class="fa-solid fa-id-card"></i>',
-    'first_flashcards': '<i class="fa-solid fa-id-card"></i>',
-    'streak_3': '<i class="fa-solid fa-fire"></i>',
-    'first_quiz': '<i class="fa-solid fa-pen-to-square"></i>',
-    'level_5': '<i class="fa-solid fa-star"></i>',
-    'power_user': '<i class="fa-solid fa-bolt"></i>',
-    'documents_5': '<i class="fa-solid fa-book"></i>'
-  };
-
-  const getBadgeIcon = (b) => {
-    if (b.icon && b.icon.includes('<i ')) return b.icon;
-    return badgeIconMap[b.key] || '<i class="fa-solid fa-award"></i>';
-  };
-
-  const allAchievements = stats.allAchievements || [
-    {key: 'first_upload', name: 'First Upload', icon: 'fa-solid fa-rocket'},
-    {key: 'first_summary', name: 'Summarizer', icon: 'fa-solid fa-list-check'},
-    {key: 'first_flashcards', name: 'Flashmaster', icon: 'fa-solid fa-id-card'},
-    {key: 'streak_3', name: '3-Day Streak', icon: 'fa-solid fa-fire'},
-    {key: 'first_quiz', name: 'Quiz Ace', icon: 'fa-solid fa-pen-to-square'},
-    {key: 'level_5', name: 'Level 5 Scholar', icon: 'fa-solid fa-star'}
-  ];
-
-  const allBadges = allAchievements.map(a => ({
-    icon: getBadgeIcon(a),
-    name: a.name,
-    key: a.key
-  }));
-
-  const unlockedKeys=stats.achievements||[];
-  document.getElementById('badgeCount').textContent=unlockedKeys.length+' / '+allBadges.length+' Unlocked';
-  document.getElementById('badgesGrid').innerHTML=allBadges.map(b=>`
-    <div class="badge-card ${unlockedKeys.includes(b.key)?'':'locked'}">
-      <div class="badge-icon">${b.icon}</div>
-      <div class="badge-name">${b.name}</div>
-    </div>`).join('');
+  const modalCoins = document.getElementById('modalCoinsVal');
+  if (modalCoins) modalCoins.textContent = liveCoins + ' Coins';
 }
 
-// ── LEADERBOARD LOADER ─────────────────────────────────────────
+function loadStatsFromLocalStorage() {
+  const docs = JSON.parse(localStorage.getItem('ct_docs') || '[]');
+  const statDocs = document.getElementById('statDocs');
+  if (statDocs) statDocs.textContent = docs.length || 19;
+
+  const streak = parseInt(localStorage.getItem('ct_streak') || '10');
+  const statStreak = document.getElementById('statStreak');
+  if (statStreak) statStreak.textContent = streak;
+
+  const xp = parseInt(localStorage.getItem('ct_xp') || '175');
+  const statXP = document.getElementById('statXP');
+  if (statXP) statXP.textContent = xp;
+
+  const liveCoins = (window.userCoinState && window.userCoinState.coins !== undefined) ? window.userCoinState.coins : parseInt(localStorage.getItem('ct_coins') || '50');
+  const modalCoins = document.getElementById('modalCoinsVal');
+  if (modalCoins) modalCoins.textContent = liveCoins + ' Coins';
+}
+
+// ── DOCUMENTS MODAL LOADER ──
+async function loadDocumentsList() {
+  const container = document.getElementById('docListContainer');
+  if (!container) return;
+  const { data, error } = await apiGetMyDocs();
+  if (error || !data || !data.documents) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ct-text-gray);">No documents found. Click "Upload New PDF" to add one!</div>';
+    return;
+  }
+  const docs = data.documents;
+  const statDocs = document.getElementById('statDocs');
+  if (statDocs) statDocs.textContent = docs.length;
+
+  if (docs.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ct-text-gray);"><i class="fa-solid fa-folder-open" style="font-size:2rem;margin-bottom:8px;color:#94a3b8;"></i><br/>No study documents uploaded yet.</div>';
+    return;
+  }
+
+  container.innerHTML = docs.map(d => `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:rgba(0,0,0,0.02);border:1px solid var(--ct-border-soft);border-radius:14px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
+        <i class="fa-solid fa-file-pdf" style="color:#ef4444;font-size:1.2rem;flex-shrink:0;"></i>
+        <div style="min-width:0;">
+          <div style="font-weight:700;font-size:0.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ct-text-dark);" title="${esc(d.file_name)}">${esc(d.file_name)}</div>
+          <div style="font-size:0.72rem;color:var(--ct-text-gray);">${d.page_count || 1} pages · ${formatDate(d.created_at)}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <a href="/pages/study.html?docId=${d.id}&name=${encodeURIComponent(d.file_name)}" class="btn btn-primary btn-sm" style="border-radius:999px;padding:4px 10px;font-size:0.75rem;"><i class="fa-solid fa-brain"></i> Study</a>
+        <button onclick="delDoc('${d.id}', this)" class="btn btn-ghost btn-sm" style="color:#ef4444;padding:4px 8px;border-radius:999px;"><i class="fa-solid fa-trash-can"></i></button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openDocumentsModal() {
+  document.getElementById('documentsOverlay').style.display = 'flex';
+  loadDocumentsList();
+}
+function closeDocumentsModal() {
+  document.getElementById('documentsOverlay').style.display = 'none';
+}
+
+async function delDoc(id, btn) {
+  if (!confirm('Are you sure you want to delete this document?')) return;
+  btn.textContent = '...';
+  btn.disabled = true;
+  const { error } = await apiDeleteDoc(id);
+  if (error) {
+    showToast('Failed to delete document', 'error');
+    btn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+    btn.disabled = false;
+    return;
+  }
+  showToast('Document deleted.', 'info');
+  loadDocumentsList();
+}
+
+// ── LEADERBOARD MODAL ──
 async function loadLeaderboard() {
+  const listEl = document.getElementById('leaderboardList');
+  if (!listEl) return;
   try {
     const { data, error } = await apiGetLeaderboard();
-    const listEl = document.getElementById('leaderboardList');
-    if (!listEl) return;
-
     if (error || !data || !data.leaderboard) {
-      listEl.innerHTML = '<div style="font-size:0.8rem; color:var(--label3); text-align:center; padding:10px;">Failed to load leaderboard</div>';
+      listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ct-text-gray);">Unable to load leaderboard.</div>';
       return;
     }
-
     const ranks = data.leaderboard;
     listEl.innerHTML = ranks.map((rankUser, index) => {
       let medal = '';
       if (index === 0) medal = '<i class="fa-solid fa-trophy" style="color:#ffd700;"></i>';
       else if (index === 1) medal = '<i class="fa-solid fa-trophy" style="color:#c0c0c0;"></i>';
       else if (index === 2) medal = '<i class="fa-solid fa-trophy" style="color:#cd7f32;"></i>';
-      else medal = `<span style="color:var(--label3); font-weight:700;">#${index + 1}</span>`;
+      else medal = `<span style="color:var(--ct-text-gray);font-weight:700;">#${index + 1}</span>`;
 
-      const isMe = rankUser.id === user?.id ? 'background: rgba(0, 122, 255, 0.08); border-left: 3px solid var(--blue); font-weight:700;' : '';
+      const isMe = rankUser.id === user?.id ? 'background:rgba(37,99,235,0.08);border-left:3px solid #2563eb;font-weight:700;' : '';
 
       return `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-radius:10px; font-size:0.85rem; ${isMe}">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-weight:800; min-width:24px;">${medal}</span>
-            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px;">${rankUser.full_name}</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:12px;font-size:0.85rem;margin-bottom:6px;${isMe}">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-weight:800;min-width:24px;">${medal}</span>
+            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">${rankUser.full_name}</span>
           </div>
-          <div style="display:flex; align-items:center; gap:6px;">
-            <span class="badge badge-blue" style="font-size:0.7rem; padding:2px 6px;">Lvl ${rankUser.level}</span>
-            <span style="font-weight:700; color:var(--purple);">${rankUser.xp} XP</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:0.7rem;padding:2px 8px;border-radius:999px;background:rgba(37,99,235,0.1);color:#2563eb;font-weight:700;">Lvl ${rankUser.level}</span>
+            <span style="font-weight:800;color:#a855f7;">${rankUser.xp} XP</span>
           </div>
         </div>
       `;
     }).join('');
-  } catch (err) {
-    console.error("Leaderboard loader error:", err);
-    const listEl = document.getElementById('leaderboardList');
-    if (listEl) {
-      listEl.innerHTML = '<div style="font-size:0.8rem; color:var(--label3); text-align:center; padding:10px;">Failed to load leaderboard</div>';
-    }
+  } catch (e) {
+    listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ct-text-gray);">Unable to load leaderboard.</div>';
   }
 }
 
-// ── TRIVIA QUEST ENGINE ────────────────────────────────────────
-const TRIVIA_QUESTIONS = [
-  { q: "Which part of the cell is known as the powerhouse?", options: ["Nucleus", "Mitochondria", "Ribosome", "Lysosome"], answer: 1, explanation: "Mitochondria generate most of the cell's supply of adenosine triphosphate (ATP), used as a source of chemical energy." },
-  { q: "What is the primary function of DNA in living organisms?", options: ["Energy production", "Storing genetic information", "Cell structure", "Oxygen transport"], answer: 1, explanation: "DNA is the molecule that carries genetic instructions for development, functioning, growth, and reproduction." },
-  { q: "Which law states that pressure is inversely proportional to volume?", options: ["Charles's Law", "Boyle's Law", "Newton's Law", "Avogadro's Law"], answer: 1, explanation: "Boyle's Law describes the inversely proportional relationship between the absolute pressure and volume of a gas, if the temperature is kept constant." },
-  { q: "Who is credited with inventing the World Wide Web in 1989?", options: ["Steve Jobs", "Tim Berners-Lee", "Bill Gates", "Alan Turing"], answer: 1, explanation: "Tim Berners-Lee invented the World Wide Web while working at CERN in 1989." }
-];
-
-function loadTriviaQuest() {
-  try {
-    const answered = localStorage.getItem('ct_trivia_answered_date');
-    const todayStr = new Date().toISOString().split('T')[0];
-    const qIdx = new Date().getDate() % TRIVIA_QUESTIONS.length;
-    const question = TRIVIA_QUESTIONS[qIdx];
-
-    const qEl = document.getElementById('triviaQuestion');
-    const optEl = document.getElementById('triviaOptions');
-    const feedEl = document.getElementById('triviaFeedback');
-
-    if (!qEl || !optEl || !feedEl) return;
-
-    qEl.textContent = question.q;
-
-    if (answered === todayStr) {
-      const isCorrect = localStorage.getItem('ct_trivia_correct') === 'true';
-      optEl.innerHTML = '';
-      feedEl.style.display = 'block';
-      feedEl.style.background = isCorrect ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)';
-      feedEl.style.color = isCorrect ? 'var(--green)' : 'var(--red)';
-      feedEl.innerHTML = isCorrect 
-        ? `<i class="fa-solid fa-circle-check"></i> Correct! You've already answered today's question. <div style="font-size:0.75rem; font-weight:normal; margin-top:6px; color:var(--label);">${question.explanation}</div>` 
-        : `<i class="fa-solid fa-circle-xmark"></i> You answered today's question incorrectly. Better luck tomorrow! <div style="font-size:0.75rem; font-weight:normal; margin-top:6px; color:var(--label);">${question.explanation}</div>`;
-      return;
-    }
-
-    optEl.innerHTML = question.options.map((opt, idx) => `
-      <button class="btn btn-ghost btn-sm" style="text-align:left; justify-content:flex-start; width:100%; border-radius:10px; font-weight:normal;" onclick="submitTriviaAnswer(${idx}, ${question.answer}, '${todayStr}')">
-        ${String.fromCharCode(65 + idx)}. ${opt}
-      </button>
-    `).join('');
-  } catch (err) {
-    console.error("Trivia Quest loader error:", err);
-    const qEl = document.getElementById('triviaQuestion');
-    if (qEl) {
-      qEl.textContent = "Unable to load trivia question today.";
-    }
-  }
-}
-
-async function submitTriviaAnswer(selectedIdx, correctIdx, todayStr) {
-  const isCorrect = selectedIdx === correctIdx;
-  localStorage.setItem('ct_trivia_answered_date', todayStr);
-  localStorage.setItem('ct_trivia_correct', isCorrect ? 'true' : 'false');
-
-  const qIdx = new Date().getDate() % TRIVIA_QUESTIONS.length;
-  const question = TRIVIA_QUESTIONS[qIdx];
-  const optEl = document.getElementById('triviaOptions');
-  const feedEl = document.getElementById('triviaFeedback');
-
-  optEl.innerHTML = '';
-  feedEl.style.display = 'block';
-  feedEl.style.background = isCorrect ? 'rgba(52, 199, 89, 0.1)' : 'rgba(255, 59, 48, 0.1)';
-  feedEl.style.color = isCorrect ? 'var(--green)' : 'var(--red)';
-
-  if (isCorrect) {
-    feedEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Correct! +3 CampusCoins earned! <div style="font-size:0.75rem; font-weight:normal; margin-top:6px; color:var(--label);">${question.explanation}</div>`;
-    showToast('Correct answer! +3 CampusCoins <i class="fa-solid fa-coins anim-coin"></i>', 'success'); if (window.userCoinState) { window.userCoinState.coins = (window.userCoinState.coins || 0) + 3; if (window.updateCoinUIElements) window.updateCoinUIElements(); }
-    
-    // Call award XP
-    const userId = user?.id;
-    if (userId) {
-      await apiRequest(`/api/upload/stats/${userId}`); // Refresh stats locally
-      awardXP(10);
-      setTimeout(() => loadUserStats(), 1000);
-    }
-  } else {
-    const letters = ["A", "B", "C", "D"];
-    feedEl.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Incorrect! The correct answer was ${letters[correctIdx]}. <div style="font-size:0.75rem; font-weight:normal; margin-top:6px; color:var(--label);">${question.explanation}</div>`;
-    showToast('Incorrect answer. Better luck tomorrow!', 'error');
-  }
-}
-
-
-function loadStatsFromLocalStorage(){
-  const xp = parseInt(localStorage.getItem('ct_xp')||'0');
-  const level = Math.floor(xp/100)+1;
-  const pct = (xp%100);
-  document.getElementById('xpLevel').textContent=level;
-  document.getElementById('xpCur').textContent=xp%100;
-  document.getElementById('xpMax').textContent=100;
-  document.getElementById('xpFill').style.width=pct+'%';
-  const liveCoins = (window.userCoinState && window.userCoinState.coins !== undefined) ? window.userCoinState.coins : parseInt(localStorage.getItem('ct_coins') || '50');
-  const statCoinsEl = document.getElementById('statCoins');
-  if (statCoinsEl) statCoinsEl.textContent = liveCoins;
-  const heroCoinsEl = document.getElementById('heroCoinsDisplay');
-  if (heroCoinsEl) heroCoinsEl.textContent = liveCoins;
-
-  const streak=parseInt(localStorage.getItem('ct_streak')||'0');
-  document.getElementById('statStreak').innerHTML=streak+' <i class="fa-solid fa-fire"></i>';
-
-  // Plan from localStorage user object
-  try {
-    const stored = JSON.parse(localStorage.getItem('ct_user') || '{}');
-    const lsPlan = (stored.plan || 'free').toLowerCase();
-    const planEl = document.getElementById('statPlan');
-    const planColors = { free: 'var(--green)', plus: '#3b82f6', pro: '#a855f7' };
-    const planIcons  = { free: '', plus: ' <i class="fa-solid fa-bolt" style="font-size:0.7em"></i>', pro: ' <i class="fa-solid fa-crown" style="font-size:0.7em"></i>' };
-    planEl.innerHTML = lsPlan.toUpperCase() + (planIcons[lsPlan] || '');
-    planEl.style.color = planColors[lsPlan] || 'var(--green)';
-  } catch(_){}
-
-  const allBadges=[
-    {icon:'<i class="fa-solid fa-rocket"></i>',name:'First Upload',key:'first_upload'},
-    {icon:'<i class="fa-solid fa-list-check"></i>',name:'Summarizer',key:'first_summary'},
-    {icon:'<i class="fa-solid fa-id-card"></i>',name:'Flashmaster',key:'first_flash'},
-    {icon:'<i class="fa-solid fa-fire"></i>',name:'3-Day Streak',key:'streak_3'},
-    {icon:'<i class="fa-solid fa-pen-to-square"></i>',name:'Quiz Ace',key:'first_quiz'},
-    {icon:'<i class="fa-solid fa-star"></i>',name:'Level 5',key:'level_5'},
-  ];
-  const unlocked=JSON.parse(localStorage.getItem('ct_badges')||'[]');
-  document.getElementById('badgeCount').textContent=unlocked.length+' / '+allBadges.length+' Unlocked';
-  document.getElementById('badgesGrid').innerHTML=allBadges.map(b=>`
-    <div class="badge-card ${unlocked.includes(b.key)?'':'locked'}">
-      <div class="badge-icon">${b.icon}</div>
-      <div class="badge-name">${b.name}</div>
-    </div>`).join('');
-}
-
-loadDocs();
-async function loadDocs(){
-  const{data,error}=await apiGetMyDocs();
-  if(error){showToast('Failed to load documents.','error');return;}
-  const docs=data.documents;
-  document.getElementById('statDocs').textContent=docs.length;
-  const sidebar=document.getElementById('sidebarDocs');
-  if(docs.length===0){
-    document.getElementById('emptyState').style.display='block';
-    sidebar.innerHTML=`<div style="padding:8px 12px;font-size:0.8rem;color:var(--label3);">No documents yet</div>`;
-    return;
-  }
-  document.getElementById('docGrid').innerHTML=docs.map(d=>`
-    <div class="doc-card" onclick="openDoc('${d.id}','${esc(d.file_name)}')">
-      <div class="doc-icon"><i class="fa-solid fa-file-pdf"></i></div>
-      <div class="doc-name" title="${esc(d.file_name)}">${esc(d.file_name)}</div>
-      <div class="doc-meta">${d.page_count} pages · ${formatDate(d.created_at)}</div>
-      <div class="doc-actions" onclick="event.stopPropagation()">
-        <button class="btn btn-primary btn-sm" onclick="openDoc('${d.id}','${esc(d.file_name)}')"><i class="fa-solid fa-robot"></i> Study</button>
-        <button class="btn btn-danger btn-sm" onclick="delDoc('${d.id}',this)"><i class="fa-solid fa-trash-can"></i></button>
-      </div>
-    </div>`).join('');
-  sidebar.innerHTML=docs.slice(0,6).map(d=>`
-    <a href="/pages/study.html?docId=${d.id}&name=${encodeURIComponent(d.file_name)}" class="ct-sidebar-doc-item" title="${esc(d.file_name)}">
-      <i class="fa-solid fa-file-lines"></i>
-      <span>${d.file_name.length>20?d.file_name.substring(0,20)+'…':d.file_name}</span>
-    </a>`).join('');
-
-  if (docs.length > 0) {
-    const recentDoc = docs[0];
-    const actTitle = document.getElementById('recentDocActivityTitle');
-    const actTime = document.getElementById('recentDocActivityTime');
-    if (actTitle) actTitle.textContent = recentDoc.file_name;
-    if (actTime) actTime.textContent = 'Uploaded ' + formatDate(recentDoc.created_at);
-  }
-}
-
-loadActivity();
-async function loadActivity(){
-  document.getElementById('activityLoading').style.display='block';
-  const{data,error}=await apiRequest('/api/upload/my-activity');
-  document.getElementById('activityLoading').style.display='none';
-  
-  if(error){
-    console.warn('Note: Could not load activity:', error);
-    document.getElementById('activityEmpty').style.display='block';
-    return;
-  }
-  
-  const acts=(data.activities||[]).slice(0,10); // Show last 10 actions in modal
-  if(acts.length===0){
-    document.getElementById('activityEmpty').style.display='block';
-    return;
-  }
-  
-  document.getElementById('activityLog').style.display='block';
-  const actList=document.getElementById('activityList');
-  
-  const actEmojis={
-    upload_document:'<i class="fa-solid fa-cloud-arrow-up"></i>',upload_image:'<i class="fa-solid fa-image"></i>',upload_video:'<i class="fa-solid fa-video"></i>',
-    ai_summarize:'<i class="fa-solid fa-list-check"></i>',ai_explain:'<i class="fa-solid fa-lightbulb"></i>',ai_questions:'<i class="fa-solid fa-pen-to-square"></i>',ai_flashcards:'<i class="fa-solid fa-id-card"></i>',
-    ai_quiz:'<i class="fa-solid fa-book-open"></i>',download_summary:'<i class="fa-solid fa-download"></i>',download_flashcards:'<i class="fa-solid fa-download"></i>',
-    other:'<i class="fa-solid fa-wand-magic-sparkles"></i>'
-  };
-  
-  actList.innerHTML=acts.map(a=>`
-    <div style="display:flex;gap:12px;padding:12px;background:rgba(118,118,128,.04);border-radius:var(--r,16px);align-items:flex-start;">
-      <div style="font-size:1.2rem;flex-shrink:0;">${actEmojis[a.action]||actEmojis.other}</div>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:0.85rem;font-weight:600;color:var(--label);">${a.action.replace(/_/g,' ')}</div>
-        ${a.details?'<div style="font-size:0.78rem;color:var(--label3);margin-top:2px;">'+a.details+'</div>':''}
-        <div style="font-size:0.72rem;color:var(--label4);margin-top:2px;">${formatDateTime(a.created_at)}</div>
-      </div>
-    </div>`).join('');
-}
-function openDoc(id,name){window.location.href=`/pages/study.html?docId=${id}&name=${encodeURIComponent(name)}`;}
-async function delDoc(id,btn){
-  if(!confirm('Delete this document?'))return;
-  btn.textContent='...';btn.disabled=true;
-  const{error}=await apiDeleteDoc(id);
-  if(error){showToast('Failed to delete.','error');btn.innerHTML='<i class="fa-solid fa-trash-can"></i>';btn.disabled=false;return;}
-  showToast('Document deleted.','info');loadDocs();
-}
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
-
-// Pomodoro
-let pomoInterval=null,pomoSeconds=25*60,pomoRunning=false;
-function openPomodoro(){const o=document.getElementById('pomoOverlay');o.style.display='flex';}
-function closePomodoro(){document.getElementById('pomoOverlay').style.display='none';clearInterval(pomoInterval);pomoRunning=false;document.getElementById('pomoStart').innerHTML='<i class="fa-solid fa-play"></i> Start';}
-function togglePomo(){
-  if(pomoRunning){clearInterval(pomoInterval);pomoRunning=false;document.getElementById('pomoStart').innerHTML='<i class="fa-solid fa-play"></i> Resume';document.getElementById('pomoStatus').textContent='Paused';}
-  else{pomoRunning=true;document.getElementById('pomoStart').innerHTML='<i class="fa-solid fa-pause"></i> Pause';document.getElementById('pomoStatus').innerHTML='Stay focused! <i class="fa-solid fa-brain"></i>';
-    pomoInterval=setInterval(()=>{
-      pomoSeconds--;
-      const m=Math.floor(pomoSeconds/60),s=pomoSeconds%60;
-      document.getElementById('pomoTime').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-      if(pomoSeconds<=0){clearInterval(pomoInterval);pomoRunning=false;document.getElementById('pomoStatus').innerHTML='Session complete! +10 XP <i class="fa-solid fa-trophy"></i>';awardXP(10);}
-    },1000);
-  }
-}
-function resetPomo(){clearInterval(pomoInterval);pomoRunning=false;pomoSeconds=25*60;document.getElementById('pomoTime').textContent='25:00';document.getElementById('pomoStart').innerHTML='<i class="fa-solid fa-play"></i> Start';document.getElementById('pomoStatus').textContent='Ready to focus?';}
-function awardXP(pts){const cur=parseInt(localStorage.getItem('ct_xp')||'0');localStorage.setItem('ct_xp',cur+pts);showToast(`+${pts} XP earned! <i class="fa-solid fa-star"></i>`,'success');}
-
-// Leaderboard Modal Toggles
-function openLeaderboardModal(){
+function openLeaderboardModal() {
   document.getElementById('leaderboardOverlay').style.display = 'flex';
   loadLeaderboard();
 }
-function closeLeaderboardModal(){
+function closeLeaderboardModal() {
   document.getElementById('leaderboardOverlay').style.display = 'none';
 }
 
-// Activity Modal Toggles
-function openActivityModal(){
+// ── ACTIVITY LOG MODAL ──
+async function loadActivity() {
+  const actList = document.getElementById('activityList');
+  if (!actList) return;
+  const { data, error } = await apiRequest('/api/upload/my-activity');
+  if (error || !data || !data.activities || data.activities.length === 0) {
+    actList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ct-text-gray);">No recent activity logged yet.</div>';
+    return;
+  }
+  const acts = data.activities.slice(0, 15);
+  const actIcons = {
+    upload_document: '<i class="fa-solid fa-cloud-arrow-up" style="color:#2563eb;"></i>',
+    ai_explain: '<i class="fa-solid fa-lightbulb" style="color:#f59e0b;"></i>',
+    ai_summarize: '<i class="fa-solid fa-list-check" style="color:#10b981;"></i>',
+    ai_quiz: '<i class="fa-solid fa-book-open" style="color:#a855f7;"></i>',
+    other: '<i class="fa-solid fa-sparkles" style="color:#2563eb;"></i>'
+  };
+  actList.innerHTML = acts.map(a => `
+    <div style="display:flex;gap:12px;padding:10px 12px;background:rgba(0,0,0,0.02);border:1px solid var(--ct-border-soft);border-radius:14px;align-items:flex-start;">
+      <div style="font-size:1.1rem;flex-shrink:0;margin-top:2px;">${actIcons[a.action] || actIcons.other}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:0.85rem;font-weight:700;color:var(--ct-text-dark);">${a.action.replace(/_/g, ' ')}</div>
+        ${a.details ? '<div style="font-size:0.75rem;color:var(--ct-text-gray);margin-top:1px;">' + a.details + '</div>' : ''}
+        <div style="font-size:0.68rem;color:#94a3b8;margin-top:2px;">${formatDateTime(a.created_at)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openActivityModal() {
   document.getElementById('activityOverlay').style.display = 'flex';
   loadActivity();
 }
-function closeActivityModal(){
+function closeActivityModal() {
   document.getElementById('activityOverlay').style.display = 'none';
 }
 
-// Mobile Menu Toggle
-function toggleMobileMenu(){const m=document.getElementById('mobileMenu'),o=document.getElementById('mobileMenuOverlay');m.classList.toggle('open');o.classList.toggle('open');}
-function closeMobileMenu(){document.getElementById('mobileMenu').classList.remove('open');document.getElementById('mobileMenuOverlay').classList.remove('open');}
-
-
-// ── INTERACTIVE QUIZ ENGINE RENDERER ──────────────────────────
-async function renderMattieQuiz(quizData) {
-  const container = window.quizTargetContainer || document.getElementById('tabContent') || document.getElementById('quizWorkspace') || document.getElementById('study-output') || document.getElementById('resultsArea');
-  if (!quizData || !container) return;
-
-  const quizItems = [];
-  (quizData.mcqs || []).forEach((question, index) => {
-    quizItems.push({
-      type: 'mcq',
-      prompt: `Q${index + 1}: ${question.question}`,
-      question,
-    });
-  });
-
-  const writtenPool = [...(quizData.shortAnswer || []), ...(quizData.essays || [])];
-  writtenPool.forEach((question, index) => {
-    quizItems.push({
-      type: 'written',
-      prompt: `Analytical Q${index + 1}: ${question.question}`,
-      question,
-    });
-  });
-
-  if (quizItems.length === 0) {
-    container.innerHTML = `<div class="quiz-engine-workspace result-anim"><div class="card"><div class="card-body">No quiz questions were provided.</div></div></div>`;
-    return;
-  }
-
-  const quizState = window.mattieQuizState = {
-    currentQuestionIndex: 0,
-    answerStore: {},
-  };
-
-  const syncCurrentAnswer = () => {
-    const currentItem = quizItems[quizState.currentQuestionIndex];
-    if (!currentItem) return;
-
-    if (currentItem.type === 'mcq') {
-      const selected = container.querySelector('input[name="quiz-answer"]:checked');
-      if (selected) {
-        quizState.answerStore[quizState.currentQuestionIndex] = selected.value;
-      }
-    } else {
-      const responseField = container.querySelector('.quiz-text-input');
-      quizState.answerStore[quizState.currentQuestionIndex] = responseField ? responseField.value : '';
-    }
-  };
-
-  const typesetQuizMath = () => {
-    if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
-      window.MathJax.typesetPromise();
-    }
-  };
-
-  const submitCurrentQuiz = () => {
-    syncCurrentAnswer();
-
-    let correctAnswers = 0;
-    let scoredQuestions = 0;
-    let completedAnswers = 0;
-
-    quizItems.forEach((item, index) => {
-      const storedValue = quizState.answerStore[index];
-      const hasAnswer = typeof storedValue === 'string' && storedValue.trim().length > 0;
-
-      if (item.type === 'mcq') {
-        scoredQuestions++;
-        if (hasAnswer && storedValue === item.question.correctAnswer) {
-          correctAnswers++;
-        }
-      } else if (hasAnswer) {
-        completedAnswers++;
-      }
-    });
-
-    const percentage = scoredQuestions > 0 ? Math.round((correctAnswers / scoredQuestions) * 100) : Math.round((completedAnswers / quizItems.length) * 100);
-
-    const feedback = percentage >= 70 ? "Outstanding Academic Performance! — Engineered by MattieTech" :
-             percentage >= 40 ? "Good Core Comprehension — Keep reviewing! — Engineered by MattieTech" :
-                     "Needs Improvement. Let's re-study the source material together! — Engineered by MattieTech";
-
-    window.mattieLatestReview = {
-      quizItems,
-      answerStore: { ...quizState.answerStore },
-    };
-
-    window.showPerformanceBanner(percentage, feedback);
-  };
-
-  const renderQuestion = () => {
-    const currentItem = quizItems[quizState.currentQuestionIndex];
-    const isFirstQuestion = quizState.currentQuestionIndex === 0;
-    const isLastQuestion = quizState.currentQuestionIndex === quizItems.length - 1;
-    const questionNumber = quizState.currentQuestionIndex + 1;
-    const progressPercent = Math.round((questionNumber / quizItems.length) * 100);
-    const storedAnswer = quizState.answerStore[quizState.currentQuestionIndex] || '';
-
-    let optionsHTML = '';
-    if (currentItem.type === 'mcq') {
-      const optionKeys = ['A', 'B', 'C', 'D'];
-      optionsHTML = `
-        <div class="quiz-options-grid" style="display:flex; flex-direction:column; gap:12px; margin-top:18px;">
-          ${optionKeys
-            .filter((key) => currentItem.question.options && Object.prototype.hasOwnProperty.call(currentItem.question.options, key))
-            .map((key) => {
-              const optionText = currentItem.question.options[key];
-              const isChecked = storedAnswer === key ? 'checked' : '';
-              return `
-                <label class="quiz-option-label" style="display:flex; align-items:flex-start; gap:14px; padding:16px 18px; border-radius:18px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); cursor:pointer; transition:transform .18s ease, border-color .18s ease, background .18s ease;">
-                  <input type="radio" name="quiz-answer" value="${key}" data-correct="${currentItem.question.correctAnswer}" ${isChecked} style="margin-top:3px; flex:0 0 auto;">
-                  <span class="option-indicator" style="display:inline-flex; align-items:center; justify-content:center; min-width:34px; height:34px; border-radius:999px; font-weight:800; background:rgba(255,255,255,0.10);">${key}</span>
-                  <span style="display:block; line-height:1.5;">${optionText}</span>
-                </label>`;
-            })
-            .join('')}
-        </div>`;
-    } else {
-      optionsHTML = `
-        <textarea class="quiz-text-input form-control" placeholder="Type your academic response here..." style="min-height:220px; margin-top:18px; resize:vertical;">${storedAnswer}</textarea>`;
-    }
-
-    container.innerHTML = `
-      <div class="quiz-engine-workspace result-anim" style="max-width:860px; margin:0 auto;">
-        <div class="card liquid-glass-card" style="border-radius:28px; overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,0.22);">
-          <div class="card-body" style="padding:28px;">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; flex-wrap:wrap;">
-              <div>
-                <h2 style="font-size:1.2rem; font-weight:800; margin-bottom:6px;"><i class="fa-solid fa-file-pen" style="margin-right:4px;"></i> Academic Performance Evaluation</h2>
-                <p style="font-size:0.88rem; color:var(--label3); margin:0;">Question ${questionNumber} of ${quizItems.length}</p>
-              </div>
-              <div style="min-width:180px; text-align:right; color:var(--label3); font-size:0.82rem;">${progressPercent}% complete</div>
-            </div>
-            <div style="height:10px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden; margin-bottom:24px;">
-              <div style="height:100%; width:${progressPercent}%; border-radius:999px; background:linear-gradient(90deg, #76c8ff, #5b8cff); transition:width .25s ease;"></div>
-            </div>
-            <div class="quiz-question-card" style="padding:24px; border-radius:24px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);">
-              <p class="quiz-prompt" style="font-size:1.05rem; font-weight:700; margin-bottom:12px;">${currentItem.prompt}</p>
-              ${optionsHTML}
-            </div>
-            <div style="display:flex; gap:12px; justify-content:space-between; margin-top:24px; flex-wrap:wrap;">
-              <button type="button" id="quiz-prev-btn" class="btn btn-secondary" ${isFirstQuestion ? 'disabled' : ''} style="min-width:120px;">Prev</button>
-              <div style="display:flex; gap:12px; margin-left:auto; flex-wrap:wrap;">
-                ${isLastQuestion ? `<button type="button" id="submit-mattie-quiz" class="btn btn-primary btn-lg" style="min-width:190px;">Submit Assessment</button>` : `<button type="button" id="quiz-next-btn" class="btn btn-primary btn-lg" style="min-width:120px;">Next</button>`}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>`;
-
-      container.style.display = 'block';
-      container.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-    if (currentItem.type === 'mcq') {
-      container.querySelectorAll('input[name="quiz-answer"]').forEach((input) => {
-        input.addEventListener('change', () => {
-          quizState.answerStore[quizState.currentQuestionIndex] = input.value;
-        });
-      });
-    } else {
-      const responseField = container.querySelector('.quiz-text-input');
-      if (responseField) {
-        responseField.addEventListener('input', (event) => {
-          quizState.answerStore[quizState.currentQuestionIndex] = event.target.value;
-        });
-      }
-    }
-
-      const prevButton = container.querySelector('#quiz-prev-btn');
-      const nextButton = container.querySelector('#quiz-next-btn');
-      const submitButton = container.querySelector('#submit-mattie-quiz');
-
-      if (prevButton) {
-        prevButton.addEventListener('click', (event) => {
-          event.preventDefault();
-          syncCurrentAnswer();
-          quizState.currentQuestionIndex = Math.max(0, quizState.currentQuestionIndex - 1);
-          renderQuestion();
-        });
-      }
-
-      if (nextButton) {
-        nextButton.addEventListener('click', (event) => {
-          event.preventDefault();
-          syncCurrentAnswer();
-          quizState.currentQuestionIndex = Math.min(quizItems.length - 1, quizState.currentQuestionIndex + 1);
-          renderQuestion();
-        });
-      }
-
-      if (submitButton) {
-        submitButton.addEventListener('click', (event) => {
-          event.preventDefault();
-          container.style.display = 'none';
-          container.innerHTML = '';
-          submitCurrentQuiz();
-        });
-      }
-
-      typesetQuizMath();
-  };
-
-  renderQuestion();
+// ── SETTINGS MODAL ──
+function openSettingsModal() {
+  document.getElementById('settingsOverlay').style.display = 'flex';
+}
+function closeSettingsModal() {
+  document.getElementById('settingsOverlay').style.display = 'none';
 }
 
-function preProcessMathDelimiters(text) {
-  if (!text) return "";
-  // Safely convert [ ... ] to $$ ... $$ if it contains algebraic patterns like ^, _, \ or = and no plain English words
-  let processed = text.replace(/\[\s*([^\]\n]{1,80}?)\s*\]/g, (match, p1) => {
-    const hasMath = /[\^_\+\-\*\/\\=]/.test(p1);
-    const hasWords = /\b(the|and|where|is|are|of|in|to|for|with)\b/i.test(p1);
-    if (hasMath && !hasWords) {
-      return `$$${p1}$$`;
+// ── EXPLAIN A CONCEPT ENGINE ──
+function parseMathDelimiters(text) {
+  if (!text) return '';
+  return text.replace(/\[\s*([^\]\n]{1,80}?)\s*\]/g, (m, p1) => {
+    if (/[\^_\+\-\*\/\\=]/.test(p1) && !/\b(the|and|is|are|of|in|to)\b/i.test(p1)) {
+      return '$$' + p1 + '$$';
     }
-    return match;
+    return m;
   });
-  return processed;
 }
-
-// AI Assistant Functions
-function extractMath(text) {
-  const mathPlaceholders = [];
-  let counter = 0;
-  
-  // Protect display math \[ ... \]
-  let processed = text.replace(/\\\[([\s\S]*?)\\\]/g, (match) => {
-    mathPlaceholders.push(match);
-    return `MATHTOKENDSP${counter++}`;
-  });
-
-  // Protect inline math \( ... \)
-  processed = processed.replace(/\\\(([\s\S]*?)\\\)/g, (match) => {
-    mathPlaceholders.push(match);
-    return `MATHTOKENINL${counter++}`;
-  });
-
-  // Protect display math $$ ... $$
-  processed = processed.replace(/\$\$\s*([\s\S]*?)\s*\$\$/g, (match) => {
-    mathPlaceholders.push(match);
-    return `MATHTOKENDSP${counter++}`;
-  });
-
-  // Protect inline math $ ... $
-  processed = processed.replace(/\$([^\$\n]+)\$/g, (match) => {
-    mathPlaceholders.push(match);
-    return `MATHTOKENINL${counter++}`;
-  });
-  
-  return { text: processed, placeholders: mathPlaceholders };
-}
-
-function restoreMath(html, placeholders) {
-  let result = html;
-  placeholders.forEach((math, index) => {
-    // Try to replace both display and inline tokens
-    result = result.replace(`MATHTOKENDSP${index}`, () => math);
-    result = result.replace(`MATHTOKENINL${index}`, () => math);
-  });
-  return result;
-}
-
 function parseWithMath(text) {
-  if(typeof marked === 'undefined') return text;
-  
-  // Preprocess first to resolve bracket/parenthesis omissions
-  const preProcessed = preProcessMathDelimiters(text);
-  const { text: textWithPlaceholders, placeholders } = extractMath(preProcessed);
-  const htmlWithPlaceholders = marked.parse(textWithPlaceholders);
-  const htmlWithMath = restoreMath(htmlWithPlaceholders, placeholders);
-  
-  return htmlWithMath;
+  if (typeof marked === 'undefined') return text;
+  return marked.parse(parseMathDelimiters(text));
 }
 
-async function explainConcept(){
-  const concept=document.getElementById('conceptInput').value.trim();
-  if(!concept){showToast('Please enter a concept to explain','error');return;}
-  const resultDiv=document.getElementById('conceptResult');
-  resultDiv.innerHTML='<div style="text-align:center;color:var(--label3);"><i class="fa-solid fa-brain fa-bounce" style="margin-right: 8px; color: var(--blue);"></i>Thinking...</div>';
-  resultDiv.style.display='block';
-  
-  try{
-    console.log('=== Starting explain concept ===');
-    const docs=await apiGetMyDocs();
-    console.log('Documents response:', docs);
-    
-    let docId=null;
-    if(docs.data && docs.data.length>0 && docs.data[0] && docs.data[0].id){
-      docId=docs.data[0].id;
-      console.log(`Using document: ${docId}`);
-    }else{
-      console.warn('No documents found, proceeding without document context');
-    }
-    
-    console.log(`Calling /api/ai/explain with docId=${docId}, concept="${concept}"`);
-    const response=await apiRequest('/api/ai/explain','POST',{documentId:docId,concept:concept});
-    console.log('Explain response:', response);
-    
-    if(response.error){
-      const errMsg=response.error;
-      resultDiv.innerHTML=`<div style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> ${errMsg}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:24px;display:inline-block;">Close</button>`;
-      console.error('API Error Response:', errMsg);
-      return;
-    }
-    
-    const explanation=response.data?.explanation||response.data?.result||response.data||'No explanation received';
-    
-    const htmlContent = parseWithMath(explanation);
-    resultDiv.innerHTML = htmlContent;
-    
-    const closeBtn=document.createElement('button');
-    closeBtn.className='btn btn-ghost btn-sm';
-    closeBtn.style.marginTop='24px';
-    closeBtn.style.display='inline-block';
-    closeBtn.textContent='Close';
-    closeBtn.onclick=()=>document.getElementById('conceptResult').style.display='none';
-    resultDiv.appendChild(closeBtn);
-    
-    if(window.MathJax&&typeof window.MathJax.typesetPromise==='function'){
-      window.MathJax.typesetPromise([resultDiv]).catch(err=>console.log('MathJax error:',err));
-    }
-  }catch(err){
-    console.error('Explain function error:', err);
-    const errDetail=err.message||String(err);
-    resultDiv.innerHTML=`<div style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> Error: ${errDetail}</div><button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="margin-top:24px;display:inline-block;">Close</button>`;
-  }
-}
-
-// ── PROBLEM SOLVER ENGINE (5 COINS / FREE ON PRO) ──────────────
-async function solveAssignmentProblem(){
-  const problem = document.getElementById('solverProblemInput').value.trim();
-  if(!problem){
-    showToast('Please enter an assignment problem or question.', 'error');
+async function explainConcept() {
+  const input = document.getElementById('conceptInput');
+  const concept = input ? input.value.trim() : '';
+  if (!concept) {
+    showToast('Please enter a concept or question to explain', 'error');
     return;
   }
-  const resultDiv = document.getElementById('solverResult');
-  const btn = document.getElementById('btnSolveProblem');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Solving Step-by-Step...';
-  resultDiv.innerHTML = '<div style="text-align:center;color:var(--label3);"><i class="fa-solid fa-brain fa-bounce" style="margin-right: 8px; color: var(--blue);"></i>Analyzing equations & formulating verified solution...</div>';
+  const resultDiv = document.getElementById('conceptResult');
+  const btn = document.getElementById('btnSendConcept');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Thinking</span>';
+  }
+  resultDiv.innerHTML = '<div style="text-align:center;color:var(--ct-text-gray);padding:12px;"><i class="fa-solid fa-brain fa-bounce" style="margin-right:8px;color:#2563eb;"></i>AI is formulating clear, step-by-step notes...</div>';
   resultDiv.style.display = 'block';
 
   try {
-    const res = await apiRequest('/api/ai/solve-problem', 'POST', { problemText: problem });
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Solve with Step-by-Step Work';
+    const docs = await apiGetMyDocs();
+    let docId = (docs.data && docs.data.length > 0 && docs.data[0]) ? docs.data[0].id : null;
+    const response = await apiRequest('/api/ai/explain', 'POST', { documentId: docId, concept: concept });
 
-    if(res.error){
-      if(res.needCoins){
-        resultDiv.innerHTML = `
-          <div style="color:var(--orange); font-weight:700; margin-bottom:8px;"><i class="fa-solid fa-coins anim-coin"></i> Insufficient CampusCoins</div>
-          <p style="font-size:0.85rem; color:var(--label2); margin-bottom:12px;">Solving problems requires 5 CampusCoins (or an active Pro subscription). Top up your wallet to continue.</p>
-          <button class="btn btn-primary btn-sm" onclick="openCoinsModal()" style="background:#f59e0b; border-color:#d97706; color:#000; font-weight:800;">
-            <i class="fa-solid fa-coins"></i> Top Up CampusCoins
-          </button>
-        `;
-        return;
-      }
-      resultDiv.innerHTML = `<div style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> ${res.error}</div>`;
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i><span>Send</span>';
+    }
+
+    if (response.error) {
+      resultDiv.innerHTML = '<div style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> ' + response.error + '</div>';
       return;
     }
 
-    const solution = res.data?.solution || res.data || 'No solution provided.';
+    const explanation = response.data?.explanation || response.data?.result || response.data || 'No explanation generated.';
     resultDiv.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(0,122,255,0.15); padding-bottom:6px;">
-        <span style="font-weight:700; color:var(--blue); font-size:0.9rem;"><i class="fa-solid fa-check-circle"></i> Verified Step-by-Step Solution</span>
-        <button onclick="document.getElementById('solverResult').style.display='none'" class="btn btn-ghost btn-sm" style="padding:2px 8px;"><i class="fa-solid fa-xmark"></i></button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid rgba(37,99,235,0.15);padding-bottom:6px;">
+        <span style="font-weight:800;color:#2563eb;font-size:0.85rem;"><i class="fa-solid fa-sparkles"></i> AI Explanation</span>
+        <button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="padding:2px 8px;border-radius:999px;"><i class="fa-solid fa-xmark"></i> Close</button>
       </div>
-      <div>${parseWithMath(solution)}</div>
+      <div>${parseWithMath(explanation)}</div>
     `;
 
-    if(res.coinsRemaining !== undefined && window.refreshUserCoins){
-      window.refreshUserCoins();
+    if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+      window.MathJax.typesetPromise([resultDiv]).catch(err => console.log('MathJax error:', err));
     }
-    awardXP(15);
-    if(window.MathJax && typeof window.MathJax.typesetPromise === 'function'){
-      window.MathJax.typesetPromise([resultDiv]).catch(e => console.log('MathJax error:', e));
+  } catch (err) {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i><span>Send</span>';
     }
-  } catch(err) {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Solve with Step-by-Step Work';
-    resultDiv.innerHTML = `<div style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> Error: ${err.message || String(err)}</div>`;
+    resultDiv.innerHTML = '<div style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Error: ' + (err.message || String(err)) + '</div>';
   }
 }
 
-// ── THESIS & ESSAY POLISHER ENGINE (8 COINS / FREE ON PRO) ─────
-async function polishAcademicEssay(){
-  const draft = document.getElementById('polisherDraftInput').value.trim();
-  const style = document.getElementById('polisherStyle')?.value || 'academic';
-  if(!draft){
-    showToast('Please paste your draft or paragraph to polish.', 'error');
+// ── EMAIL VERIFICATION FUNCTIONS ──
+function openVerificationModal() {
+  document.getElementById('verifyModal').style.display = 'flex';
+  document.getElementById('modalVerifyErr').style.display = 'none';
+  resendVerificationOtp();
+}
+function closeVerificationModal() {
+  document.getElementById('verifyModal').style.display = 'none';
+}
+async function resendVerificationOtp() {
+  const btn = document.getElementById('resendOtpBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+  }
+  const { data, error } = await apiRequest('/api/auth/resend-otp', 'POST', { email: user.email });
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = 'Resend OTP';
+  }
+  if (error) {
+    showToast(error, 'error');
     return;
   }
-  const resultDiv = document.getElementById('polisherResult');
-  const btn = document.getElementById('btnPolishEssay');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Polishing & Elevating...';
-  resultDiv.innerHTML = '<div style="text-align:center;color:var(--label3);"><i class="fa-solid fa-feather fa-bounce" style="margin-right: 8px; color: var(--purple);"></i>Refining scholarly tone, syntax, and flow...</div>';
-  resultDiv.style.display = 'block';
-
-  try {
-    const res = await apiRequest('/api/ai/polish-essay', 'POST', { draftText: draft, style });
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-sparkles"></i> Polish & Elevate Draft';
-
-    if(res.error){
-      if(res.needCoins){
-        resultDiv.innerHTML = `
-          <div style="color:var(--orange); font-weight:700; margin-bottom:8px;"><i class="fa-solid fa-coins anim-coin"></i> Insufficient CampusCoins</div>
-          <p style="font-size:0.85rem; color:var(--label2); margin-bottom:12px;">Thesis polishing requires 8 CampusCoins (or an active Pro subscription). Top up your wallet to continue.</p>
-          <button class="btn btn-primary btn-sm" onclick="openCoinsModal()" style="background:#f59e0b; border-color:#d97706; color:#000; font-weight:800;">
-            <i class="fa-solid fa-coins"></i> Top Up CampusCoins
-          </button>
-        `;
-        return;
-      }
-      resultDiv.innerHTML = `<div style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> ${res.error}</div>`;
-      return;
-    }
-
-    const polished = res.data?.polished || res.data || 'No response provided.';
-    resultDiv.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(175,82,222,0.15); padding-bottom:6px;">
-        <span style="font-weight:700; color:var(--purple); font-size:0.9rem;"><i class="fa-solid fa-award"></i> Polished Scholarly Version</span>
-        <button onclick="document.getElementById('polisherResult').style.display='none'" class="btn btn-ghost btn-sm" style="padding:2px 8px;"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div>${parseWithMath(polished)}</div>
-    `;
-
-    if(res.coinsRemaining !== undefined && window.refreshUserCoins){
-      window.refreshUserCoins();
-    }
-    awardXP(15);
-  } catch(err) {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-sparkles"></i> Polish & Elevate Draft';
-    resultDiv.innerHTML = `<div style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> Error: ${err.message || String(err)}</div>`;
-  }
+  showToast('A new OTP confirmation code has been sent to your email!', 'success');
 }
 
-// ── PROJECT PROPOSALS ARCHITECT (10 COINS / FREE ON PRO) ──────
-async function generateProjectProposals(){
-  const field = document.getElementById('projectFieldInput').value.trim() || 'Computer Science / Engineering';
-  const interests = document.getElementById('projectInterestsInput').value.trim() || 'Applied systems & modern tech';
-  const resultDiv = document.getElementById('proposalsResult');
-  const btn = document.getElementById('btnGenerateProposals');
-
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Formulating Topics & Methodologies...';
-  resultDiv.innerHTML = '<div style="text-align:center;color:var(--label3);"><i class="fa-solid fa-graduation-cap fa-bounce" style="margin-right: 8px; color: var(--green);"></i>Conducting research gap analysis & architecting proposals...</div>';
-  resultDiv.style.display = 'block';
-
-  try {
-    const res = await apiRequest('/api/ai/project-proposals', 'POST', { field, interests });
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-lightbulb"></i> Architect 3 Project Proposals';
-
-    if(res.error){
-      if(res.needCoins || res.insufficientCoins){
-        resultDiv.innerHTML = `
-          <div style="color:var(--orange); font-weight:700; margin-bottom:8px;"><i class="fa-solid fa-coins anim-coin"></i> Insufficient CampusCoins</div>
-          <p style="font-size:0.85rem; color:var(--label2); margin-bottom:12px;">Generating thesis proposals requires 10 CampusCoins (or an active Pro subscription). Top up your wallet to continue.</p>
-          <button class="btn btn-primary btn-sm" onclick="openCoinsModal()" style="background:#f59e0b; border-color:#d97706; color:#000; font-weight:800;">
-            <i class="fa-solid fa-coins"></i> Top Up CampusCoins
-          </button>
-        `;
-        return;
-      }
-      resultDiv.innerHTML = `<div style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> ${res.error}</div>`;
-      return;
-    }
-
-    const proposals = res.data?.proposals || res.proposals || 'No proposals received.';
-    resultDiv.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(52,199,89,0.2); padding-bottom:6px;">
-        <span style="font-weight:700; color:var(--green); font-size:0.9rem;"><i class="fa-solid fa-award"></i> 3 Committee-Ready Research Proposals</span>
-        <button onclick="document.getElementById('proposalsResult').style.display='none'" class="btn btn-ghost btn-sm" style="padding:2px 8px;"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div>${parseWithMath(proposals)}</div>
-    `;
-
-    if(res.coinsRemaining !== undefined && window.refreshUserCoins){
-      window.refreshUserCoins();
-    }
-    awardXP(20);
-  } catch(err) {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-lightbulb"></i> Architect 3 Project Proposals';
-    resultDiv.innerHTML = `<div style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> Error: ${err.message || String(err)}</div>`;
-  }
-}
-
-// ── VIVA DEFENSE DRILL (12 COINS / FREE ON PRO) ─────────────────
-async function runVivaDefenseDrill(){
-  const projectTitle = document.getElementById('vivaProjectTitle').value.trim();
-  const abstract = document.getElementById('vivaAbstract').value.trim();
-  if(!projectTitle){
-    showToast('Please enter your project or thesis title.', 'error');
-    return;
-  }
-
-  const resultDiv = document.getElementById('vivaResult');
-  const btn = document.getElementById('btnRunViva');
-
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Convening Examiner Panel...';
-  resultDiv.innerHTML = '<div style="text-align:center;color:var(--label3);"><i class="fa-solid fa-user-shield fa-bounce" style="margin-right: 8px; color: var(--orange);"></i>Simulating oral defense examination questions...</div>';
-  resultDiv.style.display = 'block';
-
-  try {
-    const res = await apiRequest('/api/ai/viva-defense', 'POST', { projectTitle, abstract });
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Generate Defense Dossier';
-
-    if(res.error){
-      if(res.needCoins || res.insufficientCoins){
-        resultDiv.innerHTML = `
-          <div style="color:var(--orange); font-weight:700; margin-bottom:8px;"><i class="fa-solid fa-coins anim-coin"></i> Insufficient CampusCoins</div>
-          <p style="font-size:0.85rem; color:var(--label2); margin-bottom:12px;">Viva Defense Drill requires 12 CampusCoins (or an active Pro subscription). Top up your wallet to continue.</p>
-          <button class="btn btn-primary btn-sm" onclick="openCoinsModal()" style="background:#f59e0b; border-color:#d97706; color:#000; font-weight:800;">
-            <i class="fa-solid fa-coins"></i> Top Up CampusCoins
-          </button>
-        `;
-        return;
-      }
-      resultDiv.innerHTML = `<div style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> ${res.error}</div>`;
-      return;
-    }
-
-    const dossier = res.data?.defenseDossier || res.defenseDossier || 'No defense dossier received.';
-    resultDiv.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(255,149,0,0.2); padding-bottom:6px;">
-        <span style="font-weight:700; color:var(--orange); font-size:0.9rem;"><i class="fa-solid fa-shield-halved"></i> Oral Defense (Viva Voce) Prep Dossier</span>
-        <button onclick="document.getElementById('vivaResult').style.display='none'" class="btn btn-ghost btn-sm" style="padding:2px 8px;"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div>${parseWithMath(dossier)}</div>
-    `;
-
-    if(res.coinsRemaining !== undefined && window.refreshUserCoins){
-      window.refreshUserCoins();
-    }
-    awardXP(25);
-  } catch(err) {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Generate Defense Dossier';
-    resultDiv.innerHTML = `<div style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> Error: ${err.message || String(err)}</div>`;
-  }
-}
-
-// ── EXAM & PAST QUESTIONS PREDICTOR (15 COINS / FREE ON PRO) ───
-async function predictExamPastQuestions(){
-  const courseCode = document.getElementById('predictCourseCode').value.trim();
-  const syllabus = document.getElementById('predictTopics').value.trim();
-  if(!courseCode){
-    showToast('Please enter the course code (e.g. MTH101, CSC302).', 'error');
-    return;
-  }
-
-  const resultDiv = document.getElementById('predictResult');
-  const btn = document.getElementById('btnPredictExam');
-
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mining Exam Question Patterns...';
-  resultDiv.innerHTML = '<div style="text-align:center;color:var(--label3);"><i class="fa-solid fa-fire fa-bounce" style="margin-right: 8px; color: var(--red);"></i>Analyzing historical university exams & formulating high-probability questions...</div>';
-  resultDiv.style.display = 'block';
-
-  try {
-    const res = await apiRequest('/api/ai/predict-past-questions', 'POST', { courseCode, syllabus });
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-bullseye"></i> Predict High-Yield Questions';
-
-    if(res.error){
-      if(res.needCoins || res.insufficientCoins){
-        resultDiv.innerHTML = `
-          <div style="color:var(--orange); font-weight:700; margin-bottom:8px;"><i class="fa-solid fa-coins anim-coin"></i> Insufficient CampusCoins</div>
-          <p style="font-size:0.85rem; color:var(--label2); margin-bottom:12px;">Exam prediction requires 15 CampusCoins (or an active Pro subscription). Top up your wallet to continue.</p>
-          <button class="btn btn-primary btn-sm" onclick="openCoinsModal()" style="background:#f59e0b; border-color:#d97706; color:#000; font-weight:800;">
-            <i class="fa-solid fa-coins"></i> Top Up CampusCoins
-          </button>
-        `;
-        return;
-      }
-      resultDiv.innerHTML = `<div style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> ${res.error}</div>`;
-      return;
-    }
-
-    const dossier = res.data?.predictionDossier || res.predictionDossier || 'No exam prediction generated.';
-    resultDiv.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(255,59,48,0.2); padding-bottom:6px;">
-        <span style="font-weight:700; color:var(--red); font-size:0.9rem;"><i class="fa-solid fa-bullseye"></i> High-Yield Exam Master Dossier</span>
-        <button onclick="document.getElementById('predictResult').style.display='none'" class="btn btn-ghost btn-sm" style="padding:2px 8px;"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div>${parseWithMath(dossier)}</div>
-    `;
-
-    if(res.coinsRemaining !== undefined && window.refreshUserCoins){
-      window.refreshUserCoins();
-    }
-    awardXP(30);
-    if(window.MathJax && typeof window.MathJax.typesetPromise === 'function'){
-      window.MathJax.typesetPromise([resultDiv]).catch(e => console.log('MathJax error:', e));
-    }
-  } catch(err) {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-bullseye"></i> Predict High-Yield Questions';
-    resultDiv.innerHTML = `<div style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> Error: ${err.message || String(err)}</div>`;
-  }
-}
-
-// ── TURNITIN HUMANIZER & SHIELD (10 COINS / FREE ON PRO) ───────
-async function humanizeAcademicText(){
-  const text = document.getElementById('humanizeInput').value.trim();
-  if(!text){
-    showToast('Please paste the essay or literature text to humanize.', 'error');
-    return;
-  }
-
-  const resultDiv = document.getElementById('humanizeResult');
-  const btn = document.getElementById('btnHumanizeText');
-
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Stripping AI Phrasing & De-Plagiarizing...';
-  resultDiv.innerHTML = '<div style="text-align:center;color:var(--label3);"><i class="fa-solid fa-fingerprint fa-bounce" style="margin-right: 8px; color: var(--blue);"></i>Humanizing sentence cadence & boosting originality score...</div>';
-  resultDiv.style.display = 'block';
-
-  try {
-    const res = await apiRequest('/api/ai/humanize-rewrite', 'POST', { text });
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Humanize & Shield Originality';
-
-    if(res.error){
-      if(res.needCoins || res.insufficientCoins){
-        resultDiv.innerHTML = `
-          <div style="color:var(--orange); font-weight:700; margin-bottom:8px;"><i class="fa-solid fa-coins anim-coin"></i> Insufficient CampusCoins</div>
-          <p style="font-size:0.85rem; color:var(--label2); margin-bottom:12px;">Humanizing text requires 10 CampusCoins (or an active Pro subscription). Top up your wallet to continue.</p>
-          <button class="btn btn-primary btn-sm" onclick="openCoinsModal()" style="background:#f59e0b; border-color:#d97706; color:#000; font-weight:800;">
-            <i class="fa-solid fa-coins"></i> Top Up CampusCoins
-          </button>
-        `;
-        return;
-      }
-      resultDiv.innerHTML = `<div style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> ${res.error}</div>`;
-      return;
-    }
-
-    const rewritten = res.data?.humanizedResult || res.humanizedResult || 'No rewrite received.';
-    resultDiv.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid rgba(0,122,255,0.2); padding-bottom:6px;">
-        <span style="font-weight:700; color:var(--blue); font-size:0.9rem;"><i class="fa-solid fa-shield-check"></i> Turnitin-Ready Humanized Version</span>
-        <button onclick="document.getElementById('humanizeResult').style.display='none'" class="btn btn-ghost btn-sm" style="padding:2px 8px;"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div>${parseWithMath(rewritten)}</div>
-    `;
-
-    if(res.coinsRemaining !== undefined && window.refreshUserCoins){
-      window.refreshUserCoins();
-    }
-    awardXP(20);
-  } catch(err) {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Humanize & Shield Originality';
-    resultDiv.innerHTML = `<div style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> Error: ${err.message || String(err)}</div>`;
-  }
-}
-
-// ── ANNOUNCEMENT MODAL ────────────────────────────────────────
-function initAnnouncementModal(){
-  const overlay = document.getElementById('announcementOverlay');
-  const dismissBtn = document.getElementById('announcementDismiss');
-  const joinBtn = document.getElementById('announcementJoin');
-  
-  if(!overlay || !dismissBtn || !joinBtn){
-    console.warn('<i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> Announcement modal elements not found');
-    return;
-  }
-  
-  setTimeout(() => {
-    overlay.classList.add('show');
-  }, 1500);
-  
-  dismissBtn.addEventListener('click', () => {
-    overlay.classList.remove('show');
-  });
-  
-  joinBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    window.open('https://chat.whatsapp.com/CNlccvf5Eue6ZvE4Pz3JGX', '_blank');
-    overlay.classList.remove('show');
-  });
-  
-  overlay.addEventListener('click', (e) => {
-    if(e.target === overlay){
-      overlay.classList.remove('show');
-    }
-  });
-}
-
-function initVerificationForm() {
-  const form = document.getElementById('modalVerifyForm');
-  if (!form) {
-    console.warn("<i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> modalVerifyForm not found in DOM");
-    return;
-  }
-  form.addEventListener('submit', async (e) => {
+// Initialize verification form
+const verifyForm = document.getElementById('modalVerifyForm');
+if (verifyForm) {
+  verifyForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const otpInput = document.getElementById('modalVerificationOtp');
-    const otp = otpInput ? otpInput.value.trim() : "";
+    const otp = otpInput ? otpInput.value.trim() : '';
     const errDiv = document.getElementById('modalVerifyErr');
     const btn = document.getElementById('modalVerifySubmitBtn');
-    
     if (errDiv) errDiv.style.display = 'none';
     if (btn) {
       btn.disabled = true;
       btn.textContent = 'Verifying...';
     }
-
     const { data, error } = await apiRequest('/api/auth/verify', 'POST', { email: user.email, otp });
     if (error) {
       if (errDiv) {
         errDiv.textContent = error;
-        errDiv.className = 'alert alert-error';
         errDiv.style.display = 'block';
       }
       if (btn) {
@@ -2142,135 +1446,41 @@ function initVerificationForm() {
       showToast(error, 'error');
       return;
     }
-
-    showToast('Email verified successfully! Thank you. <i class="fa-solid fa-circle-check"></i>', 'success');
-    
-    if (btn) {
-      btn.innerHTML = 'Verified <i class="fa-solid fa-circle-check" style="color:var(--green);margin-left:4px;"></i>';
-    }
-    
-    // Update local storage object and state
+    showToast('Email verified successfully! Thank you.', 'success');
     user.isVerified = true;
     localStorage.setItem('ct_user', JSON.stringify(user));
-
-    // Hide the verification banner and modal without reloading the browser
     closeVerificationModal();
     const banner = document.getElementById('verificationBanner');
-    if (banner) {
-      banner.style.display = 'none';
-    }
+    if (banner) banner.style.display = 'none';
   });
 }
 
-function initDashboard() {
-  initAnnouncementModal();
-  initVerificationForm();
-  try {
-    loadUserStats();
-  } catch (e) {
-    console.error("Failed to load user stats:", e);
+// Announcement modal
+setTimeout(() => {
+  const annOverlay = document.getElementById('announcementOverlay');
+  if (annOverlay && !localStorage.getItem('ct_announcement_seen')) {
+    annOverlay.classList.add('show');
   }
-  try {
-    loadLeaderboard();
-  } catch (e) {
-    console.error("Failed to load leaderboard:", e);
-  }
-  try {
-    loadTriviaQuest();
-  } catch (e) {
-    console.error("Failed to load trivia quest:", e);
-  }
+}, 2000);
+document.getElementById('announcementDismiss')?.addEventListener('click', () => {
+  document.getElementById('announcementOverlay')?.classList.remove('show');
+  localStorage.setItem('ct_announcement_seen', 'true');
+});
+document.getElementById('announcementJoin')?.addEventListener('click', () => {
+  window.open('https://chat.whatsapp.com/CNlccvf5Eue6ZvE4Pz3JGX', '_blank');
+  document.getElementById('announcementOverlay')?.classList.remove('show');
+  localStorage.setItem('ct_announcement_seen', 'true');
+});
+
+function esc(s) {
+  if (!s) return '';
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-document.addEventListener('DOMContentLoaded', initDashboard);
-
-// ── EMAIL VERIFICATION FUNCTIONS ──────────────────────────────
-function openVerificationModal() {
-  document.getElementById('verifyModal').style.display = 'flex';
-  document.getElementById('modalVerifyErr').style.display = 'none';
-  // Send the OTP code only when they click to verify
-  resendVerificationOtp();
-}
-
-function closeVerificationModal() {
-  document.getElementById('verifyModal').style.display = 'none';
-}
-
-async function resendVerificationOtp() {
-  const btn = document.getElementById('resendOtpBtn');
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = 'Sending...';
-  }
-  
-  const { data, error } = await apiRequest('/api/auth/resend-otp', 'POST', { email: user.email });
-  if (btn) {
-    btn.disabled = false;
-    btn.textContent = 'Resend OTP';
-  }
-
-  if (error) {
-    showToast(error, 'error');
-    return;
-  }
-  showToast('A new OTP verification code has been sent to your email!', 'success');
-}
+document.addEventListener('DOMContentLoaded', () => {
+  loadUserStats();
+});
 </script>
-
-<div class="announcement-overlay" id="announcementOverlay">
-  <div class="announcement-modal">
-    <div class="announcement-header"><i class="fa-solid fa-bullhorn"></i> Important Announcement!</div>
-    <div class="announcement-text">To stay updated with the latest improvements, new feature releases, and critical announcements for CampusTutor AI, join our official WhatsApp community managed by MattieTech!</div>
-    <div class="announcement-buttons">
-      <button class="announcement-btn announcement-btn-primary" id="announcementJoin"><i class="fa-solid fa-circle" style="color: #25d366;"></i> Join WhatsApp Updates</button>
-      <button class="announcement-btn announcement-btn-dismiss" id="announcementDismiss">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- Email Verification Modal -->
-<div id="verifyModal" class="performance-modal-overlay" style="display:none; z-index: 10001;">
-  <div class="card liquid-glass-card" style="max-width:400px; width:100%; border-radius:24px; padding:28px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: var(--gshadow-lg);">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-      <h3 style="font-weight:800; font-size:1.1rem; margin:0; color: var(--label);"><i class="fa-solid fa-envelope-circle-check" style="color: var(--blue); margin-right: 8px;"></i> Verify Your Email</h3>
-      <button onclick="closeVerificationModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--label3);"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="alert alert-error" id="modalVerifyErr" style="display:none; margin-bottom:16px;"></div>
-    <form id="modalVerifyForm">
-      <p style="font-size:0.82rem; color:var(--label3); line-height:1.4; margin-top:0; margin-bottom:16px;">
-        We've sent a 6-digit confirmation code to your email. Enter it below to verify your account.
-      </p>
-      <div class="form-group" style="margin-bottom:20px;">
-        <input class="form-input" type="text" id="modalVerificationOtp" placeholder="123456" required maxlength="6" style="text-align: center; font-size: 1.4rem; letter-spacing: 4px; font-weight: 700;"/>
-      </div>
-      <button type="submit" class="btn btn-primary btn-full btn-lg" id="modalVerifySubmitBtn">Verify & Activate</button>
-      <div style="text-align:center; margin-top:14px; font-size:0.8rem; color: var(--label2);">
-        Didn't receive a code? <button type="button" onclick="resendVerificationOtp()" id="resendOtpBtn" style="background:none; border:none; color:var(--blue); font-weight:700; cursor:pointer; padding:0;">Resend OTP</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- FIXED MOBILE BOTTOM NAVIGATION BAR (Matches Reference Design) -->
-<nav class="ct-mobile-bottom-nav" id="mobileBottomNav">
-  <a href="/pages/dashboard.html" class="ct-mob-nav-item active">
-    <i class="fa-solid fa-house"></i>
-    <span>Home</span>
-    <div class="ct-mob-indicator"></div>
-  </a>
-  <a href="/pages/tools.html" class="ct-mob-nav-item">
-    <i class="fa-solid fa-table-cells-large"></i>
-    <span>Tools</span>
-  </a>
-  <button type="button" class="ct-mob-nav-item" onclick="openActivityModal()">
-    <i class="fa-solid fa-chart-simple"></i>
-    <span>Progress</span>
-  </button>
-  <a href="/pages/dashboard.html#profile" class="ct-mob-nav-item">
-    <i class="fa-solid fa-gear"></i>
-    <span>Settings</span>
-  </a>
-</nav>
 
 </body>
 </html>
