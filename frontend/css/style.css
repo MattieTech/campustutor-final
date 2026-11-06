@@ -3058,3 +3058,468 @@ html, body {
     padding: 6px 8px !important;
   }
 }
+
+
+/* ============================================================
+   REFERENCE MOBILE UI REDESIGN (CampusTutor AI 2.0 Mobile Layout)
+   ============================================================ */
+
+/* ── Mobile Nav Brand Header ── */
+.ct-mobile-nav-brand {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.ct-mobile-nav-brand .ct-brand-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0052FF, #3b82f6);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 1.15rem;
+  box-shadow: 0 4px 14px rgba(0, 82, 255, 0.35);
+  flex-shrink: 0;
+}
+.ct-mobile-nav-brand .ct-brand-text-wrap {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.ct-mobile-nav-brand .ct-brand-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ct-mobile-nav-brand .ct-brand-name {
+  font-family: var(--font-ui);
+  font-weight: 800;
+  font-size: 1.08rem;
+  color: var(--label);
+  letter-spacing: -0.02em;
+}
+.ct-mobile-nav-brand .ct-brand-version-badge {
+  background: #0052FF;
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 10px;
+  letter-spacing: 0.02em;
+}
+.ct-mobile-nav-brand .ct-brand-tagline {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--label3);
+  margin-top: 2px;
+}
+
+/* ── Hero 3D Illustration Box ── */
+.ct-hero-illustration-box {
+  display: none;
+}
+
+/* ── Quick Tools Section ── */
+.ct-quick-tools-section {
+  margin-top: 10px;
+  margin-bottom: 18px;
+}
+.ct-quick-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.ct-tool-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  text-decoration: none;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+.ct-tool-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.07);
+}
+.ct-tool-card-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+.ct-tool-card-text {
+  flex: 1;
+  min-width: 0;
+}
+.ct-tool-card-title {
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: var(--label);
+  line-height: 1.2;
+}
+.ct-tool-card-desc {
+  font-size: 0.73rem;
+  color: var(--label3);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ct-tool-card-arrow {
+  color: var(--label4);
+  font-size: 0.78rem;
+  margin-left: auto;
+  transition: transform 0.2s;
+}
+.ct-tool-card:hover .ct-tool-card-arrow {
+  transform: translateX(3px);
+  color: var(--blue);
+}
+
+.ct-tool-blue {
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.95), rgba(219, 234, 254, 0.7));
+  border: 1px solid rgba(191, 219, 254, 0.85);
+}
+.ct-tool-purple {
+  background: linear-gradient(135deg, rgba(250, 245, 255, 0.95), rgba(243, 232, 255, 0.7));
+  border: 1px solid rgba(233, 213, 255, 0.85);
+}
+.ct-tool-amber {
+  background: linear-gradient(135deg, rgba(254, 252, 232, 0.95), rgba(254, 243, 199, 0.7));
+  border: 1px solid rgba(253, 230, 138, 0.85);
+}
+.ct-tool-green {
+  background: linear-gradient(135deg, rgba(240, 253, 244, 0.95), rgba(220, 252, 231, 0.7));
+  border: 1px solid rgba(187, 247, 208, 0.85);
+}
+
+[data-theme="dark"] .ct-tool-blue {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.4), rgba(30, 64, 175, 0.25));
+  border-color: rgba(59, 130, 246, 0.3);
+}
+[data-theme="dark"] .ct-tool-purple {
+  background: linear-gradient(135deg, rgba(88, 28, 135, 0.4), rgba(107, 33, 168, 0.25));
+  border-color: rgba(168, 85, 247, 0.3);
+}
+[data-theme="dark"] .ct-tool-amber {
+  background: linear-gradient(135deg, rgba(120, 53, 15, 0.4), rgba(146, 64, 14, 0.25));
+  border-color: rgba(245, 158, 11, 0.3);
+}
+[data-theme="dark"] .ct-tool-green {
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.4), rgba(6, 95, 70, 0.25));
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+/* ── Upgrade to Pro Banner ── */
+.ct-pro-banner-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #7c3aed 0%, #4338ca 60%, #1e1b4b 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
+  margin-bottom: 20px;
+}
+.ct-pro-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+.ct-pro-banner-crown {
+  font-size: 1.6rem;
+  color: #fbbf24;
+  filter: drop-shadow(0 2px 8px rgba(251, 191, 36, 0.5));
+  flex-shrink: 0;
+}
+.ct-pro-banner-text {
+  flex: 1;
+  min-width: 0;
+}
+.ct-pro-banner-title {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #ffffff;
+  line-height: 1.2;
+}
+.ct-pro-banner-desc {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ct-pro-banner-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: var(--r-pill);
+  background: #ffffff;
+  color: #1e1b4b;
+  font-weight: 800;
+  font-size: 0.82rem;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  transition: transform 0.2s, background 0.2s;
+}
+.ct-pro-banner-btn:hover {
+  transform: scale(1.03);
+  background: #f8fafc;
+}
+
+/* ── Mobile Bottom Navigation Bar ── */
+.ct-mobile-bottom-nav {
+  display: none;
+}
+
+/* ── Mobile Responsive Overrides matching Screenshot ── */
+@media (max-width: 768px) {
+  /* Show Mobile Nav Brand */
+  .ct-mobile-nav-brand {
+    display: flex !important;
+  }
+  .ct-hamburger-btn {
+    display: none !important; /* screenshot has brand directly on left */
+  }
+
+  /* Fixed Bottom Navigation Dock */
+  .ct-mobile-bottom-nav {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 64px !important;
+    background: rgba(255, 255, 255, 0.94) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+    z-index: 9999 !important;
+    align-items: center !important;
+    justify-content: space-around !important;
+    padding: 0 8px calc(env(safe-area-inset-bottom, 0px)) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05) !important;
+  }
+  [data-theme="dark"] .ct-mobile-bottom-nav {
+    background: rgba(18, 18, 20, 0.94) !important;
+    border-top-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35) !important;
+  }
+  .ct-mob-nav-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    color: var(--label3) !important;
+    text-decoration: none !important;
+    background: none !important;
+    border: none !important;
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    flex: 1 !important;
+    height: 100% !important;
+    cursor: pointer !important;
+    position: relative !important;
+    transition: color 0.2s ease !important;
+  }
+  .ct-mob-nav-item i {
+    font-size: 1.25rem !important;
+  }
+  .ct-mob-nav-item.active {
+    color: var(--blue) !important;
+    font-weight: 700 !important;
+  }
+  .ct-mob-indicator {
+    position: absolute !important;
+    bottom: 5px !important;
+    width: 24px !important;
+    height: 3px !important;
+    border-radius: 3px !important;
+    background: var(--blue) !important;
+  }
+
+  /* Content bottom padding protection */
+  .ct-dashboard-body,
+  .main-content,
+  body {
+    padding-bottom: 84px !important;
+  }
+
+  /* Hero Banner matching screenshot */
+  .ct-hero-banner {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 16px !important;
+    border-radius: 22px !important;
+    background: linear-gradient(135deg, #091e42 0%, #0052cc 65%, #0747a6 100%) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    min-height: 130px !important;
+    box-shadow: 0 10px 30px rgba(0, 82, 204, 0.25) !important;
+  }
+  .ct-hero-left {
+    flex: 1 1 58% !important;
+    z-index: 2 !important;
+  }
+  .ct-hero-user-name {
+    font-size: 1.45rem !important;
+    font-weight: 800 !important;
+    color: #38bdf8 !important;
+    line-height: 1.2 !important;
+    margin: 2px 0 4px !important;
+  }
+  .ct-hero-welcome-sub {
+    font-size: 0.8rem !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-weight: 600 !important;
+  }
+  .ct-hero-tagline {
+    font-size: 0.75rem !important;
+    color: rgba(255, 255, 255, 0.82) !important;
+    line-height: 1.35 !important;
+    margin-bottom: 8px !important;
+  }
+  .ct-hero-quote-pill {
+    display: inline-flex !important;
+    font-size: 0.68rem !important;
+    padding: 3px 10px !important;
+    background: rgba(10, 30, 80, 0.45) !important;
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 20px !important;
+    color: #ffffff !important;
+  }
+  .ct-hero-illustration-box {
+    display: block !important;
+    flex: 0 0 38% !important;
+    max-width: 135px !important;
+    z-index: 1 !important;
+  }
+  .ct-hero-campus-img {
+    width: 100% !important;
+    height: auto !important;
+    border-radius: 14px !important;
+    object-fit: cover !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35) !important;
+  }
+  .ct-hero-gamification-box {
+    display: none !important;
+  }
+
+  /* 4 Stat Cards in Single Crisp Horizontal Row */
+  .ct-stats-grid-4 {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px !important;
+    margin: 14px 0 !important;
+  }
+  .ct-stat-pill-card {
+    padding: 8px 6px !important;
+    border-radius: 14px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    position: relative !important;
+    gap: 4px !important;
+    background: var(--bg2) !important;
+    border: 1px solid var(--sep) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03) !important;
+  }
+  .ct-stat-card-left {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+  .ct-stat-icon-square {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.95rem !important;
+    border-radius: 8px !important;
+    display: grid !important;
+    place-items: center !important;
+  }
+  .ct-stat-number {
+    font-size: 1.05rem !important;
+    font-weight: 800 !important;
+    color: var(--label) !important;
+    line-height: 1.1 !important;
+  }
+  .ct-stat-name {
+    font-size: 0.65rem !important;
+    color: var(--label3) !important;
+    white-space: nowrap !important;
+    font-weight: 600 !important;
+  }
+  .ct-stat-arrow-btn {
+    display: block !important;
+    position: absolute !important;
+    top: 6px !important;
+    right: 6px !important;
+    font-size: 0.65rem !important;
+    color: var(--label4) !important;
+    background: none !important;
+    width: auto !important;
+    height: auto !important;
+  }
+
+  /* Explain a Concept Card matching Screenshot */
+  .ct-concept-hero-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 16px !important;
+    gap: 14px !important;
+    border-radius: 20px !important;
+  }
+  .ct-concept-illustration {
+    width: 72px !important;
+    height: 72px !important;
+    border-radius: 14px !important;
+    flex-shrink: 0 !important;
+    object-fit: cover !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+  }
+  .ct-prompt-input-row {
+    margin-top: 8px !important;
+    gap: 6px !important;
+  }
+  .ct-send-pill-btn {
+    padding: 8px 16px !important;
+    font-size: 0.85rem !important;
+  }
+  .ct-send-pill-btn span {
+    display: inline-block !important; /* keep Send text on mobile */
+  }
+  .ct-quick-chips-row {
+    display: none !important; /* hidden on mobile for clean look matching screenshot */
+  }
+
+  /* Hide Desktop redundant quick access on mobile */
+  .ct-quick-access-grid {
+    display: none !important;
+  }
+}

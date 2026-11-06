@@ -1256,6 +1256,14 @@ function updateCoinUIElements() {
 
   const modalBal = document.getElementById("modalCoinBalance");
   if (modalBal) modalBal.textContent = `${userCoinState.coins} Coins`;
+  const statCoins = document.getElementById("statCoins");
+  if (statCoins) statCoins.textContent = userCoinState.coins;
+  const heroCoins = document.getElementById("heroCoinsDisplay");
+  if (heroCoins) heroCoins.textContent = userCoinState.coins;
+  const studyCoins = document.getElementById("studyCoinsCount");
+  if (studyCoins) studyCoins.textContent = userCoinState.coins;
+  const histCoins = document.getElementById("userCoinsBalance");
+  if (histCoins) histCoins.textContent = userCoinState.coins;
 
   const dailyBtn = document.getElementById("navDailyGiftBtn");
   if (dailyBtn) {

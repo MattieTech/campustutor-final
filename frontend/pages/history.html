@@ -62,7 +62,7 @@
 
     <!-- Stats Summary -->
     <div class="stats-row">
-      <div class="stat-card"><div class="stat-num" id="totalXP" style="color:var(--purple);">0</div><div class="stat-label">Total XP</div></div>
+      <div class="stat-card"><div class="stat-num" id="userCoinsBalance" style="color:#d97706;">50</div><div class="stat-label"><i class="fa-solid fa-coins anim-coin"></i> CampusCoins</div></div>
       <div class="stat-card"><div class="stat-num" id="currentLevel" style="color:var(--blue);">1</div><div class="stat-label">Current Level</div></div>
       <div class="stat-card"><div class="stat-num" id="dayStreak" style="color:var(--orange);">0<i class="fa-solid fa-fire"></i></div><div class="stat-label">Day Streak</div></div>
       <div class="stat-card"><div class="stat-num" id="totalDocs" style="color:var(--green);">0</div><div class="stat-label">Documents</div></div>
@@ -74,7 +74,7 @@
       <button class="tab-btn" onclick="switchTab('ai')"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Results</button>
       <button class="tab-btn" onclick="switchTab('documents')"><i class="fa-solid fa-file-pdf"></i> Documents</button>
       <button class="tab-btn" onclick="switchTab('achievements')"><i class="fa-solid fa-trophy"></i> Achievements</button>
-      <button class="tab-btn" onclick="switchTab('xp')"><i class="fa-solid fa-bolt"></i> XP History</button>
+      <button class="tab-btn" onclick="switchTab('xp')"><i class="fa-solid fa-coins"></i> Coins History</button>
     </div>
 
     <!-- Activity Tab -->
@@ -215,7 +215,9 @@ async function loadHistoryData(){
   // Get stats
   const {data:stats,error:statsErr}=await apiGetUserStats(userId);
   if(stats){
-    document.getElementById('totalXP').textContent=stats.xp||0;
+    const liveCoins = (window.userCoinState && window.userCoinState.coins !== undefined) ? window.userCoinState.coins : (stats.coins || 50);
+    const histEl = document.getElementById('userCoinsBalance');
+    if (histEl) histEl.textContent = liveCoins;
     document.getElementById('currentLevel').textContent=stats.level||1;
     document.getElementById('dayStreak').innerHTML = (stats.streak||0)+' <i class="fa-solid fa-fire"></i>';
     document.getElementById('totalDocs').textContent=stats.documentsCount||0;

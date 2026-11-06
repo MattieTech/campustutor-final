@@ -170,10 +170,18 @@
           <span class="ct-hamburger-bar ct-bar-bot"></span>
         </button>
 
-        <!-- Brand in navbar for mobile -->
-        <a href="/" class="brand" style="display:none;" id="mobileNavBrand">
-          <div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div>
-          <span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span> <span class="brand-ai">2.0</span>
+        <!-- Brand in navbar for mobile (Matches Reference Design) -->
+        <a href="/pages/dashboard.html" class="ct-mobile-nav-brand" id="mobileNavBrand">
+          <div class="ct-brand-icon-box">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div class="ct-brand-text-wrap">
+            <div class="ct-brand-title-row">
+              <span class="ct-brand-name">CampusTutor AI</span>
+              <span class="ct-brand-version-badge">2.0</span>
+            </div>
+            <span class="ct-brand-tagline">Learn • Practice • Excel</span>
+          </div>
         </a>
 
         <!-- Search Bar -->
@@ -232,7 +240,7 @@
         </div>
       </div>
 
-      <!-- PANORAMIC HERO BANNER -->
+      <!-- PANORAMIC HERO BANNER (Matches Reference Screenshot) -->
       <div class="ct-hero-banner">
         <div class="ct-hero-left">
           <span class="ct-hero-welcome-sub">Welcome back,</span>
@@ -243,17 +251,22 @@
           </div>
         </div>
 
-        <!-- Hero Gamification Box -->
+        <!-- Hero Right 3D Illustration (Stacked Textbooks & Graduation Cap) -->
+        <div class="ct-hero-illustration-box">
+          <img src="/images/campus_banner.jpg" alt="Campus & Books Hero" class="ct-hero-campus-img" fetchpriority="high" loading="eager" />
+        </div>
+
+        <!-- Hero Gamification Box (Desktop Only) -->
         <div class="ct-hero-gamification-box">
           <div>
             <div class="ct-hero-level-row" style="margin-bottom:8px;">
               <span class="ct-hero-level-chip">
-                <i class="fa-solid fa-star"></i> Level <span id="xpLevel">2</span>
+                <i class="fa-solid fa-coins anim-coin"></i> CampusCoins
               </span>
-              <span class="ct-hero-xp-val"><span id="xpCur">75</span> / <span id="xpMax">250</span> XP</span>
+              <span class="ct-hero-xp-val"><span id="heroCoinsDisplay">50</span> Coins</span>
             </div>
             <div class="ct-hero-xp-track">
-              <div class="ct-hero-xp-bar" id="xpFill" style="width: 30%;"></div>
+              <div class="ct-hero-xp-bar" id="xpFill" style="width: 50%; background: linear-gradient(90deg, #f59e0b, #d97706);"></div>
             </div>
           </div>
 
@@ -268,16 +281,16 @@
             </div>
             <div class="ct-hero-quest-info">
               <div class="ct-hero-quest-title">Daily Study Quest</div>
-              <div class="ct-hero-quest-desc" id="dailyGoalText">Earned 50 / 50 XP today</div>
+              <div class="ct-hero-quest-desc" id="dailyGoalText">Streak active · Daily reward ready</div>
             </div>
-            <div class="ct-hero-quest-check">
-              <i class="fa-solid fa-check"></i>
+            <div class="ct-hero-quest-check" onclick="openCoinsModal()" style="cursor:pointer;" title="Claim study reward">
+              <i class="fa-solid fa-gift anim-gift"></i>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 4 STATS ROW CARDS -->
+      <!-- 4 STATS ROW CARDS (Single Horizontal Row) -->
       <div class="ct-stats-grid-4">
         <!-- 1. Documents -->
         <a href="#documentsSection" class="ct-stat-pill-card">
@@ -291,7 +304,7 @@
             </div>
           </div>
           <div class="ct-stat-arrow-btn">
-            <i class="fa-solid fa-arrow-right"></i>
+            <i class="fa-solid fa-chevron-right"></i>
           </div>
         </a>
 
@@ -307,23 +320,23 @@
             </div>
           </div>
           <div class="ct-stat-arrow-btn">
-            <i class="fa-solid fa-arrow-right"></i>
+            <i class="fa-solid fa-chevron-right"></i>
           </div>
         </div>
 
-        <!-- 3. Total XP -->
-        <div class="ct-stat-pill-card" onclick="openLeaderboardModal()">
+        <!-- 3. CampusCoins (Replaces Total XP per instruction) -->
+        <div class="ct-stat-pill-card" onclick="openCoinsModal()" title="View CampusCoins Wallet">
           <div class="ct-stat-card-left">
-            <div class="ct-stat-icon-square" style="background:#faf5ff; color:#a855f7;">
-              <i class="fa-solid fa-star anim-sparkle"></i>
+            <div class="ct-stat-icon-square" style="background:#fefce8; color:#eab308;">
+              <i class="fa-solid fa-coins anim-coin"></i>
             </div>
             <div class="ct-stat-data">
-              <div class="ct-stat-number" id="statXP">175</div>
-              <div class="ct-stat-name">Total XP</div>
+              <div class="ct-stat-number" id="statCoins">50</div>
+              <div class="ct-stat-name">CampusCoins</div>
             </div>
           </div>
           <div class="ct-stat-arrow-btn">
-            <i class="fa-solid fa-arrow-right"></i>
+            <i class="fa-solid fa-chevron-right"></i>
           </div>
         </div>
 
@@ -334,12 +347,12 @@
               <i class="fa-solid fa-crown anim-crown"></i>
             </div>
             <div class="ct-stat-data">
-              <div class="ct-stat-number" id="statPlan" style="font-size:1.35rem; color:#10b981;">PLUS ⚡</div>
+              <div class="ct-stat-number" id="statPlan" style="font-size:1.15rem; color:#10b981;">PLUS ⚡</div>
               <div class="ct-stat-name">Plan</div>
             </div>
           </div>
           <div class="ct-stat-arrow-btn">
-            <i class="fa-solid fa-arrow-right"></i>
+            <i class="fa-solid fa-chevron-right"></i>
           </div>
         </a>
       </div>
@@ -348,15 +361,15 @@
       <div class="ct-grid-2col">
         <!-- LEFT COLUMN: Main AI Tools & Documents -->
         <div style="display:flex; flex-direction:column; gap:20px;">
-          <!-- 1. EXPLAIN A CONCEPT WIDGET (Hero Mascot Card) -->
+          <!-- 1. EXPLAIN A CONCEPT WIDGET (3D Lightbulb & Book) -->
           <div class="ct-card">
             <div class="ct-concept-hero-card">
-              <img src="/images/robot_mascot.jpg" alt="AI Robot Tutor" class="ct-concept-illustration" />
+              <img src="/images/lightbulb_concept.jpg" alt="3D Glowing Lightbulb on Open Book" class="ct-concept-illustration" loading="eager" fetchpriority="high" />
               <div class="ct-concept-content-wrap">
                 <div>
                   <div class="ct-card-title-group" style="margin-bottom:4px;">
-                    <i class="fa-solid fa-wand-magic-sparkles" style="color:#8b5cf6; font-size:1.15rem;"></i>
-                    <h2 class="ct-card-title-text">Explain a Concept</h2>
+                    <i class="fa-solid fa-sparkles" style="color:#007AFF; font-size:1.15rem;"></i>
+                    <h2 class="ct-card-title-text" style="font-weight:800; font-size:1.15rem;">Explain a Concept</h2>
                   </div>
                   <div class="ct-card-subtitle-text">Ask the AI to explain any topic or concept instantly</div>
                 </div>
@@ -390,6 +403,92 @@
 
             <!-- Concept Result Container -->
             <div id="conceptResult" style="display:none; margin-top:16px; padding:20px; background:rgba(37,99,235,0.04); border:1px solid rgba(37,99,235,0.15); border-radius:18px; color:var(--ct-text-main); font-size:0.92rem; max-height:450px; overflow-y:auto; line-height:1.65;"></div>
+          </div>
+
+          <!-- QUICK TOOLS SECTION (Matches Reference Screenshot) -->
+          <div class="ct-quick-tools-section">
+            <div class="ct-section-header-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 style="font-size:1.1rem; font-weight:800; color:var(--ct-text-main); display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-table-cells-large" style="color:#2563eb;"></i> Quick Tools
+              </h3>
+              <a href="/pages/study.html" style="font-size:0.82rem; font-weight:700; color:#2563eb; display:flex; align-items:center; gap:4px;">
+                View All <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+
+            <div class="ct-quick-tools-grid">
+              <!-- Card 1: Upload PDF -->
+              <a href="/pages/upload.html" class="ct-tool-card ct-tool-blue">
+                <div class="ct-tool-card-icon" style="background:linear-gradient(135deg, #3b82f6, #1d4ed8);">
+                  <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <div class="ct-tool-card-text">
+                  <div class="ct-tool-card-title">Upload PDF</div>
+                  <div class="ct-tool-card-desc">Study your PDFs</div>
+                </div>
+                <div class="ct-tool-card-arrow">
+                  <i class="fa-solid fa-chevron-right"></i>
+                </div>
+              </a>
+
+              <!-- Card 2: Study Tools -->
+              <a href="/pages/study.html" class="ct-tool-card ct-tool-purple">
+                <div class="ct-tool-card-icon" style="background:linear-gradient(135deg, #a855f7, #7c3aed);">
+                  <i class="fa-solid fa-briefcase"></i>
+                </div>
+                <div class="ct-tool-card-text">
+                  <div class="ct-tool-card-title">Study Tools</div>
+                  <div class="ct-tool-card-desc">Boost your learning</div>
+                </div>
+                <div class="ct-tool-card-arrow">
+                  <i class="fa-solid fa-chevron-right"></i>
+                </div>
+              </a>
+
+              <!-- Card 3: Leaderboard -->
+              <div onclick="openLeaderboardModal()" class="ct-tool-card ct-tool-amber" style="cursor:pointer;">
+                <div class="ct-tool-card-icon" style="background:linear-gradient(135deg, #fbbf24, #f59e0b);">
+                  <i class="fa-solid fa-trophy"></i>
+                </div>
+                <div class="ct-tool-card-text">
+                  <div class="ct-tool-card-title">Leaderboard</div>
+                  <div class="ct-tool-card-desc">See top learners</div>
+                </div>
+                <div class="ct-tool-card-arrow">
+                  <i class="fa-solid fa-chevron-right"></i>
+                </div>
+              </div>
+
+              <!-- Card 4: Activity Log -->
+              <div onclick="openActivityModal()" class="ct-tool-card ct-tool-green" style="cursor:pointer;">
+                <div class="ct-tool-card-icon" style="background:linear-gradient(135deg, #34d399, #10b981);">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <div class="ct-tool-card-text">
+                  <div class="ct-tool-card-title">Activity Log</div>
+                  <div class="ct-tool-card-desc">Track your progress</div>
+                </div>
+                <div class="ct-tool-card-arrow">
+                  <i class="fa-solid fa-chevron-right"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- UPGRADE TO PRO BANNER CARD (Matches Reference Screenshot) -->
+          <div class="ct-pro-banner-card">
+            <div class="ct-pro-banner-left">
+              <div class="ct-pro-banner-crown">
+                <i class="fa-solid fa-crown anim-crown"></i>
+              </div>
+              <div class="ct-pro-banner-text">
+                <div class="ct-pro-banner-title">Upgrade to Pro</div>
+                <div class="ct-pro-banner-desc">Unlock premium features and get the best experience.</div>
+              </div>
+            </div>
+            <a href="/pages/pricing.html" class="ct-pro-banner-btn">
+              Upgrade Now <i class="fa-solid fa-arrow-right"></i>
+            </a>
           </div>
 
           <!-- 2. STEP-BY-STEP PROBLEM SOLVER WIDGET -->
@@ -912,7 +1011,11 @@ async function loadUserStats(){
   document.getElementById('xpCur').textContent=stats.xpInLevel||0;
   document.getElementById('xpMax').textContent=stats.xpForNextLevel||100;
   document.getElementById('xpFill').style.width=(stats.xpProgressPercent||0)+'%';
-  document.getElementById('statXP').textContent=stats.xp||0;
+  const liveCoins = (window.userCoinState && window.userCoinState.coins !== undefined) ? window.userCoinState.coins : (stats.coins !== undefined ? stats.coins : 50);
+  const statCoinsEl = document.getElementById('statCoins');
+  if (statCoinsEl) statCoinsEl.textContent = liveCoins;
+  const heroCoinsEl = document.getElementById('heroCoinsDisplay');
+  if (heroCoinsEl) heroCoinsEl.textContent = liveCoins;
   document.getElementById('statStreak').innerHTML=(stats.streak||0)+' <i class="fa-solid fa-fire"></i>';
   document.getElementById('statDocs').textContent=stats.documentsCount||0;
 
@@ -1101,8 +1204,8 @@ async function submitTriviaAnswer(selectedIdx, correctIdx, todayStr) {
   feedEl.style.color = isCorrect ? 'var(--green)' : 'var(--red)';
 
   if (isCorrect) {
-    feedEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Correct! +10 XP earned! <div style="font-size:0.75rem; font-weight:normal; margin-top:6px; color:var(--label);">${question.explanation}</div>`;
-    showToast('Correct answer! +10 XP <i class="fa-solid fa-star"></i>', 'success');
+    feedEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Correct! +3 CampusCoins earned! <div style="font-size:0.75rem; font-weight:normal; margin-top:6px; color:var(--label);">${question.explanation}</div>`;
+    showToast('Correct answer! +3 CampusCoins <i class="fa-solid fa-coins anim-coin"></i>', 'success'); if (window.userCoinState) { window.userCoinState.coins = (window.userCoinState.coins || 0) + 3; if (window.updateCoinUIElements) window.updateCoinUIElements(); }
     
     // Call award XP
     const userId = user?.id;
@@ -1127,7 +1230,11 @@ function loadStatsFromLocalStorage(){
   document.getElementById('xpCur').textContent=xp%100;
   document.getElementById('xpMax').textContent=100;
   document.getElementById('xpFill').style.width=pct+'%';
-  document.getElementById('statXP').textContent=xp;
+  const liveCoins = (window.userCoinState && window.userCoinState.coins !== undefined) ? window.userCoinState.coins : parseInt(localStorage.getItem('ct_coins') || '50');
+  const statCoinsEl = document.getElementById('statCoins');
+  if (statCoinsEl) statCoinsEl.textContent = liveCoins;
+  const heroCoinsEl = document.getElementById('heroCoinsDisplay');
+  if (heroCoinsEl) heroCoinsEl.textContent = liveCoins;
 
   const streak=parseInt(localStorage.getItem('ct_streak')||'0');
   document.getElementById('statStreak').innerHTML=streak+' <i class="fa-solid fa-fire"></i>';
@@ -2122,6 +2229,27 @@ async function resendVerificationOtp() {
     </form>
   </div>
 </div>
+
+<!-- FIXED MOBILE BOTTOM NAVIGATION BAR (Matches Reference Design) -->
+<nav class="ct-mobile-bottom-nav" id="mobileBottomNav">
+  <a href="/pages/dashboard.html" class="ct-mob-nav-item active">
+    <i class="fa-solid fa-house"></i>
+    <span>Home</span>
+    <div class="ct-mob-indicator"></div>
+  </a>
+  <a href="/pages/study.html" class="ct-mob-nav-item">
+    <i class="fa-solid fa-book-open"></i>
+    <span>Tools</span>
+  </a>
+  <button type="button" class="ct-mob-nav-item" onclick="openActivityModal()">
+    <i class="fa-solid fa-chart-simple"></i>
+    <span>Progress</span>
+  </button>
+  <a href="/pages/dashboard.html#profile" class="ct-mob-nav-item">
+    <i class="fa-solid fa-gear"></i>
+    <span>Settings</span>
+  </a>
+</nav>
 
 </body>
 </html>
