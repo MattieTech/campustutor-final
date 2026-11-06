@@ -9,10 +9,10 @@
 </head>
 <body>
 <nav class="navbar">
-  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">☰</button>
+  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
   <a href="/" class="brand"><div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></a>
   <div class="navbar-right">
-    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
     <a href="/pages/dashboard.html" class="pill-btn">← Dashboard</a>
     <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop">Log Out</button>
   </div>
@@ -31,7 +31,7 @@
 <div class="app-layout">
   <aside class="sidebar">
     <div class="sidebar-section">Navigation</div>
-    <a href="/pages/dashboard.html" class="sidebar-link">🏠 Dashboard</a>
+    <a href="/pages/dashboard.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Dashboard</a>
     <a href="/pages/upload.html" class="sidebar-link active"><i class="fa-solid fa-cloud-arrow-up"></i> Upload PDF</a>
     <a href="/pages/pricing.html" class="sidebar-link"><i class="fa-solid fa-credit-card"></i> Upgrade Plan</a>
     <a href="/pages/referral.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Refer & Earn</a>
@@ -57,7 +57,7 @@
           <div id="pdfFileInfo" style="display:none;margin-top:18px;padding:14px;background:rgba(118,118,128,0.06);border-radius:var(--r);border:0.5px solid var(--sep);display:flex;align-items:center;gap:14px;">
             <div style="font-size:1.8rem;"><i class="fa-solid fa-file-pdf"></i></div>
             <div style="flex:1;"><div id="pdfFileName" style="font-weight:700;font-size:0.9rem;"></div><div id="pdfFileSize" style="font-size:0.78rem;color:var(--label3);margin-top:2px;"></div></div>
-            <button onclick="clearPdfFile()" class="btn btn-ghost btn-sm">✕</button>
+            <button onclick="clearPdfFile()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-xmark"></i></button>
           </div>
           <div id="pdfProgressArea" style="display:none;margin-top:18px;">
             <div style="font-size:0.83rem;color:var(--label3);margin-bottom:8px;" id="pdfProgressLabel">Uploading...</div>
@@ -79,7 +79,7 @@
           <div id="imageFileInfo" style="display:none;margin-top:18px;padding:14px;background:rgba(118,118,128,0.06);border-radius:var(--r);border:0.5px solid var(--sep);display:flex;align-items:center;gap:14px;">
             <div style="font-size:1.8rem;"><i class="fa-solid fa-image"></i></div>
             <div style="flex:1;"><div id="imageFileName" style="font-weight:700;font-size:0.9rem;"></div><div id="imageFileSize" style="font-size:0.78rem;color:var(--label3);margin-top:2px;"></div></div>
-            <button onclick="clearImageFile()" class="btn btn-ghost btn-sm">✕</button>
+            <button onclick="clearImageFile()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-xmark"></i></button>
           </div>
           <div id="imageProgressArea" style="display:none;margin-top:18px;">
             <div style="font-size:0.83rem;color:var(--label3);margin-bottom:8px;" id="imageProgressLabel">Uploading...</div>
@@ -110,14 +110,14 @@ function initThemeToggle(){
   if(!themeBtn) return;
   const t = localStorage.getItem('ct_theme') || 'light';
   document.documentElement.setAttribute('data-theme', t);
-  themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
+  themeBtn.textContent = t === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
   themeBtn.addEventListener('click', (e) => {
     e.preventDefault();
     const c = document.documentElement.getAttribute('data-theme');
     const n = c === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', n);
     localStorage.setItem('ct_theme', n);
-    themeBtn.textContent = n === 'dark' ? '☀️' : '🌙';
+    themeBtn.textContent = n === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
   });
 }
 
@@ -136,13 +136,13 @@ function initMobileMenu(){
   mobileMenuBtn.addEventListener('click', (e) => {
     e.preventDefault();
     sidebar.classList.toggle('mobile-open');
-    mobileMenuBtn.textContent = sidebar.classList.contains('mobile-open') ? '✕' : '☰';
+    mobileMenuBtn.textContent = sidebar.classList.contains('mobile-open') ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
   });
   
   sidebar.querySelectorAll('a, button').forEach(el => {
     el.addEventListener('click', () => {
       sidebar.classList.remove('mobile-open');
-      mobileMenuBtn.textContent = '☰';
+      mobileMenuBtn.innerHTML = '<i class="fa-solid fa-bars"></i>';
     });
   });
 }

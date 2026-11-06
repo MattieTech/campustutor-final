@@ -244,11 +244,11 @@
 </head>
 <body>
 <nav class="navbar">
-  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">☰</button>
+  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
   <a href="/" class="brand"><div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></a>
   <div class="navbar-right">
-    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
-    <a href="/pages/dashboard.html" class="pill-btn">← Dashboard</a>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
+    <a href="/pages/dashboard.html" class="pill-btn"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
     <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop">Log Out</button>
   </div>
 </nav>
@@ -267,7 +267,7 @@
 <div class="app-layout">
   <aside class="sidebar">
     <div class="sidebar-section">Navigation</div>
-    <a href="/pages/dashboard.html" class="sidebar-link">🏠 Dashboard</a>
+    <a href="/pages/dashboard.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Dashboard</a>
     <a href="/pages/pricing.html" class="sidebar-link active"><i class="fa-solid fa-credit-card"></i> Upgrade Plan</a>
     <a href="/pages/referral.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Refer & Earn</a>
     <div class="sidebar-bottom"><div style="font-size:0.7rem;color:var(--label4);text-align:center;padding:8px;"><i class="fa-solid fa-bolt"></i> Developed by MattieTech</div></div>
@@ -284,10 +284,10 @@
       <div style="display: flex; justify-content: center; margin-bottom: 24px;">
         <div style="background: rgba(118, 118, 128, 0.12); padding: 5px; border-radius: 99px; display: inline-flex; gap: 6px;">
           <button id="viewBtnSubs" onclick="switchPricingView('subs')" style="padding: 10px 22px; border-radius: 99px; border: none; font-weight: 700; font-size: 0.92rem; cursor: pointer; background: var(--blue); color: #fff; transition: all 0.2s;">
-            <i class="fa-solid fa-crown"></i> Monthly Subscriptions
+            <i class="fa-solid fa-crown anim-crown"></i> Monthly Subscriptions
           </button>
           <button id="viewBtnCoins" onclick="switchPricingView('coins')" style="padding: 10px 22px; border-radius: 99px; border: none; font-weight: 700; font-size: 0.92rem; cursor: pointer; background: transparent; color: var(--label2); transition: all 0.2s;">
-            <i class="fa-solid fa-coins" style="color: #f59e0b;"></i> CampusCoins (Pay-As-You-Go)
+            <i class="fa-solid fa-coins anim-coin"></i> CampusCoins (Pay-As-You-Go)
           </button>
         </div>
       </div>
@@ -295,7 +295,7 @@
       <!-- Paywall / New User Banner -->
       <div id="paywallBanner" style="display:none; margin-bottom: 28px; padding: 18px 22px; border-radius: 16px; background: linear-gradient(135deg, rgba(0, 122, 255, 0.12), rgba(88, 86, 214, 0.12)); border: 1.5px solid rgba(0, 122, 255, 0.35); box-shadow: 0 4px 18px rgba(0, 122, 255, 0.08);">
         <div style="display:flex; align-items:center; gap:14px;">
-          <div style="font-size:2rem;" id="paywallBannerIcon">🔒</div>
+          <div style="font-size:2rem;" id="paywallBannerIcon"><i class="fa-solid fa-lock anim-lock"></i></div>
           <div>
             <div style="font-weight:800; font-size:1.05rem; color:var(--label);" id="paywallBannerTitle">Subscription Required</div>
             <div style="font-size:0.88rem; color:var(--label2); margin-top:2px;" id="paywallBannerDesc">CampusTutor AI is a premium service. Subscribe below to unlock your study tools.</div>
@@ -407,7 +407,7 @@
           <!-- Pack 100 -->
           <div class="card liquid-glass-card" style="padding: 22px; text-align: center; border-radius: 20px; border: 1.5px solid rgba(118, 118, 128, 0.2); display: flex; flex-direction: column; justify-content: space-between;">
             <div>
-              <div style="font-size: 1.8rem; margin-bottom: 8px;">🪙</div>
+              <div style="font-size: 2.2rem; margin-bottom: 8px;"><i class="fa-solid fa-coins anim-coin"></i></div>
               <div style="font-weight: 800; font-size: 1.25rem;">100 Coins</div>
               <div style="font-size: 0.8rem; color: var(--label3); margin-top: 4px;">Starter Pack</div>
               <div style="font-size: 1.6rem; font-weight: 800; color: var(--label); margin: 16px 0 8px 0;">₦1,500</div>
@@ -420,7 +420,7 @@
           <div class="card liquid-glass-card" style="padding: 22px; text-align: center; border-radius: 20px; border: 1.5px solid rgba(0, 122, 255, 0.4); background: rgba(0, 122, 255, 0.03); display: flex; flex-direction: column; justify-content: space-between; position: relative;">
             <div style="position: absolute; top: -10px; right: 14px; background: var(--blue); color: #fff; font-size: 0.7rem; font-weight: 800; padding: 3px 8px; border-radius: 99px;">Popular</div>
             <div>
-              <div style="font-size: 1.8rem; margin-bottom: 8px;">💰</div>
+              <div style="font-size: 2.2rem; margin-bottom: 8px;"><i class="fa-solid fa-sack-dollar anim-coin"></i></div>
               <div style="font-weight: 800; font-size: 1.25rem;">250 Coins</div>
               <div style="font-size: 0.8rem; color: var(--label3); margin-top: 4px;">Sprint Pack</div>
               <div style="font-size: 1.6rem; font-weight: 800; color: var(--label); margin: 16px 0 8px 0;">₦3,500</div>
@@ -433,7 +433,7 @@
           <div class="card liquid-glass-card" style="padding: 22px; text-align: center; border-radius: 20px; border: 1.5px solid rgba(52, 199, 89, 0.4); background: rgba(52, 199, 89, 0.03); display: flex; flex-direction: column; justify-content: space-between; position: relative;">
             <div style="position: absolute; top: -10px; right: 14px; background: var(--green); color: #fff; font-size: 0.7rem; font-weight: 800; padding: 3px 8px; border-radius: 99px;">Best Value</div>
             <div>
-              <div style="font-size: 1.8rem; margin-bottom: 8px;">💎</div>
+              <div style="font-size: 2.2rem; margin-bottom: 8px;"><i class="fa-solid fa-gem anim-gem"></i></div>
               <div style="font-weight: 800; font-size: 1.25rem;">600 Coins</div>
               <div style="font-size: 0.8rem; color: var(--label3); margin-top: 4px;">Semester Pack (+100 Bonus)</div>
               <div style="font-size: 1.6rem; font-weight: 800; color: var(--label); margin: 16px 0 8px 0;">₦7,500</div>
@@ -445,7 +445,7 @@
           <!-- Pack 1600 -->
           <div class="card liquid-glass-card" style="padding: 22px; text-align: center; border-radius: 20px; border: 1.5px solid rgba(175, 82, 222, 0.4); background: rgba(175, 82, 222, 0.03); display: flex; flex-direction: column; justify-content: space-between;">
             <div>
-              <div style="font-size: 1.8rem; margin-bottom: 8px;">👑</div>
+              <div style="font-size: 2.2rem; margin-bottom: 8px;"><i class="fa-solid fa-crown anim-crown"></i></div>
               <div style="font-weight: 800; font-size: 1.25rem;">1,600 Coins</div>
               <div style="font-size: 0.8rem; color: var(--label3); margin-top: 4px;">Scholar Vault (+350 Bonus)</div>
               <div style="font-size: 1.6rem; font-weight: 800; color: var(--label); margin: 16px 0 8px 0;">₦18,000</div>
@@ -469,7 +469,7 @@
     const btn = document.getElementById('mobileMenuBtn');
     if (sidebar) {
       sidebar.classList.toggle('mobile-open');
-      if (btn) btn.textContent = sidebar.classList.contains('mobile-open') ? '✕' : '☰';
+      if (btn) btn.textContent = sidebar.classList.contains('mobile-open') ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
     }
   }
 
@@ -574,7 +574,7 @@
     showToast('Verifying payment with Paystack...', 'info');
     apiRequest(`/api/paystack/verify/${encodeURIComponent(ref)}`).then(({ data, error }) => {
       if (data && data.success) {
-        showToast(`🎉 Payment verified! Welcome to ${data.plan.toUpperCase()}! Redirecting to dashboard...`, 'success');
+        showToast(`Payment verified! Welcome to ${data.plan.toUpperCase()}! Redirecting to dashboard...`, 'success');
         setTimeout(() => { window.location.href = '/pages/dashboard.html'; }, 1500);
       } else {
         showToast(error || 'Could not verify payment.', 'error');
@@ -586,12 +586,12 @@
   if (banner) {
     if (isNewUser) {
       banner.style.display = 'block';
-      document.getElementById('paywallBannerIcon').textContent = '🎉';
+      document.getElementById('paywallBannerIcon').innerHTML = '<i class="fa-solid fa-cake-candles anim-party"></i>';
       document.getElementById('paywallBannerTitle').textContent = 'Welcome! Choose Your Plan to Get Started';
       document.getElementById('paywallBannerDesc').textContent = 'Activate your account by choosing a flexible Plus or Pro plan below.';
     } else if (reason === 'paywall') {
       banner.style.display = 'block';
-      document.getElementById('paywallBannerIcon').textContent = '🔒';
+      document.getElementById('paywallBannerIcon').innerHTML = '<i class="fa-solid fa-lock anim-lock"></i>';
       document.getElementById('paywallBannerTitle').textContent = 'Subscription Required to Access CampusTutor AI';
       document.getElementById('paywallBannerDesc').textContent = 'You need an active subscription to access the dashboard, upload lecture slides, and generate AI study content.';
     }

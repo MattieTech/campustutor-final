@@ -179,12 +179,12 @@
 
 <!-- NAVBAR -->
 <nav class="navbar">
-  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">☰</button>
+  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
   <a href="/" class="brand">
     <div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span>
   </a>
   <div class="navbar-right">
-    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
     <a href="/pages/dashboard.html" class="pill-btn">← Dashboard</a>
     <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop">Log Out</button>
   </div>
@@ -471,7 +471,7 @@
           <button class="audio-ctrl-btn" onclick="toggleAudioSpeed()" id="audioSpeedBtn" title="Playback speed">1.0x</button>
           <button class="audio-ctrl-btn primary" onclick="toggleAudioPlayPause()" id="audioPlayPauseBtn" title="Pause / Resume"><i class="fa-solid fa-pause"></i></button>
           <button class="audio-ctrl-btn" onclick="stopAudio()" title="Stop audio"><i class="fa-solid fa-stop"></i></button>
-          <button class="audio-ctrl-btn close" onclick="closeAudioPlayer()" title="Close player">✕</button>
+          <button class="audio-ctrl-btn close" onclick="closeAudioPlayer()" title="Close player"><i class="fa-solid fa-xmark"></i></button>
         </div>
       </div>
     </div>
@@ -495,14 +495,14 @@ function initThemeToggle(){
   if(!themeBtn) return;
   const t = localStorage.getItem('ct_theme') || 'light';
   document.documentElement.setAttribute('data-theme', t);
-  themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
+  themeBtn.textContent = t === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
   themeBtn.addEventListener('click', (e) => {
     e.preventDefault();
     const c = document.documentElement.getAttribute('data-theme');
     const n = c === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', n);
     localStorage.setItem('ct_theme', n);
-    themeBtn.textContent = n === 'dark' ? '☀️' : '🌙';
+    themeBtn.textContent = n === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
   });
 }
 
@@ -521,13 +521,13 @@ function initMobileMenu(){
   mobileMenuBtn.addEventListener('click', (e) => {
     e.preventDefault();
     sidebar.classList.toggle('mobile-open');
-    mobileMenuBtn.textContent = sidebar.classList.contains('mobile-open') ? '✕' : '☰';
+    mobileMenuBtn.textContent = sidebar.classList.contains('mobile-open') ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
   });
   
   sidebar.querySelectorAll('a, button').forEach(el => {
     el.addEventListener('click', () => {
       sidebar.classList.remove('mobile-open');
-      mobileMenuBtn.textContent = '☰';
+      mobileMenuBtn.innerHTML = '<i class="fa-solid fa-bars"></i>';
     });
   });
 }
@@ -1216,22 +1216,22 @@ function finishExamSimulation(force = false) {
   if (percentage >= 70) {
     grade = 'A';
     gradeClass = 'grade-A';
-    gradeTitle = 'First Class Distinction! 🏆';
+    gradeTitle = 'First Class Distinction! <i class="fa-solid fa-trophy anim-sparkle" style="color:#eab308;margin-left:4px;"></i>';
     advice = 'Outstanding mastery of the lecture materials. Keep up this momentum!';
   } else if (percentage >= 60) {
     grade = 'B';
     gradeClass = 'grade-B';
-    gradeTitle = 'Second Class Upper 🌟';
+    gradeTitle = 'Second Class Upper <i class="fa-solid fa-star anim-sparkle" style="color:#eab308;margin-left:4px;"></i>';
     advice = 'Great conceptual understanding. Polish a few weak points to secure an A.';
   } else if (percentage >= 50) {
     grade = 'C';
     gradeClass = 'grade-C';
-    gradeTitle = 'Good Pass 👍';
+    gradeTitle = 'Good Pass <i class="fa-solid fa-thumbs-up" style="color:var(--green);margin-left:4px;"></i>';
     advice = 'Passing performance. Spend extra time with the flashcards and concept explainer.';
   } else {
     grade = 'F';
     gradeClass = 'grade-F';
-    gradeTitle = 'Revision Needed ⚠️';
+    gradeTitle = 'Revision Needed <i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> ';
     advice = 'Do not panic. Review the smart summary and re-test with fresh questions.';
   }
 
@@ -1290,7 +1290,7 @@ async function runAudioNotes() {
     return;
   }
 
-  showToast('Preparing lecture audio notes... 🎧', 'info');
+  showToast('Preparing lecture audio notes...', 'info');
   const player = document.getElementById('audioPlayerBar');
   player.style.display = 'block';
 

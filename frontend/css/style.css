@@ -1289,5 +1289,148 @@ img{max-width:100%;display:block;}
   margin-bottom: 20px;
 }
 
+/* ==========================================================================
+   ANIMATED ICONS & ULTRA-PREMIUM MICRO-ANIMATIONS (Flaticon Style)
+   ========================================================================== */
+
+@keyframes ct-coin-spin {
+  0% { transform: rotateY(0deg) scale(1); filter: drop-shadow(0 0 2px rgba(255, 176, 32, 0.4)); }
+  50% { transform: rotateY(180deg) scale(1.12); filter: drop-shadow(0 0 8px rgba(255, 176, 32, 0.8)); }
+  100% { transform: rotateY(360deg) scale(1); filter: drop-shadow(0 0 2px rgba(255, 176, 32, 0.4)); }
+}
+
+@keyframes ct-float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(3deg); }
+}
+
+@keyframes ct-pulse-glow {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(0, 122, 255, 0)); }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 10px rgba(0, 122, 255, 0.5)); }
+}
+
+@keyframes ct-bounce-gift {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-6px) scale(1.1) rotate(-5deg); }
+  60% { transform: translateY(-3px) scale(1.05) rotate(5deg); }
+}
+
+@keyframes ct-fire-flicker {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(255, 87, 34, 0.5)); }
+  25% { transform: scale(1.06) rotate(-3deg); filter: drop-shadow(0 0 10px rgba(255, 149, 0, 0.8)); }
+  75% { transform: scale(1.04) rotate(3deg); filter: drop-shadow(0 0 8px rgba(255, 59, 48, 0.7)); }
+}
+
+@keyframes ct-shimmer {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-8deg) scale(1.1); }
+  75% { transform: rotate(8deg) scale(1.1); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+/* Base icon animation wrapper */
+.anim-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.anim-coin {
+  color: #f59e0b;
+  display: inline-block;
+  animation: ct-coin-spin 3.5s infinite ease-in-out;
+  transform-style: preserve-3d;
+}
+
+.anim-fire {
+  color: #ff5722;
+  display: inline-block;
+  animation: ct-fire-flicker 1.8s infinite ease-in-out;
+}
+
+.anim-gift {
+  color: #ec4899;
+  display: inline-block;
+  animation: ct-bounce-gift 2.2s infinite ease-in-out;
+}
+
+.anim-crown {
+  color: #f59e0b;
+  display: inline-block;
+  animation: ct-float 3s infinite ease-in-out;
+}
+
+.anim-gem {
+  color: #06b6d4;
+  display: inline-block;
+  animation: ct-pulse-glow 2.5s infinite ease-in-out;
+}
+
+.anim-sparkle {
+  color: #eab308;
+  display: inline-block;
+  animation: ct-shimmer 2.5s infinite ease-in-out;
+}
+
+.anim-bulb {
+  color: #eab308;
+  display: inline-block;
+  animation: ct-pulse-glow 2s infinite ease-in-out;
+}
+
+.anim-brain {
+  color: #a855f7;
+  display: inline-block;
+  animation: ct-float 2.8s infinite ease-in-out;
+}
+
+.anim-shield {
+  color: #10b981;
+  display: inline-block;
+  animation: ct-pulse-glow 3s infinite ease-in-out;
+}
+
+.anim-rocket {
+  color: #3b82f6;
+  display: inline-block;
+  animation: ct-float 2.2s infinite ease-in-out;
+}
+
+.anim-lock {
+  color: #ef4444;
+  display: inline-block;
+}
+
+.anim-party {
+  color: #8b5cf6;
+  display: inline-block;
+  animation: ct-bounce-gift 2s infinite ease-in-out;
+}
+
+/* Badge styling with animated coin */
+.coin-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #b45309;
+  font-weight: 700;
+  font-size: 0.76rem;
+  padding: 3px 8px;
+  border-radius: 999px;
+  box-shadow: 0 1px 4px rgba(245, 158, 11, 0.15);
+}
+
+[data-theme="dark"] .coin-badge-pill {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #fbbf24;
+}
+
+
 
 

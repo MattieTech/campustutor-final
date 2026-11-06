@@ -9,10 +9,10 @@
 </head>
 <body>
 <nav class="navbar">
-  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">☰</button>
+  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
   <a href="/" class="brand"><div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span> <span class="brand-ai">AI</span></a>
   <div class="navbar-right">
-    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
     <a href="/pages/dashboard.html" class="pill-btn">← Dashboard</a>
     <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop">Log Out</button>
   </div>
@@ -140,14 +140,14 @@ function initThemeToggle(){
   if(!themeBtn) return;
   const t = localStorage.getItem('ct_theme') || 'light';
   document.documentElement.setAttribute('data-theme', t);
-  themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
+  themeBtn.textContent = t === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
   themeBtn.addEventListener('click', (e) => {
     e.preventDefault();
     const c = document.documentElement.getAttribute('data-theme');
     const n = c === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', n);
     localStorage.setItem('ct_theme', n);
-    themeBtn.textContent = n === 'dark' ? '☀️' : '🌙';
+    themeBtn.textContent = n === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
   });
 }
 
@@ -166,13 +166,13 @@ function initMobileMenu(){
   mobileMenuBtn.addEventListener('click', (e) => {
     e.preventDefault();
     sidebar.classList.toggle('mobile-open');
-    mobileMenuBtn.textContent = sidebar.classList.contains('mobile-open') ? '✕' : '☰';
+    mobileMenuBtn.textContent = sidebar.classList.contains('mobile-open') ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
   });
   
   sidebar.querySelectorAll('a, button').forEach(el => {
     el.addEventListener('click', () => {
       sidebar.classList.remove('mobile-open');
-      mobileMenuBtn.textContent = '☰';
+      mobileMenuBtn.innerHTML = '<i class="fa-solid fa-bars"></i>';
     });
   });
 }

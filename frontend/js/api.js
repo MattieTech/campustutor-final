@@ -206,7 +206,7 @@ function buildQuizGenerationLoaderHTML(waitingTime = "1-2 minutes") {
     <div class="quiz-engine-workspace result-anim" style="display:flex; align-items:center; justify-content:center; min-height:260px;">
       <div class="card liquid-glass-card" style="max-width:620px; width:100%; padding:30px; text-align:center; border-radius:24px;">
         <div style="width:48px; height:48px; margin:0 auto 18px; border-radius:50%; border:4px solid rgba(0,0,0,0.08); border-top-color:#ff9f43; animation:ctSpin 0.8s linear infinite;"></div>
-        <p style="font-weight:800; margin:0 0 10px;">🔄 Generating Questions... Please wait ${waitingTime}.</p>
+        <p style="font-weight:800; margin:0 0 10px;"><i class="fa-solid fa-arrows-rotate fa-spin" style="color:var(--blue);margin-right:6px;"></i> Generating Questions... Please wait ${waitingTime}.</p>
         <p style="margin:0; color:var(--label3);">CampusTutor AI is crafting a high-yield interactive exam pool. Deep analysis extraction takes about ${waitingTime}. Please keep this tab open...</p>
       </div>
     </div>`;
@@ -293,25 +293,25 @@ function downloadFile(url, filename) {
 async function downloadSummaryTXT(documentId) {
   const url = `/api/ai/download/summary/${documentId}/txt`;
   downloadFile(url, "summary.txt");
-  showToast("Summary downloaded! 📥", "success");
+  showToast("Summary downloaded successfully!", "success");
 }
 
 async function downloadFlashcardsCSV(documentId) {
   const url = `/api/ai/download/flashcards/${documentId}/csv`;
   downloadFile(url, "flashcards.csv");
-  showToast("Flashcards downloaded! 📥", "success");
+  showToast("Flashcards downloaded successfully!", "success");
 }
 
 async function downloadQuestionsTXT(documentId) {
   const url = `/api/ai/download/questions/${documentId}/txt`;
   downloadFile(url, "questions.txt");
-  showToast("Questions downloaded! 📥", "success");
+  showToast("Questions downloaded successfully!", "success");
 }
 
 async function downloadExplanationTXT(documentId) {
   const url = `/api/ai/download/explanation/${documentId}/txt`;
   downloadFile(url, "explanation.txt");
-  showToast("Explanation downloaded! 📥", "success");
+  showToast("Explanation downloaded successfully!", "success");
 }
 // ── CONTACT ───────────────────────────────────────────────────
 async function apiSendContactMessage(name, email, message) {
@@ -485,9 +485,9 @@ window.showPerformanceBanner = function(score, message) {
           <h2 style="font-weight:900; font-size:1.8rem; margin:0; color:${scoreColor};">Evaluation Complete</h2>
           <p style="font-size:1.1rem; line-height:1.7; color:#1e293b; margin:0; max-width:500px; font-weight:600;">${message}</p>
           <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:8px; width:100%;">
-            <button type="button" onclick="this.closest('.performance-modal-overlay').remove()" class="btn btn-primary btn-lg" style="padding:12px 24px; border-radius:14px; font-weight:700;">Continue Learning</button>
-            <button type="button" id="mattie-review-answers-btn" class="btn btn-info" style="padding:12px 20px; border-radius:14px; font-weight:700; background:#0ea5e9; border:none; color:white; cursor:pointer;">🔍 Review Corrections</button>
-            <button type="button" id="mattie-refresh-quiz-btn" class="btn btn-secondary" style="padding:12px 20px; border-radius:14px; font-weight:700; background:#64748b; border:none; color:white; cursor:pointer;">🔄 Generate Fresh Quiz</button>
+            <button type="button" onclick="this.closest('.performance-modal-overlay').remove()" class="btn btn-primary btn-lg" style="padding:12px 24px; border-radius:14px; font-weight:700;"><i class="fa-solid fa-arrow-right"></i> Continue Learning</button>
+            <button type="button" id="mattie-review-answers-btn" class="btn btn-info" style="padding:12px 20px; border-radius:14px; font-weight:700; background:#0ea5e9; border:none; color:white; cursor:pointer;"><i class="fa-solid fa-magnifying-glass"></i> Review Corrections</button>
+            <button type="button" id="mattie-refresh-quiz-btn" class="btn btn-secondary" style="padding:12px 20px; border-radius:14px; font-weight:700; background:#64748b; border:none; color:white; cursor:pointer;"><i class="fa-solid fa-arrows-rotate"></i> Generate Fresh Quiz</button>
           </div>
           <div id="mattie-review-panel" style="width:100%; max-height:0; opacity:0; overflow:hidden; transition:max-height .45s ease, opacity .35s ease; margin-top:8px;">
             <div id="mattie-review-content" style="display:grid; gap:14px; padding-top:16px; text-align:left; max-height:400px; overflow-y:auto; padding-right:8px;"></div>
@@ -535,7 +535,7 @@ window.showPerformanceBanner = function(score, message) {
         quizContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
         if (typeof showToast === 'function') {
-          showToast('Select the number of questions you want for your new quiz! 🎯', 'info');
+          showToast('Select the number of questions you want for your new quiz!', 'info');
         }
       } else {
         regenerateFreshQuiz();
@@ -1272,10 +1272,10 @@ function updateCoinUIElements() {
     if (userCoinState.canClaimDaily) {
       claimBoxBtn.disabled = false;
       const bonusEstimate = 3 + Math.min(Math.floor(((userCoinState.streak || 1) - 1) / 2), 2);
-      claimBoxBtn.innerHTML = `🎁 Claim Day ${userCoinState.streak} Bonus (+${bonusEstimate} Coins)`;
+      claimBoxBtn.innerHTML = `<i class="fa-solid fa-gift anim-gift" style="margin-right:6px;"></i> Claim Day ${userCoinState.streak} Bonus (+${bonusEstimate} Coins)`;
     } else {
       claimBoxBtn.disabled = true;
-      claimBoxBtn.innerHTML = `✓ Day ${userCoinState.streak} Claimed! Next reward tomorrow`;
+      claimBoxBtn.innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--green);margin-right:6px;"></i> Day ${userCoinState.streak} Claimed! Next reward tomorrow`;
     }
   }
 }
@@ -1295,7 +1295,7 @@ function closeCoinsModal() {
 async function claimDailyBonusAction() {
   const btn = document.getElementById("btnClaimChest");
   if (btn) btn.disabled = true;
-  showToast("Opening your daily study reward... 🎁", "info");
+  showToast("Opening your daily study reward...", "info");
 
   const { data, error } = await apiClaimDailyBonus();
   if (error || !data) {
@@ -1331,11 +1331,11 @@ function injectCoinsModal() {
         <div class="support-modal-header" style="border-bottom:1px solid var(--sep);padding-bottom:14px;">
           <div>
             <h3 style="font-size:1.25rem;font-weight:800;display:flex;align-items:center;gap:8px;">
-              🪙 CampusCoins Wallet
+              <i class="fa-solid fa-coins anim-coin"></i> CampusCoins Wallet
             </h3>
             <p style="font-size:0.83rem;color:var(--label3);margin-top:2px;">Fund your account or claim daily educational study rewards</p>
           </div>
-          <button class="support-modal-close" onclick="closeCoinsModal()">✕</button>
+          <button class="support-modal-close" onclick="closeCoinsModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
         <div class="support-modal-body" style="padding-top:20px;">
@@ -1350,11 +1350,11 @@ function injectCoinsModal() {
 
           <!-- Daily Streak Chest -->
           <div class="coin-chest-box">
-            <div style="font-size:2rem;margin-bottom:6px;">🎁</div>
+            <div style="font-size:2.2rem;margin-bottom:6px;"><i class="fa-solid fa-gift anim-gift"></i></div>
             <h4 style="font-size:1.05rem;font-weight:800;margin-bottom:4px;">Daily Study Reward</h4>
             <p style="font-size:0.82rem;color:var(--label2);margin-bottom:14px;">Check in daily to maintain your study streak and earn 3 CampusCoins!</p>
             <button class="btn btn-warning" id="btnClaimChest" onclick="claimDailyBonusAction()" style="background:linear-gradient(135deg,#ffb020,#d97806);color:#fff;border:none;font-weight:800;padding:10px 22px;border-radius:var(--r-pill);">
-              🎁 Claim Today's Bonus
+              <i class="fa-solid fa-gift anim-gift" style="margin-right:6px;"></i> Claim Today's Bonus
             </button>
           </div>
 
@@ -1369,7 +1369,7 @@ function injectCoinsModal() {
           <div class="coins-modal-grid">
             <!-- 100 Coins -->
             <div class="coin-pack-card" onclick="buyCoinPackAction('starter')">
-              <div class="coin-amount-title">🪙 100</div>
+              <div class="coin-amount-title"><i class="fa-solid fa-coins anim-coin"></i> 100</div>
               <div style="font-size:0.75rem;color:var(--label3);">Starter Stash</div>
               <div class="coin-price-tag">₦1,500</div>
               <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;">Buy Pack</button>
@@ -1378,7 +1378,7 @@ function injectCoinsModal() {
             <!-- 250 Coins (Popular) -->
             <div class="coin-pack-card featured" onclick="buyCoinPackAction('popular')">
               <span class="coin-pack-badge">Popular</span>
-              <div class="coin-amount-title">🪙 250</div>
+              <div class="coin-amount-title"><i class="fa-solid fa-sack-dollar anim-coin"></i> 250</div>
               <div style="font-size:0.75rem;color:var(--label3);">Scholar Pack</div>
               <div class="coin-price-tag">₦3,500</div>
               <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;background:#d97806;border:none;">Buy Pack</button>
@@ -1386,7 +1386,7 @@ function injectCoinsModal() {
 
             <!-- 600 Coins -->
             <div class="coin-pack-card" onclick="buyCoinPackAction('pro')">
-              <div class="coin-amount-title">🪙 600</div>
+              <div class="coin-amount-title"><i class="fa-solid fa-gem anim-gem"></i> 600</div>
               <div style="font-size:0.75rem;color:var(--green);font-weight:700;">+100 Bonus Coins</div>
               <div class="coin-price-tag">₦7,500</div>
               <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;">Buy Pack</button>
@@ -1394,7 +1394,7 @@ function injectCoinsModal() {
 
             <!-- 1,600 Coins -->
             <div class="coin-pack-card" onclick="buyCoinPackAction('vip')">
-              <div class="coin-amount-title">🪙 1,600</div>
+              <div class="coin-amount-title"><i class="fa-solid fa-crown anim-crown"></i> 1,600</div>
               <div style="font-size:0.75rem;color:var(--purple);font-weight:700;">+350 Bonus Coins</div>
               <div class="coin-price-tag">₦18,000</div>
               <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;">Buy Pack</button>
@@ -1418,7 +1418,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const coinBtn = document.createElement("button");
       coinBtn.id = "navCoinPill";
       coinBtn.className = "coin-nav-pill";
-      coinBtn.innerHTML = `🪙 <span id="navCoinCount">--</span> <span class="coin-plus">+</span>`;
+      coinBtn.innerHTML = `<i class="fa-solid fa-coins anim-coin"></i> <span id="navCoinCount">--</span> <span class="coin-plus">+</span>`;
       coinBtn.title = "CampusCoins Wallet — Click to top up or view balance";
       coinBtn.onclick = openCoinsModal;
       navRight.insertBefore(coinBtn, navRight.firstChild);
@@ -1426,7 +1426,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const dailyBtn = document.createElement("button");
       dailyBtn.id = "navDailyGiftBtn";
       dailyBtn.className = "daily-gift-nav-btn";
-      dailyBtn.innerHTML = `🎁 Daily Gift`;
+      dailyBtn.innerHTML = `<i class="fa-solid fa-gift anim-gift"></i> Daily Gift`;
       dailyBtn.onclick = openCoinsModal;
       navRight.insertBefore(dailyBtn, coinBtn.nextSibling);
     }
@@ -1439,10 +1439,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const paymentType = urlParams.get("payment");
   const ref = urlParams.get("reference") || urlParams.get("trxref");
   if (paymentType === "coins_success" && ref) {
-    showToast("Verifying your coin purchase with Paystack... 🪙", "info");
+    showToast("Verifying your coin purchase with Paystack...", "info");
     apiRequest(`/api/paystack/verify/${encodeURIComponent(ref)}`).then(({ data, error }) => {
       if (data && data.success) {
-        showToast(data.message || "🎉 CampusCoins credited to your wallet!", "success");
+        showToast(data.message || "CampusCoins credited to your wallet!", "success");
         window.history.replaceState({}, document.title, window.location.pathname);
         refreshUserCoins();
       } else {

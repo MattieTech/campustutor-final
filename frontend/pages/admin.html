@@ -363,12 +363,12 @@
 
 <!-- NAVBAR -->
 <nav class="navbar">
-  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleAdminMobileMenu()">☰</button>
+  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleAdminMobileMenu()"><i class="fa-solid fa-bars"></i></button>
   <a href="/" class="brand">
     <div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span>
   </a>
   <div class="navbar-right">
-    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
     <span id="adminName" style="font-size:.83rem;color:var(--label3);"></span>
     <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop">Log Out</button>
   </div>
@@ -429,7 +429,7 @@
         ← Back to App
       </a>
       <div style="font-size:.7rem;color:var(--label4);text-align:center;padding:10px 4px 0;">
-        ⚡ Developed by MattieTech
+        <i class="fa-solid fa-bolt" style="color:#eab308;margin-right:4px;"></i> Developed by MattieTech
       </div>
     </div>
   </aside>
@@ -747,7 +747,7 @@
 <!-- ── USER DETAIL MODAL ── -->
 <div class="adm-overlay" id="userModal">
   <div class="adm-modal" style="max-height: 90vh; overflow-y: auto;">
-    <button class="adm-modal-close" onclick="closeModal('userModal')">✕</button>
+    <button class="adm-modal-close" onclick="closeModal('userModal')"><i class="fa-solid fa-xmark"></i></button>
     <h2 id="modalUserName">User Details</h2>
     <div class="adm-modal-sub" id="modalUserEmail"></div>
 
@@ -785,7 +785,7 @@
 <!-- ── CONFIRM / INPUT MODAL ── -->
 <div class="adm-overlay" id="confirmModal">
   <div class="adm-modal" style="max-width:400px;">
-    <button class="adm-modal-close" onclick="closeModal('confirmModal')">✕</button>
+    <button class="adm-modal-close" onclick="closeModal('confirmModal')"><i class="fa-solid fa-xmark"></i></button>
     <h2 id="confirmTitle"></h2>
     <div class="adm-modal-sub" id="confirmSub"></div>
     <div class="adm-confirm-form" id="confirmForm"></div>
@@ -798,13 +798,13 @@
 // ── THEME ─────────────────────────────────────────────────────
 const savedTheme = localStorage.getItem('ct_theme') || 'light';
 document.documentElement.setAttribute('data-theme', savedTheme);
-document.getElementById('themeBtn').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+document.getElementById('themeBtn').textContent = savedTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
 document.getElementById('themeBtn').addEventListener('click', () => {
   const cur = document.documentElement.getAttribute('data-theme');
   const next = cur === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('ct_theme', next);
-  document.getElementById('themeBtn').textContent = next === 'dark' ? '☀️' : '🌙';
+  document.getElementById('themeBtn').textContent = next === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
 });
 
 // ── GUARD ─────────────────────────────────────────────────────
@@ -1303,7 +1303,7 @@ async function downloadUserFile(fileId, fileName) {
     const token = getToken();
     
     if (!token) {
-      alert('⚠️ You must be logged in to download files');
+      alert('<i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> You must be logged in to download files');
       return;
     }
 
@@ -1348,7 +1348,7 @@ async function downloadUserFile(fileId, fileName) {
     
   } catch (err) {
     console.error('❌ Download error:', err);
-    alert('⚠️ Error downloading file: ' + err.message);
+    alert('<i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> Error downloading file: ' + err.message);
   }
 }
 
@@ -1400,7 +1400,7 @@ function showConfirm({ title, sub, fields = [], danger = false, onConfirm }) {
   btnsEl.innerHTML = `
     <button class="btn btn-glass btn-sm" onclick="closeModal('confirmModal')">Cancel</button>
     <button class="btn ${danger ? 'btn-danger' : 'btn-primary'} btn-sm" id="confirmOkBtn">
-      ${danger ? '⚠️ Confirm' : '✅ Confirm'}
+      ${danger ? '<i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> Confirm' : '✅ Confirm'}
     </button>`;
 
   document.getElementById('confirmOkBtn').onclick = () => {

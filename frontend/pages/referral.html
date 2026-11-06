@@ -34,10 +34,10 @@
 </head>
 <body>
 <nav class="navbar">
-  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">☰</button>
+  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
   <a href="/" class="brand"><div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></a>
   <div class="navbar-right">
-    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
     <a href="/pages/dashboard.html" class="pill-btn">← Dashboard</a>
     <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop">Log Out</button>
   </div>
@@ -55,7 +55,7 @@
 <div class="app-layout">
   <aside class="sidebar">
     <div class="sidebar-section">Navigation</div>
-    <a href="/pages/dashboard.html" class="sidebar-link">🏠 Dashboard</a>
+    <a href="/pages/dashboard.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Dashboard</a>
     <a href="/pages/pricing.html" class="sidebar-link"><i class="fa-solid fa-credit-card"></i> Upgrade Plan</a>
     <a href="/pages/referral.html" class="sidebar-link active"><i class="fa-solid fa-users"></i> Refer & Earn</a>
     <div class="sidebar-bottom"><div style="font-size:0.7rem;color:var(--label4);text-align:center;padding:8px;"><i class="fa-solid fa-bolt"></i> Developed by MattieTech</div></div>
@@ -142,7 +142,7 @@
     const btn = document.getElementById('mobileMenuBtn');
     if (sidebar) {
       sidebar.classList.toggle('mobile-open');
-      if (btn) btn.textContent = sidebar.classList.contains('mobile-open') ? '✕' : '☰';
+      if (btn) btn.textContent = sidebar.classList.contains('mobile-open') ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
     }
   }
 

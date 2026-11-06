@@ -12,7 +12,7 @@
 <div class="auth-orb2"></div>
 <div class="auth-card">
   <div style="position:absolute;top:16px;right:16px;">
-    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">🌙</button>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
   </div>
   <div class="auth-brand">
     <div class="auth-brand-icon"><i class="fa-solid fa-key"></i></div>
@@ -67,13 +67,13 @@
 <script>
 const t = localStorage.getItem('ct_theme')||'light';
 document.documentElement.setAttribute('data-theme',t);
-document.getElementById('themeBtn').textContent = t==='dark'?'☀️':'🌙';
+document.getElementById('themeBtn').textContent = t==='dark'?'<i class="fa-solid fa-sun"></i>':'<i class="fa-solid fa-moon"></i>';
 document.getElementById('themeBtn').addEventListener('click',()=>{
   const c=document.documentElement.getAttribute('data-theme');
   const n=c==='dark'?'light':'dark';
   document.documentElement.setAttribute('data-theme',n);
   localStorage.setItem('ct_theme',n);
-  document.getElementById('themeBtn').textContent=n==='dark'?'☀️':'🌙';
+  document.getElementById('themeBtn').textContent=n==='dark'?'<i class="fa-solid fa-sun"></i>':'<i class="fa-solid fa-moon"></i>';
 });
 
 let targetEmail = '';
