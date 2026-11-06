@@ -245,7 +245,11 @@
 </head>
 <body>
 <nav class="navbar">
-  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
+  <button id="mobileMenuBtn" class="mobile-menu-btn ct-hamburger-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">
+    <span class="ct-hamburger-bar ct-bar-top"></span>
+    <span class="ct-hamburger-bar ct-bar-mid"></span>
+    <span class="ct-hamburger-bar ct-bar-bot"></span>
+  </button>
   <a href="/" class="brand"><div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></a>
   <div class="navbar-right">
     <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
@@ -474,12 +478,15 @@
 
   // Mobile Menu Toggle
   function toggleMobileMenu() {
-    const sidebar = document.querySelector('.sidebar');
     const btn = document.getElementById('mobileMenuBtn');
-    if (sidebar) {
-      sidebar.classList.toggle('mobile-open');
-      if (btn) btn.textContent = sidebar.classList.contains('mobile-open') ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
-    }
+    const menu = document.getElementById('mobileMenu');
+    const overlay = document.getElementById('mobileMenuOverlay');
+    const sidebar = document.querySelector('.sidebar') || document.querySelector('.ct-sidebar') || document.querySelector('.adm-sidebar');
+    if (btn) btn.classList.toggle('is-active');
+    if (menu) menu.classList.toggle('open');
+    if (overlay) overlay.classList.toggle('open');
+    if (sidebar) sidebar.classList.toggle('mobile-open');
+  }
   }
 
   // Theme Toggle

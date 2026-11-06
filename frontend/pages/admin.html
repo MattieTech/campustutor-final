@@ -363,7 +363,11 @@
 
 <!-- NAVBAR -->
 <nav class="navbar">
-  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleAdminMobileMenu()"><i class="fa-solid fa-bars"></i></button>
+  <button id="mobileMenuBtn" class="mobile-menu-btn ct-hamburger-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">
+    <span class="ct-hamburger-bar ct-bar-top"></span>
+    <span class="ct-hamburger-bar ct-bar-mid"></span>
+    <span class="ct-hamburger-bar ct-bar-bot"></span>
+  </button>
   <a href="/" class="brand">
     <div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span>
   </a>
@@ -798,13 +802,13 @@
 // ── THEME ─────────────────────────────────────────────────────
 const savedTheme = localStorage.getItem('ct_theme') || 'light';
 document.documentElement.setAttribute('data-theme', savedTheme);
-document.getElementById('themeBtn').textContent = savedTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+document.getElementById('themeBtn').innerHTML = savedTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
 document.getElementById('themeBtn').addEventListener('click', () => {
   const cur = document.documentElement.getAttribute('data-theme');
   const next = cur === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('ct_theme', next);
-  document.getElementById('themeBtn').textContent = next === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+  document.getElementById('themeBtn').innerHTML = next === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
 });
 
 // ── GUARD ─────────────────────────────────────────────────────

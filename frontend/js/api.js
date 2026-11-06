@@ -359,28 +359,7 @@ async function requirePaidSubscription() {
     window.location.href = "/pages/login.html";
     return false;
   }
-  const user = getUser();
-  const role = user?.app_metadata?.role || user?.role;
-  if (role === "admin") return true;
-
-  try {
-    const { data: stats } = await apiRequest(`/api/upload/stats/${user.id}`);
-    if (stats) {
-      const plan = (stats.plan || "free").toLowerCase();
-      const status = (stats.subscription_status || "active").toLowerCase();
-      const isExpired = stats.subscription_end
-        ? new Date(stats.subscription_end).getTime() < Date.now()
-        : false;
-
-      if (plan === "free" || status !== "active" || isExpired) {
-        window.location.href = "/pages/pricing.html?reason=paywall";
-        return false;
-      }
-      return true;
-    }
-  } catch (err) {
-    console.warn("Could not check subscription:", err);
-  }
+  // Free and paid users can access their dashboard and spend CampusCoins or upgrade
   return true;
 }
 window.requirePaidSubscription = requirePaidSubscription;

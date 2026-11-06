@@ -180,7 +180,11 @@
 
 <!-- NAVBAR -->
 <nav class="navbar">
-  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
+  <button id="mobileMenuBtn" class="mobile-menu-btn ct-hamburger-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">
+    <span class="ct-hamburger-bar ct-bar-top"></span>
+    <span class="ct-hamburger-bar ct-bar-mid"></span>
+    <span class="ct-hamburger-bar ct-bar-bot"></span>
+  </button>
   <a href="/" class="brand">
     <div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span>
   </a>
@@ -496,14 +500,14 @@ function initThemeToggle(){
   if(!themeBtn) return;
   const t = localStorage.getItem('ct_theme') || 'light';
   document.documentElement.setAttribute('data-theme', t);
-  themeBtn.textContent = t === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+  themeBtn.innerHTML = t === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
   themeBtn.addEventListener('click', (e) => {
     e.preventDefault();
     const c = document.documentElement.getAttribute('data-theme');
     const n = c === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', n);
     localStorage.setItem('ct_theme', n);
-    themeBtn.textContent = n === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    themeBtn.innerHTML = n === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
   });
 }
 
@@ -522,7 +526,7 @@ function initMobileMenu(){
   mobileMenuBtn.addEventListener('click', (e) => {
     e.preventDefault();
     sidebar.classList.toggle('mobile-open');
-    mobileMenuBtn.textContent = sidebar.classList.contains('mobile-open') ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
+    mobileMenuBtn.innerHTML = sidebar.classList.contains('mobile-open') ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
   });
   
   sidebar.querySelectorAll('a, button').forEach(el => {
@@ -1395,7 +1399,16 @@ function closeAudioPlayer() {
 }
 
 // Mobile Menu Toggle
-function toggleMobileMenu(){const m=document.getElementById('mobileMenu'),o=document.getElementById('mobileMenuOverlay');m.classList.toggle('open');o.classList.toggle('open');}
+function toggleMobileMenu() {
+    const btn = document.getElementById('mobileMenuBtn');
+    const menu = document.getElementById('mobileMenu');
+    const overlay = document.getElementById('mobileMenuOverlay');
+    const sidebar = document.querySelector('.sidebar') || document.querySelector('.ct-sidebar') || document.querySelector('.adm-sidebar');
+    if (btn) btn.classList.toggle('is-active');
+    if (menu) menu.classList.toggle('open');
+    if (overlay) overlay.classList.toggle('open');
+    if (sidebar) sidebar.classList.toggle('mobile-open');
+  }
 function closeMobileMenu(){document.getElementById('mobileMenu').classList.remove('open');document.getElementById('mobileMenuOverlay').classList.remove('open');}
 </script>
 </body>

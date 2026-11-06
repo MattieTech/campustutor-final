@@ -72,13 +72,13 @@
 <script>
 const t=localStorage.getItem('ct_theme')||'light';
 document.documentElement.setAttribute('data-theme',t);
-document.getElementById('themeBtn').textContent=t==='dark'?'<i class="fa-solid fa-sun"></i>':'<i class="fa-solid fa-moon"></i>';
+document.getElementById('themeBtn').innerHTML = t==='dark'?'<i class="fa-solid fa-sun"></i>':'<i class="fa-solid fa-moon"></i>';
 document.getElementById('themeBtn').addEventListener('click',()=>{
   const c=document.documentElement.getAttribute('data-theme');
   const n=c==='dark'?'light':'dark';
   document.documentElement.setAttribute('data-theme',n);
   localStorage.setItem('ct_theme',n);
-  document.getElementById('themeBtn').textContent=n==='dark'?'<i class="fa-solid fa-sun"></i>':'<i class="fa-solid fa-moon"></i>';
+  document.getElementById('themeBtn').innerHTML = n==='dark'?'<i class="fa-solid fa-sun"></i>':'<i class="fa-solid fa-moon"></i>';
   renderGoogleButton();
 });
 redirectIfLoggedIn();

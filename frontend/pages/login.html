@@ -54,13 +54,13 @@
 <script>
 const t = localStorage.getItem('ct_theme')||'light';
 document.documentElement.setAttribute('data-theme',t);
-document.getElementById('themeBtn').textContent = t==='dark'?'<i class="fa-solid fa-sun"></i>':'<i class="fa-solid fa-moon"></i>';
+document.getElementById('themeBtn').innerHTML = t==='dark'?'<i class="fa-solid fa-sun"></i>':'<i class="fa-solid fa-moon"></i>';
 document.getElementById('themeBtn').addEventListener('click',()=>{
   const c=document.documentElement.getAttribute('data-theme');
   const n=c==='dark'?'light':'dark';
   document.documentElement.setAttribute('data-theme',n);
   localStorage.setItem('ct_theme',n);
-  document.getElementById('themeBtn').textContent=n==='dark'?'<i class="fa-solid fa-sun"></i>':'<i class="fa-solid fa-moon"></i>';
+  document.getElementById('themeBtn').innerHTML = n==='dark'?'<i class="fa-solid fa-sun"></i>':'<i class="fa-solid fa-moon"></i>';
   renderGoogleButton();
 });
 redirectIfLoggedIn();
@@ -81,19 +81,7 @@ document.getElementById('loginForm').addEventListener('submit',async(e)=>{
     return;
   }
   showToast(`Welcome back, ${data.user.fullName || 'Scholar'}! <i class="fa-solid fa-hand"></i>`,'success');
-  const role = data.user?.app_metadata?.role || data.user?.role;
-  if (role === 'admin') {
-    setTimeout(()=>{window.location.href='/pages/dashboard.html';},800);
-    return;
-  }
-  const { data: stats } = await apiRequest(`/api/upload/stats/${data.user.id}`);
-  const plan = (stats?.plan || 'free').toLowerCase();
-  const isExpired = stats?.subscription_end ? (new Date(stats.subscription_end).getTime() < Date.now()) : false;
-  if (plan === 'free' || isExpired) {
-    setTimeout(()=>{window.location.href='/pages/pricing.html?reason=paywall';},800);
-  } else {
-    setTimeout(()=>{window.location.href='/pages/dashboard.html';},800);
-  }
+  setTimeout(()=>{window.location.href='/pages/dashboard.html';},800);
 });
 
 let googleClientId = "";

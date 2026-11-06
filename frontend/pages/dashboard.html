@@ -51,367 +51,640 @@
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
-<nav class="navbar">
-  <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
-  <a href="/" class="brand"><div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span> <span class="brand-ai">AI</span></a>
-  <div class="navbar-right">
-    <a href="/pages/pricing.html" class="btn btn-warning btn-sm" style="display:flex;align-items:center;gap:6px;font-weight:700;background:linear-gradient(135deg, #ffb020, #d97806);color:#fff;border:none;border-radius:20px;padding:6px 14px;text-decoration:none;font-size:0.8rem;margin-right:8px;"><i class="fa-solid fa-crown"></i> Upgrade</a>
-    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
-    <span id="userGreeting" style="display: none;"></span>
-    <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop">Log Out</button>
-  </div>
-</nav>
 
-<div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="closeMobileMenu()"></div>
-<nav class="mobile-menu" id="mobileMenu">
-  <a href="/pages/dashboard.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-house"></i> Dashboard</a>
-  <a href="/pages/upload.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-cloud-arrow-up"></i> Uploads</a>
-  <a href="/pages/history.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-chart-simple"></i> History</a>
-  <a href="/pages/pricing.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-credit-card"></i> Upgrade Plan</a>
-  <a href="/pages/referral.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-users"></i> Refer & Earn</a>
-  <button class="mobile-menu-item" onclick="closeMobileMenu(); openLeaderboardModal()"><i class="fa-solid fa-trophy"></i> Weekly Leaderboard</button>
-  <button class="mobile-menu-item" onclick="closeMobileMenu(); openActivityModal()"><i class="fa-solid fa-clock-rotate-left"></i> Activity Log</button>
-  <a href="/pages/dashboard.html#profile" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-user"></i> Profile</a>
-  <button class="mobile-menu-item logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
-</nav>
+<div class="ct-sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileMenu()"></div>
 
-<div class="app-layout">
-  <aside class="sidebar">
-    <div class="sidebar-section">Main</div>
-    <a href="/pages/dashboard.html" class="sidebar-link active"><i class="fa-solid fa-house"></i> Dashboard</a>
-    <a href="/pages/history.html" class="sidebar-link"><i class="fa-solid fa-chart-simple"></i> History</a>
-    <a href="/pages/upload.html" class="sidebar-link"><i class="fa-solid fa-cloud-arrow-up"></i> Upload PDF</a>
-    <a href="/pages/pricing.html" class="sidebar-link"><i class="fa-solid fa-credit-card"></i> Upgrade Plan</a>
-    <a href="/pages/referral.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Refer & Earn</a>
+<div class="ct-dashboard-app">
+  <!-- LEFT SIDEBAR -->
+  <aside class="ct-sidebar" id="dashboardSidebar">
+    <!-- Brand Header -->
+    <a href="/" class="ct-sidebar-brand">
+      <div class="ct-brand-icon-box">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <div class="ct-brand-text-wrap">
+        <div class="ct-brand-title-row">
+          <span class="ct-brand-name">CampusTutor</span>
+          <span class="ct-brand-version-badge">2.0</span>
+        </div>
+        <span class="ct-brand-tagline">Learn • Practice • Excel</span>
+      </div>
+    </a>
 
-    <div class="sidebar-section" style="margin-top:8px;">Social & Stats</div>
-    <button class="sidebar-link" onclick="openLeaderboardModal()" style="background:none;border:none;width:100%;text-align:left;cursor:pointer;"><i class="fa-solid fa-trophy"></i> Leaderboard</button>
-    <button class="sidebar-link" onclick="openActivityModal()" style="background:none;border:none;width:100%;text-align:left;cursor:pointer;"><i class="fa-solid fa-clock-rotate-left"></i> Activity Log</button>
+    <!-- Primary Nav Links -->
+    <div class="ct-nav-group">
+      <a href="/pages/dashboard.html" class="ct-nav-link active">
+        <i class="fa-solid fa-house"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="/pages/history.html" class="ct-nav-link">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span>History</span>
+      </a>
+      <a href="/pages/upload.html" class="ct-nav-link">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <span>Upload PDF</span>
+      </a>
+      <a href="/pages/pricing.html" class="ct-nav-link">
+        <i class="fa-solid fa-credit-card"></i>
+        <span>Upgrade Plan</span>
+      </a>
+      <a href="/pages/referral.html" class="ct-nav-link">
+        <i class="fa-solid fa-users"></i>
+        <span>Refer & Earn</span>
+      </a>
+    </div>
 
-    <div class="sidebar-section" style="margin-top:8px;">Study Tools</div>
-    <div id="sidebarDocs"></div>
+    <!-- Social & Stats -->
+    <div class="ct-nav-group">
+      <div class="ct-nav-section-title">Social & Stats</div>
+      <button type="button" class="ct-nav-link" onclick="openLeaderboardModal()">
+        <i class="fa-solid fa-trophy" style="color:#f59e0b;"></i>
+        <span>Leaderboard</span>
+      </button>
+      <button type="button" class="ct-nav-link" onclick="openActivityModal()">
+        <i class="fa-solid fa-chart-line" style="color:#10b981;"></i>
+        <span>Activity Log</span>
+      </button>
+    </div>
 
-    <div class="sidebar-section" style="margin-top:8px;">Productivity</div>
-    <button class="sidebar-link" onclick="openPomodoro()" style="background:none;border:none;width:100%;text-align:left;padding:10px 12px;cursor:pointer;font-size:0.88rem;font-weight:500;"><i class="fa-solid fa-stopwatch"></i> Focus Timer</button>
-    <a href="#" class="sidebar-link"><i class="fa-solid fa-bookmark"></i> Bookmarks</a>
+    <!-- Study Tools & Recent Files -->
+    <div class="ct-nav-group">
+      <div class="ct-nav-section-title">Study Tools</div>
+      <div id="sidebarDocs" style="display:flex; flex-direction:column; gap:2px;"></div>
+    </div>
 
-    <div class="sidebar-bottom">
-      <div style="font-size:0.7rem;color:var(--label4);text-align:center;padding:8px;"><i class="fa-solid fa-bolt"></i> Developed by MattieTech</div>
-      <div style="font-size:0.7rem;color:var(--label4);text-align:center;padding:8px;">Version 1.0.1</div>
+    <!-- Productivity -->
+    <div class="ct-nav-group">
+      <div class="ct-nav-section-title">Productivity</div>
+      <button type="button" class="ct-nav-link" onclick="openPomodoro()">
+        <i class="fa-solid fa-stopwatch" style="color:#38bdf8;"></i>
+        <span>Focus Timer</span>
+      </button>
+      <a href="/pages/dashboard.html#profile" class="ct-nav-link">
+        <i class="fa-solid fa-bookmark" style="color:#a855f7;"></i>
+        <span>Bookmarks</span>
+      </a>
+    </div>
+
+    <!-- Bottom Upgrade CTA Card -->
+    <div class="ct-sidebar-upgrade-card">
+      <div class="ct-upgrade-card-title">
+        <i class="fa-solid fa-crown anim-crown" style="color:#fbbf24;"></i>
+        <span>Upgrade to Pro</span>
+      </div>
+      <div class="ct-upgrade-card-desc">
+        Unlock premium features and get the best experience.
+      </div>
+      <a href="/pages/pricing.html" class="ct-upgrade-card-btn">
+        <span>Upgrade Now</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </a>
     </div>
   </aside>
 
+  <!-- MAIN CONTENT COLUMN -->
+  <div class="ct-main-layout">
+    <!-- TOP NAVBAR -->
+    <header class="ct-navbar-header">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <!-- Animated Hamburger Button -->
+        <button id="mobileMenuBtn" class="ct-hamburger-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">
+          <span class="ct-hamburger-bar ct-bar-top"></span>
+          <span class="ct-hamburger-bar ct-bar-mid"></span>
+          <span class="ct-hamburger-bar ct-bar-bot"></span>
+        </button>
 
-  <main class="main-content">
-    <!-- Email Verification Pending Banner -->
-    <div id="verificationBanner" style="display:none; margin-bottom: 20px; padding: 14px 18px; border-radius: var(--r); background: rgba(255, 159, 67, 0.1); border-left: 4px solid var(--orange); justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <i class="fa-solid fa-triangle-exclamation" style="color: var(--orange); font-size: 1.15rem;"></i>
-        <span style="font-weight: 600; font-size: 0.9rem; color: var(--label);">Your email address is not verified. Please verify your account to unlock all features.</span>
+        <!-- Brand in navbar for mobile -->
+        <a href="/" class="brand" style="display:none;" id="mobileNavBrand">
+          <div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+          <span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span> <span class="brand-ai">2.0</span>
+        </a>
+
+        <!-- Search Bar -->
+        <div class="ct-nav-search-wrap">
+          <i class="fa-solid fa-magnifying-glass" style="color:#94a3b8; font-size:0.9rem;"></i>
+          <input type="text" id="navSearchInput" class="ct-nav-search-input" placeholder="Search for topics, notes, or documents..." oninput="filterDashboardDocs(this.value)" />
+          <span class="ct-nav-search-key">Ctrl + K</span>
+        </div>
       </div>
-      <div style="display: flex; gap: 8px;">
-        <button onclick="openVerificationModal()" class="btn btn-warning btn-sm" style="background: var(--orange); border: none; font-weight: 700; color: #fff; padding: 6px 14px; border-radius: 20px; cursor: pointer;">Verify Email</button>
-        <button onclick="document.getElementById('verificationBanner').style.display='none'" class="btn btn-ghost btn-sm" style="border-radius: 20px; padding: 6px 14px; font-weight: 600;">Verify Later</button>
-      </div>
-    </div>
 
-    <div class="page-header">
-      <h1 id="welcomeMsg">Welcome back, Student <i class="fa-solid fa-graduation-cap"></i></h1>
-      <p>Your study hub — track progress, manage documents, stay motivated.</p>
-    </div>
+      <!-- Right Navbar Actions -->
+      <div class="ct-nav-right-actions">
+        <!-- Notification Bell -->
+        <button class="ct-nav-circle-btn" aria-label="Notifications" onclick="openActivityModal()" title="Notifications & Activity">
+          <i class="fa-solid fa-bell"></i>
+          <span class="ct-nav-bell-badge">2</span>
+        </button>
 
-    <div class="dashboard-grid-layout">
-      <!-- Left Column: Core Actions & Tools -->
-      <div style="display:flex;flex-direction:column;gap:20px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <a href="/pages/upload.html" class="btn btn-primary btn-lg" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-weight:700;">
-            <i class="fa-solid fa-file-pdf"></i> Upload PDF
-          </a>
-          <a href="/pages/upload.html" class="btn btn-primary btn-lg" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-weight:700;">
-            <i class="fa-solid fa-image"></i> Upload Image
-          </a>
+        <!-- Daily Gift Button -->
+        <button class="ct-daily-gift-btn" onclick="openCoinsModal()" title="Claim your daily study coins bonus">
+          <i class="fa-solid fa-gift anim-gift"></i>
+          <span>Daily Gift</span>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button class="ct-nav-circle-btn theme-btn" id="themeBtn" aria-label="Toggle dark mode" title="Toggle theme">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+
+        <!-- User Avatar & Greeting -->
+        <div class="ct-nav-user-avatar" onclick="window.location.href='/pages/dashboard.html#profile'">
+          <div class="ct-avatar-circle" id="userAvatarCircle">
+            <span id="userAvatarInitials">ST</span>
+            <span class="ct-avatar-status-dot"></span>
+          </div>
+          <span id="userGreeting" style="font-size:0.86rem; font-weight:700; color:var(--ct-text-main); display:inline-block;">Hi, Student</span>
+          <i class="fa-solid fa-chevron-down" style="font-size:0.72rem; color:#94a3b8;"></i>
         </div>
 
-        <!-- Mini Stats Grid (Repositioned here below Upload buttons) -->
-        <div class="stats-row dashboard-stats-row">
-          <div class="stat-card"><div class="stat-num" id="statDocs" style="color:var(--blue);">—</div><div class="stat-label">Documents</div></div>
-          <div class="stat-card"><div class="stat-num" id="statStreak" style="color:var(--orange);">0 <i class="fa-solid fa-fire"></i></div><div class="stat-label">Day Streak</div></div>
-          <div class="stat-card"><div class="stat-num" id="statXP" style="color:var(--purple);">0</div><div class="stat-label">Total XP</div></div>
-          <div class="stat-card"><div class="stat-num" id="statPlan" style="color:var(--green);">Free</div><div class="stat-label">Plan</div></div>
-        </div>
+        <!-- Desktop Logout -->
+        <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop" style="border-radius:20px; font-size:0.78rem; padding:6px 14px;">Log Out</button>
+      </div>
+    </header>
 
-        <!-- Concept Explainer -->
-        <div class="card liquid-glass-card" style="margin:0;">
-          <div class="card-body">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-              <span style="font-size:1.5rem;"><i class="fa-solid fa-comment-dots"></i></span>
-              <div>
-                <div style="font-weight:700;font-size:0.95rem;">Explain a Concept</div>
-                <div style="font-size:0.8rem;color:var(--label3);">Ask the AI to explain any topic or concept instantly</div>
-              </div>
-            </div>
-            <div style="display:flex;gap:8px;margin-bottom:6px;">
-              <input type="text" class="form-input" id="conceptInput" placeholder="e.g., Photosynthesis, Newton's Laws..." style="flex:1;min-width:200px;"/>
-              <button onclick="explainConcept()" class="btn btn-primary" style="white-space:nowrap;">Send</button>
-            </div>
-            <div id="conceptResult" style="display:none;margin-top:12px;padding:16px;background:rgba(118,118,128,.08);border-radius:var(--r,12px);color:var(--label);font-size:0.9rem;max-height:400px;overflow-y:auto;line-height:1.6;"></div>
+    <!-- DASHBOARD BODY -->
+    <main class="ct-dashboard-body">
+      <!-- Email Verification Pending Banner -->
+      <div id="verificationBanner" style="display:none; padding:14px 18px; border-radius:var(--r); background:rgba(255,159,67,0.12); border-left:4px solid var(--orange); justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <i class="fa-solid fa-triangle-exclamation" style="color:var(--orange); font-size:1.15rem;"></i>
+          <span style="font-weight:600; font-size:0.9rem; color:var(--label);">Your email address is not verified. Please verify your account to unlock all features.</span>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button onclick="openVerificationModal()" class="btn btn-warning btn-sm" style="background:var(--orange); border:none; font-weight:700; color:#fff; padding:6px 14px; border-radius:20px; cursor:pointer;">Verify Email</button>
+          <button onclick="document.getElementById('verificationBanner').style.display='none'" class="btn btn-ghost btn-sm" style="border-radius:20px; padding:6px 14px; font-weight:600;">Verify Later</button>
+        </div>
+      </div>
+
+      <!-- PANORAMIC HERO BANNER -->
+      <div class="ct-hero-banner">
+        <div class="ct-hero-left">
+          <span class="ct-hero-welcome-sub">Welcome back,</span>
+          <h1 id="welcomeMsg" class="ct-hero-user-name">matthewaliu001</h1>
+          <p class="ct-hero-tagline">Your study hub — track progress, manage documents, and stay motivated.</p>
+          <div class="ct-hero-quote-pill">
+            <span>❝ Dream big, study smart, achieve more.</span>
           </div>
         </div>
 
-        <!-- AI Assignment & Problem Solver Widget -->
-        <div class="card liquid-glass-card" style="margin:0; border: 1.5px solid rgba(0, 122, 255, 0.25);">
-          <div class="card-body">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <span style="font-size:1.4rem; color:var(--blue);"><i class="fa-solid fa-calculator"></i></span>
-                <div>
-                  <div style="font-weight:700;font-size:0.95rem;">Step-by-Step Problem Solver</div>
-                  <div style="font-size:0.78rem;color:var(--label3);">Math, physics, engineering & coding solutions</div>
-                </div>
-              </div>
-              <span class="coin-badge-pill">
-                <i class="fa-solid fa-coins anim-coin"></i> 5 Coins / Free on Pro
+        <!-- Hero Gamification Box -->
+        <div class="ct-hero-gamification-box">
+          <div>
+            <div class="ct-hero-level-row" style="margin-bottom:8px;">
+              <span class="ct-hero-level-chip">
+                <i class="fa-solid fa-star"></i> Level <span id="xpLevel">2</span>
               </span>
+              <span class="ct-hero-xp-val"><span id="xpCur">75</span> / <span id="xpMax">250</span> XP</span>
             </div>
-            <textarea class="form-input" id="solverProblemInput" placeholder="Paste your assignment question, math formula, or engineering problem here..." rows="3" style="width:100%; resize:vertical; margin-bottom:8px; font-family:inherit;"></textarea>
-            <div style="display:flex; gap:8px; justify-content:flex-end;">
-              <button onclick="solveAssignmentProblem()" id="btnSolveProblem" class="btn btn-primary" style="font-weight:700;">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> Solve with Step-by-Step Work
-              </button>
+            <div class="ct-hero-xp-track">
+              <div class="ct-hero-xp-bar" id="xpFill" style="width: 30%;"></div>
             </div>
-            <div id="solverResult" style="display:none;margin-top:14px;padding:16px;background:rgba(0,122,255,0.05);border:1px solid rgba(0,122,255,0.2);border-radius:var(--r,12px);font-size:0.9rem;max-height:400px;overflow-y:auto;line-height:1.6;"></div>
+          </div>
+
+          <!-- Daily Study Quest Progress -->
+          <div class="ct-hero-quest-row">
+            <div class="ct-hero-quest-gauge">
+              <svg width="48" height="48" viewBox="0 0 48 48">
+                <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="4.5"></circle>
+                <circle cx="24" cy="24" r="20" fill="none" stroke="#38bdf8" stroke-width="4.5" stroke-dasharray="125.6" stroke-dashoffset="0" id="dailyGoalCircle" stroke-linecap="round" style="transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset 0.6s ease;"></circle>
+              </svg>
+              <div class="ct-gauge-center-text" id="dailyGoalPct">100%</div>
+            </div>
+            <div class="ct-hero-quest-info">
+              <div class="ct-hero-quest-title">Daily Study Quest</div>
+              <div class="ct-hero-quest-desc" id="dailyGoalText">Earned 50 / 50 XP today</div>
+            </div>
+            <div class="ct-hero-quest-check">
+              <i class="fa-solid fa-check"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 STATS ROW CARDS -->
+      <div class="ct-stats-grid-4">
+        <!-- 1. Documents -->
+        <a href="#documentsSection" class="ct-stat-pill-card">
+          <div class="ct-stat-card-left">
+            <div class="ct-stat-icon-square" style="background:#eff6ff; color:#2563eb;">
+              <i class="fa-solid fa-file-lines"></i>
+            </div>
+            <div class="ct-stat-data">
+              <div class="ct-stat-number" id="statDocs">19</div>
+              <div class="ct-stat-name">Documents</div>
+            </div>
+          </div>
+          <div class="ct-stat-arrow-btn">
+            <i class="fa-solid fa-arrow-right"></i>
+          </div>
+        </a>
+
+        <!-- 2. Day Streak -->
+        <div class="ct-stat-pill-card" onclick="openCoinsModal()">
+          <div class="ct-stat-card-left">
+            <div class="ct-stat-icon-square" style="background:#fff7ed; color:#f97316;">
+              <i class="fa-solid fa-fire anim-fire"></i>
+            </div>
+            <div class="ct-stat-data">
+              <div class="ct-stat-number" id="statStreak">10</div>
+              <div class="ct-stat-name">Day Streak</div>
+            </div>
+          </div>
+          <div class="ct-stat-arrow-btn">
+            <i class="fa-solid fa-arrow-right"></i>
           </div>
         </div>
 
-        <!-- Thesis & Academic Essay Polisher Widget -->
-        <div class="card liquid-glass-card" style="margin:0; border: 1.5px solid rgba(175, 82, 222, 0.25);">
-          <div class="card-body">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <span style="font-size:1.4rem; color:var(--purple);"><i class="fa-solid fa-feather-pointed"></i></span>
+        <!-- 3. Total XP -->
+        <div class="ct-stat-pill-card" onclick="openLeaderboardModal()">
+          <div class="ct-stat-card-left">
+            <div class="ct-stat-icon-square" style="background:#faf5ff; color:#a855f7;">
+              <i class="fa-solid fa-star anim-sparkle"></i>
+            </div>
+            <div class="ct-stat-data">
+              <div class="ct-stat-number" id="statXP">175</div>
+              <div class="ct-stat-name">Total XP</div>
+            </div>
+          </div>
+          <div class="ct-stat-arrow-btn">
+            <i class="fa-solid fa-arrow-right"></i>
+          </div>
+        </div>
+
+        <!-- 4. Plan -->
+        <a href="/pages/pricing.html" class="ct-stat-pill-card">
+          <div class="ct-stat-card-left">
+            <div class="ct-stat-icon-square" style="background:#f0fdf4; color:#10b981;">
+              <i class="fa-solid fa-crown anim-crown"></i>
+            </div>
+            <div class="ct-stat-data">
+              <div class="ct-stat-number" id="statPlan" style="font-size:1.35rem; color:#10b981;">PLUS ⚡</div>
+              <div class="ct-stat-name">Plan</div>
+            </div>
+          </div>
+          <div class="ct-stat-arrow-btn">
+            <i class="fa-solid fa-arrow-right"></i>
+          </div>
+        </a>
+      </div>
+
+      <!-- TWO COLUMN MAIN GRID -->
+      <div class="ct-grid-2col">
+        <!-- LEFT COLUMN: Main AI Tools & Documents -->
+        <div style="display:flex; flex-direction:column; gap:20px;">
+          <!-- 1. EXPLAIN A CONCEPT WIDGET (Hero Mascot Card) -->
+          <div class="ct-card">
+            <div class="ct-concept-hero-card">
+              <img src="/images/robot_mascot.jpg" alt="AI Robot Tutor" class="ct-concept-illustration" />
+              <div class="ct-concept-content-wrap">
                 <div>
-                  <div style="font-weight:700;font-size:0.95rem;">Thesis & Coursework Polisher</div>
-                  <div style="font-size:0.78rem;color:var(--label3);">Elevate tone, structure, grammar & academic rigor</div>
+                  <div class="ct-card-title-group" style="margin-bottom:4px;">
+                    <i class="fa-solid fa-wand-magic-sparkles" style="color:#8b5cf6; font-size:1.15rem;"></i>
+                    <h2 class="ct-card-title-text">Explain a Concept</h2>
+                  </div>
+                  <div class="ct-card-subtitle-text">Ask the AI to explain any topic or concept instantly</div>
+                </div>
+
+                <!-- Input & Send Pill Button -->
+                <div class="ct-prompt-input-row">
+                  <input type="text" class="ct-prompt-input-field" id="conceptInput" placeholder="e.g., Photosynthesis, Newton's Laws, Data Structures..." onkeydown="if(event.key==='Enter') explainConcept()" />
+                  <button type="button" onclick="explainConcept()" class="ct-send-pill-btn">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span>Send</span>
+                  </button>
+                </div>
+
+                <!-- Quick Action Chips -->
+                <div class="ct-quick-chips-row">
+                  <button type="button" class="ct-action-chip" onclick="applyConceptChip('Summarize: ')">
+                    <i class="fa-solid fa-list-check" style="color:#2563eb;"></i> Summarize
+                  </button>
+                  <button type="button" class="ct-action-chip" onclick="applyConceptChip('Get Detailed Study Notes: ')">
+                    <i class="fa-solid fa-book-open" style="color:#8b5cf6;"></i> Get Notes
+                  </button>
+                  <button type="button" class="ct-action-chip" onclick="applyConceptChip('Solve Step-by-Step: ')">
+                    <i class="fa-solid fa-calculator" style="color:#f59e0b;"></i> Solve Problem
+                  </button>
+                  <button type="button" class="ct-action-chip" onclick="applyConceptChip('Explain in Simple Terms: ')">
+                    <i class="fa-solid fa-lightbulb anim-bulb" style="color:#10b981;"></i> Explain Topic
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Concept Result Container -->
+            <div id="conceptResult" style="display:none; margin-top:16px; padding:20px; background:rgba(37,99,235,0.04); border:1px solid rgba(37,99,235,0.15); border-radius:18px; color:var(--ct-text-main); font-size:0.92rem; max-height:450px; overflow-y:auto; line-height:1.65;"></div>
+          </div>
+
+          <!-- 2. STEP-BY-STEP PROBLEM SOLVER WIDGET -->
+          <div class="ct-card" style="border-color:rgba(16,185,129,0.3);">
+            <div class="ct-card-header-row" style="margin-bottom:12px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:36px; height:36px; background:#f0fdf4; color:#10b981; border-radius:10px; display:grid; place-items:center; font-size:1.15rem;">
+                  <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                  <h3 class="ct-card-title-text" style="font-size:1.05rem;">Step-by-Step Problem Solver</h3>
+                  <div class="ct-card-subtitle-text">Math, physics, engineering & coding solutions</div>
                 </div>
               </div>
               <span class="coin-badge-pill">
-                <i class="fa-solid fa-coins anim-coin"></i> 8 Coins / Free on Pro
+                <i class="fa-solid fa-coins anim-coin"></i> 5 COINS / FREE ON PRO
               </span>
+            </div>
+
+            <div class="ct-solver-hero-card">
+              <img src="/images/calculator_ruler.jpg" alt="Calculator and Ruler" class="ct-solver-illustration" />
+              <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
+                <textarea class="form-input" id="solverProblemInput" placeholder="Paste your assignment question, math formula, or engineering problem here..." rows="3" style="width:100%; resize:vertical; font-family:inherit; border-radius:16px;"></textarea>
+                <div style="display:flex; justify-content:flex-end;">
+                  <button type="button" onclick="solveAssignmentProblem()" id="btnSolveProblem" class="ct-send-pill-btn" style="background:linear-gradient(135deg, #1d4ed8, #2563eb); font-weight:700;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Solve with Step-by-Step Work</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Solver Result Container -->
+            <div id="solverResult" style="display:none; margin-top:16px; padding:20px; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2); border-radius:18px; font-size:0.92rem; max-height:450px; overflow-y:auto; line-height:1.65;"></div>
+          </div>
+
+          <!-- 3. ADDITIONAL AI STUDY TOOLS ACCORDION -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+            <h3 style="font-size:1.05rem; font-weight:800; color:var(--ct-text-main); display:flex; align-items:center; gap:8px;">
+              <i class="fa-solid fa-toolbox" style="color:#2563eb;"></i> Specialized Academic Tools
+            </h3>
+            <span style="font-size:0.75rem; color:var(--ct-text-muted); font-weight:600;">Full University Suite</span>
+          </div>
+
+          <!-- Thesis & Coursework Polisher -->
+          <div class="ct-card" style="padding:18px 20px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:36px; height:36px; border-radius:10px; background:#faf5ff; color:#a855f7; display:grid; place-items:center; font-size:1.1rem;">
+                  <i class="fa-solid fa-feather-pointed"></i>
+                </div>
+                <div>
+                  <div style="font-weight:800; font-size:0.95rem; color:var(--ct-text-main);">Thesis & Coursework Polisher</div>
+                  <div style="font-size:0.75rem; color:var(--ct-text-muted);">Elevate tone, structure, grammar & academic rigor</div>
+                </div>
+              </div>
+              <span class="coin-badge-pill"><i class="fa-solid fa-coins anim-coin"></i> 8 Coins / Free on Pro</span>
             </div>
             <div style="display:flex; gap:10px; margin-bottom:8px;">
-              <select class="form-input" id="polisherStyle" style="width: auto; font-size: 0.82rem; padding: 6px 10px;">
+              <select class="form-input" id="polisherStyle" style="width:auto; font-size:0.82rem; padding:6px 12px; border-radius:12px;">
                 <option value="academic">Academic / Scholarly</option>
                 <option value="persuasive">Persuasive / Argumentative</option>
                 <option value="concise">Concise & Punchy</option>
                 <option value="literature_review">Literature Review Standard</option>
               </select>
             </div>
-            <textarea class="form-input" id="polisherDraftInput" placeholder="Paste your essay paragraph, abstract, or project draft..." rows="3" style="width:100%; resize:vertical; margin-bottom:8px; font-family:inherit;"></textarea>
-            <div style="display:flex; gap:8px; justify-content:flex-end;">
-              <button onclick="polishAcademicEssay()" id="btnPolishEssay" class="btn btn-primary" style="background:var(--purple); border-color:var(--purple); font-weight:700;">
+            <textarea class="form-input" id="polisherDraftInput" placeholder="Paste your essay paragraph, abstract, or project draft..." rows="2" style="width:100%; resize:vertical; margin-bottom:8px; border-radius:14px; font-family:inherit;"></textarea>
+            <div style="display:flex; justify-content:flex-end;">
+              <button onclick="polishAcademicEssay()" id="btnPolishEssay" class="btn btn-primary btn-sm" style="background:#8b5cf6; border-color:#8b5cf6; font-weight:700; border-radius:20px;">
                 <i class="fa-solid fa-sparkles"></i> Polish & Elevate Draft
               </button>
             </div>
-            <div id="polisherResult" style="display:none;margin-top:14px;padding:16px;background:rgba(175,82,222,0.05);border:1px solid rgba(175,82,222,0.2);border-radius:var(--r,12px);font-size:0.9rem;max-height:400px;overflow-y:auto;line-height:1.6;"></div>
+            <div id="polisherResult" style="display:none; margin-top:12px; padding:16px; background:rgba(175,82,222,0.05); border:1px solid rgba(175,82,222,0.2); border-radius:14px; font-size:0.9rem; max-height:400px; overflow-y:auto; line-height:1.6;"></div>
           </div>
-        </div>
 
-        <!-- Final Year Project Topic & Proposal Architect -->
-        <div class="card liquid-glass-card" style="margin:0; border: 1.5px solid rgba(52, 199, 89, 0.25);">
-          <div class="card-body">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <span style="font-size:1.4rem; color:var(--green);"><i class="fa-solid fa-graduation-cap"></i></span>
+          <!-- Final Year Project Topic & Proposal Architect -->
+          <div class="ct-card" style="padding:18px 20px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:36px; height:36px; border-radius:10px; background:#f0fdf4; color:#10b981; display:grid; place-items:center; font-size:1.1rem;">
+                  <i class="fa-solid fa-graduation-cap"></i>
+                </div>
                 <div>
-                  <div style="font-weight:700;font-size:0.95rem;">Project & Proposal Architect</div>
-                  <div style="font-size:0.78rem;color:var(--label3);">Original topics, problem statements & methodology</div>
+                  <div style="font-weight:800; font-size:0.95rem; color:var(--ct-text-main);">Project & Proposal Architect</div>
+                  <div style="font-size:0.75rem; color:var(--ct-text-muted);">Original topics, problem statements & methodology</div>
                 </div>
               </div>
-              <span class="coin-badge-pill">
-                <i class="fa-solid fa-coins anim-coin"></i> 10 Coins / Free on Pro
-              </span>
+              <span class="coin-badge-pill"><i class="fa-solid fa-coins anim-coin"></i> 10 Coins / Free on Pro</span>
             </div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-              <input type="text" class="form-input" id="projectFieldInput" placeholder="Department (e.g. Computer Science)" style="font-size:0.85rem;" />
-              <input type="text" class="form-input" id="projectInterestsInput" placeholder="Interests (e.g. Cybersecurity, AI)" style="font-size:0.85rem;" />
+              <input type="text" class="form-input" id="projectFieldInput" placeholder="Department (e.g. Computer Science)" style="font-size:0.85rem; border-radius:12px;" />
+              <input type="text" class="form-input" id="projectInterestsInput" placeholder="Interests (e.g. Cybersecurity, AI)" style="font-size:0.85rem; border-radius:12px;" />
             </div>
-            <div style="display:flex; gap:8px; justify-content:flex-end;">
-              <button onclick="generateProjectProposals()" id="btnGenerateProposals" class="btn btn-primary" style="background:var(--green); border-color:var(--green); font-weight:700;">
+            <div style="display:flex; justify-content:flex-end;">
+              <button onclick="generateProjectProposals()" id="btnGenerateProposals" class="btn btn-primary btn-sm" style="background:#10b981; border-color:#10b981; font-weight:700; border-radius:20px;">
                 <i class="fa-solid fa-lightbulb anim-bulb"></i> Architect 3 Project Proposals
               </button>
             </div>
-            <div id="proposalsResult" style="display:none;margin-top:14px;padding:16px;background:rgba(52,199,89,0.05);border:1px solid rgba(52,199,89,0.2);border-radius:var(--r,12px);font-size:0.9rem;max-height:450px;overflow-y:auto;line-height:1.6;"></div>
+            <div id="proposalsResult" style="display:none; margin-top:12px; padding:16px; background:rgba(52,199,89,0.05); border:1px solid rgba(52,199,89,0.2); border-radius:14px; font-size:0.9rem; max-height:450px; overflow-y:auto; line-height:1.6;"></div>
           </div>
-        </div>
 
-        <!-- Viva & Oral Defense Drill Simulator -->
-        <div class="card liquid-glass-card" style="margin:0; border: 1.5px solid rgba(255, 149, 0, 0.25);">
-          <div class="card-body">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <span style="font-size:1.4rem; color:var(--orange);"><i class="fa-solid fa-user-shield"></i></span>
+          <!-- Viva & Oral Defense Drill Simulator -->
+          <div class="ct-card" style="padding:18px 20px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:36px; height:36px; border-radius:10px; background:#fff7ed; color:#f97316; display:grid; place-items:center; font-size:1.1rem;">
+                  <i class="fa-solid fa-user-shield"></i>
+                </div>
                 <div>
-                  <div style="font-weight:700;font-size:0.95rem;">Viva Defense Panel Drill</div>
-                  <div style="font-size:0.78rem;color:var(--label3);">Tough examiner questions, model answers & trap alerts</div>
+                  <div style="font-weight:800; font-size:0.95rem; color:var(--ct-text-main);">Viva Defense Panel Drill</div>
+                  <div style="font-size:0.75rem; color:var(--ct-text-muted);">Tough examiner questions, model answers & trap alerts</div>
                 </div>
               </div>
-              <span class="coin-badge-pill">
-                <i class="fa-solid fa-coins anim-coin"></i> 12 Coins / Free on Pro
-              </span>
+              <span class="coin-badge-pill"><i class="fa-solid fa-coins anim-coin"></i> 12 Coins / Free on Pro</span>
             </div>
-            <input type="text" class="form-input" id="vivaProjectTitle" placeholder="Project / Thesis Title..." style="width:100%; margin-bottom:8px; font-size:0.85rem;" />
-            <textarea class="form-input" id="vivaAbstract" placeholder="Brief abstract or scope (optional but recommended)..." rows="2" style="width:100%; resize:vertical; margin-bottom:8px; font-family:inherit;"></textarea>
-            <div style="display:flex; gap:8px; justify-content:flex-end;">
-              <button onclick="runVivaDefenseDrill()" id="btnRunViva" class="btn btn-primary" style="background:var(--orange); border-color:var(--orange); color:#fff; font-weight:700;">
+            <input type="text" class="form-input" id="vivaProjectTitle" placeholder="Project / Thesis Title..." style="width:100%; margin-bottom:8px; font-size:0.85rem; border-radius:12px;" />
+            <textarea class="form-input" id="vivaAbstract" placeholder="Brief abstract or scope (optional but recommended)..." rows="2" style="width:100%; resize:vertical; margin-bottom:8px; font-family:inherit; border-radius:12px;"></textarea>
+            <div style="display:flex; justify-content:flex-end;">
+              <button onclick="runVivaDefenseDrill()" id="btnRunViva" class="btn btn-primary btn-sm" style="background:#f97316; border-color:#f97316; color:#fff; font-weight:700; border-radius:20px;">
                 <i class="fa-solid fa-shield-halved"></i> Generate Defense Dossier
               </button>
             </div>
-            <div id="vivaResult" style="display:none;margin-top:14px;padding:16px;background:rgba(255,149,0,0.05);border:1px solid rgba(255,149,0,0.2);border-radius:var(--r,12px);font-size:0.9rem;max-height:450px;overflow-y:auto;line-height:1.6;"></div>
+            <div id="vivaResult" style="display:none; margin-top:12px; padding:16px; background:rgba(255,149,0,0.05); border:1px solid rgba(255,149,0,0.2); border-radius:14px; font-size:0.9rem; max-height:450px; overflow-y:auto; line-height:1.6;"></div>
           </div>
-        </div>
 
-        <!-- Exam Past Questions & Probability Predictor Widget -->
-        <div class="card liquid-glass-card" style="margin:0; border: 1.5px solid rgba(255, 59, 48, 0.25);">
-          <div class="card-body">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <span style="font-size:1.4rem; color:var(--red);"><i class="fa-solid fa-fire anim-fire"></i></span>
+          <!-- Exam Past Questions & Probability Predictor -->
+          <div class="ct-card" style="padding:18px 20px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:36px; height:36px; border-radius:10px; background:#fef2f2; color:#ef4444; display:grid; place-items:center; font-size:1.1rem;">
+                  <i class="fa-solid fa-fire anim-fire"></i>
+                </div>
                 <div>
-                  <div style="font-weight:700;font-size:0.95rem;">Exam & Past Question Predictor</div>
-                  <div style="font-size:0.78rem;color:var(--label3);">Recurring questions, CBT drill & lecturer marking traps</div>
+                  <div style="font-weight:800; font-size:0.95rem; color:var(--ct-text-main);">Exam & Past Question Predictor</div>
+                  <div style="font-size:0.75rem; color:var(--ct-text-muted);">Recurring questions, CBT drill & lecturer marking traps</div>
                 </div>
               </div>
-              <span class="coin-badge-pill">
-                <i class="fa-solid fa-coins anim-coin"></i> 15 Coins / Free on Pro
-              </span>
+              <span class="coin-badge-pill"><i class="fa-solid fa-coins anim-coin"></i> 15 Coins / Free on Pro</span>
             </div>
-            <input type="text" class="form-input" id="predictCourseCode" placeholder="Course Code (e.g. MTH101, CHM201, LAW301)..." style="width:100%; margin-bottom:8px; font-size:0.85rem;" />
-            <textarea class="form-input" id="predictTopics" placeholder="Key topics or syllabus chapters covered by your lecturer..." rows="2" style="width:100%; resize:vertical; margin-bottom:8px; font-family:inherit;"></textarea>
-            <div style="display:flex; gap:8px; justify-content:flex-end;">
-              <button onclick="predictExamPastQuestions()" id="btnPredictExam" class="btn btn-primary" style="background:var(--red); border-color:var(--red); color:#fff; font-weight:700;">
+            <input type="text" class="form-input" id="predictCourseCode" placeholder="Course Code (e.g. MTH101, CHM201, LAW301)..." style="width:100%; margin-bottom:8px; font-size:0.85rem; border-radius:12px;" />
+            <textarea class="form-input" id="predictTopics" placeholder="Key topics or syllabus chapters covered by your lecturer..." rows="2" style="width:100%; resize:vertical; margin-bottom:8px; font-family:inherit; border-radius:12px;"></textarea>
+            <div style="display:flex; justify-content:flex-end;">
+              <button onclick="predictExamPastQuestions()" id="btnPredictExam" class="btn btn-primary btn-sm" style="background:#ef4444; border-color:#ef4444; color:#fff; font-weight:700; border-radius:20px;">
                 <i class="fa-solid fa-bullseye"></i> Predict High-Yield Questions
               </button>
             </div>
-            <div id="predictResult" style="display:none;margin-top:14px;padding:16px;background:rgba(255,59,48,0.05);border:1px solid rgba(255,59,48,0.2);border-radius:var(--r,12px);font-size:0.9rem;max-height:450px;overflow-y:auto;line-height:1.6;"></div>
+            <div id="predictResult" style="display:none; margin-top:12px; padding:16px; background:rgba(255,59,48,0.05); border:1px solid rgba(255,59,48,0.2); border-radius:14px; font-size:0.9rem; max-height:450px; overflow-y:auto; line-height:1.6;"></div>
           </div>
-        </div>
 
-        <!-- Turnitin Plagiarism Bypasser & Humanizer Widget -->
-        <div class="card liquid-glass-card" style="margin:0; border: 1.5px solid rgba(0, 122, 255, 0.25);">
-          <div class="card-body">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <span style="font-size:1.4rem; color:var(--blue);"><i class="fa-solid fa-fingerprint"></i></span>
+          <!-- Turnitin Plagiarism Bypasser & Humanizer -->
+          <div class="ct-card" style="padding:18px 20px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:36px; height:36px; border-radius:10px; background:#eff6ff; color:#2563eb; display:grid; place-items:center; font-size:1.1rem;">
+                  <i class="fa-solid fa-fingerprint"></i>
+                </div>
                 <div>
-                  <div style="font-weight:700;font-size:0.95rem;">Turnitin Humanizer & Originality Shield</div>
-                  <div style="font-size:0.78rem;color:var(--label3);">Bypass AI detectors & eliminate plagiarism flags</div>
+                  <div style="font-weight:800; font-size:0.95rem; color:var(--ct-text-main);">Turnitin Humanizer & Originality Shield</div>
+                  <div style="font-size:0.75rem; color:var(--ct-text-muted);">Bypass AI detectors & eliminate plagiarism flags</div>
                 </div>
               </div>
-              <span class="coin-badge-pill">
-                <i class="fa-solid fa-coins anim-coin"></i> 10 Coins / Free on Pro
-              </span>
+              <span class="coin-badge-pill"><i class="fa-solid fa-coins anim-coin"></i> 10 Coins / Free on Pro</span>
             </div>
-            <textarea class="form-input" id="humanizeInput" placeholder="Paste your essay, literature review, or paragraph to rewrite and humanize..." rows="3" style="width:100%; resize:vertical; margin-bottom:8px; font-family:inherit;"></textarea>
-            <div style="display:flex; gap:8px; justify-content:flex-end;">
-              <button onclick="humanizeAcademicText()" id="btnHumanizeText" class="btn btn-primary" style="background:var(--blue); border-color:var(--blue); color:#fff; font-weight:700;">
+            <textarea class="form-input" id="humanizeInput" placeholder="Paste your essay, literature review, or paragraph to rewrite and humanize..." rows="2" style="width:100%; resize:vertical; margin-bottom:8px; font-family:inherit; border-radius:12px;"></textarea>
+            <div style="display:flex; justify-content:flex-end;">
+              <button onclick="humanizeAcademicText()" id="btnHumanizeText" class="btn btn-primary btn-sm" style="background:#2563eb; border-color:#2563eb; color:#fff; font-weight:700; border-radius:20px;">
                 <i class="fa-solid fa-wand-magic-sparkles"></i> Humanize & Shield Originality
               </button>
             </div>
-            <div id="humanizeResult" style="display:none;margin-top:14px;padding:16px;background:rgba(0,122,255,0.05);border:1px solid rgba(0,122,255,0.2);border-radius:var(--r,12px);font-size:0.9rem;max-height:450px;overflow-y:auto;line-height:1.6;"></div>
+            <div id="humanizeResult" style="display:none; margin-top:12px; padding:16px; background:rgba(0,122,255,0.05); border:1px solid rgba(0,122,255,0.2); border-radius:14px; font-size:0.9rem; max-height:450px; overflow-y:auto; line-height:1.6;"></div>
+          </div>
+
+          <!-- Documents Section -->
+          <div id="documentsSection" style="margin-top:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h2 style="font-size:1.15rem; font-weight:800; color:var(--ct-text-main); display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> Your Documents
+              </h2>
+              <a href="/pages/upload.html" class="btn btn-primary btn-sm" style="border-radius:20px; font-weight:700;">+ Upload New</a>
+            </div>
+            <div id="emptyState" style="display:none;" class="empty-state">
+              <div class="empty-state-icon"><i class="fa-solid fa-folder-open"></i></div>
+              <h3>No documents yet</h3>
+              <p>Upload your first PDF lecture note to start studying with AI assistance.</p>
+              <a href="/pages/upload.html" class="btn btn-primary" style="border-radius:20px;"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Your First PDF</a>
+            </div>
+            <div class="doc-grid" id="docGrid"></div>
           </div>
         </div>
 
-        <!-- Daily Brain Teaser Widget (Hidden) -->
-        <div class="card liquid-glass-card" style="display:none; margin:0; border: 1px solid rgba(0, 122, 255, 0.15);">
-          <div class="card-body">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-              <span style="font-size:1.5rem;color:var(--orange);"><i class="fa-solid fa-brain"></i></span>
-              <div>
-                <div style="font-weight:700;font-size:0.95rem;">Daily Trivia Quest</div>
-                <div style="font-size:0.8rem;color:var(--label3);">Solve today's question to earn bonus XP!</div>
+        <!-- RIGHT COLUMN: Quick Access & Recent Activity -->
+        <div style="display:flex; flex-direction:column; gap:20px;">
+          <!-- 1. QUICK ACCESS 2x2 CARD -->
+          <div class="ct-card">
+            <div class="ct-card-header-row">
+              <h3 class="ct-card-title-text" style="font-size:1.05rem;">Quick Access</h3>
+              <a href="/pages/upload.html" style="font-size:0.8rem; font-weight:700; color:#2563eb; display:flex; align-items:center; gap:4px;">
+                View All <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+
+            <div class="ct-quick-access-grid">
+              <!-- Tile 1: Upload PDF -->
+              <a href="/pages/upload.html" class="ct-quick-tile ct-tile-blue">
+                <div class="ct-quick-tile-icon-box" style="background:#2563eb;">
+                  <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <span class="ct-quick-tile-label">Upload PDF</span>
+              </a>
+
+              <!-- Tile 2: Study Tools -->
+              <a href="/pages/study.html" class="ct-quick-tile ct-tile-purple">
+                <div class="ct-quick-tile-icon-box" style="background:#a855f7;">
+                  <i class="fa-solid fa-briefcase"></i>
+                </div>
+                <span class="ct-quick-tile-label">Study Tools</span>
+              </a>
+
+              <!-- Tile 3: Leaderboard -->
+              <div class="ct-quick-tile ct-tile-amber" onclick="openLeaderboardModal()">
+                <div class="ct-quick-tile-icon-box" style="background:#f59e0b;">
+                  <i class="fa-solid fa-trophy"></i>
+                </div>
+                <span class="ct-quick-tile-label">Leaderboard</span>
+              </div>
+
+              <!-- Tile 4: Activity Log -->
+              <div class="ct-quick-tile ct-tile-green" onclick="openActivityModal()">
+                <div class="ct-quick-tile-icon-box" style="background:#10b981;">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                </div>
+                <span class="ct-quick-tile-label">Activity Log</span>
               </div>
             </div>
-            <div id="triviaContent" style="padding:14px; background:rgba(118,118,128,0.05); border-radius:var(--r); font-size:0.9rem; margin-bottom:12px;">
-              <div style="font-weight:600; margin-bottom:10px;" id="triviaQuestion">Loading question...</div>
-              <div style="display:flex; flex-direction:column; gap:8px;" id="triviaOptions"></div>
+          </div>
+
+          <!-- 2. RECENT ACTIVITY CARD -->
+          <div class="ct-card">
+            <div class="ct-card-header-row">
+              <h3 class="ct-card-title-text" style="font-size:1.05rem; display:flex; align-items:center; gap:6px;">
+                <i class="fa-solid fa-chart-line" style="color:#2563eb;"></i> Recent Activity
+              </h3>
+              <button type="button" onclick="openActivityModal()" style="background:none; border:none; font-size:0.8rem; font-weight:700; color:#2563eb; cursor:pointer; display:flex; align-items:center; gap:4px;">
+                View All <i class="fa-solid fa-arrow-right"></i>
+              </button>
             </div>
-            <div id="triviaFeedback" style="display:none; font-size:0.85rem; font-weight:600; padding:10px; border-radius:8px; text-align:center;"></div>
+
+            <div class="ct-activity-feed" id="recentActivityQuickFeed">
+              <div class="ct-activity-item">
+                <div class="ct-act-icon-box" style="background:#eff6ff; color:#2563eb;">
+                  <i class="fa-solid fa-file-lines"></i>
+                </div>
+                <div class="ct-act-info">
+                  <div class="ct-act-title" id="recentDocActivityTitle">CSC141 SLIDE.pptx</div>
+                  <div class="ct-act-time" id="recentDocActivityTime">Uploaded 2 hours ago</div>
+                </div>
+                <div class="ct-act-status-badge">
+                  <i class="fa-solid fa-circle-check"></i>
+                </div>
+              </div>
+
+              <div class="ct-activity-item">
+                <div class="ct-act-icon-box" style="background:#faf5ff; color:#a855f7;">
+                  <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div class="ct-act-info">
+                  <div class="ct-act-title">Daily Study Quest</div>
+                  <div class="ct-act-time">Completed today</div>
+                </div>
+                <div class="ct-act-status-badge">
+                  <i class="fa-solid fa-circle-check"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. TODAY'S CHALLENGE CARD -->
+          <div class="ct-card" style="border: 1.5px solid rgba(37,99,235,0.25); cursor:pointer;" onclick="window.location.href='/pages/upload.html'">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+              <span style="font-size:1.4rem; color:#2563eb;"><i class="fa-solid fa-bullseye"></i></span>
+              <div>
+                <div style="font-weight:800; font-size:0.95rem; color:var(--ct-text-main);">Today's Challenge</div>
+                <div style="font-size:0.75rem; color:var(--ct-text-muted);">Upload a PDF and generate flashcards to earn +50 XP</div>
+              </div>
+            </div>
+            <div class="progress-bar" style="height:6px; border-radius:4px; margin:10px 0;">
+              <div class="progress-fill" style="width: 50%; background:linear-gradient(90deg, #2563eb, #38bdf8);"></div>
+            </div>
+            <button class="btn btn-primary btn-sm btn-full" style="border-radius:20px; font-weight:700; margin-top:6px;" onclick="event.stopPropagation(); window.location.href='/pages/upload.html'">
+              Start Challenge <i class="fa-solid fa-rocket anim-rocket"></i>
+            </button>
+          </div>
+
+          <!-- 4. ACHIEVEMENTS CARD -->
+          <div class="ct-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 style="font-size:1rem; font-weight:800; color:var(--ct-text-main); display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-trophy" style="color:#f59e0b;"></i> Achievements
+              </h3>
+              <span class="badge badge-blue" id="badgeCount">0 / 6 Unlocked</span>
+            </div>
+            <div class="badges-grid" id="badgesGrid"></div>
           </div>
         </div>
       </div>
 
-      <!-- Right Column: Stats & Gamification -->
-      <div style="display:flex;flex-direction:column;gap:20px;">
-        <!-- Level Progress & Daily Target -->
-        <div class="xp-bar-wrap" style="margin-bottom:0;">
-          <div class="xp-row">
-            <div class="xp-level"><i class="fa-solid fa-bolt"></i> Level <span id="xpLevel">1</span></div>
-            <div class="xp-points"><span id="xpCur">0</span> / <span id="xpMax">100</span> XP</div>
-          </div>
-          <div class="xp-bar" style="margin-bottom:14px;"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
-
-          <!-- Daily XP Target progress ring -->
-          <div style="display:flex; align-items:center; gap:12px; margin-top:14px; padding-top:14px; border-top:1px solid var(--sep);">
-            <div style="position:relative; width:44px; height:44px; flex-shrink:0;">
-              <svg width="44" height="44" viewBox="0 0 44 44">
-                <circle cx="22" cy="22" r="18" fill="none" stroke="var(--sep)" stroke-width="4"></circle>
-                <circle cx="22" cy="22" r="18" fill="none" stroke="var(--blue)" stroke-width="4" stroke-dasharray="113" stroke-dashoffset="113" id="dailyGoalCircle" stroke-linecap="round" style="transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset 0.6s ease;"></circle>
-              </svg>
-              <div style="position:absolute; inset:0; display:grid; place-items:center; font-size:0.72rem; font-weight:800; color:var(--blue);" id="dailyGoalPct">0%</div>
-            </div>
-            <div>
-              <div style="font-weight:700; font-size:0.82rem;">Daily Study Quest</div>
-              <div style="font-size:0.75rem; color:var(--label3);" id="dailyGoalText">Earn 50 XP today!</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="quizWorkspace" style="display:none; margin-bottom: 24px;"></div>
-
-    <div style="margin-bottom:28px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <h2 style="font-size:1.1rem;font-family:var(--font-ui);font-weight:700;"><i class="fa-solid fa-trophy"></i> Achievements</h2>
-        <span class="badge badge-blue" id="badgeCount">0 / 6 Unlocked</span>
-      </div>
-      <div class="badges-grid" id="badgesGrid"></div>
-    </div>
-
-    <!-- Today's Challenge (Repositioned above Documents & Styled Premium) -->
-    <div class="card liquid-glass-card" style="margin-bottom:24px; cursor:pointer; border: 1.5px solid rgba(0, 122, 255, 0.2); transition: transform 0.2s, border-color 0.2s;" onclick="window.location.href='/pages/upload.html'" onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='var(--blue)'" onmouseout="this.style.transform='none'; this.style.borderColor='rgba(0,122,255,0.2)'">
-      <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
-        <div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-            <span style="font-size:1.5rem; color:var(--blue);"><i class="fa-solid fa-bullseye"></i></span>
-            <div>
-              <div style="font-weight:700;font-size:0.95rem;">Today's Challenge</div>
-              <div style="font-size:0.8rem;color:var(--label3);">Upload a PDF and generate flashcards to earn +50 XP</div>
-            </div>
-          </div>
-          <div class="progress-bar" style="width:220px;margin-top:8px;">
-            <div class="progress-fill" style="width:30%"></div>
-          </div>
-        </div>
-        <button class="btn btn-primary" onclick="event.stopPropagation(); window.location.href='/pages/upload.html'">Start Challenge <i class="fa-solid fa-rocket"></i></button>
-      </div>
-    </div>
-
-    <div style="margin-bottom:28px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <h2 style="font-size:1.1rem;font-family:var(--font-ui);font-weight:700;"><i class="fa-solid fa-file-pdf"></i> Your Documents</h2>
-        <a href="/pages/upload.html" class="btn btn-primary btn-sm">+ Upload New</a>
-      </div>
-      <div id="emptyState" style="display:none;" class="empty-state">
-        <div class="empty-state-icon"><i class="fa-solid fa-folder-open"></i></div>
-        <h3>No documents yet</h3>
-        <p>Upload your first PDF lecture note to start studying with AI assistance.</p>
-        <a href="/pages/upload.html" class="btn btn-primary"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Your First PDF</a>
-      </div>
-      <div class="doc-grid" id="docGrid"></div>
-    </div>
-
-  </main>
+      <!-- Quiz Workspace Container -->
+      <div id="quizWorkspace" style="display:none; margin-bottom: 24px;"></div>
+    </main>
+  </div>
 </div>
 
 <div id="pomoOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);z-index:800;align-items:center;justify-content:center;">
@@ -518,43 +791,61 @@ function initThemeToggle(){
   });
 }
 
-// ── MOBILE MENU TOGGLE ────────────────────────────────────────
+// ── ANIMATED HAMBURGER MENU & DRAWER TOGGLE ────────────────────
+function toggleMobileMenu(){
+  const btn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.getElementById('dashboardSidebar') || document.querySelector('.ct-sidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  if(!btn || !sidebar) return;
+  const isOpen = sidebar.classList.toggle('is-open');
+  btn.classList.toggle('is-active', isOpen);
+  if(backdrop) backdrop.classList.toggle('is-active', isOpen);
+}
+
+function closeMobileMenu(){
+  const btn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.getElementById('dashboardSidebar') || document.querySelector('.ct-sidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  if(sidebar) sidebar.classList.remove('is-open');
+  if(btn) btn.classList.remove('is-active');
+  if(backdrop) backdrop.classList.remove('is-active');
+}
+
 function initMobileMenu(){
-  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-  const sidebar = document.querySelector('.sidebar');
-  
-  if(!mobileMenuBtn || !sidebar){
-    console.warn('<i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> Mobile menu elements not found');
-    return;
-  }
-  
-  function updateMobileMenuVisibility(){
-    if(window.innerWidth <= 768){
-      mobileMenuBtn.style.display = 'grid';
-    } else {
-      mobileMenuBtn.style.display = 'none';
-      sidebar.classList.remove('mobile-open');
-    }
-  }
-  
-  updateMobileMenuVisibility();
-  window.addEventListener('resize', updateMobileMenuVisibility);
-  
-  mobileMenuBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    sidebar.classList.toggle('mobile-open');
-    mobileMenuBtn.textContent = sidebar.classList.contains('mobile-open') ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
-  });
-  
+  const sidebar = document.getElementById('dashboardSidebar') || document.querySelector('.ct-sidebar');
+  if(!sidebar) return;
   sidebar.querySelectorAll('a, button').forEach(el => {
-    if(el.tagName === 'A' || el.onclick){
-      el.addEventListener('click', () => {
-        sidebar.classList.remove('mobile-open');
-        mobileMenuBtn.innerHTML = '<i class="fa-solid fa-bars"></i>';
-      });
-    }
+    el.addEventListener('click', () => {
+      if(window.innerWidth <= 900){
+        closeMobileMenu();
+      }
+    });
   });
 }
+
+function applyConceptChip(prefix) {
+  const input = document.getElementById('conceptInput');
+  if (!input) return;
+  input.value = prefix;
+  input.focus();
+}
+
+function filterDashboardDocs(query) {
+  query = (query || '').toLowerCase().trim();
+  const docCards = document.querySelectorAll('#docGrid .doc-card');
+  docCards.forEach(card => {
+    const text = card.textContent.toLowerCase();
+    card.style.display = text.includes(query) ? '' : 'none';
+  });
+}
+
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    const search = document.getElementById('navSearchInput') || document.getElementById('conceptInput');
+    if (search) search.focus();
+  }
+});
 
 const t=localStorage.getItem('ct_theme')||'light';
 document.documentElement.setAttribute('data-theme',t);
@@ -567,23 +858,28 @@ if (urlParams.get('payment') === 'success') {
   const plan = urlParams.get('plan') || '';
   const displayPlan = plan.charAt(0).toUpperCase() + plan.slice(1);
   showToast(`Subscription successful! Your account has been upgraded to ${displayPlan} Plan. <i class="fa-solid fa-circle-check"></i>`, 'success');
-  // Clean up URL parameters so refresh doesn't trigger the toast again
   const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
   window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
 }
 
 const user=getUser();
 if(user){
-  if(user.fullName){
-    const firstName = user.fullName.split(' ')[0];
-    document.getElementById('userGreeting').innerHTML=`Hi, ${firstName} <i class="fa-solid fa-hand"></i>`;
-    document.getElementById('welcomeMsg').innerHTML=`Welcome back, ${firstName} <i class="fa-solid fa-graduation-cap"></i>`;
-  }
+  const name = user.fullName || user.email || 'Student';
+  const firstName = name.split(' ')[0];
+  const userGreeting = document.getElementById('userGreeting');
+  if (userGreeting) userGreeting.innerHTML = `Hi, ${firstName}`;
+  const welcomeMsg = document.getElementById('welcomeMsg');
+  if (welcomeMsg) welcomeMsg.textContent = user.fullName || user.email?.split('@')[0] || 'Student';
+  
+  const initials = name.substring(0, 2).toUpperCase();
+  const avatarInitials = document.getElementById('userAvatarInitials');
+  if (avatarInitials) avatarInitials.textContent = initials;
+
   if(user.isVerified === false){
-    document.getElementById('verificationBanner').style.display = 'flex';
+    const banner = document.getElementById('verificationBanner');
+    if (banner) banner.style.display = 'flex';
   }
 }
-
 
 async function loadUserStats(){
   const userId = user?.id;
@@ -871,8 +1167,19 @@ async function loadDocs(){
         <button class="btn btn-danger btn-sm" onclick="delDoc('${d.id}',this)"><i class="fa-solid fa-trash-can"></i></button>
       </div>
     </div>`).join('');
-  sidebar.innerHTML=docs.slice(0,5).map(d=>`
-    <a href="/pages/study.html?docId=${d.id}&name=${encodeURIComponent(d.file_name)}" class="sidebar-link" style="font-size:0.82rem;padding:8px 12px;"><i class="fa-solid fa-file-pdf"></i> ${d.file_name.length>22?d.file_name.substring(0,22)+'…':d.file_name}</a>`).join('');
+  sidebar.innerHTML=docs.slice(0,6).map(d=>`
+    <a href="/pages/study.html?docId=${d.id}&name=${encodeURIComponent(d.file_name)}" class="ct-sidebar-doc-item" title="${esc(d.file_name)}">
+      <i class="fa-solid fa-file-lines"></i>
+      <span>${d.file_name.length>20?d.file_name.substring(0,20)+'…':d.file_name}</span>
+    </a>`).join('');
+
+  if (docs.length > 0) {
+    const recentDoc = docs[0];
+    const actTitle = document.getElementById('recentDocActivityTitle');
+    const actTime = document.getElementById('recentDocActivityTime');
+    if (actTitle) actTitle.textContent = recentDoc.file_name;
+    if (actTime) actTime.textContent = 'Uploaded ' + formatDate(recentDoc.created_at);
+  }
 }
 
 loadActivity();
@@ -1696,7 +2003,7 @@ function initVerificationForm() {
     showToast('Email verified successfully! Thank you. <i class="fa-solid fa-circle-check"></i>', 'success');
     
     if (btn) {
-      btn.textContent = 'Verified <i class="fa-solid fa-circle-check" style="color:var(--green);margin-left:4px;"></i>';
+      btn.innerHTML = 'Verified <i class="fa-solid fa-circle-check" style="color:var(--green);margin-left:4px;"></i>';
     }
     
     // Update local storage object and state
