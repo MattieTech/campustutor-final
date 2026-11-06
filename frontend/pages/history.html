@@ -121,15 +121,15 @@
 
     <!-- XP History Tab -->
     <div id="xpTab" class="tab-content" style="display:none;">
-      <h2 style="font-size:1rem;margin-bottom:16px;font-weight:700;">XP Earning History</h2>
+      <h2 style="font-size:1rem;margin-bottom:16px;font-weight:700;">CampusCoins History & Rewards</h2>
       <div style="background:rgba(118,118,128,0.06);border-radius:var(--r-lg);padding:16px;margin-bottom:20px;">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
           <div>
-            <div style="font-size:0.8rem;color:var(--label3);margin-bottom:4px;">XP to Next Level</div>
+            <div style="font-size:0.8rem;color:var(--label3);margin-bottom:4px;">Available Balance</div>
             <div style="font-size:1.5rem;font-weight:700;" id="xpToNext">100</div>
           </div>
           <div>
-            <div style="font-size:0.8rem;color:var(--label3);margin-bottom:4px;">Lifetime XP</div>
+            <div style="font-size:0.8rem;color:var(--label3);margin-bottom:4px;">Total Coins Earned</div>
             <div style="font-size:1.5rem;font-weight:700;" id="lifetimeXP">0</div>
           </div>
         </div>
@@ -138,7 +138,7 @@
         </div>
       </div>
       
-      <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:12px;">XP Breakdown</h3>
+      <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:12px;">Coins Breakdown</h3>
       <div id="xpBreakdown" style="display:flex;flex-direction:column;gap:8px;"></div>
     </div>
   </main>
@@ -221,10 +221,10 @@ async function loadHistoryData(){
     document.getElementById('currentLevel').textContent=stats.level||1;
     document.getElementById('dayStreak').innerHTML = (stats.streak||0)+' <i class="fa-solid fa-fire"></i>';
     document.getElementById('totalDocs').textContent=stats.documentsCount||0;
-    document.getElementById('xpToNext').textContent=stats.xpToNextLevel||100;
-    document.getElementById('lifetimeXP').textContent=stats.xp||0;
-    const percent=((stats.xp||0)%100)/100;
-    document.getElementById('xpProgressBar').style.width=(percent*100)+'%';
+    const currentCoins = (window.userCoinState && window.userCoinState.coins !== undefined) ? window.userCoinState.coins : (stats.coins || 50);
+    document.getElementById('xpToNext').textContent = currentCoins + ' Coins';
+    document.getElementById('lifetimeXP').textContent = (currentCoins + 40) + ' Coins';
+    document.getElementById('xpProgressBar').style.width = '100%';
   }
 
   // Load activity
@@ -323,22 +323,22 @@ async function loadHistoryData(){
     document.getElementById('achievementsEmpty').style.display='block';
   }
 
-  // XP Breakdown
+  // Coins Breakdown
   document.getElementById('xpBreakdown').innerHTML=`
     <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(0,122,255,0.1);border-radius:var(--r);">
-      <span>Upload PDF</span><span style="font-weight:700;">+25 XP</span>
+      <span>Upload PDF</span><span style="font-weight:700;">+5 Coins</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(0,122,255,0.1);border-radius:var(--r);">
-      <span>Upload Image</span><span style="font-weight:700;">+20 XP</span>
+      <span>Upload Image</span><span style="font-weight:700;">+3 Coins</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(0,122,255,0.1);border-radius:var(--r);">
-      <span>Generate Summary</span><span style="font-weight:700;">+30 XP</span>
+      <span>Generate Summary</span><span style="font-weight:700;">+10 Coins</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(0,122,255,0.1);border-radius:var(--r);">
-      <span>Generate Flashcards</span><span style="font-weight:700;">+40 XP</span>
+      <span>Generate Flashcards</span><span style="font-weight:700;">+8 Coins</span>
     </div>
     <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(0,122,255,0.1);border-radius:var(--r);">
-      <span>Generate Questions</span><span style="font-weight:700;">+35 XP</span>
+      <span>Generate Questions</span><span style="font-weight:700;">+5 Coins</span>
     </div>
   `;
 }

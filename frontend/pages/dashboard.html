@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>CampusTutor AI — Study Hub</title>
 <link rel="stylesheet" href="/css/style.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
@@ -32,126 +32,132 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 
 <style>
-  /* ── EXACT SCREENSHOT STYLING ── */
-  :root {
-    --ct-blue: #2563eb;
-    --ct-blue-dark: #1d4ed8;
-    --ct-cyan: #38bdf8;
-    --ct-bg-soft: #f4f7fc;
-    --ct-card-bg: #ffffff;
-    --ct-border-soft: #edf2f7;
-    --ct-text-dark: #0f172a;
-    --ct-text-gray: #64748b;
+  /* ── STRICT MOBILE-FIRST CSS (Optimized for Infinix Hot 60i & 360px Android Viewports) ── */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
   }
-  [data-theme="dark"] {
-    --ct-bg-soft: #080e1e;
-    --ct-card-bg: #11192e;
-    --ct-border-soft: rgba(255,255,255,0.08);
-    --ct-text-dark: #f8fafc;
-    --ct-text-gray: #94a3b8;
-  }
-
-  body {
-    background: var(--ct-bg-soft);
-    background-image: 
-      radial-gradient(circle at 10% 5%, rgba(191, 219, 254, 0.35) 0%, transparent 35%),
-      radial-gradient(circle at 90% 12%, rgba(233, 213, 255, 0.35) 0%, transparent 35%);
-    background-attachment: fixed;
+  html, body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
     margin: 0;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
-    color: var(--ct-text-dark);
+    background: #f4f7fc;
+    background-image: 
+      radial-gradient(circle at 10% 5%, rgba(191, 219, 254, 0.4) 0%, transparent 35%),
+      radial-gradient(circle at 90% 12%, rgba(233, 213, 255, 0.4) 0%, transparent 35%);
+    background-attachment: fixed;
+    color: #0f172a;
     -webkit-font-smoothing: antialiased;
   }
-
-  /* Exact Centered Layout Container */
-  .ct-dashboard-container {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 16px 16px 90px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    box-sizing: border-box;
+  [data-theme="dark"] body {
+    background: #080e1e;
+    color: #f8fafc;
   }
 
-  /* Top Header matching reference */
+  /* Main Container - strictly constrained to 100% width with no overflow */
+  .ct-dashboard-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 10px 12px 84px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Top Bar */
   .ct-exact-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 0 2px 0;
+    padding: 4px 0 2px 0;
+    width: 100%;
   }
   .ct-exact-brand {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     text-decoration: none;
+    min-width: 0;
   }
   .ct-exact-brand-icon {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border-radius: 12px;
     background: linear-gradient(135deg, #2563eb, #1d4ed8);
     color: #ffffff;
     display: grid;
     place-items: center;
-    font-size: 1.25rem;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    font-size: 1.2rem;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
     flex-shrink: 0;
   }
   .ct-exact-brand-text {
     display: flex;
     flex-direction: column;
+    min-width: 0;
   }
   .ct-exact-brand-title {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 1.15rem;
+    gap: 5px;
+    font-size: 1.05rem;
     font-weight: 800;
-    color: var(--ct-text-dark);
+    color: #0f172a;
     letter-spacing: -0.02em;
-    line-height: 1.2;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+  [data-theme="dark"] .ct-exact-brand-title {
+    color: #ffffff;
   }
   .ct-exact-badge {
     background: #2563eb;
     color: #ffffff;
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     font-weight: 800;
-    padding: 2px 7px;
+    padding: 1px 6px;
     border-radius: 999px;
-    letter-spacing: 0.02em;
   }
   .ct-exact-brand-sub {
-    font-size: 0.72rem;
-    color: var(--ct-text-gray);
+    font-size: 0.68rem;
+    color: #64748b;
     font-weight: 500;
-    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  [data-theme="dark"] .ct-exact-brand-sub {
+    color: #94a3b8;
   }
 
-  /* Header Right Actions */
+  /* Header Right */
   .ct-exact-header-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    flex-shrink: 0;
   }
   .ct-exact-bell-btn {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    background: var(--ct-card-bg);
-    border: 1px solid var(--ct-border-soft);
+    background: #ffffff;
+    border: 1px solid #edf2f7;
     display: grid;
     place-items: center;
-    color: var(--ct-text-dark);
+    color: #0f172a;
     position: relative;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    transition: transform 0.15s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
   }
-  .ct-exact-bell-btn:active {
-    transform: scale(0.94);
+  [data-theme="dark"] .ct-exact-bell-btn {
+    background: #11192e;
+    border-color: rgba(255,255,255,0.08);
+    color: #ffffff;
   }
   .ct-exact-bell-badge {
     position: absolute;
@@ -159,131 +165,133 @@
     right: 2px;
     background: #ef4444;
     color: #ffffff;
-    font-size: 0.62rem;
+    font-size: 0.58rem;
     font-weight: 800;
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
     border-radius: 50%;
     display: grid;
     place-items: center;
-    border: 2px solid var(--ct-card-bg);
+    border: 2px solid #ffffff;
   }
   .ct-exact-user-pill {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
     cursor: pointer;
-    padding: 2px;
-    border-radius: 999px;
+    flex-shrink: 0;
   }
   .ct-exact-avatar-circle {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     color: #ffffff;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 800;
     display: grid;
     place-items: center;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     border: 2px solid #ffffff;
-    overflow: hidden;
-  }
-  .ct-exact-avatar-circle img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
   }
   .ct-exact-chevron-icon {
-    font-size: 0.75rem;
-    color: var(--ct-text-gray);
+    font-size: 0.7rem;
+    color: #64748b;
   }
 
-  /* ── Hero Banner (Exact match to screenshot) ── */
+  /* ── Hero Banner ── */
   .ct-exact-hero {
     background: linear-gradient(125deg, #021132 0%, #082975 48%, #1e40af 100%);
-    border-radius: 24px;
-    padding: 20px 22px;
+    border-radius: 20px;
+    padding: 14px 14px;
     color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    position: relative;
+    gap: 10px;
+    width: 100%;
     overflow: hidden;
-    box-shadow: 0 12px 32px rgba(8, 41, 117, 0.28);
+    box-shadow: 0 8px 24px rgba(8, 41, 117, 0.25);
   }
   .ct-exact-hero-left {
-    flex: 1 1 60%;
-    z-index: 2;
+    flex: 1 1 auto;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 2px;
   }
   .ct-exact-hero-welcome {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: #ffffff;
   }
   .ct-exact-hero-username {
-    font-size: 1.65rem;
+    font-size: clamp(1.15rem, 5vw, 1.45rem);
     font-weight: 800;
     color: #38bdf8;
     letter-spacing: -0.02em;
-    margin: 2px 0 6px 0;
+    margin: 2px 0 4px 0;
     line-height: 1.15;
-    word-break: break-word;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .ct-exact-hero-tagline {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     color: #cbd5e1;
-    line-height: 1.38;
-    margin: 0 0 10px 0;
+    line-height: 1.3;
+    margin: 0 0 6px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   .ct-exact-quote-pill {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     background: rgba(255, 255, 255, 0.12);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 999px;
-    padding: 4px 12px;
-    font-size: 0.72rem;
+    padding: 3px 8px;
+    font-size: 0.65rem;
     color: #f8fafc;
     font-weight: 500;
-    width: fit-content;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .ct-exact-hero-right {
-    flex: 0 0 38%;
-    max-width: 145px;
+    flex: 0 0 95px;
+    max-width: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1;
+    flex-shrink: 0;
   }
   .ct-exact-hero-img {
     width: 100%;
-    height: auto;
-    max-height: 120px;
+    height: 80px;
     object-fit: cover;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   }
 
-  /* ── 4 Stat Cards in ONE horizontal row ── */
+  /* ── 4 Stat Cards in ONE row (Zero overflow on 360px phones) ── */
   .ct-exact-stats-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
   }
   .ct-exact-stat-card {
-    background: var(--ct-card-bg);
-    border: 1px solid var(--ct-border-soft);
-    border-radius: 16px;
-    padding: 10px 8px;
+    background: #ffffff;
+    border: 1px solid #edf2f7;
+    border-radius: 12px;
+    padding: 8px 3px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -291,100 +299,136 @@
     position: relative;
     text-decoration: none;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    min-width: 0;
   }
-  .ct-exact-stat-card:active {
-    transform: scale(0.96);
+  [data-theme="dark"] .ct-exact-stat-card {
+    background: #11192e;
+    border-color: rgba(255,255,255,0.08);
   }
   .ct-exact-stat-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
     display: grid;
     place-items: center;
-    font-size: 1rem;
-    margin-bottom: 5px;
+    font-size: 0.85rem;
+    margin-bottom: 3px;
+    flex-shrink: 0;
   }
   .ct-exact-stat-val {
-    font-size: 1.05rem;
+    font-size: 0.95rem;
     font-weight: 800;
-    color: var(--ct-text-dark);
+    color: #0f172a;
     line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  [data-theme="dark"] .ct-exact-stat-val {
+    color: #ffffff;
   }
   .ct-exact-stat-lbl {
-    font-size: 0.65rem;
-    color: var(--ct-text-gray);
+    font-size: 0.62rem;
+    color: #64748b;
     font-weight: 600;
-    margin-top: 2px;
+    margin-top: 1px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    width: 100%;
+    text-align: center;
+  }
+  [data-theme="dark"] .ct-exact-stat-lbl {
+    color: #94a3b8;
   }
   .ct-exact-stat-arrow {
     position: absolute;
-    top: 7px;
-    right: 7px;
-    font-size: 0.62rem;
+    top: 4px;
+    right: 4px;
+    font-size: 0.55rem;
     color: #94a3b8;
   }
 
   /* ── Explain a Concept Card ── */
   .ct-exact-concept-card {
-    background: var(--ct-card-bg);
-    border: 1px solid var(--ct-border-soft);
-    border-radius: 20px;
-    padding: 16px 18px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+    background: #ffffff;
+    border: 1px solid #edf2f7;
+    border-radius: 18px;
+    padding: 12px 14px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.03);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+    width: 100%;
+  }
+  [data-theme="dark"] .ct-exact-concept-card {
+    background: #11192e;
+    border-color: rgba(255,255,255,0.08);
   }
   .ct-exact-concept-main {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
+    width: 100%;
   }
   .ct-exact-concept-img {
-    width: 74px;
-    height: 74px;
-    border-radius: 14px;
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
     object-fit: cover;
     flex-shrink: 0;
-    box-shadow: 0 4px 14px rgba(37,99,235,0.12);
+    box-shadow: 0 4px 10px rgba(37,99,235,0.12);
   }
   .ct-exact-concept-content {
     flex: 1;
     min-width: 0;
   }
   .ct-exact-concept-title {
-    font-size: 1.02rem;
+    font-size: 0.95rem;
     font-weight: 800;
-    color: var(--ct-text-dark);
+    color: #0f172a;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  [data-theme="dark"] .ct-exact-concept-title {
+    color: #ffffff;
   }
   .ct-exact-concept-sub {
-    font-size: 0.72rem;
-    color: var(--ct-text-gray);
-    margin: 3px 0 8px 0;
+    font-size: 0.68rem;
+    color: #64748b;
+    margin: 2px 0 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  [data-theme="dark"] .ct-exact-concept-sub {
+    color: #94a3b8;
   }
   .ct-exact-concept-input-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    width: 100%;
   }
   .ct-exact-concept-input {
     flex: 1;
+    min-width: 0;
     background: #f1f5f9;
     border: 1px solid transparent;
     border-radius: 999px;
-    padding: 9px 14px;
-    font-size: 0.8rem;
-    color: var(--ct-text-dark);
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    color: #0f172a;
     outline: none;
     font-family: inherit;
-    transition: border-color 0.2s, background 0.2s;
   }
   [data-theme="dark"] .ct-exact-concept-input {
     background: rgba(255,255,255,0.06);
@@ -402,19 +446,15 @@
     color: #ffffff;
     border: none;
     border-radius: 999px;
-    padding: 9px 18px;
+    padding: 8px 14px;
     font-weight: 700;
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     cursor: pointer;
     flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(37,99,235,0.3);
-    transition: transform 0.15s, background 0.15s;
-  }
-  .ct-exact-concept-btn:active {
-    transform: scale(0.96);
+    box-shadow: 0 4px 10px rgba(37,99,235,0.25);
   }
 
   /* ── Quick Tools Section ── */
@@ -422,57 +462,57 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 2px 2px;
+    padding: 2px 0;
+    width: 100%;
   }
   .ct-exact-tools-title {
-    font-size: 1.05rem;
+    font-size: 0.95rem;
     font-weight: 800;
-    color: var(--ct-text-dark);
+    color: #0f172a;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+  }
+  [data-theme="dark"] .ct-exact-tools-title {
+    color: #ffffff;
   }
   .ct-exact-tools-viewall {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: #2563eb;
     text-decoration: none;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
   }
 
   /* 2x2 Grid */
   .ct-exact-tools-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
   }
   .ct-exact-tool-card {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 14px;
-    border-radius: 18px;
+    gap: 8px;
+    padding: 10px 8px;
+    border-radius: 14px;
     text-decoration: none;
     position: relative;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s;
-  }
-  .ct-exact-tool-card:active {
-    transform: scale(0.97);
+    min-width: 0;
   }
   .ct-exact-tool-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
     display: grid;
     place-items: center;
     color: #ffffff;
-    font-size: 1.15rem;
+    font-size: 0.95rem;
     flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   }
   .ct-exact-tool-text {
     flex: 1;
@@ -480,25 +520,34 @@
   }
   .ct-exact-tool-name {
     font-weight: 800;
-    font-size: 0.92rem;
-    color: var(--ct-text-dark);
-    line-height: 1.2;
-  }
-  .ct-exact-tool-desc {
-    font-size: 0.72rem;
-    color: var(--ct-text-gray);
-    margin-top: 2px;
+    font-size: 0.82rem;
+    color: #0f172a;
+    line-height: 1.15;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  [data-theme="dark"] .ct-exact-tool-name {
+    color: #ffffff;
+  }
+  .ct-exact-tool-desc {
+    font-size: 0.65rem;
+    color: #64748b;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  [data-theme="dark"] .ct-exact-tool-desc {
+    color: #94a3b8;
+  }
   .ct-exact-tool-arrow {
     color: #94a3b8;
-    font-size: 0.75rem;
-    margin-left: auto;
+    font-size: 0.65rem;
+    margin-left: 2px;
+    flex-shrink: 0;
   }
 
-  /* Card Color Themes matching screenshot */
   .ct-exact-tool-blue {
     background: linear-gradient(135deg, rgba(239, 246, 255, 0.95), rgba(219, 234, 254, 0.7));
     border: 1px solid rgba(191, 219, 254, 0.85);
@@ -538,24 +587,25 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: 14px 18px;
-    border-radius: 20px;
+    gap: 8px;
+    padding: 12px 14px;
+    border-radius: 16px;
     background: linear-gradient(90deg, #7c3aed 0%, #4f46e5 50%, #1e1b4b 100%);
     color: #ffffff;
-    box-shadow: 0 10px 28px rgba(79, 70, 229, 0.28);
+    box-shadow: 0 8px 24px rgba(79, 70, 229, 0.25);
+    width: 100%;
   }
   .ct-exact-pro-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     flex: 1;
     min-width: 0;
   }
   .ct-exact-pro-crown {
-    font-size: 1.6rem;
+    font-size: 1.3rem;
     color: #fbbf24;
-    filter: drop-shadow(0 2px 8px rgba(251, 191, 36, 0.5));
+    filter: drop-shadow(0 2px 6px rgba(251, 191, 36, 0.5));
     flex-shrink: 0;
   }
   .ct-exact-pro-text {
@@ -564,12 +614,12 @@
   }
   .ct-exact-pro-title {
     font-weight: 800;
-    font-size: 0.98rem;
+    font-size: 0.9rem;
     color: #ffffff;
-    line-height: 1.2;
+    line-height: 1.15;
   }
   .ct-exact-pro-desc {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     color: rgba(255, 255, 255, 0.85);
     margin-top: 2px;
     white-space: nowrap;
@@ -579,73 +629,62 @@
   .ct-exact-pro-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 9px 16px;
+    gap: 4px;
+    padding: 7px 12px;
     border-radius: 999px;
     background: #ffffff;
     color: #1e1b4b;
     font-weight: 800;
-    font-size: 0.8rem;
+    font-size: 0.74rem;
     text-decoration: none;
     white-space: nowrap;
     flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-    transition: transform 0.15s;
-  }
-  .ct-exact-pro-btn:active {
-    transform: scale(0.96);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
   }
 
   /* ── Fixed Mobile Bottom Navigation Bar ── */
   .ct-exact-dock {
     position: fixed;
     bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
+    right: 0;
     width: 100%;
-    max-width: 680px;
-    height: 64px;
-    background: rgba(255, 255, 255, 0.92);
+    height: 58px;
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-top: 1px solid rgba(0, 0, 0, 0.08);
-    border-left: 1px solid rgba(0, 0, 0, 0.05);
-    border-right: 1px solid rgba(0, 0, 0, 0.05);
-    border-top-left-radius: 18px;
-    border-top-right-radius: 18px;
     z-index: 9999;
     display: flex;
     align-items: center;
     justify-content: space-around;
-    padding: 0 8px calc(env(safe-area-inset-bottom, 0px));
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
-    box-sizing: border-box;
+    padding: 0 4px calc(env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -3px 15px rgba(0, 0, 0, 0.04);
   }
   [data-theme="dark"] .ct-exact-dock {
-    background: rgba(17, 25, 46, 0.92);
+    background: rgba(17, 25, 46, 0.96);
     border-top-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35);
   }
   .ct-exact-dock-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
+    gap: 2px;
     color: #94a3b8;
     text-decoration: none;
     background: none;
     border: none;
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 600;
     flex: 1;
     height: 100%;
     cursor: pointer;
     position: relative;
-    transition: color 0.2s;
+    padding: 0;
   }
   .ct-exact-dock-item i {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
   }
   .ct-exact-dock-item.active {
     color: #2563eb;
@@ -653,8 +692,8 @@
   }
   .ct-exact-dock-indicator {
     position: absolute;
-    bottom: 5px;
-    width: 24px;
+    bottom: 4px;
+    width: 20px;
     height: 3px;
     border-radius: 3px;
     background: #2563eb;
@@ -663,21 +702,26 @@
   /* ── Interactive Concept Result Box ── */
   #conceptResult {
     display: none;
-    padding: 16px;
+    padding: 14px;
     background: rgba(37,99,235,0.04);
     border: 1px solid rgba(37,99,235,0.18);
-    border-radius: 16px;
-    font-size: 0.88rem;
-    line-height: 1.6;
-    max-height: 420px;
+    border-radius: 14px;
+    font-size: 0.84rem;
+    line-height: 1.55;
+    max-height: 400px;
     overflow-y: auto;
-    color: var(--ct-text-dark);
+    color: #0f172a;
+    width: 100%;
+    word-break: break-word;
+  }
+  [data-theme="dark"] #conceptResult {
+    color: #f8fafc;
   }
 </style>
 </head>
 <body>
 
-<!-- DASHBOARD MAIN CONTAINER (Matches exact screenshot layout) -->
+<!-- DASHBOARD MOBILE-FIRST CONTAINER -->
 <div class="ct-dashboard-container">
 
   <!-- TOP HEADER -->
@@ -713,12 +757,12 @@
   </header>
 
   <!-- Email Verification Pending Banner (Only shows if unverified) -->
-  <div id="verificationBanner" style="display:none; padding:12px 16px; border-radius:16px; background:rgba(255,159,67,0.12); border-left:4px solid #f97316; justify-content:space-between; align-items:center; gap:10px; font-size:0.84rem;">
-    <div style="display:flex; align-items:center; gap:8px;">
-      <i class="fa-solid fa-triangle-exclamation" style="color:#f97316;"></i>
-      <span>Please verify your email address to unlock full AI capabilities.</span>
+  <div id="verificationBanner" style="display:none; padding:10px 14px; border-radius:14px; background:rgba(255,159,67,0.12); border-left:4px solid #f97316; justify-content:space-between; align-items:center; gap:8px; font-size:0.8rem; width:100%;">
+    <div style="display:flex; align-items:center; gap:6px; min-width:0;">
+      <i class="fa-solid fa-triangle-exclamation" style="color:#f97316; flex-shrink:0;"></i>
+      <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Please verify your email address.</span>
     </div>
-    <button onclick="openVerificationModal()" style="background:#f97316; color:#fff; border:none; padding:5px 12px; border-radius:999px; font-weight:700; font-size:0.75rem; cursor:pointer;">Verify</button>
+    <button onclick="openVerificationModal()" style="background:#f97316; color:#fff; border:none; padding:4px 10px; border-radius:999px; font-weight:700; font-size:0.72rem; cursor:pointer; flex-shrink:0;">Verify</button>
   </div>
 
   <!-- HERO BANNER CARD (Matches reference screenshot) -->
@@ -737,7 +781,7 @@
     </div>
   </div>
 
-  <!-- 4 STAT CARDS IN SINGLE HORIZONTAL ROW -->
+  <!-- 4 STAT CARDS IN SINGLE HORIZONTAL ROW (ONLY COINS - NO XP) -->
   <div class="ct-exact-stats-row">
     <!-- 1. Documents -->
     <div class="ct-exact-stat-card" onclick="openDocumentsModal()" title="View your uploaded documents">
@@ -750,7 +794,7 @@
     </div>
 
     <!-- 2. Day Streak -->
-    <div class="ct-exact-stat-card" onclick="openCoinsModal()" title="View your daily study streak & rewards">
+    <div class="ct-exact-stat-card" onclick="openCoinsModal()" title="View daily streak & claim coins bonus">
       <div class="ct-exact-stat-icon" style="background:#fff7ed; color:#f97316;">
         <i class="fa-solid fa-fire anim-fire"></i>
       </div>
@@ -759,13 +803,13 @@
       <div class="ct-exact-stat-arrow"><i class="fa-solid fa-chevron-right"></i></div>
     </div>
 
-    <!-- 3. Total XP / Coins -->
-    <div class="ct-exact-stat-card" onclick="openLeaderboardModal()" title="View leaderboard & XP">
-      <div class="ct-exact-stat-icon" style="background:#faf5ff; color:#a855f7;">
-        <i class="fa-solid fa-star"></i>
+    <!-- 3. CampusCoins (ONLY COINS - REPLACED XP PER USER REQUEST) -->
+    <div class="ct-exact-stat-card" onclick="openCoinsModal()" title="View CampusCoins balance">
+      <div class="ct-exact-stat-icon" style="background:#fefce8; color:#eab308;">
+        <i class="fa-solid fa-coins anim-coin"></i>
       </div>
-      <div class="ct-exact-stat-val" id="statXP">175</div>
-      <div class="ct-exact-stat-lbl">Total XP</div>
+      <div class="ct-exact-stat-val" id="statCoins" style="color:#d97706;">50</div>
+      <div class="ct-exact-stat-lbl">Coins</div>
       <div class="ct-exact-stat-arrow"><i class="fa-solid fa-chevron-right"></i></div>
     </div>
 
@@ -774,7 +818,7 @@
       <div class="ct-exact-stat-icon" style="background:#f0fdf4; color:#10b981;">
         <i class="fa-solid fa-crown anim-crown"></i>
       </div>
-      <div class="ct-exact-stat-val" id="statPlan" style="font-size:0.95rem; color:#10b981;">PLUS ⚡</div>
+      <div class="ct-exact-stat-val" id="statPlan" style="font-size:0.86rem; color:#10b981;">PLUS ⚡</div>
       <div class="ct-exact-stat-lbl">Plan</div>
       <div class="ct-exact-stat-arrow"><i class="fa-solid fa-chevron-right"></i></div>
     </a>
@@ -791,7 +835,7 @@
         </h2>
         <div class="ct-exact-concept-sub">Ask the AI to explain any topic or concept instantly</div>
 
-        <div class="ct-exact-concept-input-row">
+        <div class="ct-exact-concept-input-row" style="margin-top:6px;">
           <input type="text" class="ct-exact-concept-input" id="conceptInput" placeholder="e.g., Photosynthesis, Newton's Laws..." onkeydown="if(event.key==='Enter') explainConcept()" />
           <button type="button" onclick="explainConcept()" class="ct-exact-concept-btn" id="btnSendConcept">
             <i class="fa-solid fa-paper-plane"></i>
@@ -806,7 +850,7 @@
   </div>
 
   <!-- QUICK TOOLS SECTION (Matches reference screenshot) -->
-  <div>
+  <div style="width:100%;">
     <div class="ct-exact-tools-header">
       <div class="ct-exact-tools-title">
         <i class="fa-solid fa-table-cells-large" style="color:#2563eb;"></i>
@@ -818,7 +862,7 @@
       </a>
     </div>
 
-    <div class="ct-exact-tools-grid" style="margin-top:10px;">
+    <div class="ct-exact-tools-grid" style="margin-top:8px;">
       <!-- Card 1: Upload PDF -->
       <a href="/pages/upload.html" class="ct-exact-tool-card ct-exact-tool-blue">
         <div class="ct-exact-tool-icon" style="background:linear-gradient(135deg, #3b82f6, #1d4ed8);">
@@ -838,19 +882,19 @@
         </div>
         <div class="ct-exact-tool-text">
           <div class="ct-exact-tool-name">Study Tools</div>
-          <div class="ct-exact-tool-desc">Boost your learning</div>
+          <div class="ct-exact-tool-desc">Boost learning</div>
         </div>
         <div class="ct-exact-tool-arrow"><i class="fa-solid fa-chevron-right"></i></div>
       </a>
 
-      <!-- Card 3: Leaderboard -->
+      <!-- Card 3: Leaderboard (Ranked by Coins) -->
       <div onclick="openLeaderboardModal()" class="ct-exact-tool-card ct-exact-tool-amber">
         <div class="ct-exact-tool-icon" style="background:linear-gradient(135deg, #fbbf24, #f59e0b);">
           <i class="fa-solid fa-trophy"></i>
         </div>
         <div class="ct-exact-tool-text">
           <div class="ct-exact-tool-name">Leaderboard</div>
-          <div class="ct-exact-tool-desc">See top learners</div>
+          <div class="ct-exact-tool-desc">Top coin earners</div>
         </div>
         <div class="ct-exact-tool-arrow"><i class="fa-solid fa-chevron-right"></i></div>
       </div>
@@ -862,7 +906,7 @@
         </div>
         <div class="ct-exact-tool-text">
           <div class="ct-exact-tool-name">Activity Log</div>
-          <div class="ct-exact-tool-desc">Track your progress</div>
+          <div class="ct-exact-tool-desc">Track progress</div>
         </div>
         <div class="ct-exact-tool-arrow"><i class="fa-solid fa-chevron-right"></i></div>
       </div>
@@ -888,7 +932,7 @@
 
 </div>
 
-<!-- FIXED BOTTOM NAVIGATION BAR DOCK (Matches reference screenshot) -->
+<!-- FIXED BOTTOM NAVIGATION BAR DOCK (Optimized for Android) -->
 <nav class="ct-exact-dock" id="mobileBottomNav">
   <a href="/pages/dashboard.html" class="ct-exact-dock-item active">
     <i class="fa-solid fa-house"></i>
@@ -909,113 +953,113 @@
   </button>
 </nav>
 
-<!-- ── ALL MODALS FOR FULL FUNCTIONALITY ── -->
+<!-- ── ALL MODALS ── -->
 
 <!-- 1. DOCUMENTS DRAWER MODAL -->
-<div id="documentsOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);z-index:900;align-items:center;justify-content:center;padding:16px;">
-  <div class="card" style="max-width:480px;width:100%;border-radius:24px;background:var(--ct-card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
-    <div style="padding:20px;border-bottom:1px solid var(--ct-border-soft);display:flex;justify-content:space-between;align-items:center;">
+<div id="documentsOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);z-index:9000;align-items:center;justify-content:center;padding:16px;">
+  <div class="card" style="max-width:440px;width:100%;border-radius:22px;background:#ffffff;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+    <div style="padding:16px;border-bottom:1px solid #edf2f7;display:flex;justify-content:space-between;align-items:center;">
       <div style="display:flex;align-items:center;gap:8px;">
-        <i class="fa-solid fa-file-pdf" style="color:#ef4444;font-size:1.15rem;"></i>
-        <h3 style="font-size:1.1rem;font-weight:800;margin:0;">My Study Documents</h3>
+        <i class="fa-solid fa-file-pdf" style="color:#ef4444;font-size:1.1rem;"></i>
+        <h3 style="font-size:1rem;font-weight:800;margin:0;">My Study Documents</h3>
       </div>
       <button onclick="closeDocumentsModal()" class="btn btn-ghost btn-sm" style="border:none;font-size:1.1rem;padding:4px;"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div style="padding:16px;max-height:380px;overflow-y:auto;" id="docListContainer">
-      <div style="text-align:center;padding:20px;color:var(--ct-text-gray);">Loading documents...</div>
+    <div style="padding:14px;max-height:360px;overflow-y:auto;" id="docListContainer">
+      <div style="text-align:center;padding:20px;color:#64748b;">Loading documents...</div>
     </div>
-    <div style="padding:14px 20px;background:rgba(0,0,0,0.02);border-top:1px solid var(--ct-border-soft);display:flex;justify-content:space-between;align-items:center;">
+    <div style="padding:12px 16px;background:#f8fafc;border-top:1px solid #edf2f7;display:flex;justify-content:space-between;align-items:center;">
       <a href="/pages/upload.html" class="btn btn-primary btn-sm" style="border-radius:999px;font-weight:700;"><i class="fa-solid fa-cloud-arrow-up"></i> Upload New PDF</a>
       <button onclick="closeDocumentsModal()" class="btn btn-ghost btn-sm" style="border-radius:999px;">Close</button>
     </div>
   </div>
 </div>
 
-<!-- 2. LEADERBOARD MODAL -->
-<div id="leaderboardOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);z-index:900;align-items:center;justify-content:center;padding:16px;">
-  <div class="card" style="max-width:440px;width:100%;border-radius:24px;background:var(--ct-card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
-    <div style="padding:20px;border-bottom:1px solid var(--ct-border-soft);display:flex;justify-content:space-between;align-items:center;">
+<!-- 2. LEADERBOARD MODAL (RANKED BY COINS) -->
+<div id="leaderboardOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);z-index:9000;align-items:center;justify-content:center;padding:16px;">
+  <div class="card" style="max-width:420px;width:100%;border-radius:22px;background:#ffffff;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+    <div style="padding:16px;border-bottom:1px solid #edf2f7;display:flex;justify-content:space-between;align-items:center;">
       <div style="display:flex;align-items:center;gap:8px;">
-        <i class="fa-solid fa-trophy" style="color:#f59e0b;font-size:1.15rem;"></i>
-        <h3 style="font-size:1.1rem;font-weight:800;margin:0;">Weekly Leaderboard</h3>
+        <i class="fa-solid fa-trophy" style="color:#f59e0b;font-size:1.1rem;"></i>
+        <h3 style="font-size:1rem;font-weight:800;margin:0;">Top CampusCoins Learners</h3>
       </div>
       <button onclick="closeLeaderboardModal()" class="btn btn-ghost btn-sm" style="border:none;font-size:1.1rem;padding:4px;"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div style="padding:16px;max-height:360px;overflow-y:auto;" id="leaderboardList">
-      <div style="text-align:center;padding:20px;color:var(--ct-text-gray);">Loading ranks...</div>
+    <div style="padding:14px;max-height:360px;overflow-y:auto;" id="leaderboardList">
+      <div style="text-align:center;padding:20px;color:#64748b;">Loading ranks...</div>
     </div>
   </div>
 </div>
 
 <!-- 3. ACTIVITY LOG MODAL -->
-<div id="activityOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);z-index:900;align-items:center;justify-content:center;padding:16px;">
-  <div class="card" style="max-width:480px;width:100%;border-radius:24px;background:var(--ct-card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
-    <div style="padding:20px;border-bottom:1px solid var(--ct-border-soft);display:flex;justify-content:space-between;align-items:center;">
+<div id="activityOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);z-index:9000;align-items:center;justify-content:center;padding:16px;">
+  <div class="card" style="max-width:440px;width:100%;border-radius:22px;background:#ffffff;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+    <div style="padding:16px;border-bottom:1px solid #edf2f7;display:flex;justify-content:space-between;align-items:center;">
       <div style="display:flex;align-items:center;gap:8px;">
-        <i class="fa-solid fa-clock-rotate-left" style="color:#2563eb;font-size:1.15rem;"></i>
-        <h3 style="font-size:1.1rem;font-weight:800;margin:0;">Activity History</h3>
+        <i class="fa-solid fa-clock-rotate-left" style="color:#2563eb;font-size:1.1rem;"></i>
+        <h3 style="font-size:1rem;font-weight:800;margin:0;">Activity History</h3>
       </div>
       <button onclick="closeActivityModal()" class="btn btn-ghost btn-sm" style="border:none;font-size:1.1rem;padding:4px;"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div style="padding:16px;max-height:380px;overflow-y:auto;" id="activityLog">
+    <div style="padding:14px;max-height:360px;overflow-y:auto;" id="activityLog">
       <div id="activityList" style="display:flex;flex-direction:column;gap:8px;">
-        <div style="text-align:center;padding:20px;color:var(--ct-text-gray);">Loading activity history...</div>
+        <div style="text-align:center;padding:20px;color:#64748b;">Loading activity history...</div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- 4. USER SETTINGS & PROFILE MODAL -->
-<div id="settingsOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(8px);z-index:900;align-items:center;justify-content:center;padding:16px;">
-  <div class="card" style="max-width:420px;width:100%;border-radius:24px;background:var(--ct-card-bg);box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
-    <div style="padding:20px;border-bottom:1px solid var(--ct-border-soft);display:flex;justify-content:space-between;align-items:center;">
+<div id="settingsOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);z-index:9000;align-items:center;justify-content:center;padding:16px;">
+  <div class="card" style="max-width:400px;width:100%;border-radius:22px;background:#ffffff;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;">
+    <div style="padding:16px;border-bottom:1px solid #edf2f7;display:flex;justify-content:space-between;align-items:center;">
       <div style="display:flex;align-items:center;gap:8px;">
-        <i class="fa-solid fa-user-gear" style="color:#2563eb;font-size:1.15rem;"></i>
-        <h3 style="font-size:1.1rem;font-weight:800;margin:0;">Account & Settings</h3>
+        <i class="fa-solid fa-user-gear" style="color:#2563eb;font-size:1.1rem;"></i>
+        <h3 style="font-size:1rem;font-weight:800;margin:0;">Account & Settings</h3>
       </div>
       <button onclick="closeSettingsModal()" class="btn btn-ghost btn-sm" style="border:none;font-size:1.1rem;padding:4px;"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+    <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
       <!-- Profile Header -->
-      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(37,99,235,0.06);border-radius:16px;">
-        <div class="ct-exact-avatar-circle" style="width:46px;height:46px;font-size:1.1rem;">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(37,99,235,0.06);border-radius:14px;">
+        <div class="ct-exact-avatar-circle" style="width:42px;height:42px;font-size:1rem;">
           <span id="modalAvatarInitials">ST</span>
         </div>
-        <div>
-          <div id="modalUserName" style="font-weight:800;font-size:0.95rem;color:var(--ct-text-dark);">Student</div>
-          <div id="modalUserEmail" style="font-size:0.75rem;color:var(--ct-text-gray);">student@example.com</div>
+        <div style="min-width:0;flex:1;">
+          <div id="modalUserName" style="font-weight:800;font-size:0.92rem;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Student</div>
+          <div id="modalUserEmail" style="font-size:0.72rem;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">student@example.com</div>
         </div>
       </div>
 
       <!-- Quick Settings Buttons -->
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <button onclick="toggleTheme()" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--ct-border-soft);font-weight:600;">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <button onclick="toggleTheme()" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:9px 12px;border-radius:12px;border:1px solid #edf2f7;font-weight:600;">
           <span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-moon"></i> Appearance</span>
-          <span id="themeLabelText" style="font-size:0.75rem;color:var(--ct-text-gray);">Light Mode</span>
+          <span id="themeLabelText" style="font-size:0.72rem;color:#64748b;">Light Mode</span>
         </button>
 
-        <a href="/pages/pricing.html" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--ct-border-soft);font-weight:600;text-decoration:none;color:inherit;">
+        <a href="/pages/pricing.html" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:9px 12px;border-radius:12px;border:1px solid #edf2f7;font-weight:600;text-decoration:none;color:inherit;">
           <span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-crown" style="color:#f59e0b;"></i> Subscription Plan</span>
-          <span id="modalPlanBadge" style="font-size:0.75rem;font-weight:700;color:#10b981;">PLUS ⚡</span>
+          <span id="modalPlanBadge" style="font-size:0.72rem;font-weight:700;color:#10b981;">PLUS ⚡</span>
         </a>
 
-        <button onclick="openCoinsModal(); closeSettingsModal();" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--ct-border-soft);font-weight:600;">
+        <button onclick="openCoinsModal(); closeSettingsModal();" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:9px 12px;border-radius:12px;border:1px solid #edf2f7;font-weight:600;">
           <span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-coins" style="color:#eab308;"></i> CampusCoins Wallet</span>
-          <span id="modalCoinsVal" style="font-size:0.75rem;font-weight:700;color:#eab308;">50 Coins</span>
+          <span id="modalCoinsVal" style="font-size:0.72rem;font-weight:700;color:#eab308;">50 Coins</span>
         </button>
 
-        <a href="https://chat.whatsapp.com/CNlccvf5Eue6ZvE4Pz3JGX" target="_blank" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--ct-border-soft);font-weight:600;text-decoration:none;color:inherit;">
+        <a href="https://chat.whatsapp.com/CNlccvf5Eue6ZvE4Pz3JGX" target="_blank" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:9px 12px;border-radius:12px;border:1px solid #edf2f7;font-weight:600;text-decoration:none;color:inherit;">
           <span style="display:flex;align-items:center;gap:8px;"><i class="fa-brands fa-whatsapp" style="color:#22c55e;"></i> WhatsApp Student Support</span>
-          <span style="font-size:0.75rem;color:#22c55e;font-weight:700;">Join Group</span>
+          <span style="font-size:0.72rem;color:#22c55e;font-weight:700;">Join</span>
         </a>
 
-        <button onclick="installCampusTutorPWA()" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--ct-border-soft);font-weight:600;">
+        <button onclick="installCampusTutorPWA()" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:9px 12px;border-radius:12px;border:1px solid #edf2f7;font-weight:600;">
           <span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-mobile-screen-button" style="color:#38bdf8;"></i> Install Mobile App (PWA)</span>
-          <span style="font-size:0.75rem;color:#38bdf8;font-weight:700;">Install</span>
+          <span style="font-size:0.72rem;color:#38bdf8;font-weight:700;">Install</span>
         </button>
       </div>
 
-      <button onclick="logout()" class="btn btn-danger btn-sm btn-full" style="border-radius:999px;font-weight:700;margin-top:6px;padding:10px;">
+      <button onclick="logout()" class="btn btn-danger btn-sm btn-full" style="border-radius:999px;font-weight:700;margin-top:4px;padding:9px;">
         <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
       </button>
     </div>
@@ -1024,19 +1068,19 @@
 
 <!-- 5. EMAIL VERIFICATION MODAL -->
 <div id="verifyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(10px);z-index:10001;align-items:center;justify-content:center;padding:16px;">
-  <div class="card" style="max-width:400px;width:100%;border-radius:24px;padding:28px;background:var(--ct-card-bg);box-shadow:0 24px 70px rgba(0,0,0,0.35);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h3 style="font-weight:800;font-size:1.1rem;margin:0;"><i class="fa-solid fa-envelope-circle-check" style="color:#2563eb;margin-right:8px;"></i> Verify Your Email</h3>
-      <button onclick="closeVerificationModal()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ct-text-gray);"><i class="fa-solid fa-xmark"></i></button>
+  <div class="card" style="max-width:380px;width:100%;border-radius:22px;padding:22px;background:#ffffff;box-shadow:0 24px 70px rgba(0,0,0,0.35);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="font-weight:800;font-size:1.05rem;margin:0;"><i class="fa-solid fa-envelope-circle-check" style="color:#2563eb;margin-right:6px;"></i> Verify Your Email</h3>
+      <button onclick="closeVerificationModal()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div class="alert alert-error" id="modalVerifyErr" style="display:none;margin-bottom:14px;"></div>
+    <div class="alert alert-error" id="modalVerifyErr" style="display:none;margin-bottom:12px;"></div>
     <form id="modalVerifyForm">
-      <p style="font-size:0.82rem;color:var(--ct-text-gray);line-height:1.4;margin:0 0 16px 0;">
+      <p style="font-size:0.78rem;color:#64748b;line-height:1.35;margin:0 0 14px 0;">
         Enter the 6-digit confirmation code sent to your email to verify your account.
       </p>
-      <input class="form-input" type="text" id="modalVerificationOtp" placeholder="123456" required maxlength="6" style="text-align:center;font-size:1.4rem;letter-spacing:4px;font-weight:800;margin-bottom:18px;border-radius:14px;"/>
+      <input class="form-input" type="text" id="modalVerificationOtp" placeholder="123456" required maxlength="6" style="text-align:center;font-size:1.3rem;letter-spacing:4px;font-weight:800;margin-bottom:16px;border-radius:12px;"/>
       <button type="submit" class="btn btn-primary btn-full btn-lg" id="modalVerifySubmitBtn" style="border-radius:999px;font-weight:700;">Verify & Activate</button>
-      <div style="text-align:center;margin-top:14px;font-size:0.8rem;color:var(--ct-text-gray);">
+      <div style="text-align:center;margin-top:12px;font-size:0.75rem;color:#64748b;">
         Didn't receive a code? <button type="button" onclick="resendVerificationOtp()" id="resendOtpBtn" style="background:none;border:none;color:#2563eb;font-weight:700;cursor:pointer;padding:0;">Resend OTP</button>
       </div>
     </form>
@@ -1045,11 +1089,11 @@
 
 <!-- 6. WHATSAPP ANNOUNCEMENT MODAL -->
 <div class="announcement-overlay" id="announcementOverlay">
-  <div class="announcement-modal" style="border-radius:24px;">
+  <div class="announcement-modal" style="border-radius:22px;padding:20px;">
     <div class="announcement-header"><i class="fa-solid fa-bullhorn"></i> Important Announcement!</div>
-    <div class="announcement-text">Join the official CampusTutor AI community on WhatsApp to get exam updates, early feature access, and study tips!</div>
-    <div class="announcement-buttons">
-      <button class="announcement-btn announcement-btn-primary" id="announcementJoin" style="border-radius:999px;"><i class="fa-solid fa-circle" style="color:#25d366;"></i> Join WhatsApp Updates</button>
+    <div class="announcement-text">Join the official CampusTutor AI community on WhatsApp for study updates and new features!</div>
+    <div class="announcement-buttons" style="margin-top:14px;">
+      <button class="announcement-btn announcement-btn-primary" id="announcementJoin" style="border-radius:999px;"><i class="fa-solid fa-circle" style="color:#25d366;"></i> Join WhatsApp</button>
       <button class="announcement-btn announcement-btn-dismiss" id="announcementDismiss" style="border-radius:999px;">Close</button>
     </div>
   </div>
@@ -1120,13 +1164,12 @@ function toggleTheme() {
 }
 initTheme();
 
-// ── USER STATS LOADER ──
+// ── USER STATS LOADER (COINS ONLY - NO XP) ──
 async function loadUserStats() {
   const userId = user?.id;
   if (!userId) return;
   const { data: stats, error } = await apiGetUserStats(userId);
   if (error || !stats) {
-    console.log('Using local user stats');
     loadStatsFromLocalStorage();
     return;
   }
@@ -1137,8 +1180,16 @@ async function loadUserStats() {
   const statStreak = document.getElementById('statStreak');
   if (statStreak) statStreak.textContent = stats.streak || 0;
 
-  const statXP = document.getElementById('statXP');
-  if (statXP) statXP.textContent = stats.xp || 175;
+  // ONLY COINS - User explicitly requested NO XP anywhere
+  const liveCoins = (window.userCoinState && window.userCoinState.coins !== undefined) 
+    ? window.userCoinState.coins 
+    : (stats.coins !== undefined ? stats.coins : parseInt(localStorage.getItem('ct_coins') || '50'));
+  
+  const statCoins = document.getElementById('statCoins');
+  if (statCoins) statCoins.textContent = liveCoins;
+
+  const modalCoins = document.getElementById('modalCoinsVal');
+  if (modalCoins) modalCoins.textContent = liveCoins + ' Coins';
 
   const currentPlan = (stats.plan || 'plus').toLowerCase();
   const statPlan = document.getElementById('statPlan');
@@ -1152,10 +1203,6 @@ async function loadUserStats() {
     modalPlan.textContent = currentPlan.toUpperCase();
     modalPlan.style.color = currentPlan === 'free' ? '#10b981' : (currentPlan === 'plus' ? '#2563eb' : '#a855f7');
   }
-
-  const liveCoins = (window.userCoinState && window.userCoinState.coins !== undefined) ? window.userCoinState.coins : (stats.coins !== undefined ? stats.coins : 50);
-  const modalCoins = document.getElementById('modalCoinsVal');
-  if (modalCoins) modalCoins.textContent = liveCoins + ' Coins';
 }
 
 function loadStatsFromLocalStorage() {
@@ -1167,11 +1214,13 @@ function loadStatsFromLocalStorage() {
   const statStreak = document.getElementById('statStreak');
   if (statStreak) statStreak.textContent = streak;
 
-  const xp = parseInt(localStorage.getItem('ct_xp') || '175');
-  const statXP = document.getElementById('statXP');
-  if (statXP) statXP.textContent = xp;
+  const liveCoins = (window.userCoinState && window.userCoinState.coins !== undefined) 
+    ? window.userCoinState.coins 
+    : parseInt(localStorage.getItem('ct_coins') || '50');
+  
+  const statCoins = document.getElementById('statCoins');
+  if (statCoins) statCoins.textContent = liveCoins;
 
-  const liveCoins = (window.userCoinState && window.userCoinState.coins !== undefined) ? window.userCoinState.coins : parseInt(localStorage.getItem('ct_coins') || '50');
   const modalCoins = document.getElementById('modalCoinsVal');
   if (modalCoins) modalCoins.textContent = liveCoins + ' Coins';
 }
@@ -1182,7 +1231,7 @@ async function loadDocumentsList() {
   if (!container) return;
   const { data, error } = await apiGetMyDocs();
   if (error || !data || !data.documents) {
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ct-text-gray);">No documents found. Click "Upload New PDF" to add one!</div>';
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:#64748b;">No documents found. Click "Upload New PDF" to add one!</div>';
     return;
   }
   const docs = data.documents;
@@ -1190,22 +1239,22 @@ async function loadDocumentsList() {
   if (statDocs) statDocs.textContent = docs.length;
 
   if (docs.length === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ct-text-gray);"><i class="fa-solid fa-folder-open" style="font-size:2rem;margin-bottom:8px;color:#94a3b8;"></i><br/>No study documents uploaded yet.</div>';
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:#64748b;"><i class="fa-solid fa-folder-open" style="font-size:2rem;margin-bottom:8px;color:#94a3b8;"></i><br/>No study documents uploaded yet.</div>';
     return;
   }
 
   container.innerHTML = docs.map(d => `
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:rgba(0,0,0,0.02);border:1px solid var(--ct-border-soft);border-radius:14px;margin-bottom:8px;">
-      <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1;">
-        <i class="fa-solid fa-file-pdf" style="color:#ef4444;font-size:1.2rem;flex-shrink:0;"></i>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:#f8fafc;border:1px solid #edf2f7;border-radius:12px;margin-bottom:6px;">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
+        <i class="fa-solid fa-file-pdf" style="color:#ef4444;font-size:1.1rem;flex-shrink:0;"></i>
         <div style="min-width:0;">
-          <div style="font-weight:700;font-size:0.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ct-text-dark);" title="${esc(d.file_name)}">${esc(d.file_name)}</div>
-          <div style="font-size:0.72rem;color:var(--ct-text-gray);">${d.page_count || 1} pages · ${formatDate(d.created_at)}</div>
+          <div style="font-weight:700;font-size:0.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#0f172a;" title="${esc(d.file_name)}">${esc(d.file_name)}</div>
+          <div style="font-size:0.68rem;color:#64748b;">${d.page_count || 1} pages · ${formatDate(d.created_at)}</div>
         </div>
       </div>
-      <div style="display:flex;gap:6px;flex-shrink:0;">
-        <a href="/pages/study.html?docId=${d.id}&name=${encodeURIComponent(d.file_name)}" class="btn btn-primary btn-sm" style="border-radius:999px;padding:4px 10px;font-size:0.75rem;"><i class="fa-solid fa-brain"></i> Study</a>
-        <button onclick="delDoc('${d.id}', this)" class="btn btn-ghost btn-sm" style="color:#ef4444;padding:4px 8px;border-radius:999px;"><i class="fa-solid fa-trash-can"></i></button>
+      <div style="display:flex;gap:4px;flex-shrink:0;">
+        <a href="/pages/study.html?docId=${d.id}&name=${encodeURIComponent(d.file_name)}" class="btn btn-primary btn-sm" style="border-radius:999px;padding:3px 8px;font-size:0.72rem;"><i class="fa-solid fa-brain"></i> Study</a>
+        <button onclick="delDoc('${d.id}', this)" class="btn btn-ghost btn-sm" style="color:#ef4444;padding:3px 6px;border-radius:999px;"><i class="fa-solid fa-trash-can"></i></button>
       </div>
     </div>
   `).join('');
@@ -1234,14 +1283,14 @@ async function delDoc(id, btn) {
   loadDocumentsList();
 }
 
-// ── LEADERBOARD MODAL ──
+// ── LEADERBOARD MODAL (RANKED BY COINS - NO XP) ──
 async function loadLeaderboard() {
   const listEl = document.getElementById('leaderboardList');
   if (!listEl) return;
   try {
     const { data, error } = await apiGetLeaderboard();
     if (error || !data || !data.leaderboard) {
-      listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ct-text-gray);">Unable to load leaderboard.</div>';
+      listEl.innerHTML = '<div style="text-align:center;padding:20px;color:#64748b;">Unable to load leaderboard.</div>';
       return;
     }
     const ranks = data.leaderboard;
@@ -1250,25 +1299,25 @@ async function loadLeaderboard() {
       if (index === 0) medal = '<i class="fa-solid fa-trophy" style="color:#ffd700;"></i>';
       else if (index === 1) medal = '<i class="fa-solid fa-trophy" style="color:#c0c0c0;"></i>';
       else if (index === 2) medal = '<i class="fa-solid fa-trophy" style="color:#cd7f32;"></i>';
-      else medal = `<span style="color:var(--ct-text-gray);font-weight:700;">#${index + 1}</span>`;
+      else medal = `<span style="color:#64748b;font-weight:700;">#${index + 1}</span>`;
 
       const isMe = rankUser.id === user?.id ? 'background:rgba(37,99,235,0.08);border-left:3px solid #2563eb;font-weight:700;' : '';
+      const userCoins = rankUser.coins !== undefined ? rankUser.coins : (rankUser.xp ? Math.round(rankUser.xp / 2) : 50);
 
       return `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:12px;font-size:0.85rem;margin-bottom:6px;${isMe}">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-weight:800;min-width:24px;">${medal}</span>
-            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">${rankUser.full_name}</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:10px;font-size:0.82rem;margin-bottom:4px;${isMe}">
+          <div style="display:flex;align-items:center;gap:6px;min-width:0;">
+            <span style="font-weight:800;min-width:20px;">${medal}</span>
+            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;">${rankUser.full_name}</span>
           </div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style="font-size:0.7rem;padding:2px 8px;border-radius:999px;background:rgba(37,99,235,0.1);color:#2563eb;font-weight:700;">Lvl ${rankUser.level}</span>
-            <span style="font-weight:800;color:#a855f7;">${rankUser.xp} XP</span>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            <span style="font-weight:800;color:#d97706;display:flex;align-items:center;gap:3px;"><i class="fa-solid fa-coins anim-coin" style="font-size:0.75rem;"></i> ${userCoins} Coins</span>
           </div>
         </div>
       `;
     }).join('');
   } catch (e) {
-    listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ct-text-gray);">Unable to load leaderboard.</div>';
+    listEl.innerHTML = '<div style="text-align:center;padding:20px;color:#64748b;">Unable to load leaderboard.</div>';
   }
 }
 
@@ -1286,7 +1335,7 @@ async function loadActivity() {
   if (!actList) return;
   const { data, error } = await apiRequest('/api/upload/my-activity');
   if (error || !data || !data.activities || data.activities.length === 0) {
-    actList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ct-text-gray);">No recent activity logged yet.</div>';
+    actList.innerHTML = '<div style="text-align:center;padding:20px;color:#64748b;">No recent activity logged yet.</div>';
     return;
   }
   const acts = data.activities.slice(0, 15);
@@ -1298,12 +1347,12 @@ async function loadActivity() {
     other: '<i class="fa-solid fa-sparkles" style="color:#2563eb;"></i>'
   };
   actList.innerHTML = acts.map(a => `
-    <div style="display:flex;gap:12px;padding:10px 12px;background:rgba(0,0,0,0.02);border:1px solid var(--ct-border-soft);border-radius:14px;align-items:flex-start;">
-      <div style="font-size:1.1rem;flex-shrink:0;margin-top:2px;">${actIcons[a.action] || actIcons.other}</div>
+    <div style="display:flex;gap:10px;padding:8px 10px;background:#f8fafc;border:1px solid #edf2f7;border-radius:12px;align-items:flex-start;">
+      <div style="font-size:1rem;flex-shrink:0;margin-top:2px;">${actIcons[a.action] || actIcons.other}</div>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:0.85rem;font-weight:700;color:var(--ct-text-dark);">${a.action.replace(/_/g, ' ')}</div>
-        ${a.details ? '<div style="font-size:0.75rem;color:var(--ct-text-gray);margin-top:1px;">' + a.details + '</div>' : ''}
-        <div style="font-size:0.68rem;color:#94a3b8;margin-top:2px;">${formatDateTime(a.created_at)}</div>
+        <div style="font-size:0.8rem;font-weight:700;color:#0f172a;">${a.action.replace(/_/g, ' ')}</div>
+        ${a.details ? '<div style="font-size:0.7rem;color:#64748b;margin-top:1px;">' + a.details + '</div>' : ''}
+        <div style="font-size:0.65rem;color:#94a3b8;margin-top:2px;">${formatDateTime(a.created_at)}</div>
       </div>
     </div>
   `).join('');
@@ -1351,9 +1400,9 @@ async function explainConcept() {
   const btn = document.getElementById('btnSendConcept');
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Thinking</span>';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
   }
-  resultDiv.innerHTML = '<div style="text-align:center;color:var(--ct-text-gray);padding:12px;"><i class="fa-solid fa-brain fa-bounce" style="margin-right:8px;color:#2563eb;"></i>AI is formulating clear, step-by-step notes...</div>';
+  resultDiv.innerHTML = '<div style="text-align:center;color:#64748b;padding:10px;"><i class="fa-solid fa-brain fa-bounce" style="margin-right:6px;color:#2563eb;"></i>Formulating step-by-step notes...</div>';
   resultDiv.style.display = 'block';
 
   try {
@@ -1374,8 +1423,8 @@ async function explainConcept() {
     const explanation = response.data?.explanation || response.data?.result || response.data || 'No explanation generated.';
     resultDiv.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid rgba(37,99,235,0.15);padding-bottom:6px;">
-        <span style="font-weight:800;color:#2563eb;font-size:0.85rem;"><i class="fa-solid fa-sparkles"></i> AI Explanation</span>
-        <button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="padding:2px 8px;border-radius:999px;"><i class="fa-solid fa-xmark"></i> Close</button>
+        <span style="font-weight:800;color:#2563eb;font-size:0.82rem;"><i class="fa-solid fa-sparkles"></i> AI Explanation</span>
+        <button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="padding:2px 8px;border-radius:999px;font-size:0.75rem;"><i class="fa-solid fa-xmark"></i> Close</button>
       </div>
       <div>${parseWithMath(explanation)}</div>
     `;
@@ -1419,7 +1468,6 @@ async function resendVerificationOtp() {
   showToast('A new OTP confirmation code has been sent to your email!', 'success');
 }
 
-// Initialize verification form
 const verifyForm = document.getElementById('modalVerifyForm');
 if (verifyForm) {
   verifyForm.addEventListener('submit', async (e) => {

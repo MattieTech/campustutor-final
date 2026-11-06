@@ -564,8 +564,8 @@ if (!docId) {
 document.getElementById('pageTitle').innerHTML    = '<i class="fa-solid fa-file-pdf"></i> ' + docName;
 document.getElementById('pageSubtitle').textContent = 'Use the AI tools below to study this document';
 
-// Track XP earned this session
-let sessionXP = 0;
+// Track Coins earned this session
+let sessionCoins = 0;
 
 // ── LOAD SAVED RESULTS ─────────────────────────────────────────
 // When the page loads, restore any previously generated content
@@ -626,8 +626,8 @@ async function triggerSummaryGeneration() {
   if (cached?.summary) {
     resetBtn(btn, '<i class="fa-solid fa-list-check"></i>', 'Summarize Notes', 'Get a clean overview of all key points');
     showResult('summary', '<i class="fa-solid fa-list-check"></i> Summary', cached.summary);
-    awardXP(15, 'first_summary');
-    showToast('Summary ready! +15 XP <i class="fa-solid fa-star"></i>', 'success');
+    awardCoins(15, 'first_summary');
+    showToast('Summary ready! +15 Coins <i class="fa-solid fa-star"></i>', 'success');
     return;
   }
 
@@ -641,8 +641,8 @@ async function triggerSummaryGeneration() {
     return; 
   }
   showResult('summary', '<i class="fa-solid fa-list-check"></i> Summary', data.summary);
-  awardXP(15, 'first_summary');
-  showToast('Summary ready! +15 XP <i class="fa-solid fa-star"></i>', 'success');
+  awardCoins(15, 'first_summary');
+  showToast('Summary ready! +15 Coins <i class="fa-solid fa-star"></i>', 'success');
 }
 
 function runQuestions() {
@@ -697,8 +697,8 @@ async function triggerQuestionGeneration() {
   if (!forceFresh && cached?.questions && cached.questions.mcqs?.length === (quizSize === 10 ? 8 : quizSize === 20 ? 14 : quizSize === 30 ? 20 : quizSize === 40 ? 25 : 30)) {
     resetBtn(btn, '<i class="fa-solid fa-pen-to-square"></i>', 'Revision Questions', 'MCQs + essay questions with model answers');
     showResult('questions', '<i class="fa-solid fa-pen-to-square"></i> Questions', { questions: cached.questions });
-    awardXP(20, 'first_quiz');
-    showToast('Questions ready! +20 XP <i class="fa-solid fa-star"></i>', 'success');
+    awardCoins(20, 'first_quiz');
+    showToast('Questions ready! +20 Coins <i class="fa-solid fa-star"></i>', 'success');
     return;
   }
 
@@ -712,8 +712,8 @@ async function triggerQuestionGeneration() {
     return;
   }
   showResult('questions', '<i class="fa-solid fa-pen-to-square"></i> Questions', response.data);
-  awardXP(20, 'first_quiz');
-  showToast('Questions ready! +20 XP <i class="fa-solid fa-star"></i>', 'success');
+  awardCoins(20, 'first_quiz');
+  showToast('Questions ready! +20 Coins <i class="fa-solid fa-star"></i>', 'success');
 }
 
 function runFlashcards() {
@@ -755,8 +755,8 @@ async function triggerFlashcardGeneration() {
   if (cached?.flashcards && cached.flashcards.length === flashcardSize) {
     resetBtn(btn, '<i class="fa-solid fa-id-card"></i>', 'Create Flashcards', 'Interactive flip-card study set');
     showFlashcards(cached.flashcards);
-    awardXP(15, 'first_flash');
-    showToast('Flashcards ready! +15 XP <i class="fa-solid fa-star"></i>', 'success');
+    awardCoins(15, 'first_flash');
+    showToast('Flashcards ready! +15 Coins <i class="fa-solid fa-star"></i>', 'success');
     return;
   }
 
@@ -770,8 +770,8 @@ async function triggerFlashcardGeneration() {
     return; 
   }
   showFlashcards(data.flashcards);
-  awardXP(15, 'first_flash');
-  showToast('Flashcards ready! +15 XP <i class="fa-solid fa-star"></i>', 'success');
+  awardCoins(15, 'first_flash');
+  showToast('Flashcards ready! +15 Coins <i class="fa-solid fa-star"></i>', 'success');
 }
 
 async function runExplain() {
@@ -965,12 +965,12 @@ function resetBtn(btn, icon, title, desc) {
   btn.querySelector('.action-desc').textContent  = desc;
 }
 
-// ── XP ─────────────────────────────────────────────────────────
-function awardXP(pts, badgeKey) {
-  sessionXP += pts;
+// ── Coins ─────────────────────────────────────────────────────────
+function awardCoins(pts, badgeKey) {
+  sessionCoins += pts;
   const badge = document.getElementById('xpBadge');
   badge.style.display = 'inline-flex';
-  badge.innerHTML = `+${sessionXP} XP this session`;
+  badge.innerHTML = `<i class="fa-solid fa-coins anim-coin"></i> +${pts || 5} Coins earned!`;
 
   const cur = parseInt(localStorage.getItem('ct_xp') || '0');
   localStorage.setItem('ct_xp', cur + pts);
@@ -1289,7 +1289,7 @@ function finishExamSimulation(force = false) {
   `;
 
   renderMath(panel);
-  showToast(`Exam graded: Predicted Grade ${grade} (${percentage}%)! +30 XP`, 'success');
+  showToast(`Exam graded: Predicted Grade ${grade} (${percentage}%)! +30 Coins`, 'success');
 }
 
 // ── AUDIO LECTURE NOTES (VOICE REVISION) ───────────────────────
