@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Settings — CampusTutor AI 2.0</title>
+<link rel="stylesheet" href="/css/style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+<meta name="theme-color" content="#060d24"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="CampusTutor"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-192.png"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+
+<style>
+  *, *::before, *::after {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html, body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+    background: #f4f7fc;
+    background-image: 
+      radial-gradient(circle at 90% 8%, rgba(191, 219, 254, 0.45) 0%, transparent 40%),
+      radial-gradient(circle at 10% 20%, rgba(233, 213, 255, 0.35) 0%, transparent 40%);
+    background-attachment: fixed;
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
+  }
+  [data-theme="dark"] body {
+    background: #080e1e;
+    color: #f8fafc;
+  }
+
+  .ct-dashboard-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 10px 14px 90px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* ── Header ── */
+  .ct-exact-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0 2px 0;
+    width: 100%;
+  }
+  .ct-exact-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    min-width: 0;
+  }
+  .ct-exact-brand-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    display: grid;
+    place-items: center;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    flex-shrink: 0;
+  }
+  .ct-exact-brand-title {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  [data-theme="dark"] .ct-exact-brand-title { color: #ffffff; }
+  .ct-exact-badge {
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 999px;
+  }
+  .ct-exact-brand-sub {
+    font-size: 0.68rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+  [data-theme="dark"] .ct-exact-brand-sub { color: #94a3b8; }
+
+  .ct-exact-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .ct-exact-bell-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid #edf2f7;
+    display: grid;
+    place-items: center;
+    color: #334155;
+    position: relative;
+    cursor: pointer;
+  }
+  [data-theme="dark"] .ct-exact-bell-btn {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+  }
+  .ct-exact-bell-dot {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.58rem;
+    font-weight: 800;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+  .ct-exact-user-pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+  .ct-exact-avatar-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #ffffff;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 0.82rem;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+  }
+
+  /* ── Settings Page Header Title ── */
+  .ct-settings-head {
+    margin: 2px 0 2px 0;
+  }
+  .ct-settings-title {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    margin: 0 0 4px 0;
+  }
+  [data-theme="dark"] .ct-settings-title { color: #ffffff; }
+  .ct-settings-sub {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin: 0;
+  }
+  [data-theme="dark"] .ct-settings-sub { color: #94a3b8; }
+
+  /* ── User Profile Card ── */
+  .ct-profile-card {
+    background: #ffffff;
+    border-radius: 22px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #edf2f7;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .ct-profile-card:active {
+    transform: scale(0.99);
+  }
+  [data-theme="dark"] .ct-profile-card {
+    background: #111a2e;
+    border-color: #1e293b;
+  }
+  .ct-profile-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+    flex: 1;
+  }
+  .ct-profile-avatar-wrap {
+    position: relative;
+    width: 62px;
+    height: 62px;
+    flex-shrink: 0;
+  }
+  .ct-profile-avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background: linear-gradient(135deg, #bfdbfe, #60a5fa);
+    display: grid;
+    place-items: center;
+    color: #1e40af;
+    font-weight: 800;
+    font-size: 1.3rem;
+    border: 3px solid #ffffff;
+    box-shadow: 0 4px 14px rgba(37,99,235,0.25);
+  }
+  .ct-avatar-edit-badge {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 22px;
+    height: 22px;
+    background: #2563eb;
+    color: #ffffff;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 0.65rem;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+
+  .ct-profile-details {
+    min-width: 0;
+    flex: 1;
+  }
+  .ct-profile-name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  [data-theme="dark"] .ct-profile-name { color: #ffffff; }
+  .ct-profile-email {
+    font-size: 0.74rem;
+    color: #64748b;
+    margin: 2px 0 6px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  [data-theme="dark"] .ct-profile-email { color: #94a3b8; }
+  .ct-profile-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #2563eb;
+    background: #eff6ff;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  [data-theme="dark"] .ct-profile-tag {
+    background: rgba(37,99,235,0.2);
+    color: #60a5fa;
+  }
+
+  .ct-profile-arrow {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    margin-left: 8px;
+  }
+
+  /* ── Settings Group Sections ── */
+  .ct-settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ct-group-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 2px;
+  }
+  [data-theme="dark"] .ct-group-header { color: #ffffff; }
+  .ct-group-header i { color: #2563eb; }
+
+  .ct-group-box {
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid #edf2f7;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.025);
+  }
+  [data-theme="dark"] .ct-group-box {
+    background: #111a2e;
+    border-color: #1e293b;
+  }
+
+  .ct-setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid #f1f5f9;
+    gap: 12px;
+  }
+  .ct-setting-row:last-child {
+    border-bottom: none;
+  }
+  [data-theme="dark"] .ct-setting-row {
+    border-bottom-color: #1e293b;
+  }
+  .ct-setting-row.clickable {
+    cursor: pointer;
+  }
+  .ct-setting-row.clickable:active {
+    background: rgba(0,0,0,0.02);
+  }
+  [data-theme="dark"] .ct-setting-row.clickable:active {
+    background: rgba(255,255,255,0.03);
+  }
+
+  .ct-setting-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+  .ct-setting-icon-box {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .ct-icon-purple { background: #faf5ff; color: #9333ea; }
+  .ct-icon-blue { background: #eff6ff; color: #2563eb; }
+  .ct-icon-green { background: #f0fdf4; color: #16a34a; }
+  .ct-icon-orange { background: #fff7ed; color: #ea580c; }
+  .ct-icon-cyan { background: #ecfeff; color: #0891b2; }
+
+  [data-theme="dark"] .ct-icon-purple { background: rgba(147,51,234,0.2); }
+  [data-theme="dark"] .ct-icon-blue { background: rgba(37,99,235,0.2); }
+  [data-theme="dark"] .ct-icon-green { background: rgba(22,163,74,0.2); }
+  [data-theme="dark"] .ct-icon-orange { background: rgba(234,88,12,0.2); }
+  [data-theme="dark"] .ct-icon-cyan { background: rgba(8,145,178,0.2); }
+
+  .ct-setting-texts {
+    min-width: 0;
+    flex: 1;
+  }
+  .ct-setting-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+  }
+  [data-theme="dark"] .ct-setting-name { color: #ffffff; }
+  .ct-setting-desc {
+    font-size: 0.68rem;
+    color: #64748b;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  [data-theme="dark"] .ct-setting-desc { color: #94a3b8; }
+
+  /* Dropdown Select Controls */
+  .ct-setting-select-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #0f172a;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  [data-theme="dark"] .ct-setting-select-btn {
+    background: #1e293b;
+    border-color: #334155;
+    color: #ffffff;
+  }
+
+  /* Toggle Switch */
+  .ct-toggle-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  .ct-toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .ct-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #cbd5e1;
+    border-radius: 999px;
+    transition: 0.25s;
+  }
+  .ct-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.25s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  input:checked + .ct-toggle-slider {
+    background-color: #2563eb;
+  }
+  input:checked + .ct-toggle-slider:before {
+    transform: translateX(20px);
+  }
+
+  .ct-setting-arrow {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  /* ── Logout Button (Pink/Red Pill matching reference) ── */
+  .ct-logout-btn {
+    width: 100%;
+    background: #ffe4e6;
+    color: #e11d48;
+    border: 1px solid #fecdd3;
+    padding: 12px;
+    border-radius: 999px;
+    font-size: 0.92rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: transform 0.15s, background 0.15s;
+  }
+  .ct-logout-btn:active {
+    transform: scale(0.98);
+    background: #fecdd3;
+  }
+  [data-theme="dark"] .ct-logout-btn {
+    background: rgba(225, 29, 72, 0.18);
+    border-color: rgba(225, 29, 72, 0.35);
+    color: #fb7185;
+  }
+
+  /* ── Modal for Profile Edit ── */
+  .ct-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .ct-modal-card {
+    background: #ffffff;
+    border-radius: 22px;
+    max-width: 420px;
+    width: 100%;
+    padding: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  [data-theme="dark"] .ct-modal-card {
+    background: #111a2e;
+    color: #ffffff;
+  }
+</style>
+</head>
+<body>
+
+<div class="ct-dashboard-container">
+  <!-- Exact Header -->
+  <header class="ct-exact-header">
+    <a href="/pages/dashboard.html" class="ct-exact-brand">
+      <div class="ct-exact-brand-icon">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <div class="ct-exact-brand-text">
+        <div class="ct-exact-brand-title">
+          <span>CampusTutor AI</span>
+          <span class="ct-exact-badge">2.0</span>
+        </div>
+        <span class="ct-exact-brand-sub">Learn • Practice • Excel</span>
+      </div>
+    </a>
+    <div class="ct-exact-header-right">
+      <div class="ct-exact-bell-btn" onclick="window.location.href='/pages/dashboard.html#activity'" title="Notifications">
+        <i class="fa-solid fa-bell"></i>
+        <div class="ct-exact-bell-dot">2</div>
+      </div>
+      <div class="ct-exact-user-pill" title="My Profile">
+        <div class="ct-exact-avatar-circle" id="navAvatarCircle">MA</div>
+        <i class="fa-solid fa-chevron-down" style="font-size:0.7rem;color:#64748b;margin-left:2px;"></i>
+      </div>
+    </div>
+  </header>
+
+  <!-- Title section -->
+  <div class="ct-settings-head">
+    <h1 class="ct-settings-title">Settings</h1>
+    <p class="ct-settings-sub">Customize your experience and manage your account.</p>
+  </div>
+
+  <!-- Profile Card (Matches Reference Screenshot) -->
+  <div class="ct-profile-card" onclick="openProfileModal()">
+    <div class="ct-profile-left">
+      <div class="ct-profile-avatar-wrap">
+        <div class="ct-profile-avatar-img" id="profileAvatarText">MA</div>
+        <div class="ct-avatar-edit-badge"><i class="fa-solid fa-pencil"></i></div>
+      </div>
+      <div class="ct-profile-details">
+        <div class="ct-profile-name" id="profileFullName">Matthew Aliu</div>
+        <div class="ct-profile-email" id="profileEmail">matthewaliu001@gmail.com</div>
+        <div class="ct-profile-tag" id="profileLevelBadge">
+          <i class="fa-solid fa-graduation-cap"></i>
+          <span id="academicLevelText">200L Student</span>
+        </div>
+      </div>
+    </div>
+    <div class="ct-profile-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+  </div>
+
+  <!-- Group 1: Preferences -->
+  <div class="ct-settings-group">
+    <div class="ct-group-header">
+      <i class="fa-solid fa-sliders"></i>
+      <span>Preferences</span>
+    </div>
+    <div class="ct-group-box">
+      <!-- Appearance -->
+      <div class="ct-setting-row">
+        <div class="ct-setting-left">
+          <div class="ct-setting-icon-box ct-icon-purple">
+            <i class="fa-solid fa-moon"></i>
+          </div>
+          <div class="ct-setting-texts">
+            <div class="ct-setting-name">Appearance</div>
+            <div class="ct-setting-desc">Light, Dark or System mode</div>
+          </div>
+        </div>
+        <button type="button" class="ct-setting-select-btn" onclick="cycleThemeSetting()" id="btnThemeSelect">
+          <span id="themeLabelText">Light</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+      </div>
+
+      <!-- Language -->
+      <div class="ct-setting-row">
+        <div class="ct-setting-left">
+          <div class="ct-setting-icon-box ct-icon-blue">
+            <i class="fa-solid fa-globe"></i>
+          </div>
+          <div class="ct-setting-texts">
+            <div class="ct-setting-name">Language</div>
+            <div class="ct-setting-desc">Choose your preferred language</div>
+          </div>
+        </div>
+        <button type="button" class="ct-setting-select-btn" onclick="cycleLanguage()" id="btnLanguageSelect">
+          <span id="languageLabelText">English</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+      </div>
+
+      <!-- Notifications -->
+      <div class="ct-setting-row">
+        <div class="ct-setting-left">
+          <div class="ct-setting-icon-box ct-icon-green">
+            <i class="fa-solid fa-bell"></i>
+          </div>
+          <div class="ct-setting-texts">
+            <div class="ct-setting-name">Notifications</div>
+            <div class="ct-setting-desc">Get notified about updates and reminders</div>
+          </div>
+        </div>
+        <label class="ct-toggle-switch">
+          <input type="checkbox" id="toggleNotifications" checked onchange="savePreferences()" />
+          <span class="ct-toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- Auto Download -->
+      <div class="ct-setting-row">
+        <div class="ct-setting-left">
+          <div class="ct-setting-icon-box ct-icon-orange">
+            <i class="fa-solid fa-download"></i>
+          </div>
+          <div class="ct-setting-texts">
+            <div class="ct-setting-name">Auto Download</div>
+            <div class="ct-setting-desc">Download PDFs for offline access</div>
+          </div>
+        </div>
+        <label class="ct-toggle-switch">
+          <input type="checkbox" id="toggleAutoDownload" onchange="savePreferences()" />
+          <span class="ct-toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Group 2: App Settings -->
+  <div class="ct-settings-group">
+    <div class="ct-group-header">
+      <i class="fa-solid fa-shield-halved"></i>
+      <span>App Settings</span>
+    </div>
+    <div class="ct-group-box">
+      <!-- Data & Storage -->
+      <div class="ct-setting-row clickable" onclick="clearAppDataCache()">
+        <div class="ct-setting-left">
+          <div class="ct-setting-icon-box ct-icon-cyan">
+            <i class="fa-solid fa-database"></i>
+          </div>
+          <div class="ct-setting-texts">
+            <div class="ct-setting-name">Data & Storage</div>
+            <div class="ct-setting-desc">Manage your data and cache</div>
+          </div>
+        </div>
+        <div class="ct-setting-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+      </div>
+
+      <!-- Privacy & Security -->
+      <div class="ct-setting-row clickable" onclick="window.location.href='/pages/reset.html'">
+        <div class="ct-setting-left">
+          <div class="ct-setting-icon-box ct-icon-green">
+            <i class="fa-solid fa-shield-heart"></i>
+          </div>
+          <div class="ct-setting-texts">
+            <div class="ct-setting-name">Privacy & Security</div>
+            <div class="ct-setting-desc">Change password and security settings</div>
+          </div>
+        </div>
+        <div class="ct-setting-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+      </div>
+
+      <!-- About CampusTutor AI -->
+      <div class="ct-setting-row clickable" onclick="showAboutModal()">
+        <div class="ct-setting-left">
+          <div class="ct-setting-icon-box ct-icon-purple">
+            <i class="fa-solid fa-circle-info"></i>
+          </div>
+          <div class="ct-setting-texts">
+            <div class="ct-setting-name">About CampusTutor AI</div>
+            <div class="ct-setting-desc">Version 2.0.0 • Built for Nigerian Students</div>
+          </div>
+        </div>
+        <div class="ct-setting-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Group 3: Support -->
+  <div class="ct-settings-group">
+    <div class="ct-group-header">
+      <i class="fa-solid fa-headset"></i>
+      <span>Support</span>
+    </div>
+    <div class="ct-group-box">
+      <!-- Contact Support -->
+      <div class="ct-setting-row clickable" onclick="openSupportLink()">
+        <div class="ct-setting-left">
+          <div class="ct-setting-icon-box ct-icon-blue">
+            <i class="fa-solid fa-envelope"></i>
+          </div>
+          <div class="ct-setting-texts">
+            <div class="ct-setting-name">Contact Support</div>
+            <div class="ct-setting-desc">Get help from our support team</div>
+          </div>
+        </div>
+        <div class="ct-setting-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+      </div>
+
+      <!-- FAQs -->
+      <div class="ct-setting-row clickable" onclick="openFaqModal()">
+        <div class="ct-setting-left">
+          <div class="ct-setting-icon-box ct-icon-cyan">
+            <i class="fa-solid fa-circle-question"></i>
+          </div>
+          <div class="ct-setting-texts">
+            <div class="ct-setting-name">FAQs</div>
+            <div class="ct-setting-desc">Find answers to common questions</div>
+          </div>
+        </div>
+        <div class="ct-setting-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Button (Exact Pink/Red Pill) -->
+  <button type="button" class="ct-logout-btn" onclick="logout()">
+    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+    <span>Log Out</span>
+  </button>
+</div>
+
+<!-- STANDARDIZED BOTTOM NAVIGATION -->
+<nav class="ct-exact-dock" id="mobileBottomNav"></nav>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="ct-modal-overlay" id="editProfileModal">
+  <div class="ct-modal-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 style="font-weight:800;font-size:1.1rem;margin:0;">Edit Profile</h3>
+      <button onclick="closeProfileModal()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="editProfileForm" onsubmit="handleProfileSubmit(event)">
+      <div style="margin-bottom:12px;">
+        <label style="font-size:0.78rem;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Full Name</label>
+        <input type="text" id="editFullName" class="form-input" required style="width:100%;border-radius:12px;padding:10px 12px;" />
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:0.78rem;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Academic Level</label>
+        <select id="editAcademicLevel" class="form-input" style="width:100%;border-radius:12px;padding:10px 12px;">
+          <option value="100L Student">100L Student</option>
+          <option value="200L Student">200L Student</option>
+          <option value="300L Student">300L Student</option>
+          <option value="400L Student">400L Student</option>
+          <option value="500L Student">500L Student</option>
+          <option value="Postgraduate / MSc">Postgraduate / MSc</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full" id="btnSaveProfile" style="border-radius:999px;font-weight:800;padding:10px;">Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+requireAuth();
+
+// Load User Data
+async function loadUserSettings() {
+  const localUser = getUser();
+  if (localUser) {
+    updateUIWithUser(localUser);
+  }
+
+  try {
+    const freshUser = await apiGetMe();
+    if (freshUser) {
+      updateUIWithUser(freshUser);
+    }
+  } catch (err) {
+    console.warn('Could not refresh profile:', err.message);
+  }
+}
+
+function updateUIWithUser(u) {
+  const name = u.fullName || u.email?.split('@')[0] || 'Student';
+  const email = u.email || '';
+  const level = u.academicLevel || '200L Student';
+  const initials = name.substring(0, 2).toUpperCase();
+
+  document.getElementById('profileFullName').textContent = name;
+  document.getElementById('profileEmail').textContent = email;
+  document.getElementById('profileAvatarText').textContent = initials;
+  document.getElementById('navAvatarCircle').textContent = initials;
+  document.getElementById('academicLevelText').textContent = level;
+
+  document.getElementById('editFullName').value = name;
+  document.getElementById('editAcademicLevel').value = level;
+
+  // Preferences
+  const currentTheme = localStorage.getItem('ct_theme') || 'light';
+  document.getElementById('themeLabelText').textContent = currentTheme === 'dark' ? 'Dark' : 'Light';
+}
+
+function openProfileModal() {
+  document.getElementById('editProfileModal').style.display = 'flex';
+}
+function closeProfileModal() {
+  document.getElementById('editProfileModal').style.display = 'none';
+}
+
+async function handleProfileSubmit(e) {
+  e.preventDefault();
+  const fullName = document.getElementById('editFullName').value.trim();
+  const academicLevel = document.getElementById('editAcademicLevel').value;
+  const btn = document.getElementById('btnSaveProfile');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  try {
+    const res = await apiRequest('/api/auth/profile', 'PUT', { fullName, academicLevel });
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+    if (res.error) {
+      showToast(res.error, 'error');
+      return;
+    }
+    showToast('Profile updated successfully!', 'success');
+    closeProfileModal();
+    const u = getUser() || {};
+    u.fullName = fullName;
+    u.academicLevel = academicLevel;
+    localStorage.setItem('ct_user', JSON.stringify(u));
+    updateUIWithUser(u);
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+    showToast('Failed to save profile.', 'error');
+  }
+}
+
+// Appearance Toggle
+function cycleThemeSetting() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const nextTheme = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', nextTheme);
+  localStorage.setItem('ct_theme', nextTheme);
+  document.getElementById('themeLabelText').textContent = nextTheme === 'dark' ? 'Dark' : 'Light';
+  showToast(`Switched to ${nextTheme} mode`, 'info');
+  savePreferences();
+}
+
+// Language Cycle
+const langs = ['English', 'Pidgin (Nigeria)', 'Yoruba', 'Igbo', 'Hausa'];
+let langIdx = 0;
+function cycleLanguage() {
+  langIdx = (langIdx + 1) % langs.length;
+  document.getElementById('languageLabelText').textContent = langs[langIdx];
+  showToast(`Language set to ${langs[langIdx]}`, 'info');
+  savePreferences();
+}
+
+async function savePreferences() {
+  const prefs = {
+    appearance: document.documentElement.getAttribute('data-theme') || 'light',
+    language: document.getElementById('languageLabelText').textContent,
+    notifications: document.getElementById('toggleNotifications').checked,
+    autoDownload: document.getElementById('toggleAutoDownload').checked
+  };
+  localStorage.setItem('ct_user_prefs', JSON.stringify(prefs));
+  try {
+    await apiRequest('/api/auth/preferences', 'PUT', prefs);
+  } catch (e) {
+    // Background preference save
+  }
+}
+
+function clearAppDataCache() {
+  if (confirm('Clear offline study cache and temporary data? Your account information will remain safe.')) {
+    sessionStorage.clear();
+    showToast('App cache cleared successfully!', 'success');
+  }
+}
+
+function openSupportLink() {
+  window.open('https://chat.whatsapp.com/CNlccvf5Eue6ZvE4Pz3JGX', '_blank');
+}
+
+function showAboutModal() {
+  alert('CampusTutor AI 2.0\nBuilt for Nigerian and Global University Scholars.\nPowered by Google Gemini 2.5 Flash & MattieTech AI Framework.\nVersion 2.0.0 (Production Release)');
+}
+
+function openFaqModal() {
+  alert('Frequently Asked Questions:\n\n1. How do CampusCoins work?\nCoins allow you to use specialized academic tools like Coursework Polisher and Viva Defense Drill.\n\n2. How do I get more coins?\nRefer your friends for up to ₦5,000 / coins or purchase instant coin packages.\n\n3. What is CampusTutor Pro?\nPro grants unlimited access to all AI study tools without per-action coin deductions.');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderStandardBottomNav('settings');
+  loadUserSettings();
+});
+</script>
+</body>
+</html>

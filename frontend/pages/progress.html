@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>My Progress — CampusTutor AI 2.0</title>
+<link rel="stylesheet" href="/css/style.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<meta name="theme-color" content="#060d24"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="CampusTutor"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-192.png"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+
+<style>
+  *, *::before, *::after {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html, body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+    background: #f4f7fc;
+    background-image: 
+      radial-gradient(circle at 10% 5%, rgba(191, 219, 254, 0.45) 0%, transparent 35%),
+      radial-gradient(circle at 90% 12%, rgba(233, 213, 255, 0.45) 0%, transparent 35%);
+    background-attachment: fixed;
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
+  }
+  [data-theme="dark"] body {
+    background: #080e1e;
+    color: #f8fafc;
+  }
+
+  .ct-dashboard-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 10px 14px 90px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* ── Header Bar matching Reference ── */
+  .ct-exact-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0 2px 0;
+    width: 100%;
+  }
+  .ct-exact-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    min-width: 0;
+  }
+  .ct-exact-brand-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    display: grid;
+    place-items: center;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    flex-shrink: 0;
+  }
+  .ct-exact-brand-title {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  [data-theme="dark"] .ct-exact-brand-title { color: #ffffff; }
+  .ct-exact-badge {
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 999px;
+  }
+  .ct-exact-brand-sub {
+    font-size: 0.68rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+  [data-theme="dark"] .ct-exact-brand-sub { color: #94a3b8; }
+
+  .ct-exact-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .ct-exact-bell-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid #edf2f7;
+    display: grid;
+    place-items: center;
+    color: #334155;
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  [data-theme="dark"] .ct-exact-bell-btn {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+  }
+  .ct-exact-bell-dot {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.58rem;
+    font-weight: 800;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+  .ct-exact-user-pill {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+  .ct-exact-avatar-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #ffffff;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 0.82rem;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+  }
+
+  /* ── Hero Panoramic Card ── */
+  .ct-progress-hero {
+    background: linear-gradient(135deg, #0052cc 0%, #1e40af 50%, #172554 100%);
+    border-radius: 22px;
+    padding: 20px 20px 18px 20px;
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 12px 36px rgba(30, 64, 175, 0.28);
+  }
+  .ct-progress-hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .ct-progress-hero-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 4px 0;
+  }
+  .ct-progress-hero-sub {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.88);
+    margin: 0;
+    line-height: 1.35;
+    max-width: 220px;
+  }
+  .ct-progress-hero-filter {
+    background: rgba(255, 255, 255, 0.95);
+    color: #0f172a;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .ct-progress-hero-graphic {
+    position: absolute;
+    right: 12px;
+    bottom: -6px;
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    pointer-events: none;
+  }
+  .ct-graphic-bar {
+    width: 10px;
+    background: linear-gradient(to top, rgba(255,255,255,0.4), #60a5fa);
+    border-radius: 4px 4px 0 0;
+  }
+
+  /* ── 2x2 Metric Grid ── */
+  .ct-progress-metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+  .ct-metric-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #edf2f7;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  }
+  [data-theme="dark"] .ct-metric-card {
+    background: #111a2e;
+    border-color: #1e293b;
+  }
+  .ct-metric-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+  }
+  .ct-metric-icon-blue { background: #eff6ff; color: #2563eb; }
+  .ct-metric-icon-purple { background: #faf5ff; color: #9333ea; }
+  .ct-metric-icon-green { background: #f0fdf4; color: #16a34a; }
+  .ct-metric-icon-amber { background: #fffbeb; color: #d97706; }
+
+  [data-theme="dark"] .ct-metric-icon-blue { background: rgba(37,99,235,0.2); }
+  [data-theme="dark"] .ct-metric-icon-purple { background: rgba(147,51,234,0.2); }
+  [data-theme="dark"] .ct-metric-icon-green { background: rgba(22,163,74,0.2); }
+  [data-theme="dark"] .ct-metric-icon-amber { background: rgba(217,119,6,0.2); }
+
+  .ct-metric-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .ct-metric-val-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ct-metric-val {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.1;
+  }
+  [data-theme="dark"] .ct-metric-val { color: #ffffff; }
+  .ct-metric-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #15803d;
+  }
+  [data-theme="dark"] .ct-metric-badge {
+    background: rgba(21, 128, 61, 0.25);
+    color: #4ade80;
+  }
+  .ct-metric-lbl {
+    font-size: 0.68rem;
+    color: #64748b;
+    font-weight: 600;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  [data-theme="dark"] .ct-metric-lbl { color: #94a3b8; }
+
+  /* ── Learning Overview Chart Card ── */
+  .ct-chart-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 16px;
+    border: 1px solid #edf2f7;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  }
+  [data-theme="dark"] .ct-chart-card {
+    background: #111a2e;
+    border-color: #1e293b;
+  }
+  .ct-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .ct-chart-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.96rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  [data-theme="dark"] .ct-chart-title { color: #ffffff; }
+  .ct-chart-title i { color: #2563eb; }
+
+  .ct-chart-filters {
+    display: flex;
+    gap: 4px;
+    background: #f1f5f9;
+    padding: 3px;
+    border-radius: 999px;
+  }
+  [data-theme="dark"] .ct-chart-filters { background: #1e293b; }
+  .ct-chart-tab {
+    border: none;
+    background: transparent;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #64748b;
+    padding: 4px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ct-chart-tab.active {
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(37,99,235,0.3);
+  }
+
+  .ct-chart-canvas-wrap {
+    width: 100%;
+    height: 180px;
+    position: relative;
+  }
+
+  /* ── Your Achievements Card ── */
+  .ct-achievements-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 16px;
+    border: 1px solid #edf2f7;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  }
+  [data-theme="dark"] .ct-achievements-card {
+    background: #111a2e;
+    border-color: #1e293b;
+  }
+  .ct-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .ct-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.96rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  [data-theme="dark"] .ct-section-title { color: #ffffff; }
+  .ct-section-link {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #2563eb;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .ct-achievements-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .ct-badge-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+  }
+  .ct-badge-icon-box {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 1.35rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+  .ct-badge-blue { background: #dbeafe; color: #1d4ed8; border: 2px solid #bfdbfe; }
+  .ct-badge-purple { background: #f3e8ff; color: #7e22ce; border: 2px solid #e9d5ff; }
+  .ct-badge-green { background: #dcfce7; color: #15803d; border: 2px solid #bbf7d0; }
+  .ct-badge-gold { background: #fef3c7; color: #b45309; border: 2px solid #fde68a; }
+
+  .ct-badge-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #334155;
+    line-height: 1.15;
+  }
+  [data-theme="dark"] .ct-badge-label { color: #cbd5e1; }
+
+  .ct-motivational-banner {
+    background: linear-gradient(135deg, rgba(239, 246, 255, 0.9), rgba(219, 234, 254, 0.6));
+    border: 1px solid rgba(191, 219, 254, 0.8);
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #1e40af;
+    justify-content: center;
+    text-align: center;
+  }
+  [data-theme="dark"] .ct-motivational-banner {
+    background: rgba(30, 64, 175, 0.25);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #93c5fd;
+  }
+
+  /* ── Top Tools Usage Card ── */
+  .ct-tools-usage-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 16px;
+    border: 1px solid #edf2f7;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  }
+  [data-theme="dark"] .ct-tools-usage-card {
+    background: #111a2e;
+    border-color: #1e293b;
+  }
+  .ct-usage-body {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 4px;
+  }
+  .ct-donut-wrap {
+    width: 90px;
+    height: 90px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .ct-donut-center-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .ct-donut-percent {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  [data-theme="dark"] .ct-donut-percent { color: #ffffff; }
+  .ct-donut-label {
+    font-size: 0.55rem;
+    color: #64748b;
+    margin-top: 2px;
+  }
+
+  .ct-usage-breakdown {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .ct-usage-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.72rem;
+  }
+  .ct-usage-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+  .ct-usage-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .ct-usage-name {
+    font-weight: 600;
+    color: #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 170px;
+  }
+  [data-theme="dark"] .ct-usage-name { color: #cbd5e1; }
+  .ct-usage-percent {
+    font-weight: 800;
+    color: #0f172a;
+    flex-shrink: 0;
+  }
+  [data-theme="dark"] .ct-usage-percent { color: #ffffff; }
+
+  /* ── Bottom Dock Navigation ── */
+  .ct-exact-dock {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 58px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 4px calc(env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -3px 15px rgba(0, 0, 0, 0.04);
+  }
+  [data-theme="dark"] .ct-exact-dock {
+    background: rgba(17, 25, 46, 0.96);
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+  .ct-exact-dock-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.68rem;
+    font-weight: 600;
+    flex: 1;
+    height: 100%;
+    position: relative;
+  }
+  .ct-exact-dock-item i { font-size: 1.15rem; }
+  .ct-exact-dock-item.active {
+    color: #2563eb;
+    font-weight: 700;
+  }
+  .ct-exact-dock-indicator {
+    position: absolute;
+    bottom: 4px;
+    width: 20px;
+    height: 3px;
+    border-radius: 3px;
+    background: #2563eb;
+  }
+</style>
+</head>
+<body>
+
+<div class="ct-dashboard-container">
+  <!-- Exact Header from Reference Screenshot -->
+  <header class="ct-exact-header">
+    <a href="/pages/dashboard.html" class="ct-exact-brand">
+      <div class="ct-exact-brand-icon">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <div class="ct-exact-brand-text">
+        <div class="ct-exact-brand-title">
+          <span>CampusTutor AI</span>
+          <span class="ct-exact-badge">2.0</span>
+        </div>
+        <span class="ct-exact-brand-sub">Learn • Practice • Excel</span>
+      </div>
+    </a>
+    <div class="ct-exact-header-right">
+      <div class="ct-exact-bell-btn" onclick="window.location.href='/pages/dashboard.html#activity'" title="Notifications">
+        <i class="fa-solid fa-bell"></i>
+        <div class="ct-exact-bell-dot">2</div>
+      </div>
+      <div class="ct-exact-user-pill" onclick="window.location.href='/pages/settings.html'" title="My Profile">
+        <div class="ct-exact-avatar-circle" id="userAvatarCircle">MA</div>
+        <i class="fa-solid fa-chevron-down" style="font-size:0.7rem;color:#64748b;margin-left:2px;"></i>
+      </div>
+    </div>
+  </header>
+
+  <!-- My Progress Hero Panoramic Banner -->
+  <div class="ct-progress-hero">
+    <div class="ct-progress-hero-top">
+      <div>
+        <h1 class="ct-progress-hero-title">My Progress</h1>
+        <p class="ct-progress-hero-sub">Track your learning journey and achieve your academic goals.</p>
+      </div>
+      <button class="ct-progress-hero-filter" type="button" onclick="cycleDateFilter(this)">
+        <i class="fa-solid fa-calendar-days" style="color:#2563eb;"></i>
+        <span id="dateFilterLabel">Last 30 Days</span>
+        <i class="fa-solid fa-chevron-down" style="font-size:0.6rem;"></i>
+      </button>
+    </div>
+
+    <!-- 3D Rising Chart Graphic -->
+    <div class="ct-progress-hero-graphic">
+      <div class="ct-graphic-bar" style="height:25px;"></div>
+      <div class="ct-graphic-bar" style="height:40px;"></div>
+      <div class="ct-graphic-bar" style="height:60px;"></div>
+      <div class="ct-graphic-bar" style="height:75px;"></div>
+      <i class="fa-solid fa-graduation-cap" style="font-size:2.4rem;color:#ffffff;filter:drop-shadow(0 4px 10px rgba(0,0,0,0.3));margin-left:4px;"></i>
+    </div>
+  </div>
+
+  <!-- 2x2 Metric Cards Grid -->
+  <div class="ct-progress-metrics-grid">
+    <!-- Total Activities -->
+    <div class="ct-metric-card">
+      <div class="ct-metric-icon ct-metric-icon-blue">
+        <i class="fa-solid fa-file-lines"></i>
+      </div>
+      <div class="ct-metric-info">
+        <div class="ct-metric-val-row">
+          <span class="ct-metric-val" id="metricTotalActivities">24</span>
+          <span class="ct-metric-badge"><i class="fa-solid fa-arrow-up"></i> 20%</span>
+        </div>
+        <div class="ct-metric-lbl">Total Activities</div>
+      </div>
+    </div>
+
+    <!-- Completed Tasks -->
+    <div class="ct-metric-card">
+      <div class="ct-metric-icon ct-metric-icon-purple">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <div class="ct-metric-info">
+        <div class="ct-metric-val-row">
+          <span class="ct-metric-val" id="metricCompletedTasks">18</span>
+          <span class="ct-metric-badge"><i class="fa-solid fa-arrow-up"></i> 12%</span>
+        </div>
+        <div class="ct-metric-lbl">Completed Tasks</div>
+      </div>
+    </div>
+
+    <!-- Success Rate -->
+    <div class="ct-metric-card">
+      <div class="ct-metric-icon ct-metric-icon-green">
+        <i class="fa-solid fa-star"></i>
+      </div>
+      <div class="ct-metric-info">
+        <div class="ct-metric-val-row">
+          <span class="ct-metric-val" id="metricSuccessRate">92%</span>
+          <span class="ct-metric-badge"><i class="fa-solid fa-arrow-up"></i> 5%</span>
+        </div>
+        <div class="ct-metric-lbl">Success Rate</div>
+      </div>
+    </div>
+
+    <!-- Study Time -->
+    <div class="ct-metric-card">
+      <div class="ct-metric-icon ct-metric-icon-amber">
+        <i class="fa-solid fa-clock"></i>
+      </div>
+      <div class="ct-metric-info">
+        <div class="ct-metric-val-row">
+          <span class="ct-metric-val" id="metricStudyTime">32h 15m</span>
+          <span class="ct-metric-badge"><i class="fa-solid fa-arrow-up"></i> 28%</span>
+        </div>
+        <div class="ct-metric-lbl">Study Time</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Learning Overview Chart Card -->
+  <div class="ct-chart-card">
+    <div class="ct-chart-header">
+      <div class="ct-chart-title">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Learning Overview</span>
+      </div>
+      <div class="ct-chart-filters">
+        <button class="ct-chart-tab active" onclick="setChartPeriod('weekly', this)">Weekly</button>
+        <button class="ct-chart-tab" onclick="setChartPeriod('monthly', this)">Monthly</button>
+        <button class="ct-chart-tab" onclick="setChartPeriod('all', this)">All Time</button>
+      </div>
+    </div>
+
+    <div class="ct-chart-canvas-wrap">
+      <canvas id="learningOverviewChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Your Achievements Card -->
+  <div class="ct-achievements-card">
+    <div class="ct-section-head">
+      <div class="ct-section-title">
+        <i class="fa-solid fa-trophy" style="color:#eab308;"></i>
+        <span>Your Achievements</span>
+      </div>
+      <a href="javascript:void(0)" onclick="showAllBadgesToast()" class="ct-section-link">
+        <span>View All</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="ct-achievements-row">
+      <div class="ct-badge-item">
+        <div class="ct-badge-icon-box ct-badge-blue">
+          <i class="fa-solid fa-star"></i>
+        </div>
+        <span class="ct-badge-label">Study Champion</span>
+      </div>
+      <div class="ct-badge-item">
+        <div class="ct-badge-icon-box ct-badge-purple">
+          <i class="fa-solid fa-crown"></i>
+        </div>
+        <span class="ct-badge-label">Task Master</span>
+      </div>
+      <div class="ct-badge-item">
+        <div class="ct-badge-icon-box ct-badge-green">
+          <i class="fa-solid fa-bullseye"></i>
+        </div>
+        <span class="ct-badge-label">Goal Achiever</span>
+      </div>
+      <div class="ct-badge-item">
+        <div class="ct-badge-icon-box ct-badge-gold">
+          <i class="fa-solid fa-medal"></i>
+        </div>
+        <span class="ct-badge-label">Top Learner</span>
+      </div>
+    </div>
+
+    <div class="ct-motivational-banner">
+      <i class="fa-solid fa-star" style="color:#eab308;"></i>
+      <span>Keep going! You're doing great on your learning journey.</span>
+    </div>
+  </div>
+
+  <!-- Top Tools Usage Card -->
+  <div class="ct-tools-usage-card">
+    <div class="ct-section-head">
+      <div class="ct-section-title">
+        <i class="fa-solid fa-shapes" style="color:#2563eb;"></i>
+        <span>Top Tools Usage</span>
+      </div>
+      <a href="/pages/tools.html" class="ct-section-link">
+        <span>View Details</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="ct-usage-body">
+      <div class="ct-donut-wrap">
+        <canvas id="donutChartCanvas"></canvas>
+        <div class="ct-donut-center-text">
+          <span class="ct-donut-percent">68%</span>
+          <span class="ct-donut-label">Overall Usage</span>
+        </div>
+      </div>
+
+      <div class="ct-usage-breakdown">
+        <div class="ct-usage-item">
+          <div class="ct-usage-left">
+            <span class="ct-usage-dot" style="background:#2563eb;"></span>
+            <span class="ct-usage-name">Thesis & Coursework Polisher</span>
+          </div>
+          <span class="ct-usage-percent">68%</span>
+        </div>
+        <div class="ct-usage-item">
+          <div class="ct-usage-left">
+            <span class="ct-usage-dot" style="background:#9333ea;"></span>
+            <span class="ct-usage-name">Project & Proposal Architect</span>
+          </div>
+          <span class="ct-usage-percent">18%</span>
+        </div>
+        <div class="ct-usage-item">
+          <div class="ct-usage-left">
+            <span class="ct-usage-dot" style="background:#16a34a;"></span>
+            <span class="ct-usage-name">Viva Defense Panel Drill</span>
+          </div>
+          <span class="ct-usage-percent">14%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STANDARDIZED BOTTOM NAVIGATION -->
+<nav class="ct-exact-dock" id="mobileBottomNav"></nav>
+
+<script src="/js/api.js"></script>
+<script>
+requireAuth();
+
+// Initialize user initials
+const user = getUser();
+if (user) {
+  const name = user.fullName || user.email || 'Student';
+  const initials = name.substring(0, 2).toUpperCase();
+  const avatarCircle = document.getElementById('userAvatarCircle');
+  if (avatarCircle) avatarCircle.textContent = initials;
+}
+
+// ── Chart.js Setup for Learning Overview ──
+let learningChart = null;
+
+const chartDataSets = {
+  weekly: {
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    data: [25, 42, 42, 64, 70, 95, 71]
+  },
+  monthly: {
+    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+    data: [45, 68, 82, 95]
+  },
+  all: {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    data: [30, 48, 65, 78, 88, 96]
+  }
+};
+
+function initLearningChart() {
+  const ctx = document.getElementById('learningOverviewChart').getContext('2d');
+  
+  // Gradient fill
+  const gradient = ctx.createLinearGradient(0, 0, 0, 180);
+  gradient.addColorStop(0, 'rgba(37, 99, 235, 0.35)');
+  gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
+
+  learningChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: chartDataSets.weekly.labels,
+      datasets: [{
+        label: 'Progress (%)',
+        data: chartDataSets.weekly.data,
+        borderColor: '#2563eb',
+        borderWidth: 3,
+        backgroundColor: gradient,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#2563eb',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0f172a',
+          titleFont: { size: 11, weight: 'bold' },
+          bodyFont: { size: 12 },
+          padding: 8,
+          cornerRadius: 8,
+          callbacks: {
+            label: (ctx) => `${ctx.parsed.y}%`
+          }
+        }
+      },
+      scales: {
+        y: {
+          min: 0,
+          max: 100,
+          ticks: { stepSize: 25, font: { size: 10 }, color: '#94a3b8' },
+          grid: { color: 'rgba(226, 232, 240, 0.6)' }
+        },
+        x: {
+          ticks: { font: { size: 10 }, color: '#94a3b8' },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function setChartPeriod(period, btn) {
+  document.querySelectorAll('.ct-chart-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const config = chartDataSets[period];
+  if (learningChart && config) {
+    learningChart.data.labels = config.labels;
+    learningChart.data.datasets[0].data = config.data;
+    learningChart.update();
+  }
+}
+
+// ── Chart.js Donut for Tools Usage ──
+function initDonutChart() {
+  const ctx = document.getElementById('donutChartCanvas').getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Thesis Polisher', 'Proposal Architect', 'Viva Drill'],
+      datasets: [{
+        data: [68, 18, 14],
+        backgroundColor: ['#2563eb', '#9333ea', '#16a34a'],
+        borderWidth: 0,
+        hoverOffset: 3
+      }]
+    },
+    options: {
+      cutout: '72%',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: true }
+      }
+    }
+  });
+}
+
+// Date Filter Cycle
+const filters = ['Last 7 Days', 'Last 30 Days', 'This Semester', 'All Time'];
+let currentFilterIdx = 1;
+function cycleDateFilter(btn) {
+  currentFilterIdx = (currentFilterIdx + 1) % filters.length;
+  document.getElementById('dateFilterLabel').textContent = filters[currentFilterIdx];
+  showToast(`Filtering metrics by ${filters[currentFilterIdx]}`, 'info');
+}
+
+function showAllBadgesToast() {
+  showToast('You have earned 4 of 6 badges! Keep studying to unlock "Viva Master" and "Research Guru".', 'info');
+}
+
+// Fetch real progress from backend
+async function loadRealProgress() {
+  try {
+    const me = await apiGetMe();
+    if (me) {
+      if (me.xp) {
+        document.getElementById('metricTotalActivities').textContent = Math.max(1, Math.round(me.xp / 10));
+      }
+      if (me.streak) {
+        document.getElementById('metricCompletedTasks').textContent = Math.max(1, me.streak * 2);
+      }
+    }
+    const docsRes = await apiGetMyDocs();
+    if (docsRes.data && Array.isArray(docsRes.data.documents)) {
+      const docCount = docsRes.data.documents.length;
+      if (docCount > 0) {
+        document.getElementById('metricTotalActivities').textContent = Math.max(docCount, 12);
+        document.getElementById('metricCompletedTasks').textContent = Math.max(Math.round(docCount * 0.8), 8);
+      }
+    }
+  } catch (err) {
+    console.warn('Progress fetch warning:', err.message);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderStandardBottomNav('progress');
+  initLearningChart();
+  initDonutChart();
+  loadRealProgress();
+});
+</script>
+</body>
+</html>

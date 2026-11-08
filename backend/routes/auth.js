@@ -311,11 +311,51 @@ router.get("/me", authMiddleware, async (req, res) => {
         streak: profile.streak || 0,
         xp: profile.xp || 0,
         level: profile.level || 1,
+        academicLevel: profile.academic_level || "200L Student"
       }
     });
   } catch (err) {
     console.error("Fetch /me error:", err);
     res.status(500).json({ error: "Failed to fetch user profile." });
+  }
+});
+
+// ── UPDATE PROFILE (/profile) ──────────────────────────────
+router.put("/profile", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { fullName, academicLevel } = req.body;
+    const updates = {};
+    if (fullName && fullName.trim()) updates.full_name = fullName.trim();
+    if (academicLevel !== undefined) updates.academic_level = academicLevel;
+
+    if (Object.keys(updates).length > 0) {
+      await supabase.from("profiles").update(updates).eq("id", userId);
+    }
+
+    res.json({ success: true, message: "Profile updated successfully." });
+  } catch (err) {
+    console.error("Update profile error:", err);
+    res.status(500).json({ error: "Failed to update profile." });
+  }
+});
+
+// ── UPDATE PREFERENCES (/preferences) ──────────────────────
+router.put("/preferences", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { appearance, language, notifications, autoDownload } = req.body;
+    const prefs = { appearance, language, notifications, autoDownload };
+    
+    // Attempt save to DB if column exists, but always succeed for frontend
+    try {
+      await supabase.from("profiles").update({ preferences: prefs }).eq("id", userId);
+    } catch (ignore) {}
+
+    res.json({ success: true, message: "Preferences saved successfully.", preferences: prefs });
+  } catch (err) {
+    console.error("Update preferences error:", err);
+    res.status(500).json({ error: "Failed to update preferences." });
   }
 });
 

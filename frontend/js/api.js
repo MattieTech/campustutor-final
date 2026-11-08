@@ -2,7 +2,10 @@
 // js/api.js — CampusTutor AI Frontend API Helper
 // ============================================================
 
-const API_BASE = "https://campustutor-backend.onrender.com";
+// Determine API_BASE: if hosted on same domain (e.g. localhost:3000 or custom domain), use relative path ""; otherwise fallback to live Render backend
+const API_BASE = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+  ? (window.location.port === "3000" ? "" : "http://localhost:3000")
+  : (window.location.origin.includes("vercel.app") || window.location.origin.includes("campustutor") ? "" : "https://campustutor-backend.onrender.com");
 
 // ── AUTH HELPERS ──────────────────────────────────────────────
 function getToken()    { return localStorage.getItem("ct_token"); }
@@ -1563,3 +1566,38 @@ window.installCampusTutorPWA = function() {
     }
   }
 };
+
+// ── STANDARDIZED 4-ITEM BOTTOM NAVIGATION BAR ─────────────────
+// Renders the master navigation across all authenticated pages:
+// 1. Home (/pages/dashboard.html)
+// 2. Tools (/pages/tools.html)
+// 3. Progress (/pages/progress.html)
+// 4. Settings (/pages/settings.html)
+window.renderStandardBottomNav = function(activePage = 'home') {
+  let nav = document.getElementById('mobileBottomNav');
+  if (!nav) {
+    nav = document.createElement('nav');
+    nav.id = 'mobileBottomNav';
+    nav.className = 'ct-exact-dock';
+    document.body.appendChild(nav);
+  }
+
+  const items = [
+    { key: 'home', label: 'Home', icon: 'fa-solid fa-house', href: '/pages/dashboard.html' },
+    { key: 'tools', label: 'Tools', icon: 'fa-solid fa-book-open', href: '/pages/tools.html' },
+    { key: 'progress', label: 'Progress', icon: 'fa-solid fa-chart-line', href: '/pages/progress.html' },
+    { key: 'settings', label: 'Settings', icon: 'fa-solid fa-gear', href: '/pages/settings.html' }
+  ];
+
+  nav.innerHTML = items.map(item => {
+    const isActive = item.key === activePage;
+    return `
+      <a href="${item.href}" class="ct-exact-dock-item ${isActive ? 'active' : ''}" title="${item.label}">
+        <i class="${item.icon}"></i>
+        <span>${item.label}</span>
+        ${isActive ? '<div class="ct-exact-dock-indicator"></div>' : ''}
+      </a>
+    `;
+  }).join('');
+};
+

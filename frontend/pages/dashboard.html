@@ -582,64 +582,192 @@
     border-color: rgba(16, 185, 129, 0.3);
   }
 
-  /* ── Upgrade to Pro Banner ── */
-  .ct-exact-pro-banner {
+  /* ── Promotional Banner Carousel ── */
+  .ct-promo-carousel-wrap {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    touch-action: pan-y pinch-zoom;
+  }
+  .ct-promo-track {
+    display: flex;
+    transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+    width: 100%;
+  }
+  .ct-promo-slide {
+    flex: 0 0 100%;
+    min-width: 100%;
+    padding: 16px 16px 14px 16px;
+    border-radius: 20px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-sizing: border-box;
+  }
+  .ct-promo-slide-referral {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4338ca 100%);
+    color: #ffffff;
+    border: 1px solid rgba(251, 191, 36, 0.25);
+  }
+  .ct-promo-slide-whatsapp {
+    background: linear-gradient(135deg, #064e3b 0%, #065f46 45%, #047857 100%);
+    color: #ffffff;
+    border: 1px solid rgba(52, 211, 153, 0.25);
+  }
+  .ct-promo-slide-pro {
+    background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 45%, #2563eb 100%);
+    color: #ffffff;
+    border: 1px solid rgba(196, 181, 253, 0.25);
+  }
+
+  .ct-promo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 999px;
+    width: fit-content;
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .ct-badge-whatsapp {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+    border-color: rgba(34, 197, 94, 0.35);
+  }
+  .ct-badge-pro {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .ct-promo-body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
-    padding: 12px 14px;
-    border-radius: 16px;
-    background: linear-gradient(90deg, #7c3aed 0%, #4f46e5 50%, #1e1b4b 100%);
-    color: #ffffff;
-    box-shadow: 0 8px 24px rgba(79, 70, 229, 0.25);
-    width: 100%;
+    gap: 12px;
   }
-  .ct-exact-pro-left {
+  .ct-promo-text-col {
+    flex: 1;
+    min-width: 0;
+  }
+  .ct-promo-title {
+    font-size: 0.96rem;
+    font-weight: 800;
+    margin: 0 0 3px 0;
+    line-height: 1.2;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+  }
+  .ct-promo-desc {
+    font-size: 0.73rem;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.88);
+    margin: 0 0 10px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .ct-promo-actions {
     display: flex;
     align-items: center;
     gap: 8px;
-    flex: 1;
-    min-width: 0;
+    flex-wrap: wrap;
   }
-  .ct-exact-pro-crown {
-    font-size: 1.3rem;
-    color: #fbbf24;
-    filter: drop-shadow(0 2px 6px rgba(251, 191, 36, 0.5));
-    flex-shrink: 0;
-  }
-  .ct-exact-pro-text {
-    flex: 1;
-    min-width: 0;
-  }
-  .ct-exact-pro-title {
-    font-weight: 800;
-    font-size: 0.9rem;
-    color: #ffffff;
-    line-height: 1.15;
-  }
-  .ct-exact-pro-desc {
-    font-size: 0.68rem;
-    color: rgba(255, 255, 255, 0.85);
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .ct-exact-pro-btn {
+  .ct-promo-btn {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 7px 12px;
+    gap: 5px;
+    padding: 6px 12px;
     border-radius: 999px;
-    background: #ffffff;
-    color: #1e1b4b;
-    font-weight: 800;
     font-size: 0.74rem;
+    font-weight: 700;
     text-decoration: none;
-    white-space: nowrap;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .ct-promo-btn:active {
+    transform: scale(0.96);
+  }
+  .ct-promo-btn-gold {
+    background: #fbbf24;
+    color: #0f172a;
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.35);
+  }
+  .ct-promo-btn-green {
+    background: #22c55e;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35);
+  }
+  .ct-promo-btn-white {
+    background: #ffffff;
+    color: #4c1d95;
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.25);
+  }
+  .ct-promo-btn-coins {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .ct-promo-visual {
     flex-shrink: 0;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  }
+  .ct-promo-icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 1.35rem;
+  }
+  .ct-promo-icon-gold {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.35);
+  }
+  .ct-promo-icon-green {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.35);
+  }
+  .ct-promo-icon-purple {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+  }
+
+  .ct-promo-dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0 0 0;
+  }
+  .ct-promo-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: #cbd5e1;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  [data-theme="dark"] .ct-promo-dot {
+    background: #334155;
+  }
+  .ct-promo-dot.active {
+    width: 20px;
+    background: #2563eb;
   }
 
   /* ── Fixed Mobile Bottom Navigation Bar ── */
@@ -913,21 +1041,86 @@
     </div>
   </div>
 
-  <!-- UPGRADE TO PRO BANNER (Matches reference screenshot) -->
-  <div class="ct-exact-pro-banner">
-    <div class="ct-exact-pro-left">
-      <div class="ct-exact-pro-crown">
-        <i class="fa-solid fa-crown anim-crown"></i>
+  <!-- PROMOTIONAL BANNER CAROUSEL (3 Auto-Scrolling & Swipable Banners) -->
+  <div class="ct-promo-carousel-wrap" id="promoCarouselWrap">
+    <div class="ct-promo-track" id="promoTrack">
+      <!-- Banner 1: Refer and Earn -->
+      <div class="ct-promo-slide ct-promo-slide-referral">
+        <div class="ct-promo-badge"><i class="fa-solid fa-gift"></i> Refer & Earn</div>
+        <div class="ct-promo-body">
+          <div class="ct-promo-text-col">
+            <h3 class="ct-promo-title">Earn While You Learn!</h3>
+            <p class="ct-promo-desc">Invite your friends to Campus Tutor AI and earn up to ₦5,000 for every successful referral.</p>
+            <div class="ct-promo-actions">
+              <a href="/pages/referral.html" class="ct-promo-btn ct-promo-btn-gold">
+                <span>Refer a Friend</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+          <div class="ct-promo-visual">
+            <div class="ct-promo-icon-circle ct-promo-icon-gold">
+              <i class="fa-solid fa-hand-holding-dollar"></i>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="ct-exact-pro-text">
-        <div class="ct-exact-pro-title">Upgrade to Pro</div>
-        <div class="ct-exact-pro-desc">Unlock premium features and get the best experience.</div>
+
+      <!-- Banner 2: WhatsApp Community -->
+      <div class="ct-promo-slide ct-promo-slide-whatsapp">
+        <div class="ct-promo-badge ct-badge-whatsapp"><i class="fa-brands fa-whatsapp"></i> Student Community</div>
+        <div class="ct-promo-body">
+          <div class="ct-promo-text-col">
+            <h3 class="ct-promo-title">Join Our WhatsApp Community</h3>
+            <p class="ct-promo-desc">Connect with other students, share ideas, get updates and stay informed about everything happening at Campus Tutor AI.</p>
+            <div class="ct-promo-actions">
+              <a href="https://chat.whatsapp.com/CNlccvf5Eue6ZvE4Pz3JGX" target="_blank" rel="noopener" class="ct-promo-btn ct-promo-btn-green">
+                <span>Join Community</span>
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              </a>
+            </div>
+          </div>
+          <div class="ct-promo-visual">
+            <div class="ct-promo-icon-circle ct-promo-icon-green">
+              <i class="fa-brands fa-whatsapp"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Banner 3: Upgrade to Pro -->
+      <div class="ct-promo-slide ct-promo-slide-pro">
+        <div class="ct-promo-badge ct-badge-pro"><i class="fa-solid fa-crown"></i> Premium Access</div>
+        <div class="ct-promo-body">
+          <div class="ct-promo-text-col">
+            <h3 class="ct-promo-title">Unlock More with Campus Tutor AI Pro</h3>
+            <p class="ct-promo-desc">Get more access to powerful AI learning tools, enjoy a better learning experience and unlock additional benefits.</p>
+            <div class="ct-promo-actions">
+              <a href="/pages/pricing.html" class="ct-promo-btn ct-promo-btn-white">
+                <span>Explore Pro</span>
+                <i class="fa-solid fa-sparkles"></i>
+              </a>
+              <button type="button" onclick="openCoinsModal()" class="ct-promo-btn ct-promo-btn-coins">
+                <i class="fa-solid fa-coins"></i>
+                <span>Buy Coins</span>
+              </button>
+            </div>
+          </div>
+          <div class="ct-promo-visual">
+            <div class="ct-promo-icon-circle ct-promo-icon-purple">
+              <i class="fa-solid fa-crown"></i>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <a href="/pages/pricing.html" class="ct-exact-pro-btn">
-      <span>Upgrade Now</span>
-      <i class="fa-solid fa-arrow-right"></i>
-    </a>
+
+    <!-- Carousel Pagination Indicators -->
+    <div class="ct-promo-dots" id="promoDots">
+      <span class="ct-promo-dot active" onclick="goToPromoSlide(0)"></span>
+      <span class="ct-promo-dot" onclick="goToPromoSlide(1)"></span>
+      <span class="ct-promo-dot" onclick="goToPromoSlide(2)"></span>
+    </div>
   </div>
 
 </div>
@@ -943,14 +1136,14 @@
     <i class="fa-solid fa-book-open"></i>
     <span>Tools</span>
   </a>
-  <button type="button" class="ct-exact-dock-item" onclick="openActivityModal()">
-    <i class="fa-solid fa-chart-simple"></i>
+  <a href="/pages/progress.html" class="ct-exact-dock-item">
+    <i class="fa-solid fa-chart-line"></i>
     <span>Progress</span>
-  </button>
-  <button type="button" class="ct-exact-dock-item" onclick="openSettingsModal()">
+  </a>
+  <a href="/pages/settings.html" class="ct-exact-dock-item">
     <i class="fa-solid fa-gear"></i>
     <span>Settings</span>
-  </button>
+  </a>
 </nav>
 
 <!-- ── ALL MODALS ── -->
@@ -1525,8 +1718,73 @@ function esc(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
+// ── PROMOTIONAL CAROUSEL CONTROLLER (Auto-scroll 5s + Touch Swipe) ──
+let currentPromoIndex = 0;
+const totalPromoSlides = 3;
+let promoTimer = null;
+
+function goToPromoSlide(index) {
+  currentPromoIndex = (index + totalPromoSlides) % totalPromoSlides;
+  const track = document.getElementById('promoTrack');
+  if (track) {
+    track.style.transform = `translateX(-${currentPromoIndex * 100}%)`;
+  }
+  const dots = document.querySelectorAll('#promoDots .ct-promo-dot');
+  dots.forEach((dot, idx) => {
+    dot.classList.toggle('active', idx === currentPromoIndex);
+  });
+}
+
+function nextPromoSlide() {
+  goToPromoSlide(currentPromoIndex + 1);
+}
+
+function startPromoAutoPlay() {
+  stopPromoAutoPlay();
+  promoTimer = setInterval(nextPromoSlide, 5000);
+}
+
+function stopPromoAutoPlay() {
+  if (promoTimer) clearInterval(promoTimer);
+}
+
+// Touch swipe support for mobile
+(function initPromoTouchSwipe() {
+  const wrap = document.getElementById('promoCarouselWrap');
+  if (!wrap) return;
+
+  let touchStartX = 0;
+  let touchEndX = 0;
+
+  wrap.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+    stopPromoAutoPlay();
+  }, { passive: true });
+
+  wrap.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) {
+        goToPromoSlide(currentPromoIndex + 1);
+      } else {
+        goToPromoSlide(currentPromoIndex - 1);
+      }
+    }
+    startPromoAutoPlay();
+  }, { passive: true });
+
+  wrap.addEventListener('mouseenter', stopPromoAutoPlay);
+  wrap.addEventListener('mouseleave', startPromoAutoPlay);
+
+  startPromoAutoPlay();
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
   loadUserStats();
+  if (typeof renderStandardBottomNav === 'function') {
+    renderStandardBottomNav('home');
+  }
 });
 </script>
 

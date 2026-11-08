@@ -587,8 +587,82 @@ function handleAIError(err, res) {
   res.status(500).json({ error: err.message || "Failed to process your request." });
 }
 
-// All AI study routes require authentication and active paid subscription
+// Require authentication for all AI routes
 router.use(authMiddleware);
+
+// ── EXPLAIN CONCEPT (Accessible to all authenticated users) ───
+router.post("/explain", async (req, res) => {
+  try {
+    const { documentId, concept } = req.body;
+
+    if (!concept || !concept.trim()) {
+      return res.status(400).json({ error: "Concept or question is required." });
+    }
+
+    let doc = null;
+    let docContext = "";
+    
+    if (documentId) {
+      try {
+        doc = await getDocumentText(documentId, req.user.id);
+        docContext = `A student is studying the following lecture notes:\n---\n${doc.extracted_text}\n---\n\n`;
+      } catch (docErr) {
+        console.log("Document not found, proceeding without document context:", docErr.message);
+      }
+    }
+
+    const prompt = `
+You are CampusTutor AI, a patient university lecturer who explains things simply.
+
+${docContext}The student wants you to explain this concept in beginner-friendly terms: "${concept.trim()}"
+
+IMPORTANT: Format ALL mathematical expressions using LaTeX.
+Use $ for inline math (e.g., $f(x) = x^2$) and $$ for display equations (e.g., $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$).
+Never write math as plain text.
+
+Please explain it like this:
+## 💡 Explaining: "${concept.trim()}"
+
+**Simple Definition:** [Explain it like the student is 16 years old. Use LaTeX for any maths.]
+
+**Real-World Example:** [A relatable analogy or everyday example]
+
+**Mathematical Expression (if applicable):**
+$$
+\\text{Key equation(s) here}
+$$
+
+**How it relates to the notes:** ${docContext ? "[Connect it back to what's in the lecture]" : "[General explanation without specific notes]"}
+
+**Quick Memory Trick:** [A tip to remember this concept]
+
+Keep the language simple, warm, and encouraging.
+    `.trim();
+
+    const explanation = await askGemini(prompt);
+    
+    if (doc && documentId) {
+      await saveAIResult(documentId, req.user.id, "explanation", explanation);
+      await logUserActivity(req.user.id, "ai_explain", `Asked: "${concept}" | Document: "${doc.file_name}"`);
+    } else {
+      await logUserActivity(req.user.id, "ai_explain", `Asked: "${concept}" | General Concept`);
+    }
+    
+    try {
+      await awardXP(req.user.id, "ai_explain", { concept });
+      await updateStreak(req.user.id);
+    } catch (xpErr) {
+      console.log("Note: Could not award XP:", xpErr.message);
+    }
+    
+    res.json({ explanation, content: explanation });
+  } catch (err) {
+    console.error("Explain error:", err.message);
+    handleAIError(err, res);
+  }
+});
+
+// Enforce active subscription or coins on premium study & tool routes
 router.use(subscriptionMiddleware);
 
 // ── SUMMARIZE ─────────────────────────────────────────────────

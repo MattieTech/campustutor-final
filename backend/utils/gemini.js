@@ -8,6 +8,8 @@
 //   3. Stays focused on its role as an educational assistant
 // ============================================================
 
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, "../.env") });
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -19,7 +21,7 @@ if (!GEMINI_API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
 
 // ── SYSTEM PROMPT ─────────────────────────────────────────────
 // This is prepended to every single request. It controls:
@@ -107,12 +109,12 @@ async function askGemini(prompt) {
       throw geminiError;
     }
 
-    // Ordered array of free backup models from OpenRouter
+    // Ordered array of active free backup models from OpenRouter
     const fallbackChain = [
-      "google/gemma-2-9b-it:free",
-      "meta-llama/llama-3.3-70b-instruct:free",
-      "qwen/qwen-2.5-coder-32b:free",
-      "openrouter/free"
+      "nvidia/nemotron-3.5-lightning:free",
+      "liquid/lfm-3-1.7b:free",
+      "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "google/gemma-4-26b-a4b-it:free"
     ];
 
     for (let i = 0; i < fallbackChain.length; i++) {
