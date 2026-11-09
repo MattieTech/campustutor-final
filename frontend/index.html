@@ -26,8 +26,8 @@
   </a>
   <div class="navbar-right">
     <button class="theme-btn" id="themeBtn" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
-    <a href="/pages/login.html" class="pill-btn">Log In</a>
-    <a href="/pages/signup.html" class="btn btn-primary btn-sm">Get Started</a>
+    <a href="/pages/login.html" class="pill-btn" id="navLoginBtn">Log In</a>
+    <a href="/pages/signup.html" class="btn btn-primary btn-sm" id="navCtaBtn">Get Started</a>
   </div>
 </nav>
 
@@ -316,7 +316,23 @@
 
 <script src="/js/api.js"></script>
 <script>
-redirectIfLoggedIn();
+// Adapt navigation if already logged in (without redirecting away from landing page)
+if (typeof isLoggedIn === 'function' && isLoggedIn()) {
+  const loginBtn = document.getElementById('navLoginBtn');
+  const ctaBtn = document.getElementById('navCtaBtn');
+  const heroPrimary = document.querySelector('.hero-cta .btn-hero-primary');
+  
+  if (loginBtn) loginBtn.style.display = 'none';
+  if (ctaBtn) {
+    ctaBtn.textContent = 'Dashboard';
+    ctaBtn.href = '/pages/dashboard.html';
+  }
+  if (heroPrimary) {
+    heroPrimary.href = '/pages/dashboard.html';
+    heroPrimary.innerHTML = '<i class="fa-solid fa-arrow-right"></i> Go to Dashboard';
+  }
+}
+
 // Theme
 const saved = localStorage.getItem('ct_theme') || 'light';
 document.documentElement.setAttribute('data-theme', saved);
