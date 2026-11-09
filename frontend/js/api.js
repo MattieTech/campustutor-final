@@ -44,7 +44,7 @@ async function apiRequest(endpoint, method = "GET", body = null) {
       console.warn(`API Error ${response.status}:`, data);
       // Check if session expired (401 Unauthorized)
       if (response.status === 401 && !endpoint.includes("/api/auth/")) {
-        console.warn("⏰ Session expired. Logging out...");
+        console.warn("[Session] Session expired. Logging out...");
         localStorage.removeItem("ct_token");
         localStorage.removeItem("ct_user");
         window.location.href = "/pages/login.html?status=expired";
@@ -58,7 +58,7 @@ async function apiRequest(endpoint, method = "GET", body = null) {
       
       // Check if user was banned (403 with banned flag)
       if (response.status === 403 && data.banned) {
-        console.warn("⛔ User account has been banned!");
+        console.warn("[Auth] User account has been banned!");
         logout(); // Force logout
         return { 
           data: null, 
@@ -70,7 +70,7 @@ async function apiRequest(endpoint, method = "GET", body = null) {
 
       // Check if subscription required (403 with subscriptionRequired flag)
       if (response.status === 403 && data.subscriptionRequired) {
-        console.warn("💳 Active subscription required. Redirecting to pricing...");
+        console.warn("[Billing] Active subscription required. Redirecting to pricing...");
         if (!window.location.pathname.includes("pricing.html")) {
           window.location.href = "/pages/pricing.html?reason=paywall";
         }
@@ -124,10 +124,10 @@ async function apiLogin(email, password) {
     localStorage.setItem("ct_user", JSON.stringify(result.data.user));
     
     // DEBUG: Log what we got back from the server
-    console.log("🔐 Login successful. User data:", result.data.user);
-    console.log("📦 app_metadata:", result.data.user.app_metadata);
-    console.log("👤 role:", result.data.user.role);
-    console.log("✅ Is admin?", result.data.user.app_metadata?.role === "admin" || result.data.user.role === "admin");
+    console.log("[Auth] Login successful. User data:", result.data.user);
+    console.log("[Auth] app_metadata:", result.data.user.app_metadata);
+    console.log("[Auth] role:", result.data.user.role);
+    console.log("[Auth] Is admin?", result.data.user.app_metadata?.role === "admin" || result.data.user.role === "admin");
   }
   return result;
 }
@@ -173,7 +173,7 @@ async function apiGenerateFlashcards(documentId, flashcardSize = 25)  { return a
 // ── CAMPUS COINS & ECONOMY ─────────────────────────────────────
 async function apiGetCoinBalance() { return apiRequest("/api/coins/balance"); }
 async function apiClaimDailyBonus() { return apiRequest("/api/coins/claim-daily", "POST"); }
-async function apiBuyCoinPackage(packageId) { return apiRequest("/api/coins/buy-package", "POST", { packageId }); }
+async function apiBuyCoinPackage(packageId) { return apiRequest("/api/coins/buy-package", "POST", { packageId, callbackUrl: window.location.href }); }
 async function apiGetCoinHistory() { return apiRequest("/api/coins/history"); }
 
 // ── PROBLEM SOLVER & ESSAY POLISH ─────────────────────────────
@@ -390,35 +390,76 @@ async function requirePaidSubscription() {
 window.requirePaidSubscription = requirePaidSubscription;
 
 function requireAdmin() {
-  console.log("🔐 Checking admin access...");
+  console.log("[Admin] Checking admin access...");
   
   if (!isLoggedIn()) { 
-    console.warn("❌ Not logged in");
+    console.warn("[Admin] Not logged in");
     window.location.href = "/pages/login.html"; 
     return; 
   }
   
   const user = getUser();
-  console.log("👤 User object from localStorage:", user);
-  console.log("📦 app_metadata:", user?.app_metadata);
-  console.log("👤 role property:", user?.role);
+  console.log("[Admin] User object from localStorage:", user);
+  console.log("[Admin] app_metadata:", user?.app_metadata);
+  console.log("[Admin] role property:", user?.role);
   
   // Check admin role in app_metadata (where Supabase stores it)
   const userRole = user?.app_metadata?.role || user?.role;
-  console.log("🔍 Checking role: userRole =", userRole);
+  console.log("[Admin] Checking role: userRole =", userRole);
   
   if (!user || userRole !== "admin") {
-    console.warn("❌ Access denied: Not an admin user. Role:", userRole);
+    console.warn("[Admin] Access denied: Not an admin user. Role:", userRole);
     window.location.href = "/pages/dashboard.html";
     return;
   }
   
-  console.log("✅ Access granted: User is admin");
+  console.log("[Admin] Access granted: User is admin");
 }
 
-function redirectIfLoggedIn() {
-  if (isLoggedIn()) window.location.href = "/pages/dashboard.html";
+function redirectIfLoggedIn(options = {}) {
+  if (!isLoggedIn()) return false;
+  
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('stay') === 'true' || params.get('switch') === 'true' || options.stay) {
+    return true;
+  }
+
+  // If a banner container exists on the page (like login.html or signup.html), render session alert instead of abrupt redirect
+  const banner = document.getElementById('alreadyLoggedInBanner');
+  if (banner) {
+    const user = getUser();
+    const name = user?.fullName || user?.name || user?.email || 'Logged In Scholar';
+    const email = user?.email || '';
+    banner.innerHTML = `
+      <div class="auth-session-card">
+        <div class="auth-session-head">
+          <div class="auth-session-avatar"><i class="fa-solid fa-circle-user"></i></div>
+          <div class="auth-session-text">
+            <div class="auth-session-title">Currently Signed In</div>
+            <div class="auth-session-sub">You are active as <strong>${escapeHTML(name)}</strong>${email ? ` (${escapeHTML(email)})` : ''}</div>
+          </div>
+        </div>
+        <div class="auth-session-actions">
+          <a href="/pages/dashboard.html" class="btn btn-primary btn-sm"><i class="fa-solid fa-arrow-right"></i> Continue to Dashboard</a>
+          <button type="button" onclick="logoutAndStay()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-right-from-bracket"></i> Switch Account / Log Out</button>
+        </div>
+      </div>
+    `;
+    banner.style.display = 'block';
+    return true;
+  }
+
+  window.location.href = "/pages/dashboard.html";
+  return true;
 }
+
+function logoutAndStay() {
+  localStorage.removeItem("ct_token");
+  localStorage.removeItem("ct_user");
+  window.location.reload();
+}
+window.logoutAndStay = logoutAndStay;
+window.redirectIfLoggedIn = redirectIfLoggedIn;
 
 function formatDate(isoString) {
   if (!isoString) return "Never";
@@ -681,7 +722,7 @@ if (typeof window.renderMattieQuiz !== "function") {
             <div class="card-body" style="padding:28px;">
               <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; flex-wrap:wrap;">
                 <div>
-                  <h2 style="font-size:1.2rem; font-weight:800; margin-bottom:6px;">📝 Academic Performance Evaluation</h2>
+                  <h2 style="font-size:1.2rem; font-weight:800; margin-bottom:6px;"><i class="fa-solid fa-graduation-cap anim-bulb" style="color:var(--blue);margin-right:8px;"></i>Academic Performance Evaluation</h2>
                   <p style="font-size:0.88rem; color:var(--label3); margin:0;">Question ${questionNumber} of ${quizItems.length}</p>
                 </div>
                 <div style="min-width:180px; text-align:right; color:var(--label3); font-size:0.82rem;">${progressPercent}% complete</div>
@@ -1439,7 +1480,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // If user is logged in, inject coin pill in navbar
   if (isLoggedIn()) {
-    const navRight = document.querySelector(".navbar-right");
+    const navRight = document.querySelector(".navbar-right") || document.querySelector(".ct-nav-right-actions");
     if (navRight && !document.getElementById("navCoinPill")) {
       const coinBtn = document.createElement("button");
       coinBtn.id = "navCoinPill";
@@ -1449,12 +1490,14 @@ document.addEventListener("DOMContentLoaded", () => {
       coinBtn.onclick = openCoinsModal;
       navRight.insertBefore(coinBtn, navRight.firstChild);
 
-      const dailyBtn = document.createElement("button");
-      dailyBtn.id = "navDailyGiftBtn";
-      dailyBtn.className = "daily-gift-nav-btn";
-      dailyBtn.innerHTML = `<i class="fa-solid fa-gift anim-gift"></i> Daily Gift`;
-      dailyBtn.onclick = openCoinsModal;
-      navRight.insertBefore(dailyBtn, coinBtn.nextSibling);
+      if (!document.getElementById("navDailyGiftBtn") && !document.querySelector(".ct-daily-gift-btn")) {
+        const dailyBtn = document.createElement("button");
+        dailyBtn.id = "navDailyGiftBtn";
+        dailyBtn.className = "daily-gift-nav-btn";
+        dailyBtn.innerHTML = `<i class="fa-solid fa-gift anim-gift"></i> <span>Daily Gift</span>`;
+        dailyBtn.onclick = openCoinsModal;
+        navRight.insertBefore(dailyBtn, coinBtn.nextSibling);
+      }
     }
 
     refreshUserCoins();
@@ -1487,7 +1530,7 @@ let deferredPWAInstallPrompt = null;
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
-      .then((reg) => console.log('📱 PWA Service Worker registered:', reg.scope))
+      .then((reg) => console.log('[PWA] Service Worker registered:', reg.scope))
       .catch((err) => console.warn('PWA SW registration failed:', err));
   });
 }
@@ -1502,7 +1545,7 @@ window.addEventListener('appinstalled', () => {
   deferredPWAInstallPrompt = null;
   const banner = document.getElementById('pwaInstallBanner');
   if (banner) banner.remove();
-  showToast('🎉 CampusTutor AI installed successfully on your device!', 'success');
+  showToast('CampusTutor AI installed successfully on your device!', 'success');
 });
 
 function showPWAInstallPromptUI() {
@@ -1510,6 +1553,12 @@ function showPWAInstallPromptUI() {
 
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
   if (isStandalone) return;
+
+  // Don't show the intrusive install banner on auth pages (login, signup, reset)
+  const currentPath = window.location.pathname.toLowerCase();
+  if (currentPath.includes('login') || currentPath.includes('signup') || currentPath.includes('reset')) {
+    return;
+  }
 
   const banner = document.createElement('div');
   banner.id = 'pwaInstallBanner';

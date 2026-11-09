@@ -16,87 +16,144 @@
 <link rel="manifest" href="/manifest.json"/>
 <link rel="apple-touch-icon" href="/icons/icon-192.png"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
-
 </head>
 <body class="auth-page">
 <div class="auth-orb1"></div>
 <div class="auth-orb2"></div>
+
 <div class="auth-card">
-  <div style="position:absolute;top:16px;right:16px;">
-    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
+  <!-- Top Navigation & Controls -->
+  <div class="auth-top-bar">
+    <a href="/" class="auth-nav-pill" title="Return to home page">
+      <i class="fa-solid fa-arrow-left"></i> <span>Home</span>
+    </a>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode" title="Toggle theme">
+      <i class="fa-solid fa-moon"></i>
+    </button>
   </div>
+
+  <!-- Brand & Welcome -->
   <div class="auth-brand">
-    <div class="auth-brand-icon" style="background:linear-gradient(135deg, #2563eb, #1d4ed8);border-radius:18px;box-shadow:0 8px 24px rgba(37,99,235,0.38);"><i class="fa-solid fa-graduation-cap"></i></div>
-    <div style="display:inline-flex;align-items:center;justify-content:center;gap:6px;margin-bottom:4px;">
-      <h1 style="font-size:1.55rem;font-weight:800;letter-spacing:-0.02em;margin:0;"><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></h1>
-      <span class="ct-exact-badge" style="background:#2563eb;color:#fff;font-size:0.68rem;font-weight:800;padding:2px 7px;border-radius:999px;">2.0</span>
+    <div class="auth-brand-icon">
+      <i class="fa-solid fa-graduation-cap"></i>
     </div>
-    <p style="font-size:0.85rem;color:var(--label3);margin:4px 0 0 0;">Welcome back! Log in to continue your learning journey.</p>
+    <div class="auth-brand-title">
+      <h1><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></h1>
+      <span class="ct-exact-badge" style="background:#0070F3;color:#fff;font-size:0.68rem;font-weight:800;padding:2px 7px;border-radius:999px;">2.0</span>
+    </div>
+    <h2 class="auth-heading">Welcome back</h2>
+    <p class="auth-sub">Log in to continue your personalized learning journey.</p>
   </div>
-  <div id="statusAlert" style="display:none;padding:12px;border-radius:var(--r,12px);background:rgba(175,82,222,.1);border:1px solid rgba(175,82,222,.3);color:#af52de;margin-bottom:16px;text-align:center;font-size:0.9rem;font-weight:500;"><i class="fa-solid fa-hand-point-right"></i> Your session has expired. Please log in again! <i class="fa-solid fa-lock"></i></div>
+
+  <!-- Session Switcher / Active User Banner (solves redirect confusion) -->
+  <div id="alreadyLoggedInBanner" style="display:none;"></div>
+
+  <!-- Alerts -->
+  <div id="statusAlert" style="display:none;padding:12px;border-radius:14px;background:rgba(175,82,222,.12);border:1px solid rgba(175,82,222,.32);color:#af52de;margin-bottom:16px;text-align:center;font-size:0.88rem;font-weight:600;">
+    <i class="fa-solid fa-lock"></i> Your session has expired. Please log in again!
+  </div>
   <div class="alert alert-error" id="errMsg"></div>
+
+  <!-- Login Form -->
   <form id="loginForm">
     <div class="form-group">
-      <label class="form-label">Email Address</label>
-      <input class="form-input" type="email" id="email" placeholder="you@school.edu.ng" required autocomplete="email"/>
-    </div>
-    <div class="form-group">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <label class="form-label" style="margin:0;">Password</label>
-        <a href="/pages/reset.html" style="font-size:0.8rem;color:var(--blue);text-decoration:none;font-weight:600;">Forgot Password?</a>
+      <label class="auth-form-label" for="email">
+        <span class="label-icon"><i class="fa-regular fa-envelope"></i> Email Address</span>
+      </label>
+      <div class="auth-input-group">
+        <i class="fa-regular fa-envelope auth-input-icon"></i>
+        <input class="form-input" type="email" id="email" placeholder="you@school.edu.ng" required autocomplete="email"/>
       </div>
-      <div class="password-input-wrapper">
-        <input class="form-input" type="password" id="password" placeholder="Your password" required autocomplete="current-password"/>
+    </div>
+
+    <div class="form-group">
+      <div class="auth-form-label">
+        <span class="label-icon"><i class="fa-solid fa-lock"></i> Password</span>
+        <a href="/pages/reset.html" style="font-size:0.78rem;color:var(--blue);text-transform:none;letter-spacing:normal;font-weight:600;">Forgot Password?</a>
+      </div>
+      <div class="password-input-wrapper auth-input-group">
+        <i class="fa-solid fa-lock auth-input-icon"></i>
+        <input class="form-input" type="password" id="password" placeholder="Enter your password" required autocomplete="current-password"/>
         <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password', this)" aria-label="Toggle password visibility">
           <i class="fa-solid fa-eye"></i>
         </button>
       </div>
     </div>
-    <button type="submit" class="btn btn-primary btn-full btn-lg" id="loginBtn">Log In →</button>
-  </form>
-  <div class="auth-divider">or</div>
-  
-  <!-- Continue with Google Button -->
-  <div id="google-signin-btn" style="width:100%;display:flex;justify-content:center;margin-bottom:16px;min-height:44px;"></div>
 
-  <div class="auth-footer">Don't have an account? <a href="/pages/signup.html">Sign up free</a></div>
-  <div style="text-align:center;margin-top:12px;"><a href="/" style="font-size:0.8rem;color:var(--label3);">← Back to Home</a></div>
-  <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:0.5px solid var(--sep);font-size:0.73rem;color:var(--label4);"><i class="fa-solid fa-bolt"></i> Developed & Maintained by MattieTech</div>
+    <button type="submit" class="btn btn-primary btn-full btn-lg" id="loginBtn" style="margin-top:8px;">
+      <span>Log In</span> <i class="fa-solid fa-arrow-right"></i>
+    </button>
+  </form>
+
+  <div class="auth-divider">or continue with</div>
+
+  <!-- Continue with Google Button -->
+  <div id="google-signin-btn"></div>
+
+  <!-- Switch link -->
+  <div class="auth-footer-prompt">
+    Don't have an account? <a href="/pages/signup.html">Sign up free →</a>
+  </div>
+
+  <!-- Trust Badge -->
+  <div class="auth-credit-badge">
+    <i class="fa-solid fa-shield-halved"></i> 256-bit SSL encryption · Developed & Maintained by MattieTech
+  </div>
 </div>
+
 <script src="/js/api.js"></script>
 <script>
-const t = localStorage.getItem('ct_theme')||'light';
-document.documentElement.setAttribute('data-theme',t);
-document.getElementById('themeBtn').innerHTML = t==='dark'?'<i class="fa-solid fa-sun"></i>':'<i class="fa-solid fa-moon"></i>';
-document.getElementById('themeBtn').addEventListener('click',()=>{
-  const c=document.documentElement.getAttribute('data-theme');
-  const n=c==='dark'?'light':'dark';
-  document.documentElement.setAttribute('data-theme',n);
-  localStorage.setItem('ct_theme',n);
-  document.getElementById('themeBtn').innerHTML = n==='dark'?'<i class="fa-solid fa-sun"></i>':'<i class="fa-solid fa-moon"></i>';
+// Theme Management
+const t = localStorage.getItem('ct_theme') || 'light';
+document.documentElement.setAttribute('data-theme', t);
+const themeBtn = document.getElementById('themeBtn');
+themeBtn.innerHTML = t === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+themeBtn.addEventListener('click', () => {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', nextTheme);
+  localStorage.setItem('ct_theme', nextTheme);
+  themeBtn.innerHTML = nextTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
   renderGoogleButton();
 });
+
+// Check Session
 redirectIfLoggedIn();
-const params=new URLSearchParams(window.location.search);
-if(params.get('status')==='expired'){document.getElementById('statusAlert').style.display='block';}
-document.getElementById('loginForm').addEventListener('submit',async(e)=>{
+
+// Expired Session Alert
+const params = new URLSearchParams(window.location.search);
+if (params.get('status') === 'expired') {
+  document.getElementById('statusAlert').style.display = 'block';
+}
+
+// Form Submission
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const err=document.getElementById('errMsg');
-  err.style.display='none';
-  const btn=document.getElementById('loginBtn');
-  btn.disabled=true; btn.textContent='Logging in...';
-  const {data,error}=await apiLogin(document.getElementById('email').value.trim(),document.getElementById('password').value);
+  const err = document.getElementById('errMsg');
+  err.style.display = 'none';
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="width:16px;height:16px;margin-right:6px;"></span> Logging in...';
+
+  const emailVal = document.getElementById('email').value.trim();
+  const pwdVal = document.getElementById('password').value;
+
+  const { data, error } = await apiLogin(emailVal, pwdVal);
   if (error || !data || !data.user) {
     err.textContent = error || 'Invalid email or password.';
     err.style.display = 'block';
     btn.disabled = false;
-    btn.textContent = 'Log In';
+    btn.innerHTML = '<span>Log In</span> <i class="fa-solid fa-arrow-right"></i>';
     return;
   }
-  showToast(`Welcome back, ${data.user.fullName || 'Scholar'}! <i class="fa-solid fa-hand"></i>`,'success');
-  setTimeout(()=>{window.location.href='/pages/dashboard.html';},800);
+
+  showToast(`Welcome back, ${data.user.fullName || 'Scholar'}! <i class="fa-solid fa-circle-check"></i>`, 'success');
+  setTimeout(() => {
+    window.location.href = '/pages/dashboard.html';
+  }, 700);
 });
 
+// Google Sign-In Setup
 let googleClientId = "";
 
 async function initGoogleSignIn() {
@@ -104,14 +161,15 @@ async function initGoogleSignIn() {
     const { data } = await apiRequest('/api/auth/config');
     googleClientId = (data && data.googleClientId) || "1028751505342-placeholder.apps.googleusercontent.com";
     
-    google.accounts.id.initialize({
-      client_id: googleClientId,
-      callback: handleCredentialResponse,
-      auto_select: false,
-      itp_support: true
-    });
-    
-    renderGoogleButton();
+    if (window.google && google.accounts && google.accounts.id) {
+      google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: handleCredentialResponse,
+        auto_select: false,
+        itp_support: true
+      });
+      renderGoogleButton();
+    }
   } catch (err) {
     console.error("Error initializing Google Sign-In:", err);
   }
@@ -119,13 +177,14 @@ async function initGoogleSignIn() {
 
 function renderGoogleButton() {
   const btnContainer = document.getElementById("google-signin-btn");
-  if (btnContainer && window.google) {
+  if (btnContainer && window.google && google.accounts && google.accounts.id) {
+    btnContainer.innerHTML = '';
     google.accounts.id.renderButton(
       btnContainer,
       { 
         theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'filled_black' : 'outline', 
         size: 'large',
-        width: btnContainer.offsetWidth || 340,
+        width: Math.min(btnContainer.offsetWidth || 340, 380),
         text: 'continue_with',
         shape: 'pill'
       }
@@ -146,15 +205,16 @@ async function handleCredentialResponse(response) {
     return;
   }
   
-  // Save credentials and redirect
   localStorage.setItem("ct_token", data.token);
   localStorage.setItem("ct_user", JSON.stringify(data.user));
   showToast(`Welcome back, ${data.user.fullName}! <i class="fa-solid fa-circle-check"></i>`, 'success');
+  
   const role = data.user?.app_metadata?.role || data.user?.role;
   if (role === 'admin') {
     setTimeout(() => { window.location.href = '/pages/dashboard.html'; }, 800);
     return;
   }
+  
   const { data: stats } = await apiRequest(`/api/upload/stats/${data.user.id}`);
   const plan = (stats?.plan || 'free').toLowerCase();
   const isExpired = stats?.subscription_end ? (new Date(stats.subscription_end).getTime() < Date.now()) : false;

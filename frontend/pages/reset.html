@@ -6,77 +6,130 @@
 <title>Reset Password — CampusTutor AI</title>
 <link rel="stylesheet" href="/css/style.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+<meta name="theme-color" content="#060d24"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="CampusTutor"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-192.png"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 </head>
 <body class="auth-page">
 <div class="auth-orb1"></div>
 <div class="auth-orb2"></div>
+
 <div class="auth-card">
-  <div style="position:absolute;top:16px;right:16px;">
-    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
-  </div>
-  <div class="auth-brand">
-    <div class="auth-brand-icon" style="background:linear-gradient(135deg, #2563eb, #1d4ed8);border-radius:18px;box-shadow:0 8px 24px rgba(37,99,235,0.38);"><i class="fa-solid fa-key"></i></div>
-    <div style="display:inline-flex;align-items:center;justify-content:center;gap:6px;margin-bottom:4px;">
-      <h1 style="font-size:1.55rem;font-weight:800;letter-spacing:-0.02em;margin:0;"><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></h1>
-      <span class="ct-exact-badge" style="background:#2563eb;color:#fff;font-size:0.68rem;font-weight:800;padding:2px 7px;border-radius:999px;">2.0</span>
-    </div>
-    <p style="font-size:0.85rem;color:var(--label3);margin:4px 0 0 0;">Reset your account password quickly and securely.</p>
+  <!-- Top Navigation & Controls -->
+  <div class="auth-top-bar">
+    <a href="/pages/login.html" class="auth-nav-pill" title="Back to login">
+      <i class="fa-solid fa-arrow-left"></i> <span>Login</span>
+    </a>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode" title="Toggle theme">
+      <i class="fa-solid fa-moon"></i>
+    </button>
   </div>
 
+  <!-- Brand & Title -->
+  <div class="auth-brand">
+    <div class="auth-brand-icon">
+      <i class="fa-solid fa-key"></i>
+    </div>
+    <div class="auth-brand-title">
+      <h1><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></h1>
+      <span class="ct-exact-badge" style="background:#0070F3;color:#fff;font-size:0.68rem;font-weight:800;padding:2px 7px;border-radius:999px;">2.0</span>
+    </div>
+    <h2 class="auth-heading">Reset Password</h2>
+    <p class="auth-sub">Enter your email and we'll send a 6-digit recovery code.</p>
+  </div>
+
+  <!-- Alerts -->
   <div class="alert alert-error" id="errMsg" style="display:none;"></div>
   <div class="alert alert-success" id="okMsg" style="display:none;"></div>
 
   <!-- Step 1: Request Password Reset -->
   <form id="requestForm">
     <div class="form-group">
-      <label class="form-label">Email Address</label>
-      <input class="form-input" type="email" id="email" placeholder="you@school.edu.ng" required autocomplete="email"/>
+      <label class="auth-form-label" for="email">
+        <span class="label-icon"><i class="fa-regular fa-envelope"></i> Email Address</span>
+      </label>
+      <div class="auth-input-group">
+        <i class="fa-regular fa-envelope auth-input-icon"></i>
+        <input class="form-input" type="email" id="email" placeholder="you@school.edu.ng" required autocomplete="email"/>
+      </div>
     </div>
-    <button type="submit" class="btn btn-primary btn-full btn-lg" id="requestBtn">Send Reset Code →</button>
+    <button type="submit" class="btn btn-primary btn-full btn-lg" id="requestBtn" style="margin-top:10px;">
+      <span>Send Reset Code</span> <i class="fa-solid fa-arrow-right"></i>
+    </button>
   </form>
 
   <!-- Step 2: Verify OTP and Reset Password -->
   <form id="confirmForm" style="display:none;">
     <div class="form-group">
-      <label class="form-label">6-Digit Reset Code</label>
-      <input class="form-input" type="text" id="resetOtp" placeholder="123456" required maxlength="6" style="text-align:center;font-size:1.2rem;font-weight:700;letter-spacing:2px;"/>
+      <label class="auth-form-label" for="resetOtp">
+        <span class="label-icon"><i class="fa-solid fa-shield"></i> 6-Digit Verification Code</span>
+      </label>
+      <div class="auth-input-group">
+        <i class="fa-solid fa-hashtag auth-input-icon"></i>
+        <input class="form-input" type="text" id="resetOtp" placeholder="123456" required maxlength="6" style="letter-spacing:4px;font-weight:700;font-size:1.15rem;text-align:center;"/>
+      </div>
     </div>
+
     <div class="form-group">
-      <label class="form-label">New Password</label>
-      <div class="password-input-wrapper">
-        <input class="form-input" type="password" id="newPassword" placeholder="At least 6 characters" required minlength="6" autocomplete="new-password"/>
+      <div class="auth-form-label">
+        <span class="label-icon"><i class="fa-solid fa-lock"></i> New Password</span>
+        <span style="font-size:0.75rem;color:var(--label3);text-transform:none;font-weight:500;">Min. 6 chars</span>
+      </div>
+      <div class="password-input-wrapper auth-input-group">
+        <i class="fa-solid fa-lock auth-input-icon"></i>
+        <input class="form-input" type="password" id="newPassword" placeholder="Enter new password" required minlength="6" autocomplete="new-password"/>
         <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('newPassword', this)" aria-label="Toggle password visibility">
           <i class="fa-solid fa-eye"></i>
         </button>
       </div>
     </div>
+
     <div class="form-group">
-      <label class="form-label">Confirm New Password</label>
-      <div class="password-input-wrapper">
-        <input class="form-input" type="password" id="confirmNewPassword" placeholder="Repeat your new password" required minlength="6" autocomplete="new-password"/>
+      <label class="auth-form-label" for="confirmNewPassword">
+        <span class="label-icon"><i class="fa-solid fa-shield-halved"></i> Confirm New Password</span>
+      </label>
+      <div class="password-input-wrapper auth-input-group">
+        <i class="fa-solid fa-shield-halved auth-input-icon"></i>
+        <input class="form-input" type="password" id="confirmNewPassword" placeholder="Repeat new password" required minlength="6" autocomplete="new-password"/>
         <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('confirmNewPassword', this)" aria-label="Toggle password visibility">
           <i class="fa-solid fa-eye"></i>
         </button>
       </div>
     </div>
-    <button type="submit" class="btn btn-success btn-full btn-lg" id="confirmBtn">Reset Password</button>
+
+    <button type="submit" class="btn btn-primary btn-full btn-lg" id="confirmBtn" style="margin-top:10px;">
+      <span>Save New Password</span> <i class="fa-solid fa-check"></i>
+    </button>
   </form>
 
-  <div class="auth-footer" style="margin-top:20px;"><a href="/pages/login.html">← Back to Log In</a></div>
-  <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:0.5px solid var(--sep);font-size:0.73rem;color:var(--label4);"><i class="fa-solid fa-bolt"></i> Developed & Maintained by MattieTech</div>
+  <div class="auth-footer-prompt">
+    Remember your password? <a href="/pages/login.html">Log in here →</a>
+  </div>
+
+  <div class="auth-credit-badge">
+    <i class="fa-solid fa-shield-halved"></i> 256-bit SSL encryption · Developed & Maintained by MattieTech
+  </div>
 </div>
 
 <script src="/js/api.js"></script>
 <script>
-const t = localStorage.getItem('ct_theme')||'light';
-document.documentElement.setAttribute('data-theme',t);
-document.getElementById('themeBtn').innerHTML = t==='dark'?'<i class="fa-solid fa-sun"></i>':'<i class="fa-solid fa-moon"></i>';
-document.getElementById('themeBtn').addEventListener('click',()=>{
-  const c=document.documentElement.getAttribute('data-theme');
-  const n=c==='dark'?'light':'dark';
-  document.documentElement.setAttribute('data-theme',n);
-  localStorage.setItem('ct_theme',n);
-  document.getElementById('themeBtn').innerHTML = n==='dark'?'<i class="fa-solid fa-sun"></i>':'<i class="fa-solid fa-moon"></i>';
+// Theme Management
+const t = localStorage.getItem('ct_theme') || 'light';
+document.documentElement.setAttribute('data-theme', t);
+const themeBtn = document.getElementById('themeBtn');
+themeBtn.innerHTML = t === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+themeBtn.addEventListener('click', () => {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', nextTheme);
+  localStorage.setItem('ct_theme', nextTheme);
+  themeBtn.innerHTML = nextTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
 });
 
 let targetEmail = '';
@@ -88,12 +141,14 @@ document.getElementById('requestForm').addEventListener('submit', async (e) => {
   err.style.display = 'none'; ok.style.display = 'none';
   
   const btn = document.getElementById('requestBtn');
-  btn.disabled = true; btn.textContent = 'Sending...';
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="width:16px;height:16px;margin-right:6px;"></span> Sending code...';
 
   const { data, error } = await apiRequest('/api/auth/reset-request', 'POST', { email });
   if (error) {
     err.textContent = error; err.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Send Reset Code →';
+    btn.disabled = false;
+    btn.innerHTML = '<span>Send Reset Code</span> <i class="fa-solid fa-arrow-right"></i>';
     return;
   }
 
@@ -115,12 +170,14 @@ document.getElementById('confirmForm').addEventListener('submit', async (e) => {
   err.style.display = 'none'; ok.style.display = 'none';
 
   if (pwd !== confirmPwd) {
-    err.textContent = 'Passwords do not match.'; err.style.display = 'block';
+    err.textContent = 'Passwords do not match. Please verify.';
+    err.style.display = 'block';
     return;
   }
 
   const btn = document.getElementById('confirmBtn');
-  btn.disabled = true; btn.textContent = 'Resetting...';
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="width:16px;height:16px;margin-right:6px;"></span> Resetting...';
 
   const { data, error } = await apiRequest('/api/auth/reset-confirm', 'POST', {
     email: targetEmail,
@@ -130,7 +187,8 @@ document.getElementById('confirmForm').addEventListener('submit', async (e) => {
 
   if (error) {
     err.textContent = error; err.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Reset Password';
+    btn.disabled = false;
+    btn.innerHTML = '<span>Save New Password</span> <i class="fa-solid fa-check"></i>';
     return;
   }
 

@@ -46,9 +46,57 @@ app.use("/api/paystack", paystackRoutes);
 app.use("/api/support",  supportRoutes);
 app.use("/api/coins",    coinsRoutes);
 
-// ── FRONTEND CATCH-ALL ────────────────────────────────────────
+// ── FRONTEND ROUTES ───────────────────────────────────────────
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/index.html"));
+});
+
+app.get(["/signup", "/register"], (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/signup.html"));
+});
+
+app.get(["/login", "/signin"], (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/login.html"));
+});
+
+app.get(["/reset", "/forgot-password"], (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/reset.html"));
+});
+
+app.get("/dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/dashboard.html"));
+});
+
+app.get("/pricing", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/pricing.html"));
+});
+
+app.get("/study", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/study.html"));
+});
+
+app.get("/upload", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/upload.html"));
+});
+
+app.get("/tools", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/tools.html"));
+});
+
+app.get("/history", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/history.html"));
+});
+
+app.get("/referral", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/referral.html"));
+});
+
+app.get("/settings", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/settings.html"));
+});
+
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/pages/admin.html"));
 });
 
 // ── 404 ───────────────────────────────────────────────────────

@@ -178,7 +178,7 @@ router.get("/verify/:reference", async (req, res) => {
                 plan: (freshProfile?.plan || "free").toLowerCase(),
                 coinsAdded: coinsToAdd,
                 user: freshProfile,
-                coins: freshProfile?.coins || 0,
+                coins: freshProfile?.coins ?? freshProfile?.xp ?? 0,
                 message: `🎉 +${coinsToAdd} CampusCoins added to your wallet!`,
               });
             }

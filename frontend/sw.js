@@ -21,9 +21,9 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('⚡ [SW] Caching shell assets');
+      console.log('[SW] Caching shell assets');
       return cache.addAll(STATIC_ASSETS).catch((err) => {
-        console.warn('⚠️ [SW] Some assets could not be pre-cached:', err);
+        console.warn('[SW] Some assets could not be pre-cached:', err);
       });
     }).then(() => self.skipWaiting())
   );
@@ -36,7 +36,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
-            console.log('🧹 [SW] Purging old cache:', key);
+            console.log('[SW] Purging old cache:', key);
             return caches.delete(key);
           }
         })

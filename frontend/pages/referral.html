@@ -2,35 +2,10 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Refer & Earn — CampusTutor AI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Refer & Earn — CampusTutor AI 2.0</title>
 <link rel="stylesheet" href="/css/style.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-<style>
-  .ref-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; margin: 20px 0; }
-  .ref-stat-card {
-    background: var(--glass);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border: 0.5px solid var(--glass-b); border-radius: var(--r-lg);
-    padding: 20px; text-align: center; box-shadow: var(--gshadow);
-  }
-  .ref-stat-num { font-size: 1.8rem; font-weight: 800; color: var(--blue); margin-bottom: 4px; }
-  .ref-stat-lbl { font-size: 0.8rem; color: var(--label3); font-weight: 600; }
-  
-  .link-box {
-    display: flex; gap: 10px; align-items: center; margin: 20px 0;
-    padding: 12px; border-radius: var(--r); background: var(--bg2);
-    border: 1px dashed var(--blue);
-  }
-  .link-input {
-    flex: 1; border: none; background: transparent; color: var(--label);
-    font-size: 0.88rem; outline: none; font-weight: 600;
-  }
-  .withdrawal-section { margin-top: 32px; }
-  .withdraw-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.85rem; }
-  .withdraw-table th, .withdraw-table td { padding: 12px; border-bottom: 0.5px solid var(--sep); text-align: left; }
-  .withdraw-table th { background: rgba(118,118,128,0.04); font-weight: 700; color: var(--label3); }
-</style>
 
 <meta name="theme-color" content="#060d24"/>
 <meta name="mobile-web-app-capable" content="yes"/>
@@ -41,246 +16,879 @@
 <link rel="apple-touch-icon" href="/icons/icon-192.png"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 
+<style>
+  /* ── REFERRAL PAGE MODERN DESIGN SYSTEM (CampusTutor AI 2.0) ── */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+  
+  /* Guarantee consistent UI font across all headings and text */
+  body, h1, h2, h3, h4, h5, h6, p, span, button, input, select {
+    font-family: var(--font-ui) !important;
+  }
+
+  .referral-container {
+    max-width: 860px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── Hero Banner ── */
+  .ref-hero-banner {
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.08) 0%, rgba(139, 92, 246, 0.10) 50%, rgba(52, 199, 89, 0.08) 100%);
+    border: 1px solid rgba(0, 122, 255, 0.22);
+    border-radius: 24px;
+    padding: 26px 28px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 122, 255, 0.06);
+  }
+  [data-theme="dark"] .ref-hero-banner {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.2) 0%, rgba(139, 92, 246, 0.22) 50%, rgba(16, 185, 129, 0.15) 100%);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+  }
+
+  .ref-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.18), rgba(99, 102, 241, 0.25));
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    color: var(--purple);
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 5px 14px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+  }
+  [data-theme="dark"] .ref-hero-badge {
+    color: #c084fc;
+    border-color: rgba(192, 132, 252, 0.4);
+  }
+
+  .ref-hero-title {
+    font-size: 1.85rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    color: var(--label);
+    margin: 0 0 8px 0;
+  }
+  .ref-hero-title .highlight-blue {
+    background: linear-gradient(135deg, #0070F3, #5ac8fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .ref-hero-desc {
+    font-size: 0.94rem;
+    color: var(--label2);
+    margin: 0 0 16px 0;
+    line-height: 1.5;
+    max-width: 650px;
+  }
+
+  .ref-hero-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .ref-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--label);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  }
+  [data-theme="dark"] .ref-chip {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #f1f5f9;
+  }
+
+  /* ── KPI Stats Grid ── */
+  .ref-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .ref-kpi-card {
+    background: var(--glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-b);
+    border-radius: 20px;
+    padding: 18px 20px;
+    box-shadow: var(--gshadow);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .ref-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--gshadow-lg);
+  }
+  .ref-kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+  .ref-kpi-icon.blue {
+    background: rgba(0, 122, 255, 0.12);
+    color: var(--blue);
+  }
+  .ref-kpi-icon.green {
+    background: rgba(52, 199, 89, 0.14);
+    color: var(--green);
+  }
+  .ref-kpi-icon.purple {
+    background: rgba(175, 82, 222, 0.14);
+    color: var(--purple);
+  }
+  .ref-kpi-info {
+    min-width: 0;
+    flex: 1;
+  }
+  .ref-kpi-val {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: var(--label);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ref-kpi-val.green-val {
+    color: var(--green);
+  }
+  .ref-kpi-lbl {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--label3);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Modern Card Container ── */
+  .ref-card {
+    background: var(--glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-b);
+    border-radius: 22px;
+    padding: 24px;
+    box-shadow: var(--gshadow);
+  }
+  .ref-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--sep);
+  }
+  .ref-card-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--label);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0;
+  }
+  .ref-card-sub {
+    font-size: 0.84rem;
+    color: var(--label3);
+    margin: 4px 0 0 0;
+  }
+
+  /* ── Referral Link & Code Sharing ── */
+  .ref-share-grid {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .ref-code-box {
+    background: rgba(118, 128, 140, 0.06);
+    border: 1.5px dashed rgba(0, 122, 255, 0.4);
+    border-radius: var(--r);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+  }
+  .ref-code-lbl {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--label3);
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .ref-code-text {
+    font-size: 1.18rem;
+    font-weight: 800;
+    color: var(--blue);
+    letter-spacing: 0.04em;
+    font-family: monospace, monospace !important;
+  }
+
+  .ref-link-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg2);
+    border: 1.5px solid var(--sep);
+    border-radius: var(--r);
+    padding: 8px 12px;
+    transition: border-color 0.2s;
+  }
+  .ref-link-field:focus-within {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px var(--blue-dim);
+  }
+  .ref-link-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--label);
+    font-size: 0.88rem;
+    font-weight: 600;
+    outline: none;
+    min-width: 0;
+  }
+
+  /* Quick Social Buttons */
+  .ref-social-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .ref-social-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .ref-social-btn.whatsapp {
+    background: #25D366;
+    color: #ffffff;
+    box-shadow: 0 3px 12px rgba(37, 211, 102, 0.3);
+  }
+  .ref-social-btn.whatsapp:hover {
+    background: #20bd5a;
+    transform: translateY(-1px);
+  }
+  .ref-social-btn.telegram {
+    background: #229ED9;
+    color: #ffffff;
+    box-shadow: 0 3px 12px rgba(34, 158, 217, 0.3);
+  }
+  .ref-social-btn.telegram:hover {
+    background: #1c88bd;
+    transform: translateY(-1px);
+  }
+  .ref-social-btn.twitter {
+    background: #0f1419;
+    color: #ffffff;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+  }
+  [data-theme="dark"] .ref-social-btn.twitter {
+    background: #27272a;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .ref-social-btn.twitter:hover {
+    transform: translateY(-1px);
+  }
+  .ref-social-btn.copy-btn {
+    background: rgba(0, 122, 255, 0.1);
+    color: var(--blue);
+    border: 1px solid rgba(0, 122, 255, 0.2);
+  }
+  .ref-social-btn.copy-btn:hover {
+    background: rgba(0, 122, 255, 0.18);
+  }
+
+  /* ── 3 Steps Visual Guide ── */
+  .ref-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin: 6px 0;
+  }
+  .ref-step-card {
+    background: rgba(118, 128, 140, 0.04);
+    border: 1px solid var(--sep);
+    border-radius: 18px;
+    padding: 18px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .ref-step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--blue);
+    color: #ffffff;
+    display: grid;
+    place-items: center;
+    font-size: 0.78rem;
+    font-weight: 800;
+  }
+  .ref-step-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--label);
+    margin: 4px 0 0 0;
+  }
+  .ref-step-desc {
+    font-size: 0.8rem;
+    color: var(--label3);
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  /* ── Payout Form ── */
+  .ref-payout-box {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    max-width: 540px;
+  }
+  .ref-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ref-input-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--label2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ref-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .ref-input-icon {
+    position: absolute;
+    left: 14px;
+    color: var(--label3);
+    font-size: 0.9rem;
+    pointer-events: none;
+  }
+  .ref-form-input {
+    width: 100%;
+    background: var(--bg2);
+    border: 1.5px solid var(--sep);
+    border-radius: var(--r);
+    padding: 12px 14px 12px 40px;
+    color: var(--label);
+    font-size: 0.92rem;
+    font-weight: 600;
+    outline: none;
+    transition: all 0.2s;
+  }
+  .ref-form-input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px var(--blue-dim);
+  }
+  .ref-form-input::placeholder {
+    color: var(--label4);
+    font-weight: 500;
+  }
+
+  /* Quick Amount Chips */
+  .ref-amount-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .ref-amt-chip {
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: rgba(118, 128, 140, 0.08);
+    border: 1px solid var(--sep);
+    color: var(--label2);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .ref-amt-chip:hover {
+    background: var(--blue-dim);
+    color: var(--blue);
+    border-color: var(--blue);
+  }
+
+  /* ── History Table & Mobile Cards ── */
+  .ref-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 14px;
+    border: 1px solid var(--sep);
+    margin-top: 14px;
+  }
+  .ref-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  .ref-table th {
+    background: rgba(118, 128, 140, 0.06);
+    color: var(--label3);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--sep);
+  }
+  .ref-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--sep);
+    color: var(--label);
+  }
+  .ref-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .status-pending {
+    background: rgba(255, 149, 0, 0.14);
+    color: var(--orange);
+    border: 1px solid rgba(255, 149, 0, 0.3);
+  }
+  .status-approved {
+    background: rgba(52, 199, 89, 0.14);
+    color: var(--green);
+    border: 1px solid rgba(52, 199, 89, 0.3);
+  }
+  .status-rejected {
+    background: rgba(255, 59, 48, 0.14);
+    color: var(--red);
+    border: 1px solid rgba(255, 59, 48, 0.3);
+  }
+
+  /* ── Responsive Mobile Rules ── */
+  @media (max-width: 768px) {
+    .referral-container {
+      padding: 0 4px 30px 4px;
+      gap: 16px;
+    }
+    .ref-hero-banner {
+      padding: 20px 18px;
+      border-radius: 20px;
+    }
+    .ref-hero-title {
+      font-size: 1.5rem;
+    }
+    .ref-hero-desc {
+      font-size: 0.86rem;
+    }
+    .ref-kpi-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .ref-kpi-card {
+      padding: 14px 16px;
+    }
+    .ref-share-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .ref-steps-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .ref-card {
+      padding: 18px 16px;
+      border-radius: 20px;
+    }
+    .ref-payout-box {
+      max-width: 100%;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .ref-hero-title {
+      font-size: 1.35rem;
+    }
+    .ref-social-btn {
+      flex: 1;
+      justify-content: center;
+      padding: 8px 12px;
+      font-size: 0.78rem;
+    }
+  }
+</style>
 </head>
 <body>
+
+<!-- TOP NAVBAR -->
 <nav class="navbar">
   <button id="mobileMenuBtn" class="mobile-menu-btn ct-hamburger-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">
     <span class="ct-hamburger-bar ct-bar-top"></span>
     <span class="ct-hamburger-bar ct-bar-mid"></span>
     <span class="ct-hamburger-bar ct-bar-bot"></span>
   </button>
-  <a href="/" class="brand"><div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></a>
+  <a href="/pages/dashboard.html" class="brand">
+    <div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+    <span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span>
+  </a>
   <div class="navbar-right">
     <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
-    <a href="/pages/dashboard.html" class="pill-btn">← Dashboard</a>
+    <a href="/pages/dashboard.html" class="pill-btn"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
     <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop">Log Out</button>
   </div>
 </nav>
 
+<!-- MOBILE MENU DRAWER -->
 <div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="closeMobileMenu()"></div>
 <nav class="mobile-menu" id="mobileMenu">
   <a href="/pages/dashboard.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-house"></i> Dashboard</a>
+  <a href="/pages/tools.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-book-open"></i> Study Tools</a>
   <a href="/pages/upload.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-cloud-arrow-up"></i> Uploads</a>
-  <a href="/pages/history.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-chart-simple"></i> History</a>
+  <a href="/pages/history.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-clock-rotate-left"></i> History</a>
+  <a href="/pages/pricing.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-crown" style="color:#fbbf24;"></i> Upgrade Plan</a>
+  <a href="/pages/referral.html" class="mobile-menu-item active" onclick="closeMobileMenu()" style="color:var(--blue); font-weight:700;"><i class="fa-solid fa-users"></i> Refer & Earn</a>
   <a href="/pages/dashboard.html#profile" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-user"></i> Profile</a>
   <button class="mobile-menu-item logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
 </nav>
 
 <div class="app-layout">
+  <!-- DESKTOP SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-section">Navigation</div>
     <a href="/pages/dashboard.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Dashboard</a>
-    <a href="/pages/pricing.html" class="sidebar-link"><i class="fa-solid fa-credit-card"></i> Upgrade Plan</a>
+    <a href="/pages/tools.html" class="sidebar-link"><i class="fa-solid fa-book-open"></i> Study Tools</a>
+    <a href="/pages/upload.html" class="sidebar-link"><i class="fa-solid fa-cloud-arrow-up"></i> Upload PDF</a>
+    <a href="/pages/progress.html" class="sidebar-link"><i class="fa-solid fa-chart-line"></i> Progress</a>
+    <a href="/pages/history.html" class="sidebar-link"><i class="fa-solid fa-clock-rotate-left"></i> History</a>
+    <a href="/pages/pricing.html" class="sidebar-link"><i class="fa-solid fa-crown" style="color:#fbbf24;"></i> Upgrade Plan</a>
     <a href="/pages/referral.html" class="sidebar-link active"><i class="fa-solid fa-users"></i> Refer & Earn</a>
-    <div class="sidebar-bottom"><div style="font-size:0.7rem;color:var(--label4);text-align:center;padding:8px;"><i class="fa-solid fa-bolt"></i> Developed by MattieTech</div></div>
+    
+    <div class="sidebar-section" style="margin-top:16px;">HELP & SUPPORT</div>
+    <a href="/pages/settings.html" class="sidebar-link"><i class="fa-solid fa-gear"></i> Settings</a>
+    <button type="button" class="sidebar-link" onclick="if(window.openFeedbackModal)openFeedbackModal();else window.location.href='/pages/dashboard.html#help'" style="background:none;border:none;width:100%;text-align:left;">
+      <i class="fa-solid fa-headset"></i> Help Desk
+    </button>
+
+    <div class="sidebar-bottom">
+      <div style="font-size:0.72rem;color:var(--label4);text-align:center;padding:8px;font-weight:600;">
+        <i class="fa-solid fa-bolt" style="color:var(--blue);"></i> Developed by MattieTech
+      </div>
+    </div>
   </aside>
 
-  <main class="main-content" style="max-width: 800px;">
-    <div class="page-header">
-      <h1>Refer & Earn <i class="fa-solid fa-users"></i></h1>
-      <p>Invite friends to CampusTutor AI and earn commission when they subscribe to premium plans!</p>
-    </div>
-
-    <!-- Referral Link Box -->
-    <div class="card" style="margin-bottom: 24px;">
-      <div class="card-body">
-        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 8px;">Your Referral Code & Link</h3>
-        <p style="font-size: 0.8rem; color: var(--label3); margin-bottom: 12px;">Share your link. You earn <b>₦200 / ₦250</b> for Plus Plan subscribers, and <b>₦500</b> for Pro Plan subscribers.</p>
-        <div class="link-box">
-          <input type="text" id="refLink" class="link-input" readonly value="Loading link..."/>
-          <button class="btn btn-primary btn-sm" onclick="copyRefLink()"><i class="fa-solid fa-copy"></i> Copy</button>
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <div class="referral-container">
+      
+      <!-- 1. HERO BANNER -->
+      <section class="ref-hero-banner">
+        <div class="ref-hero-badge">
+          <i class="fa-solid fa-gift anim-gift"></i> Student Affiliate Program
         </div>
-      </div>
-    </div>
+        <h1 class="ref-hero-title">
+          Invite Classmates, <span class="highlight-blue">Earn Real Cash</span>
+        </h1>
+        <p class="ref-hero-desc">
+          Share your referral link with friends. Whenever they subscribe to any CampusTutor AI premium study plan, you earn instant cash commission paid directly to your Nigerian bank account!
+        </p>
+        <div class="ref-hero-chips">
+          <div class="ref-chip">
+            <i class="fa-solid fa-circle-check" style="color:var(--green);"></i>
+            <span>Earn <b>₦200 - ₦250</b> on Plus Plans</span>
+          </div>
+          <div class="ref-chip">
+            <i class="fa-solid fa-circle-check" style="color:var(--green);"></i>
+            <span>Earn <b>₦500</b> on Pro Plans</span>
+          </div>
+          <div class="ref-chip">
+            <i class="fa-solid fa-bolt" style="color:var(--blue);"></i>
+            <span>Instant Tracking & Direct Bank Transfer</span>
+          </div>
+        </div>
+      </section>
 
-    <!-- Referral Stats -->
-    <div class="ref-stats">
-      <div class="ref-stat-card">
-        <div class="ref-stat-num" id="statClicks">0</div>
-        <div class="ref-stat-lbl">Total Referees</div>
-      </div>
-      <div class="ref-stat-card">
-        <div class="ref-stat-num" id="statBalance">₦0</div>
-        <div class="ref-stat-lbl">Referral Wallet Balance</div>
-      </div>
-      <div class="ref-stat-card">
-        <div class="ref-stat-num" id="statWithdrawn">₦0</div>
-        <div class="ref-stat-lbl">Total Withdrawn</div>
-      </div>
-    </div>
-
-    <!-- Withdrawal Form & Table -->
-    <div class="card withdrawal-section">
-      <div class="card-body">
-        <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 12px;"><i class="fa-solid fa-money-bill-transfer"></i> Request Withdrawal</h3>
-        <p style="font-size: 0.8rem; color: var(--label3); margin-bottom: 16px;">Minimum withdrawal threshold is <b>₦1,500</b>. Manual payout will be reviewed by admin.</p>
-        
-        <div style="display: flex; flex-direction: column; gap: 12px; max-width: 400px; margin-bottom: 24px;">
-          <input type="number" id="withdrawAmount" placeholder="Amount (e.g., 2000)" class="form-input" required/>
-          <input type="text" id="bankName" placeholder="Bank Name (e.g., GTBank)" class="form-input" required/>
-          <input type="text" id="accountNumber" placeholder="Account Number" class="form-input" required maxlength="10"/>
-          <input type="text" id="accountName" placeholder="Account Name / Beneficiary Name" class="form-input" required/>
-          <button class="btn btn-success" onclick="requestWithdrawal()" style="width: 100%;">Request Payout</button>
+      <!-- 2. KPI STATS OVERVIEW -->
+      <section class="ref-kpi-grid">
+        <div class="ref-kpi-card">
+          <div class="ref-kpi-icon blue">
+            <i class="fa-solid fa-user-group"></i>
+          </div>
+          <div class="ref-kpi-info">
+            <div class="ref-kpi-val" id="statClicks">0</div>
+            <div class="ref-kpi-lbl">Total Referees</div>
+          </div>
         </div>
 
-        <h4 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 10px;">Withdrawal History</h4>
-        <div style="overflow-x: auto;">
-          <table class="withdraw-table">
+        <div class="ref-kpi-card">
+          <div class="ref-kpi-icon green">
+            <i class="fa-solid fa-wallet"></i>
+          </div>
+          <div class="ref-kpi-info">
+            <div class="ref-kpi-val green-val" id="statBalance">₦0</div>
+            <div class="ref-kpi-lbl">Wallet Balance</div>
+          </div>
+        </div>
+
+        <div class="ref-kpi-card">
+          <div class="ref-kpi-icon purple">
+            <i class="fa-solid fa-building-columns"></i>
+          </div>
+          <div class="ref-kpi-info">
+            <div class="ref-kpi-val" id="statWithdrawn">₦0</div>
+            <div class="ref-kpi-lbl">Total Paid Out</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. SHARE LINK & REFERRAL CODE CARD -->
+      <section class="ref-card">
+        <div class="ref-card-header">
+          <div>
+            <h2 class="ref-card-title"><i class="fa-solid fa-share-nodes" style="color:var(--blue);"></i> Your Referral Link & Code</h2>
+            <p class="ref-card-sub">Share your custom link or code. New students who register via your link get credited to your affiliate wallet.</p>
+          </div>
+        </div>
+
+        <div class="ref-share-grid">
+          <!-- Code Badge -->
+          <div class="ref-code-box">
+            <span class="ref-code-lbl">Referral Code</span>
+            <span class="ref-code-text" id="refCodeDisplay">...</span>
+            <button class="ref-social-btn copy-btn" onclick="copyRefCode()" style="margin-top:8px; padding:4px 10px; font-size:0.75rem;">
+              <i class="fa-solid fa-copy"></i> Copy Code
+            </button>
+          </div>
+
+          <!-- Full Link Field -->
+          <div style="display:flex; flex-direction:column; justify-content:center;">
+            <div class="ref-link-field">
+              <i class="fa-solid fa-link" style="color:var(--label3);"></i>
+              <input type="text" id="refLink" class="ref-link-input" readonly value="Loading referral link..."/>
+              <button class="btn btn-primary btn-sm" onclick="copyRefLink()" style="border-radius:999px; padding:7px 18px;">
+                <i class="fa-solid fa-copy"></i> Copy Link
+              </button>
+            </div>
+            
+            <!-- Quick Social Share Row -->
+            <div class="ref-social-row">
+              <span style="font-size:0.78rem; font-weight:700; color:var(--label3); margin-right:4px;">Share via:</span>
+              <button class="ref-social-btn whatsapp" onclick="shareWhatsApp()" title="Share on WhatsApp">
+                <i class="fa-brands fa-whatsapp" style="font-size:1.05rem;"></i> WhatsApp
+              </button>
+              <button class="ref-social-btn telegram" onclick="shareTelegram()" title="Share on Telegram">
+                <i class="fa-brands fa-telegram" style="font-size:1.05rem;"></i> Telegram
+              </button>
+              <button class="ref-social-btn twitter" onclick="shareTwitter()" title="Share on X">
+                <i class="fa-brands fa-x-twitter"></i> Post
+              </button>
+              <button class="ref-social-btn copy-btn" onclick="nativeShare()" id="btnNativeShare" title="More share options">
+                <i class="fa-solid fa-share-nodes"></i> More
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. HOW IT WORKS (3-STEP GUIDE) -->
+      <section class="ref-card">
+        <div class="ref-card-header">
+          <div>
+            <h2 class="ref-card-title"><i class="fa-solid fa-circle-question" style="color:var(--purple);"></i> How Referral Earnings Work</h2>
+            <p class="ref-card-sub">Simple, transparent, and direct cash payouts for helping classmates discover CampusTutor AI.</p>
+          </div>
+        </div>
+
+        <div class="ref-steps-grid">
+          <div class="ref-step-card">
+            <div class="ref-step-num">1</div>
+            <h3 class="ref-step-title">Share Your Link</h3>
+            <p class="ref-step-desc">Share your personal link in class WhatsApp groups, study circles, or status updates.</p>
+          </div>
+          <div class="ref-step-card">
+            <div class="ref-step-num">2</div>
+            <h3 class="ref-step-title">Friends Upgrade</h3>
+            <p class="ref-step-desc">When they subscribe to Plus (₦1,000) or Pro (₦2,500), you immediately earn commission in your wallet.</p>
+          </div>
+          <div class="ref-step-card">
+            <div class="ref-step-num">3</div>
+            <h3 class="ref-step-title">Cash Out to Bank</h3>
+            <p class="ref-step-desc">Hit the ₦1,500 payout threshold and request cash. We credit your Nigerian bank account smoothly.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. REQUEST WITHDRAWAL FORM -->
+      <section class="ref-card">
+        <div class="ref-card-header">
+          <div>
+            <h2 class="ref-card-title"><i class="fa-solid fa-money-bill-transfer" style="color:var(--green);"></i> Request Bank Payout</h2>
+            <p class="ref-card-sub">Minimum payout is <b>₦1,500</b>. Payout requests are verified and disbursed promptly to any Nigerian bank.</p>
+          </div>
+        </div>
+
+        <div class="ref-payout-box">
+          <!-- Amount -->
+          <div class="ref-input-group">
+            <label class="ref-input-label">
+              <span>Withdrawal Amount (₦)</span>
+              <span style="font-size:0.75rem; color:var(--label3);">Min: ₦1,500</span>
+            </label>
+            <div class="ref-input-wrap">
+              <span class="ref-input-icon">₦</span>
+              <input type="number" id="withdrawAmount" placeholder="e.g. 2000" class="ref-form-input" min="1500" required/>
+            </div>
+            <!-- Quick Amount Chips -->
+            <div class="ref-amount-chips">
+              <button type="button" class="ref-amt-chip" onclick="setQuickAmount(1500)">Min (₦1,500)</button>
+              <button type="button" class="ref-amt-chip" onclick="setQuickAmount(3000)">₦3,000</button>
+              <button type="button" class="ref-amt-chip" onclick="setQuickAmount(5000)">₦5,000</button>
+              <button type="button" class="ref-amt-chip" onclick="setAllBalance()">Withdraw All Balance</button>
+            </div>
+          </div>
+
+          <!-- Bank Name -->
+          <div class="ref-input-group">
+            <label class="ref-input-label" for="bankName">Bank Name</label>
+            <div class="ref-input-wrap">
+              <i class="fa-solid fa-building-columns ref-input-icon"></i>
+              <input type="text" id="bankName" list="nigerianBanks" placeholder="Select or type bank (e.g. OPay, GTBank)" class="ref-form-input" required/>
+              <datalist id="nigerianBanks">
+                <option value="OPay (PayCom)"></option>
+                <option value="PalmPay"></option>
+                <option value="Moniepoint"></option>
+                <option value="Kuda Bank"></option>
+                <option value="Guaranty Trust Bank (GTBank)"></option>
+                <option value="Access Bank"></option>
+                <option value="Zenith Bank"></option>
+                <option value="First Bank of Nigeria"></option>
+                <option value="United Bank for Africa (UBA)"></option>
+                <option value="Fidelity Bank"></option>
+                <option value="Stanbic IBTC Bank"></option>
+                <option value="Sterling Bank"></option>
+                <option value="Union Bank"></option>
+                <option value="Wema Bank (ALAT)"></option>
+                <option value="Ecobank Nigeria"></option>
+              </datalist>
+            </div>
+          </div>
+
+          <!-- Account Number -->
+          <div class="ref-input-group">
+            <label class="ref-input-label" for="accountNumber">10-Digit Account Number</label>
+            <div class="ref-input-wrap">
+              <i class="fa-solid fa-hashtag ref-input-icon"></i>
+              <input type="text" id="accountNumber" placeholder="0123456789" class="ref-form-input" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" required/>
+            </div>
+          </div>
+
+          <!-- Account Name -->
+          <div class="ref-input-group">
+            <label class="ref-input-label" for="accountName">Account / Beneficiary Name</label>
+            <div class="ref-input-wrap">
+              <i class="fa-solid fa-user-check ref-input-icon"></i>
+              <input type="text" id="accountName" placeholder="Full name registered on bank account" class="ref-form-input" required/>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-lg" onclick="requestWithdrawal()" id="btnSubmitWithdrawal" style="width:100%; border-radius:14px; margin-top:8px;">
+            <i class="fa-solid fa-paper-plane"></i> Submit Payout Request
+          </button>
+          
+          <div style="font-size:0.75rem; color:var(--label3); text-align:center; display:flex; align-items:center; justify-content:center; gap:6px;">
+            <i class="fa-solid fa-shield-halved" style="color:var(--green);"></i> Safe and secure transfers via verified Nigerian banking network.
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. WITHDRAWAL HISTORY -->
+      <section class="ref-card">
+        <div class="ref-card-header">
+          <div>
+            <h2 class="ref-card-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--blue);"></i> Payout History</h2>
+            <p class="ref-card-sub">Track all your submitted withdrawal requests, approval statuses, and bank payouts.</p>
+          </div>
+        </div>
+
+        <div class="ref-table-wrap">
+          <table class="ref-table">
             <thead>
               <tr>
                 <th>Date</th>
                 <th>Amount</th>
                 <th>Status</th>
-                <th>Remarks / Rejection Reason</th>
+                <th>Remarks / Notes</th>
               </tr>
             </thead>
             <tbody id="withdrawalList">
               <tr>
-                <td colspan="4" style="text-align: center; color: var(--label3); padding: 14px;">No withdrawal history yet.</td>
+                <td colspan="4" style="text-align:center; padding:32px 14px; color:var(--label3);">
+                  <div style="font-size:2rem; margin-bottom:8px; opacity:0.4;"><i class="fa-solid fa-receipt"></i></div>
+                  <div>Loading your withdrawal history...</div>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
+
     </div>
   </main>
 </div>
 
-<script src="/js/api.js"></script>
-<script>
-  requireAuth();
-
-  // Mobile Menu Toggle
-  function toggleMobileMenu() {
-    const btn = document.getElementById('mobileMenuBtn');
-    const menu = document.getElementById('mobileMenu');
-    const overlay = document.getElementById('mobileMenuOverlay');
-    const sidebar = document.querySelector('.sidebar') || document.querySelector('.ct-sidebar') || document.querySelector('.adm-sidebar');
-    if (btn) btn.classList.toggle('is-active');
-    if (menu) menu.classList.toggle('open');
-    if (overlay) overlay.classList.toggle('open');
-    if (sidebar) sidebar.classList.toggle('mobile-open');
-  }
-  }
-
-  // Theme Toggle
-  const themeBtn = document.getElementById('themeBtn');
-  const initialTheme = localStorage.getItem('ct_theme') || 'light';
-  document.documentElement.setAttribute('data-theme', initialTheme);
-  if (themeBtn) {
-    themeBtn.innerHTML = initialTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
-    themeBtn.addEventListener('click', () => {
-      const currentTheme = document.documentElement.getAttribute('data-theme');
-      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', nextTheme);
-      localStorage.setItem('ct_theme', nextTheme);
-      themeBtn.innerHTML = nextTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
-    });
-  }
-
-  let userBalance = 0;
-
-  async function loadReferralDashboard() {
-    const user = getUser();
-    if (!user) return;
-    
-    const { data, error } = await apiRequest(`/api/upload/referrals/stats`);
-    if (error || !data) {
-      showToast(error || 'Failed to load referral statistics.', 'error');
-      return;
-    }
-
-    userBalance = data.balance || 0;
-    
-    // Set code and links
-    const refCode = data.referral_code || 'NONE';
-    const protocol = window.location.protocol;
-    const host = window.location.host;
-    document.getElementById('refLink').value = `${protocol}//${host}/pages/signup.html?ref=${refCode}`;
-    
-    // Set Stats
-    document.getElementById('statClicks').textContent = data.referee_count || 0;
-    document.getElementById('statBalance').textContent = `₦${userBalance.toLocaleString()}`;
-    document.getElementById('statWithdrawn').textContent = `₦${(data.total_withdrawn || 0).toLocaleString()}`;
-    
-    // Load withdrawal logs
-    const wList = document.getElementById('withdrawalList');
-    if (data.withdrawals && data.withdrawals.length > 0) {
-      wList.innerHTML = data.withdrawals.map(w => {
-        let statusBadge = '';
-        if (w.status === 'pending') statusBadge = '<span class="badge" style="background:rgba(255,149,0,0.1);color:var(--orange);">Pending</span>';
-        else if (w.status === 'approved') statusBadge = '<span class="badge" style="background:rgba(52,199,89,0.1);color:var(--green);">Approved</span>';
-        else statusBadge = '<span class="badge" style="background:rgba(255,59,48,0.1);color:var(--red);">Rejected</span>';
-
-        return `
-          <tr>
-            <td>${new Date(w.created_at).toLocaleDateString()}</td>
-            <td style="font-weight:700;">₦${w.amount.toLocaleString()}</td>
-            <td>${statusBadge}</td>
-            <td style="color:var(--label2); font-size:0.8rem;">${w.remark || '—'}</td>
-          </tr>
-        `;
-      }).join('');
-    } else {
-      wList.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--label3); padding: 14px;">No withdrawal history yet.</td></tr>`;
-    }
-  }
-
-  function copyRefLink() {
-    const linkEl = document.getElementById('refLink');
-    linkEl.select();
-    linkEl.setSelectionRange(0, 99999);
-    navigator.clipboard.writeText(linkEl.value);
-    showToast('Referral link copied to clipboard! <i class="fa-solid fa-check"></i>', 'success');
-  }
-
-  async function requestWithdrawal() {
-    const amt = parseInt(document.getElementById('withdrawAmount').value);
-    const bankName = document.getElementById('bankName').value.trim();
-    const accountNumber = document.getElementById('accountNumber').value.trim();
-    const accountName = document.getElementById('accountName').value.trim();
-
-    if (!amt || amt <= 0) {
-      showToast('Please specify a valid withdrawal amount.', 'error');
-      return;
-    }
-    if (amt < 1500) {
-      showToast('Minimum payout request is ₦1,500.', 'error');
-      return;
-    }
-    if (amt > userBalance) {
-      showToast('Insufficient wallet balance.', 'error');
-      return;
-    }
-    if (!bankName || !accountNumber || !accountName) {
-      showToast('Please fill in all bank account details.', 'error');
-      return;
-    }
-
-    showToast('Submitting withdrawal request...', 'info');
-    const { error } = await apiRequest('/api/upload/referrals/withdraw', 'POST', { 
-      amount: amt,
-      bankName,
-      accountNumber,
-      accountName
-    });
-    if (error) {
-      showToast(error, 'error');
-      return;
-    }
-
-    showToast('Withdrawal request submitted successfully! <i class="fa-solid fa-circle-check"></i>', 'success');
-    document.getElementById('withdrawAmount').value = '';
-    document.getElementById('bankName').value = '';
-    document.getElementById('accountNumber').value = '';
-    document.getElementById('accountName').value = '';
-    loadReferralDashboard();
-  }
-
-  // Init
-  loadReferralDashboard();
-</script>
-<!-- STANDARDIZED MOBILE BOTTOM NAVIGATION BAR -->
+<!-- STANDARDIZED MOBILE BOTTOM NAVIGATION DOCK -->
 <nav class="ct-exact-dock" id="mobileBottomNav">
   <a href="/pages/dashboard.html" class="ct-exact-dock-item">
     <i class="fa-solid fa-house"></i>
@@ -300,5 +908,253 @@
   </a>
 </nav>
 
+<script src="/js/api.js"></script>
+<script>
+  requireAuth();
+
+  // Mobile Menu Toggle
+  function toggleMobileMenu() {
+    const btn = document.getElementById('mobileMenuBtn');
+    const menu = document.getElementById('mobileMenu');
+    const overlay = document.getElementById('mobileMenuOverlay');
+    const sidebar = document.querySelector('.sidebar') || document.querySelector('.ct-sidebar');
+    if (btn) btn.classList.toggle('is-active');
+    if (menu) menu.classList.toggle('open');
+    if (overlay) overlay.classList.toggle('open');
+    if (sidebar) sidebar.classList.toggle('mobile-open');
+  }
+
+  function closeMobileMenu() {
+    const btn = document.getElementById('mobileMenuBtn');
+    const menu = document.getElementById('mobileMenu');
+    const overlay = document.getElementById('mobileMenuOverlay');
+    const sidebar = document.querySelector('.sidebar') || document.querySelector('.ct-sidebar');
+    if (btn) btn.classList.remove('is-active');
+    if (menu) menu.classList.remove('open');
+    if (overlay) overlay.classList.remove('open');
+    if (sidebar) sidebar.classList.remove('mobile-open');
+  }
+
+  // Theme Toggle
+  const themeBtn = document.getElementById('themeBtn');
+  const initialTheme = localStorage.getItem('ct_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', initialTheme);
+  if (themeBtn) {
+    themeBtn.innerHTML = initialTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    themeBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', nextTheme);
+      localStorage.setItem('ct_theme', nextTheme);
+      themeBtn.innerHTML = nextTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+    });
+  }
+
+  let userBalance = 0;
+  let currentRefCode = '';
+  let currentRefLink = '';
+
+  async function loadReferralDashboard() {
+    const user = getUser();
+    if (!user) return;
+    
+    const { data, error } = await apiRequest(`/api/upload/referrals/stats`);
+    if (error || !data) {
+      showToast(error || 'Failed to load referral statistics.', 'error');
+      return;
+    }
+
+    userBalance = data.balance || 0;
+    
+    // Set code and links
+    currentRefCode = data.referral_code || 'NONE';
+    const protocol = window.location.protocol;
+    const host = window.location.host;
+    currentRefLink = `${protocol}//${host}/pages/signup.html?ref=${currentRefCode}`;
+
+    const refLinkEl = document.getElementById('refLink');
+    if (refLinkEl) refLinkEl.value = currentRefLink;
+
+    const refCodeDisplayEl = document.getElementById('refCodeDisplay');
+    if (refCodeDisplayEl) refCodeDisplayEl.textContent = currentRefCode;
+    
+    // Set Stats
+    const statClicksEl = document.getElementById('statClicks');
+    const statBalanceEl = document.getElementById('statBalance');
+    const statWithdrawnEl = document.getElementById('statWithdrawn');
+
+    if (statClicksEl) statClicksEl.textContent = data.referee_count || 0;
+    if (statBalanceEl) statBalanceEl.textContent = `₦${userBalance.toLocaleString()}`;
+    if (statWithdrawnEl) statWithdrawnEl.textContent = `₦${(data.total_withdrawn || 0).toLocaleString()}`;
+    
+    // Load withdrawal logs
+    const wList = document.getElementById('withdrawalList');
+    if (wList) {
+      if (data.withdrawals && data.withdrawals.length > 0) {
+        wList.innerHTML = data.withdrawals.map(w => {
+          let statusBadge = '';
+          if (w.status === 'pending') {
+            statusBadge = '<span class="status-pill status-pending"><i class="fa-solid fa-clock"></i> Pending</span>';
+          } else if (w.status === 'approved') {
+            statusBadge = '<span class="status-pill status-approved"><i class="fa-solid fa-circle-check"></i> Approved</span>';
+          } else {
+            statusBadge = '<span class="status-pill status-rejected"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>';
+          }
+
+          return `
+            <tr>
+              <td><span style="font-weight:600;">${new Date(w.created_at).toLocaleDateString()}</span></td>
+              <td style="font-weight:800; color:var(--label);">₦${Number(w.amount).toLocaleString()}</td>
+              <td>${statusBadge}</td>
+              <td style="color:var(--label2); font-size:0.82rem;">${w.remark || '—'}</td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        wList.innerHTML = `
+          <tr>
+            <td colspan="4" style="text-align: center; color: var(--label3); padding: 32px 14px;">
+              <div style="font-size:2.2rem; margin-bottom:8px; opacity:0.45;"><i class="fa-solid fa-piggy-bank"></i></div>
+              <div style="font-weight:600; margin-bottom:4px;">No withdrawal requests yet</div>
+              <div style="font-size:0.8rem;">When you withdraw earnings, your transaction status will show here.</div>
+            </td>
+          </tr>
+        `;
+      }
+    }
+  }
+
+  function copyRefLink() {
+    const linkEl = document.getElementById('refLink');
+    if (!linkEl) return;
+    linkEl.select();
+    linkEl.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(linkEl.value);
+    showToast('Referral link copied to clipboard! <i class="fa-solid fa-check"></i>', 'success');
+  }
+
+  function copyRefCode() {
+    if (!currentRefCode || currentRefCode === 'NONE') {
+      showToast('Referral code not available yet.', 'error');
+      return;
+    }
+    navigator.clipboard.writeText(currentRefCode);
+    showToast(`Referral code "${currentRefCode}" copied! <i class="fa-solid fa-check"></i>`, 'success');
+  }
+
+  function shareWhatsApp() {
+    const text = encodeURIComponent(`Hey! I use CampusTutor AI to study, practice past questions, and excel in exams. Sign up with my referral link to get started:\n${currentRefLink}`);
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+  }
+
+  function shareTelegram() {
+    const text = encodeURIComponent(`Study smarter and ace your exams with CampusTutor AI! Register here:`);
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(currentRefLink)}&text=${text}`, '_blank');
+  }
+
+  function shareTwitter() {
+    const text = encodeURIComponent(`Acing my university courses with @CampusTutorAI! Sign up with my link to join:\n${currentRefLink}`);
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+  }
+
+  async function nativeShare() {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'CampusTutor AI Invite',
+          text: 'Join CampusTutor AI to study smarter, solve past questions, and ace your exams!',
+          url: currentRefLink
+        });
+      } catch (e) {
+        // user cancelled or share failed
+      }
+    } else {
+      copyRefLink();
+    }
+  }
+
+  function setQuickAmount(amt) {
+    document.getElementById('withdrawAmount').value = amt;
+  }
+
+  function setAllBalance() {
+    if (userBalance <= 0) {
+      showToast('Your wallet balance is ₦0.', 'info');
+      return;
+    }
+    document.getElementById('withdrawAmount').value = userBalance;
+  }
+
+  async function requestWithdrawal() {
+    const amt = parseInt(document.getElementById('withdrawAmount').value);
+    const bankName = document.getElementById('bankName').value.trim();
+    const accountNumber = document.getElementById('accountNumber').value.trim();
+    const accountName = document.getElementById('accountName').value.trim();
+
+    if (!amt || amt <= 0) {
+      showToast('Please specify a valid withdrawal amount.', 'error');
+      return;
+    }
+    if (amt < 1500) {
+      showToast('Minimum payout request is ₦1,500.', 'error');
+      return;
+    }
+    if (amt > userBalance) {
+      showToast(`Insufficient balance. Your balance is ₦${userBalance.toLocaleString()}.`, 'error');
+      return;
+    }
+    if (!bankName) {
+      showToast('Please enter your Bank Name.', 'error');
+      return;
+    }
+    if (!accountNumber || accountNumber.length < 10) {
+      showToast('Please provide a valid 10-digit Nigerian account number.', 'error');
+      return;
+    }
+    if (!accountName) {
+      showToast('Please enter the Beneficiary Account Name.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('btnSubmitWithdrawal');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting Request...';
+    }
+
+    showToast('Submitting withdrawal request...', 'info');
+    const { error } = await apiRequest('/api/upload/referrals/withdraw', 'POST', { 
+      amount: amt,
+      bankName,
+      accountNumber,
+      accountName
+    });
+
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Payout Request';
+    }
+
+    if (error) {
+      showToast(error, 'error');
+      return;
+    }
+
+    showToast('Withdrawal request submitted successfully! <i class="fa-solid fa-circle-check"></i>', 'success');
+    document.getElementById('withdrawAmount').value = '';
+    document.getElementById('bankName').value = '';
+    document.getElementById('accountNumber').value = '';
+    document.getElementById('accountName').value = '';
+    loadReferralDashboard();
+  }
+
+  // Account number numbers-only restriction
+  document.getElementById('accountNumber')?.addEventListener('input', function(e) {
+    this.value = this.value.replace(/[^0-9]/g, '');
+  });
+
+  // Init
+  loadReferralDashboard();
+</script>
 </body>
 </html>
