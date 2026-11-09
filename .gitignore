@@ -17,3 +17,11 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Scratch & diagnostic scripts
+backend/diag_*.js
+backend/poll_*.js
+backend/test_*.js
+backend/fetch_diag_*.js
+backend/run_sql_*.js
+

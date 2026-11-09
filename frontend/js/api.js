@@ -1091,7 +1091,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="support-modal-card">
         <div class="support-modal-header">
           <h3>Give Feedback <i class="fa-solid fa-star" style="color:#f59e0b;"></i></h3>
-          <button class="support-modal-close" onclick="closeSupportModal('feedbackOverlay')">✕</button>
+          <button class="support-modal-close" onclick="closeSupportModal('feedbackOverlay')"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="support-modal-body">
           <p style="font-size:0.9rem;color:var(--label3);text-align:center;margin-bottom:12px;">How would you rate your experience with CampusTutor?</p>
@@ -1119,7 +1119,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="support-modal-card" style="max-width:550px;">
         <div class="support-modal-header">
           <h3>Customer Help Desk <i class="fa-solid fa-circle-question" style="color:var(--blue);"></i></h3>
-          <button class="support-modal-close" onclick="closeSupportModal('supportOverlay')">✕</button>
+          <button class="support-modal-close" onclick="closeSupportModal('supportOverlay')"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="support-modal-body">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
@@ -1321,22 +1321,117 @@ function updateCoinUIElements() {
   }
 
   const claimBoxBtn = document.getElementById("btnClaimChest");
-  if (claimBoxBtn) {
-    if (userCoinState.canClaimDaily) {
-      claimBoxBtn.disabled = false;
-      const bonusEstimate = 3 + Math.min(Math.floor(((userCoinState.streak || 1) - 1) / 2), 2);
-      claimBoxBtn.innerHTML = `<i class="fa-solid fa-gift anim-gift" style="margin-right:6px;"></i> Claim Day ${userCoinState.streak} Bonus (+${bonusEstimate} Coins)`;
-    } else {
-      claimBoxBtn.disabled = true;
-      claimBoxBtn.innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--green);margin-right:6px;"></i> Day ${userCoinState.streak} Claimed! Next reward tomorrow`;
+  const quickPill = document.getElementById("quickClaimPill");
+  const tabBadge = document.getElementById("tabDailyBonusBadge");
+  const streakEl = document.getElementById("rewardStreakCount");
+  if (streakEl) streakEl.textContent = userCoinState.streak || 1;
+
+  const bonusEstimate = 3 + Math.min(Math.floor(((userCoinState.streak || 1) - 1) / 2), 2);
+
+  if (userCoinState.canClaimDaily) {
+    if (tabBadge) {
+      tabBadge.style.display = "inline-block";
+      tabBadge.textContent = `+${bonusEstimate}`;
     }
+    if (quickPill) {
+      quickPill.style.display = "inline-flex";
+      quickPill.disabled = false;
+      quickPill.innerHTML = `<i class="fa-solid fa-gift anim-gift"></i> Claim +${bonusEstimate} Coins`;
+    }
+    if (claimBoxBtn) {
+      claimBoxBtn.disabled = false;
+      claimBoxBtn.style.background = "linear-gradient(135deg,#ffb020,#d97806)";
+      claimBoxBtn.style.color = "#fff";
+      claimBoxBtn.innerHTML = `<i class="fa-solid fa-gift anim-gift" style="margin-right:8px;"></i> Claim Day ${userCoinState.streak} Bonus (+${bonusEstimate} Coins)`;
+    }
+  } else {
+    if (tabBadge) {
+      tabBadge.style.display = "none";
+    }
+    if (quickPill) {
+      quickPill.style.display = "none";
+    }
+    if (claimBoxBtn) {
+      claimBoxBtn.disabled = true;
+      claimBoxBtn.style.background = "rgba(142, 142, 147, 0.2)";
+      claimBoxBtn.style.color = "var(--label3, #94a3b8)";
+      claimBoxBtn.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#22c55e;margin-right:8px;"></i> Day ${userCoinState.streak} Claimed! Next Reward Tomorrow`;
+    }
+  }
+
+  // Update visual streak roadmap track
+  renderStreakRoadmapTrack();
+}
+
+function renderStreakRoadmapTrack() {
+  const track = document.getElementById("modalStreakTrack");
+  if (!track) return;
+  const currentStreak = userCoinState.streak || 1;
+  const canClaim = userCoinState.canClaimDaily;
+  
+  // 7-day rolling cycle
+  const currentCycleDay = ((currentStreak - 1) % 7) + 1;
+
+  let html = "";
+  for (let d = 1; d <= 7; d++) {
+    const isPast = d < currentCycleDay;
+    const isCurrent = d === currentCycleDay;
+    const isClaimedToday = isCurrent && !canClaim;
+    const coinsReward = d <= 2 ? 3 : d <= 4 ? 4 : 5;
+
+    let stateClass = "";
+    let iconHtml = "";
+
+    if (isPast || isClaimedToday) {
+      stateClass = "claimed";
+      iconHtml = '<i class="fa-solid fa-check" style="color:#22c55e;font-size:0.75rem;"></i>';
+    } else if (isCurrent) {
+      stateClass = "current";
+      iconHtml = '<i class="fa-solid fa-gift anim-gift" style="color:#ffb020;font-size:0.75rem;"></i>';
+    } else {
+      iconHtml = '<i class="fa-solid fa-lock" style="color:var(--label3);font-size:0.7rem;"></i>';
+    }
+
+    html += `
+      <div class="streak-day-item ${stateClass}">
+        <div class="streak-day-num">D${d}</div>
+        <div style="margin:2px 0;">${iconHtml}</div>
+        <div class="streak-day-coins">+${coinsReward}</div>
+      </div>
+    `;
+  }
+  track.innerHTML = html;
+}
+
+function switchCoinsModalTab(targetTab) {
+  const tabPackages = document.getElementById("coinsTabPackages");
+  const tabReward = document.getElementById("coinsTabReward");
+  const btnPackages = document.getElementById("tabBtnBuyCoins");
+  const btnReward = document.getElementById("tabBtnDailyBonus");
+
+  if (!tabPackages || !tabReward) return;
+
+  if (targetTab === "reward" || targetTab === "streak") {
+    tabPackages.style.display = "none";
+    tabReward.style.display = "block";
+    if (btnPackages) btnPackages.classList.remove("active");
+    if (btnReward) btnReward.classList.add("active");
+  } else {
+    tabPackages.style.display = "block";
+    tabReward.style.display = "none";
+    if (btnPackages) btnPackages.classList.add("active");
+    if (btnReward) btnReward.classList.remove("active");
   }
 }
 
-function openCoinsModal() {
-  const modal = document.getElementById("coinsWalletModal");
-  if (!modal) injectCoinsModal();
-  document.getElementById("coinsWalletModal").style.display = "flex";
+function openCoinsModal(defaultTab = "packages") {
+  let modal = document.getElementById("coinsWalletModal");
+  if (!modal) {
+    injectCoinsModal();
+    modal = document.getElementById("coinsWalletModal");
+  }
+  switchCoinsModalTab(defaultTab || "packages");
+  modal.style.display = "flex";
   refreshUserCoins();
 }
 
@@ -1347,26 +1442,43 @@ function closeCoinsModal() {
 
 async function claimDailyBonusAction() {
   const btn = document.getElementById("btnClaimChest");
+  const quickPill = document.getElementById("quickClaimPill");
   if (btn) btn.disabled = true;
+  if (quickPill) quickPill.disabled = true;
+
   showToast("Opening your daily study reward...", "info");
 
   const { data, error } = await apiClaimDailyBonus();
-  if (error || !data) {
-    showToast(error || "Could not claim bonus right now.", "error");
-    if (btn) btn.disabled = false;
+  if (error || !data || !data.success) {
+    showToast(error || (data && data.message) || "Could not claim bonus right now.", "error");
+    if (btn && userCoinState.canClaimDaily) btn.disabled = false;
+    if (quickPill && userCoinState.canClaimDaily) quickPill.disabled = false;
     return;
   }
 
-  showToast(data.message, "success");
+  showToast(data.message || "Daily reward claimed!", "success");
   await refreshUserCoins();
 }
 
 async function buyCoinPackAction(packageId) {
+  const card = document.querySelector(`.coin-pack-card[data-package="${packageId}"]`);
+  const buyBtn = card ? card.querySelector(".coin-pack-btn") : null;
+  const originalBtnText = buyBtn ? buyBtn.innerHTML : "";
+
+  if (buyBtn) {
+    buyBtn.disabled = true;
+    buyBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connecting...';
+  }
+
   showToast("Connecting to Paystack checkout...", "info");
   const { data, error } = await apiBuyCoinPackage(packageId);
 
   if (error || !data || !data.checkoutUrl) {
     showToast(error || "Failed to initialize payment.", "error");
+    if (buyBtn) {
+      buyBtn.disabled = false;
+      buyBtn.innerHTML = originalBtnText;
+    }
     return;
   }
 
@@ -1379,99 +1491,171 @@ function injectCoinsModal() {
   const wrap = document.createElement("div");
   wrap.innerHTML = `
     <!-- CAMPUS COINS WALLET MODAL -->
-    <div class="support-modal-overlay" id="coinsWalletModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(12px);z-index:1000;align-items:center;justify-content:center;padding:20px;">
-      <div class="support-modal-card" style="max-width:560px;width:100%;max-height:90vh;overflow-y:auto;">
-        <div class="support-modal-header" style="border-bottom:1px solid var(--sep);padding-bottom:14px;">
-          <div>
-            <h3 style="font-size:1.25rem;font-weight:800;display:flex;align-items:center;gap:8px;">
-              <i class="fa-solid fa-coins anim-coin"></i> CampusCoins Wallet
-            </h3>
-            <p style="font-size:0.83rem;color:var(--label3);margin-top:2px;">Fund your account or claim daily educational study rewards</p>
+    <div class="support-modal-overlay" id="coinsWalletModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(10px);z-index:20000;align-items:center;justify-content:center;padding:16px;">
+      <div class="coins-modal-dialog">
+        <!-- Header -->
+        <div class="support-modal-header" style="border-bottom:1px solid var(--sep);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,176,32,0.15);display:flex;align-items:center;justify-content:center;color:#d97806;font-size:1.1rem;">
+              <i class="fa-solid fa-coins anim-coin"></i>
+            </div>
+            <div>
+              <h3 style="font-size:1.15rem;font-weight:800;margin:0;line-height:1.2;color:var(--label);">CampusCoins Wallet</h3>
+              <p style="font-size:0.78rem;color:var(--label3);margin:2px 0 0;">Top up coins or claim daily streak rewards</p>
+            </div>
           </div>
-          <button class="support-modal-close" onclick="closeCoinsModal()"><i class="fa-solid fa-xmark"></i></button>
+          <button class="support-modal-close" onclick="closeCoinsModal()" style="border:none;background:rgba(142,142,147,0.12);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--label2);">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
 
-        <div class="support-modal-body" style="padding-top:20px;">
-          <!-- Current Balance Bar -->
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:linear-gradient(135deg,rgba(255,176,32,0.15),rgba(255,149,0,0.22));border-radius:var(--r);border:1px solid rgba(255,176,32,0.4);margin-bottom:20px;">
-            <div>
-              <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--label3);letter-spacing:0.05em;">Your Balance</div>
-              <div id="modalCoinBalance" style="font-size:1.6rem;font-weight:900;color:#d97806;font-family:var(--font-d);">-- Coins</div>
-            </div>
-            <a href="/pages/pricing.html" class="btn btn-sm btn-glass" style="font-size:0.78rem;">Or Get Unlimited Plan →</a>
-          </div>
-
-          <!-- Daily Streak Chest -->
-          <div class="coin-chest-box">
-            <div style="display:flex;justify-content:center;margin-bottom:6px;">
-              <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="hover" colors="primary:#ffb020,secondary:#d97806" style="width:64px;height:64px"></lord-icon>
-            </div>
-            <h4 style="font-size:1.05rem;font-weight:800;margin-bottom:4px;">Daily Study Reward</h4>
-            <p style="font-size:0.82rem;color:var(--label2);margin-bottom:14px;">Check in daily to maintain your study streak and earn 3 CampusCoins!</p>
-            <button class="btn btn-warning" id="btnClaimChest" onclick="claimDailyBonusAction()" style="background:linear-gradient(135deg,#ffb020,#d97806);color:#fff;border:none;font-weight:800;padding:10px 22px;border-radius:var(--r-pill);">
-              <i class="fa-solid fa-gift anim-gift" style="margin-right:6px;"></i> Claim Today's Bonus
+        <div class="support-modal-body" style="padding:16px 18px;overflow-y:auto;flex:1;">
+          <!-- Navigation Tabs -->
+          <div class="coins-modal-nav-tabs">
+            <button class="coins-tab-btn active" id="tabBtnBuyCoins" onclick="switchCoinsModalTab('packages')">
+              <i class="fa-solid fa-bolt-lightning" style="color:#f59e0b;"></i> Top-Up Packages
+            </button>
+            <button class="coins-tab-btn" id="tabBtnDailyBonus" onclick="switchCoinsModalTab('reward')">
+              <i class="fa-solid fa-gift" style="color:#af52de;"></i> Daily Reward
+              <span class="coins-tab-badge" id="tabDailyBonusBadge" style="display:none;">+3</span>
             </button>
           </div>
 
-          <!-- Top-Up Coin Packs -->
-          <div style="margin-bottom:10px;">
-            <h4 style="font-size:0.95rem;font-weight:800;display:flex;align-items:center;gap:6px;">
-              <i class="fa-solid fa-cart-shopping" style="color:var(--blue);"></i> Top-Up Coin Packages
-            </h4>
-            <p style="font-size:0.8rem;color:var(--label3);">Coins never expire. Use them for step-by-step problem solutions, mock exams, or note summaries.</p>
+          <!-- TAB 1: TOP-UP PACKAGES (ZERO SCROLL NEEDED) -->
+          <div id="coinsTabPackages" style="display:block;">
+            <!-- Balance & Quick Claim Bar -->
+            <div class="coins-balance-bar">
+              <div>
+                <div class="coins-balance-label">Your Balance</div>
+                <div id="modalCoinBalance" class="coins-balance-amount">-- Coins</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <button class="quick-claim-pill" id="quickClaimPill" onclick="claimDailyBonusAction()" style="display:none;">
+                  <i class="fa-solid fa-gift anim-gift"></i> Claim +3 Coins
+                </button>
+                <a href="/pages/pricing.html" class="btn btn-sm btn-glass" style="font-size:0.75rem;padding:5px 10px;text-decoration:none;">Unlimited Plan →</a>
+              </div>
+            </div>
+
+            <!-- Coin Packages Grid: 4 Packages All Visible Above The Fold -->
+            <div class="coins-modal-grid">
+              <!-- 100 Coins -->
+              <div class="coin-pack-card" data-package="starter" onclick="buyCoinPackAction('starter')">
+                <div>
+                  <div style="display:flex;justify-content:center;margin-bottom:2px;">
+                    <lord-icon src="https://cdn.lordicon.com/qhgmphtg.json" trigger="hover" colors="primary:#f59e0b,secondary:#d97706" style="width:38px;height:38px"></lord-icon>
+                  </div>
+                  <div class="coin-amount-title">100 Coins</div>
+                  <div class="coin-pack-subtitle">Starter Stash</div>
+                  <div class="coin-price-tag">₦1,500</div>
+                </div>
+                <button class="coin-pack-btn">Buy Pack</button>
+              </div>
+
+              <!-- 250 Coins (Popular) -->
+              <div class="coin-pack-card featured" data-package="popular" onclick="buyCoinPackAction('popular')">
+                <span class="coin-pack-badge">Popular</span>
+                <div>
+                  <div style="display:flex;justify-content:center;margin-bottom:2px;">
+                    <lord-icon src="https://cdn.lordicon.com/webtefou.json" trigger="hover" colors="primary:#007AFF,secondary:#5ac8fa" style="width:38px;height:38px"></lord-icon>
+                  </div>
+                  <div class="coin-amount-title">250 Coins</div>
+                  <div class="coin-pack-subtitle">Scholar Pack</div>
+                  <div class="coin-price-tag">₦3,500</div>
+                </div>
+                <button class="coin-pack-btn">Buy Pack</button>
+              </div>
+
+              <!-- 600 Coins -->
+              <div class="coin-pack-card" data-package="pro" onclick="buyCoinPackAction('pro')">
+                <div>
+                  <div style="display:flex;justify-content:center;margin-bottom:2px;">
+                    <lord-icon src="https://cdn.lordicon.com/lbjtvqiv.json" trigger="hover" colors="primary:#34c759,secondary:#30b0c7" style="width:38px;height:38px"></lord-icon>
+                  </div>
+                  <div class="coin-amount-title">600 Coins</div>
+                  <div class="coin-pack-subtitle" style="color:#10b981;font-weight:700;">+100 Bonus</div>
+                  <div class="coin-price-tag">₦7,500</div>
+                </div>
+                <button class="coin-pack-btn">Buy Pack</button>
+              </div>
+
+              <!-- 1,600 Coins -->
+              <div class="coin-pack-card" data-package="vip" onclick="buyCoinPackAction('vip')">
+                <div>
+                  <div style="display:flex;justify-content:center;margin-bottom:2px;">
+                    <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="hover" colors="primary:#af52de,secondary:#f59e0b" style="width:38px;height:38px"></lord-icon>
+                  </div>
+                  <div class="coin-amount-title">1,600 Coins</div>
+                  <div class="coin-pack-subtitle" style="color:#a855f7;font-weight:700;">+350 Bonus</div>
+                  <div class="coin-price-tag">₦18,000</div>
+                </div>
+                <button class="coin-pack-btn">Buy Pack</button>
+              </div>
+            </div>
+
+            <p style="text-align:center;font-size:0.75rem;color:var(--label3);margin:10px 0 0;">
+              <i class="fa-solid fa-shield-halved" style="color:#10b981;margin-right:4px;"></i> Coins never expire. Instant Paystack activation.
+            </p>
           </div>
 
-          <div class="coins-modal-grid">
-            <!-- 100 Coins -->
-            <div class="coin-pack-card" onclick="buyCoinPackAction('starter')">
-              <div style="display:flex;justify-content:center;margin-bottom:4px;">
-                <lord-icon src="https://cdn.lordicon.com/qhgmphtg.json" trigger="hover" colors="primary:#f59e0b,secondary:#d97706" style="width:42px;height:42px"></lord-icon>
+          <!-- TAB 2: DAILY STUDY REWARD & STREAK -->
+          <div id="coinsTabReward" style="display:none;">
+            <!-- Streak Roadmap -->
+            <div class="streak-roadmap-card">
+              <div class="streak-roadmap-header">
+                <div>
+                  <span style="font-size:0.95rem;font-weight:800;color:var(--label);display:flex;align-items:center;gap:6px;">
+                    <i class="fa-solid fa-fire anim-fire" style="color:#f97316;"></i> <span id="rewardStreakCount">1</span> Day Study Streak
+                  </span>
+                </div>
+                <span style="font-size:0.72rem;font-weight:700;color:#f59e0b;background:rgba(245,158,11,0.12);padding:3px 8px;border-radius:10px;">
+                  Up to +5 Coins/day
+                </span>
               </div>
-              <div class="coin-amount-title">100 Coins</div>
-              <div style="font-size:0.75rem;color:var(--label3);">Starter Stash</div>
-              <div class="coin-price-tag">₦1,500</div>
-              <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;">Buy Pack</button>
+              <p style="font-size:0.78rem;color:var(--label3);margin:0 0 8px;">Check in daily to build your streak and earn free CampusCoins!</p>
+              
+              <!-- 7-day track -->
+              <div class="streak-days-track" id="modalStreakTrack">
+                <!-- Injected dynamically -->
+              </div>
             </div>
 
-            <!-- 250 Coins (Popular) -->
-            <div class="coin-pack-card featured" onclick="buyCoinPackAction('popular')">
-              <span class="coin-pack-badge">Popular</span>
-              <div style="display:flex;justify-content:center;margin-bottom:4px;">
-                <lord-icon src="https://cdn.lordicon.com/webtefou.json" trigger="hover" colors="primary:#007AFF,secondary:#5ac8fa" style="width:42px;height:42px"></lord-icon>
+            <!-- Big Chest / Action Box -->
+            <div class="coin-chest-box">
+              <div style="display:flex;justify-content:center;margin-bottom:6px;">
+                <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="hover" colors="primary:#ffb020,secondary:#d97806" style="width:60px;height:60px"></lord-icon>
               </div>
-              <div class="coin-amount-title">250 Coins</div>
-              <div style="font-size:0.75rem;color:var(--label3);">Scholar Pack</div>
-              <div class="coin-price-tag">₦3,500</div>
-              <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;background:#d97806;border:none;">Buy Pack</button>
+              <h4 style="font-size:1.05rem;font-weight:800;margin-bottom:4px;color:var(--label);">Daily Study Bonus</h4>
+              <p style="font-size:0.8rem;color:var(--label2);margin-bottom:14px;">Claim your daily check-in coins to fund problem solves & exams.</p>
+              <button class="btn btn-warning" id="btnClaimChest" onclick="claimDailyBonusAction()" style="background:linear-gradient(135deg,#ffb020,#d97806);color:#fff;border:none;font-weight:800;padding:10px 24px;border-radius:24px;width:100%;font-size:0.88rem;cursor:pointer;box-shadow:0 4px 14px rgba(217,120,6,0.35);">
+                <i class="fa-solid fa-gift anim-gift" style="margin-right:6px;"></i> Claim Today's Bonus
+              </button>
             </div>
 
-            <!-- 600 Coins -->
-            <div class="coin-pack-card" onclick="buyCoinPackAction('pro')">
-              <div style="display:flex;justify-content:center;margin-bottom:4px;">
-                <lord-icon src="https://cdn.lordicon.com/lbjtvqiv.json" trigger="hover" colors="primary:#34c759,secondary:#30b0c7" style="width:42px;height:42px"></lord-icon>
-              </div>
-              <div class="coin-amount-title">600 Coins</div>
-              <div style="font-size:0.75rem;color:var(--green);font-weight:700;">+100 Bonus Coins</div>
-              <div class="coin-price-tag">₦7,500</div>
-              <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;">Buy Pack</button>
-            </div>
-
-            <!-- 1,600 Coins -->
-            <div class="coin-pack-card" onclick="buyCoinPackAction('vip')">
-              <div style="display:flex;justify-content:center;margin-bottom:4px;">
-                <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="hover" colors="primary:#af52de,secondary:#f59e0b" style="width:42px;height:42px"></lord-icon>
-              </div>
-              <div class="coin-amount-title">1,600 Coins</div>
-              <div style="font-size:0.75rem;color:var(--purple);font-weight:700;">+350 Bonus Coins</div>
-              <div class="coin-price-tag">₦18,000</div>
-              <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;font-size:0.78rem;">Buy Pack</button>
-            </div>
+            <p style="text-align:center;font-size:0.78rem;color:var(--label3);margin:8px 0 0;">
+              Need more coins immediately? <a href="javascript:void(0)" onclick="switchCoinsModalTab('packages')" style="color:var(--blue);font-weight:700;text-decoration:underline;">View Top-Up Packages →</a>
+            </p>
           </div>
         </div>
       </div>
     </div>
   `;
   document.body.appendChild(wrap);
+
+  // Overlay click to close
+  const modalEl = document.getElementById("coinsWalletModal");
+  if (modalEl) {
+    modalEl.onclick = (e) => {
+      if (e.target === modalEl) closeCoinsModal();
+    };
+  }
+
+  // Escape key to close
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modalEl && modalEl.style.display !== "none") {
+      closeCoinsModal();
+    }
+  });
 }
 
 // Global initialization on DOM ready
@@ -1487,7 +1671,7 @@ document.addEventListener("DOMContentLoaded", () => {
       coinBtn.className = "coin-nav-pill";
       coinBtn.innerHTML = `<i class="fa-solid fa-coins anim-coin"></i> <span id="navCoinCount">--</span> <span class="coin-plus">+</span>`;
       coinBtn.title = "CampusCoins Wallet — Click to top up or view balance";
-      coinBtn.onclick = openCoinsModal;
+      coinBtn.onclick = () => openCoinsModal('packages');
       navRight.insertBefore(coinBtn, navRight.firstChild);
 
       if (!document.getElementById("navDailyGiftBtn") && !document.querySelector(".ct-daily-gift-btn")) {
@@ -1495,7 +1679,7 @@ document.addEventListener("DOMContentLoaded", () => {
         dailyBtn.id = "navDailyGiftBtn";
         dailyBtn.className = "daily-gift-nav-btn";
         dailyBtn.innerHTML = `<i class="fa-solid fa-gift anim-gift"></i> <span>Daily Gift</span>`;
-        dailyBtn.onclick = openCoinsModal;
+        dailyBtn.onclick = () => openCoinsModal('reward');
         navRight.insertBefore(dailyBtn, coinBtn.nextSibling);
       }
     }

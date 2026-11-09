@@ -922,7 +922,7 @@
     </div>
 
     <!-- 2. Day Streak -->
-    <div class="ct-exact-stat-card" onclick="openCoinsModal()" title="View daily streak & claim coins bonus">
+    <div class="ct-exact-stat-card" onclick="openCoinsModal('reward')" title="View daily streak & claim coins bonus">
       <div class="ct-exact-stat-icon" style="background:#fff7ed; color:#f97316;">
         <i class="fa-solid fa-fire anim-fire"></i>
       </div>
@@ -932,7 +932,7 @@
     </div>
 
     <!-- 3. CampusCoins (ONLY COINS - REPLACED XP PER USER REQUEST) -->
-    <div class="ct-exact-stat-card" onclick="openCoinsModal()" title="View CampusCoins balance">
+    <div class="ct-exact-stat-card" onclick="openCoinsModal('packages')" title="View CampusCoins balance">
       <div class="ct-exact-stat-icon" style="background:#fefce8; color:#eab308;">
         <i class="fa-solid fa-coins anim-coin"></i>
       </div>
@@ -946,7 +946,7 @@
       <div class="ct-exact-stat-icon" style="background:#f0fdf4; color:#10b981;">
         <i class="fa-solid fa-crown anim-crown"></i>
       </div>
-      <div class="ct-exact-stat-val" id="statPlan" style="font-size:0.86rem; color:#10b981;">PLUS ⚡</div>
+      <div class="ct-exact-stat-val" id="statPlan" style="font-size:0.86rem; color:#10b981;">PLUS</div>
       <div class="ct-exact-stat-lbl">Plan</div>
       <div class="ct-exact-stat-arrow"><i class="fa-solid fa-chevron-right"></i></div>
     </a>
@@ -1233,7 +1233,7 @@
 
         <a href="/pages/pricing.html" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:9px 12px;border-radius:12px;border:1px solid #edf2f7;font-weight:600;text-decoration:none;color:inherit;">
           <span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-crown" style="color:#f59e0b;"></i> Subscription Plan</span>
-          <span id="modalPlanBadge" style="font-size:0.72rem;font-weight:700;color:#10b981;">PLUS ⚡</span>
+          <span id="modalPlanBadge" style="font-size:0.72rem;font-weight:700;color:#10b981;">PLUS</span>
         </a>
 
         <button onclick="openCoinsModal(); closeSettingsModal();" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:9px 12px;border-radius:12px;border:1px solid #edf2f7;font-weight:600;">
@@ -1387,7 +1387,7 @@ async function loadUserStats() {
   const currentPlan = (stats.plan || 'plus').toLowerCase();
   const statPlan = document.getElementById('statPlan');
   if (statPlan) {
-    const planText = currentPlan === 'pro' ? 'PRO 👑' : (currentPlan === 'plus' ? 'PLUS ⚡' : 'FREE');
+    const planText = currentPlan === 'pro' ? 'PRO' : (currentPlan === 'plus' ? 'PLUS' : 'FREE');
     statPlan.textContent = planText;
     statPlan.style.color = currentPlan === 'free' ? '#10b981' : (currentPlan === 'plus' ? '#2563eb' : '#a855f7');
   }

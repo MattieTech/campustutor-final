@@ -2,7 +2,7 @@
 // sw.js — CampusTutor AI Progressive Web App Service Worker
 // ============================================================
 
-const CACHE_NAME = 'campustutor-v1.2.0';
+const CACHE_NAME = 'campustutor-v1.2.1';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',

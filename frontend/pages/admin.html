@@ -846,7 +846,7 @@ function showPanel(name, btn) {
 async function loadStats() {
   const { data, error } = await apiAdminGetStats();
   if (error) { 
-    console.error('❌ Stats error:', error);
+    console.error('[Admin] Stats error:', error);
     document.getElementById('st-total').textContent  = '0';
     document.getElementById('st-active').textContent = '0';
     document.getElementById('st-banned').textContent = '0';
@@ -855,7 +855,7 @@ async function loadStats() {
     return; 
   }
 
-  console.log('✅ Stats loaded:', data);
+  console.log('[Admin] Stats loaded:', data);
   document.getElementById('st-total').textContent  = data.totalUsers || 0;
   document.getElementById('st-active').textContent = data.activeUsers || 0;
   document.getElementById('st-banned').textContent = data.bannedUsers || 0;
@@ -1361,7 +1361,7 @@ async function downloadUserFile(fileId, fileName) {
     window.URL.revokeObjectURL(blobUrl);
     
   } catch (err) {
-    console.error('❌ Download error:', err);
+    console.error('[Admin] Download error:', err);
     showToast('Error downloading file: ' + err.message, 'error');
   }
 }
@@ -1414,7 +1414,7 @@ function showConfirm({ title, sub, fields = [], danger = false, onConfirm }) {
   btnsEl.innerHTML = `
     <button class="btn btn-glass btn-sm" onclick="closeModal('confirmModal')">Cancel</button>
     <button class="btn ${danger ? 'btn-danger' : 'btn-primary'} btn-sm" id="confirmOkBtn">
-      ${danger ? '<i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> Confirm' : '✅ Confirm'}
+      ${danger ? '<i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> Confirm' : '<i class="fa-solid fa-check"></i> Confirm'}
     </button>`;
 
   document.getElementById('confirmOkBtn').onclick = () => {

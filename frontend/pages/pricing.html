@@ -2,246 +2,11 @@
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Pricing Plans — CampusTutor AI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Pricing Plans — CampusTutor AI 2.0</title>
 <link rel="stylesheet" href="/css/style.css"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <script src="https://cdn.lordicon.com/lordicon.js"></script>
-<style>
-  .pricing-container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 24px 16px;
-  }
-  .pricing-title-section {
-    text-align: center;
-    margin-bottom: 40px;
-  }
-  .pricing-title-section h1 {
-    font-size: 2.2rem;
-    font-weight: 800;
-    margin-bottom: 12px;
-    font-family: var(--font-ui);
-  }
-  .pricing-title-section p {
-    font-size: 1.05rem;
-    color: var(--label3);
-  }
-  .pricing-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 36px;
-  }
-  .plan-card-claude {
-    background: var(--glass);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid var(--glass-b);
-    border-radius: 20px;
-    padding: 32px;
-    box-shadow: var(--gshadow);
-    position: relative;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .plan-card-claude:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--gshadow-lg);
-  }
-  .plan-card-claude.popular {
-    border: 2px solid var(--blue);
-  }
-  .popular-badge-claude {
-    position: absolute;
-    top: -14px;
-    right: 32px;
-    background: var(--blue);
-    color: #fff;
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 6px 14px;
-    border-radius: 20px;
-    text-transform: uppercase;
-    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
-  }
-  .plan-card-header {
-    margin-bottom: 24px;
-  }
-  .plan-card-header h3 {
-    font-size: 1.6rem;
-    font-weight: 800;
-    margin-bottom: 6px;
-    color: var(--label);
-  }
-  .plan-card-header p {
-    font-size: 0.92rem;
-    color: var(--label3);
-  }
-  
-  .pricing-options-row {
-    display: flex;
-    flex-direction: row;
-    gap: 12px;
-    margin-bottom: 28px;
-  }
-  .pricing-option {
-    border: 1.5px solid var(--sep);
-    border-radius: 16px;
-    padding: 14px 10px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    background: rgba(118, 118, 128, 0.02);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    flex: 1;
-    min-width: 100px;
-    text-align: center;
-    align-items: center;
-  }
-  .pricing-option:hover {
-    border-color: var(--blue);
-    background: rgba(0, 122, 255, 0.02);
-  }
-  .pricing-option.active {
-    border-color: var(--blue);
-    background: rgba(0, 122, 255, 0.05);
-    box-shadow: 0 0 0 1px var(--blue);
-  }
-  
-  .option-radio {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 2px solid var(--label4);
-    display: inline-block;
-    margin-bottom: 12px;
-    position: relative;
-    transition: all 0.2s;
-  }
-  .pricing-option.active .option-radio {
-    border-color: var(--blue);
-    background: var(--blue);
-  }
-  .pricing-option.active .option-radio::after {
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #fff;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-  
-  .option-price {
-    font-size: 1.3rem;
-    font-weight: 800;
-    font-family: var(--font-d);
-    margin-bottom: 4px;
-    color: var(--label);
-  }
-  .option-billing {
-    font-size: 0.72rem;
-    color: var(--label3);
-    font-weight: 600;
-  }
-  
-  .save-badge {
-    position: absolute;
-    top: -10px;
-    right: 16px;
-    background: rgba(52, 199, 89, 0.15);
-    color: var(--green);
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 4px 10px;
-    border-radius: 12px;
-    border: 0.5px solid rgba(52, 199, 89, 0.3);
-  }
-  
-  .btn-primary-claude {
-    width: 100%;
-    padding: 16px;
-    background: #111;
-    color: #fff;
-    border: none;
-    border-radius: 99px;
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.2s, opacity 0.2s;
-    margin-bottom: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-  .btn-primary-claude:hover {
-    background: #222;
-  }
-  .btn-primary-claude:disabled {
-    background: var(--sep);
-    color: var(--label4);
-    cursor: not-allowed;
-    opacity: 0.8;
-  }
-  [data-theme="dark"] .btn-primary-claude {
-    background: #fff;
-    color: #111;
-  }
-  [data-theme="dark"] .btn-primary-claude:hover {
-    background: #eee;
-  }
-  [data-theme="dark"] .btn-primary-claude:disabled {
-    background: var(--sep);
-    color: var(--label4);
-  }
-  
-  .price-features-claude {
-    list-style: none;
-    padding: 24px 0 0 0;
-    margin: 0;
-    border-top: 1px solid var(--sep);
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    font-size: 0.92rem;
-  }
-  .price-features-claude li {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: var(--label2);
-  }
-  .price-features-claude li i {
-    color: var(--green);
-    font-size: 1rem;
-    width: 16px;
-    text-align: center;
-  }
-  .price-features-claude li i.reject {
-    color: var(--red);
-  }
-  
-  .plan-card-claude.current-subscription {
-    border: 2px solid var(--green);
-  }
-  .current-badge-claude {
-    position: absolute;
-    top: -14px;
-    right: 32px;
-    background: var(--green);
-    color: #fff;
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 6px 14px;
-    border-radius: 20px;
-    text-transform: uppercase;
-    box-shadow: 0 4px 12px rgba(52, 199, 89, 0.25);
-  }
-</style>
 
 <meta name="theme-color" content="#060d24"/>
 <meta name="mobile-web-app-capable" content="yes"/>
@@ -252,65 +17,783 @@
 <link rel="apple-touch-icon" href="/icons/icon-192.png"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
 
+<style>
+  /* ── UNIFIED APP SHELL & PRICING SUITE STYLES ── */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  html, body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+    background: #f4f7fc;
+    background-image: 
+      radial-gradient(circle at 10% 5%, rgba(191, 219, 254, 0.45) 0%, transparent 35%),
+      radial-gradient(circle at 90% 12%, rgba(233, 213, 255, 0.45) 0%, transparent 35%);
+    background-attachment: fixed;
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  [data-theme="dark"] body {
+    background: #080e1e;
+    color: #f8fafc;
+  }
+
+  .ct-pricing-wrapper {
+    width: 100%;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 24px 20px 100px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ── Hero Header ── */
+  .pricing-hero {
+    text-align: center;
+    padding: 24px 16px 12px 16px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .pricing-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    border: 1px solid rgba(37, 99, 235, 0.25);
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  [data-theme="dark"] .pricing-chip {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.35);
+  }
+
+  .pricing-hero h1 {
+    font-family: var(--font-ui);
+    font-size: clamp(1.85rem, 5vw, 2.5rem);
+    font-weight: 800;
+    color: var(--label);
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin: 0 0 10px 0;
+  }
+
+  .pricing-hero p {
+    font-size: clamp(0.92rem, 3vw, 1.05rem);
+    color: var(--label3);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* ── Segmented Switcher Pill ── */
+  .pricing-toggle-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0 20px 0;
+  }
+
+  .pricing-toggle-box {
+    background: rgba(148, 163, 184, 0.16);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    padding: 5px;
+    border-radius: 999px;
+    display: inline-flex;
+    gap: 6px;
+    max-width: 100%;
+    backdrop-filter: blur(8px);
+  }
+
+  .pricing-view-pill {
+    padding: 10px 22px;
+    border-radius: 999px;
+    border: none;
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+    background: transparent;
+    color: var(--label2);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .pricing-view-pill.active {
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  }
+
+  .pricing-view-pill.active.coins-active {
+    background: #f59e0b;
+    color: #000000;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  }
+
+  /* ── 2-Column Responsive Pricing Cards Grid ── */
+  .plans-grid-2col {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    align-items: stretch;
+  }
+
+  .plan-card-pro {
+    background: var(--glass);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--glass-b);
+    border-radius: 24px;
+    padding: 32px 28px;
+    box-shadow: var(--gshadow);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+
+  .plan-card-pro:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--gshadow-lg);
+  }
+
+  .plan-card-pro.featured {
+    border: 2px solid #2563eb;
+    box-shadow: 0 12px 36px rgba(37, 99, 235, 0.15);
+  }
+
+  .plan-card-pro.active-subscription {
+    border: 2px solid #10b981;
+    box-shadow: 0 12px 36px rgba(16, 185, 129, 0.18);
+  }
+
+  /* Floating Ribbon for Most Popular */
+  .popular-ribbon {
+    position: absolute;
+    top: -14px;
+    right: 28px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .current-plan-ribbon {
+    position: absolute;
+    top: -14px;
+    right: 28px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Card Header */
+  .plan-header-block {
+    margin-bottom: 20px;
+  }
+
+  .plan-badge-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font-size: 1.35rem;
+    margin-bottom: 14px;
+  }
+
+  .plan-badge-icon.plus {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+  }
+
+  .plan-badge-icon.pro {
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+  }
+
+  .plan-title-name {
+    font-family: var(--font-ui);
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: var(--label);
+    letter-spacing: -0.02em;
+    margin: 0 0 6px 0;
+  }
+
+  .plan-title-desc {
+    font-size: 0.9rem;
+    color: var(--label3);
+    line-height: 1.4;
+    margin: 0;
+    min-height: 40px;
+  }
+
+  /* Dynamic Selected Price Display */
+  .plan-price-hero {
+    margin: 14px 0 20px 0;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .plan-price-val {
+    font-family: var(--font-d);
+    font-size: 2.3rem;
+    font-weight: 900;
+    color: var(--label);
+    letter-spacing: -0.03em;
+  }
+
+  .plan-price-period {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--label3);
+  }
+
+  /* Duration Selector Options */
+  .plan-duration-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .plan-option-card {
+    border: 1.5px solid var(--sep);
+    border-radius: 16px;
+    padding: 12px 14px;
+    cursor: pointer;
+    background: rgba(148, 163, 184, 0.04);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    transition: all 0.2s ease;
+    user-select: none;
+  }
+
+  .plan-option-card:hover {
+    border-color: #2563eb;
+    background: rgba(37, 99, 235, 0.04);
+    transform: translateY(-1px);
+  }
+
+  .plan-option-card.active {
+    border-color: #2563eb;
+    background: rgba(37, 99, 235, 0.08);
+    box-shadow: 0 0 0 1px #2563eb;
+  }
+
+  .plan-option-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .plan-custom-radio {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--label4);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .plan-option-card.active .plan-custom-radio {
+    border-color: #2563eb;
+    background: #2563eb;
+  }
+
+  .plan-custom-radio::after {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ffffff;
+    display: none;
+  }
+
+  .plan-option-card.active .plan-custom-radio::after {
+    display: block;
+  }
+
+  .plan-duration-title {
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--label);
+  }
+
+  .plan-save-pill {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 999px;
+    display: inline-block;
+  }
+
+  .plan-option-right {
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .plan-option-price {
+    font-family: var(--font-d);
+    font-weight: 800;
+    font-size: 1.08rem;
+    color: var(--label);
+  }
+
+  .plan-option-per-mo {
+    font-size: 0.74rem;
+    color: var(--label3);
+    font-weight: 600;
+  }
+
+  /* Plan CTA Button */
+  .btn-plan-action {
+    width: 100%;
+    padding: 15px;
+    border-radius: 999px;
+    border: none;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    letter-spacing: -0.01em;
+  }
+
+  .btn-plan-action.plus {
+    background: #0f172a;
+    color: #ffffff;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.25);
+  }
+
+  .btn-plan-action.plus:hover:not(:disabled) {
+    background: #1e293b;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.35);
+  }
+
+  .btn-plan-action.pro {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    color: #ffffff;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+  }
+
+  .btn-plan-action.pro:hover:not(:disabled) {
+    background: linear-gradient(135deg, #1e40af, #1d4ed8);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
+  }
+
+  .btn-plan-action:disabled {
+    background: rgba(148, 163, 184, 0.3) !important;
+    color: var(--label4) !important;
+    cursor: not-allowed;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  [data-theme="dark"] .btn-plan-action.plus {
+    background: #ffffff;
+    color: #0f172a;
+  }
+
+  [data-theme="dark"] .btn-plan-action.plus:hover:not(:disabled) {
+    background: #f1f5f9;
+  }
+
+  /* Plan Features List */
+  .plan-features-list {
+    list-style: none;
+    padding: 20px 0 0 0;
+    margin: 0;
+    border-top: 1px solid var(--sep);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .plan-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.9rem;
+    color: var(--label2);
+    line-height: 1.4;
+  }
+
+  .plan-feature-item i {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .plan-feature-item i.reject {
+    color: var(--label4);
+  }
+
+  /* ── Pay-As-You-Go Coin Grid ── */
+  .coins-hero-banner {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.08));
+    border: 1.5px solid rgba(245, 158, 11, 0.35);
+    border-radius: 22px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .coins-pack-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+  }
+
+  .coin-pack-card {
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    border: 1.5px solid var(--glass-b);
+    border-radius: 22px;
+    padding: 24px 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    box-shadow: var(--gshadow);
+    transition: transform 0.25s, box-shadow 0.25s;
+  }
+
+  .coin-pack-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--gshadow-lg);
+  }
+
+  .coin-pack-card.popular-pack {
+    border-color: rgba(37, 99, 235, 0.45);
+    background: rgba(37, 99, 235, 0.03);
+  }
+
+  .coin-pack-card.best-value {
+    border-color: rgba(16, 185, 129, 0.45);
+    background: rgba(16, 185, 129, 0.03);
+  }
+
+  .coin-pack-tag {
+    position: absolute;
+    top: -10px;
+    right: 18px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 999px;
+    color: #ffffff;
+  }
+
+  /* ── Trust & Security Section ── */
+  .pricing-trust-section {
+    margin-top: 36px;
+    border-top: 1px solid var(--sep);
+    padding-top: 32px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+  }
+
+  .trust-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .trust-item-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    display: grid;
+    place-items: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+  }
+
+  .trust-item-title {
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: var(--label);
+    margin-bottom: 2px;
+  }
+
+  .trust-item-desc {
+    font-size: 0.8rem;
+    color: var(--label3);
+    line-height: 1.4;
+  }
+
+  /* ── Mobile Responsive Optimizations ── */
+  @media (max-width: 860px) {
+    .plans-grid-2col {
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+    .pricing-hero h1 {
+      font-size: 2rem;
+    }
+    .ct-pricing-wrapper {
+      padding: 16px 12px 90px 12px;
+    }
+    .plan-card-pro {
+      padding: 24px 20px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .pricing-view-pill {
+      padding: 8px 14px;
+      font-size: 0.8rem;
+    }
+    .plan-option-card {
+      padding: 10px 12px;
+    }
+    .plan-price-val {
+      font-size: 1.95rem;
+    }
+  }
+</style>
 </head>
 <body>
-<nav class="navbar">
-  <button id="mobileMenuBtn" class="mobile-menu-btn ct-hamburger-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">
-    <span class="ct-hamburger-bar ct-bar-top"></span>
-    <span class="ct-hamburger-bar ct-bar-mid"></span>
-    <span class="ct-hamburger-bar ct-bar-bot"></span>
-  </button>
-  <a href="/" class="brand"><div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span><span class="brand-ai">AI</span></a>
-  <div class="navbar-right">
-    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
-    <a href="/pages/dashboard.html" class="pill-btn"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
-    <button onclick="logout()" class="btn btn-ghost btn-sm logout-btn-desktop">Log Out</button>
-  </div>
-</nav>
 
-<div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="closeMobileMenu()"></div>
-<nav class="mobile-menu" id="mobileMenu">
-  <a href="/pages/dashboard.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-house"></i> Dashboard</a>
-  <a href="/pages/upload.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-cloud-arrow-up"></i> Uploads</a>
-  <a href="/pages/history.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-chart-simple"></i> History</a>
-  <a href="/pages/pricing.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-credit-card"></i> Upgrade Plan</a>
-  <a href="/pages/referral.html" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-users"></i> Refer & Earn</a>
-  <a href="/pages/dashboard.html#profile" class="mobile-menu-item" onclick="closeMobileMenu()"><i class="fa-solid fa-user"></i> Profile</a>
-  <button class="mobile-menu-item logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
-</nav>
+<!-- Backdrop for Mobile Sidebar Drawer -->
+<div class="ct-sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileMenu()"></div>
 
-<div class="app-layout">
-  <aside class="sidebar">
-    <div class="sidebar-section">Navigation</div>
-    <a href="/pages/dashboard.html" class="sidebar-link"><i class="fa-solid fa-house"></i> Dashboard</a>
-    <a href="/pages/pricing.html" class="sidebar-link active"><i class="fa-solid fa-credit-card"></i> Upgrade Plan</a>
-    <a href="/pages/referral.html" class="sidebar-link"><i class="fa-solid fa-users"></i> Refer & Earn</a>
-    <div class="sidebar-bottom"><div style="font-size:0.7rem;color:var(--label4);text-align:center;padding:8px;"><i class="fa-solid fa-bolt"></i> Developed by MattieTech</div></div>
+<div class="ct-dashboard-app">
+  <!-- LEFT SIDEBAR (Unified with Dashboard & Tools) -->
+  <aside class="ct-sidebar" id="dashboardSidebar">
+    <!-- Brand Header -->
+    <a href="/pages/dashboard.html" class="ct-sidebar-brand">
+      <div class="ct-brand-icon-box">
+        <i class="fa-solid fa-graduation-cap anim-bulb"></i>
+      </div>
+      <div class="ct-brand-text-wrap">
+        <div class="ct-brand-title-row">
+          <span class="ct-brand-name">CampusTutor</span>
+          <span class="ct-brand-version-badge">2.0</span>
+        </div>
+        <span class="ct-brand-tagline">Learn • Practice • Excel</span>
+      </div>
+    </a>
+
+    <!-- Primary Nav Links -->
+    <div class="ct-nav-group">
+      <a href="/pages/dashboard.html" class="ct-nav-link">
+        <i class="fa-solid fa-house"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="/pages/history.html" class="ct-nav-link">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span>History</span>
+      </a>
+      <a href="/pages/upload.html" class="ct-nav-link">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <span>Upload PDF</span>
+      </a>
+      <a href="/pages/pricing.html" class="ct-nav-link active">
+        <i class="fa-solid fa-crown anim-crown" style="color:#fbbf24;"></i>
+        <span>Upgrade Plan</span>
+      </a>
+      <a href="/pages/referral.html" class="ct-nav-link">
+        <i class="fa-solid fa-users"></i>
+        <span>Refer & Earn</span>
+      </a>
+    </div>
+
+    <!-- Specialized Academic Tools -->
+    <div class="ct-nav-group">
+      <div class="ct-nav-section-title">Academic Tools</div>
+      <a href="/pages/tools.html?tool=polisher" class="ct-nav-link">
+        <i class="fa-solid fa-feather-pointed" style="color:#38bdf8;"></i>
+        <span>Thesis & Coursework</span>
+      </a>
+      <a href="/pages/tools.html?tool=proposals" class="ct-nav-link">
+        <i class="fa-solid fa-briefcase" style="color:#10b981;"></i>
+        <span>Proposal Architect</span>
+      </a>
+      <a href="/pages/tools.html?tool=viva" class="ct-nav-link">
+        <i class="fa-solid fa-shield-halved" style="color:#f97316;"></i>
+        <span>Viva Defense Panel</span>
+      </a>
+      <a href="/pages/tools.html?tool=humanizer" class="ct-nav-link">
+        <i class="fa-solid fa-fingerprint" style="color:#a855f7;"></i>
+        <span>Turnitin Humanizer</span>
+      </a>
+    </div>
+
+    <!-- Bottom Upgrade / Support Card -->
+    <div class="ct-sidebar-upgrade-card" style="margin-top:auto;">
+      <div class="ct-upgrade-card-title">
+        <i class="fa-solid fa-bolt anim-sparkle" style="color:#38bdf8;"></i>
+        <span>Need Assistance?</span>
+      </div>
+      <div class="ct-upgrade-card-desc">
+        Contact our academic student desk anytime via WhatsApp or ticket.
+      </div>
+      <a href="https://chat.whatsapp.com/CNlccvf5Eue6ZvE4Pz3JGX" target="_blank" class="ct-upgrade-card-btn">
+        <i class="fa-brands fa-whatsapp"></i>
+        <span>Chat Support</span>
+      </a>
+    </div>
+
+    <div style="font-size:0.7rem; color:#64748b; text-align:center; padding:12px 8px 0 8px;">
+      <i class="fa-solid fa-bolt anim-sparkle"></i> Developed by MattieTech
+    </div>
   </aside>
 
-  <main class="main-content">
-    <div class="pricing-container">
-      <div class="pricing-title-section">
-        <h1>Upgrade your revision</h1>
-        <p>Choose the plan or pay-as-you-go coin pack that fits your academic goals</p>
+  <!-- MAIN APP CONTENT COLUMN -->
+  <div class="ct-main-layout">
+    <!-- TOP NAVBAR (Consistent with all other pages) -->
+    <header class="ct-navbar-header">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <!-- Animated Hamburger Button for Mobile -->
+        <button id="mobileMenuBtn" class="ct-hamburger-btn" aria-label="Toggle navigation menu" onclick="toggleMobileMenu()">
+          <span class="ct-hamburger-bar ct-bar-top"></span>
+          <span class="ct-hamburger-bar ct-bar-mid"></span>
+          <span class="ct-hamburger-bar ct-bar-bot"></span>
+        </button>
+
+        <!-- Brand in navbar for mobile -->
+        <a href="/pages/dashboard.html" class="ct-mobile-nav-brand" id="mobileNavBrand">
+          <div class="ct-brand-icon-box">
+            <i class="fa-solid fa-graduation-cap anim-bulb"></i>
+          </div>
+          <div class="ct-brand-text-wrap">
+            <div class="ct-brand-title-row">
+              <span class="ct-brand-name">CampusTutor</span>
+              <span class="ct-brand-version-badge">2.0</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Quick Back Button for Desktop -->
+        <a href="/pages/dashboard.html" class="btn btn-ghost btn-sm" style="display:inline-flex; gap:6px; font-weight:700;">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Dashboard</span>
+        </a>
       </div>
 
-      <!-- Pricing View Switcher -->
-      <div style="display: flex; justify-content: center; margin-bottom: 24px;">
-        <div style="background: rgba(118, 118, 128, 0.12); padding: 5px; border-radius: 99px; display: inline-flex; gap: 6px;">
-          <button id="viewBtnSubs" onclick="switchPricingView('subs')" style="padding: 10px 22px; border-radius: 99px; border: none; font-weight: 700; font-size: 0.92rem; cursor: pointer; background: var(--blue); color: #fff; transition: all 0.2s;">
-            <i class="fa-solid fa-crown anim-crown"></i> Monthly Subscriptions
+      <!-- Right Navbar Actions -->
+      <div class="ct-nav-right-actions">
+        <!-- Live CampusCoins Pill -->
+        <button class="coin-nav-pill" id="navCoinPill" onclick="openCoinsModal()" title="CampusCoins Wallet — Click to view or top up">
+          <i class="fa-solid fa-coins anim-coin"></i>
+          <span id="navCoinCount">--</span>
+          <span class="coin-plus">+</span>
+        </button>
+
+        <!-- Daily Gift Button -->
+        <button class="ct-daily-gift-btn" onclick="openCoinsModal()" title="Claim your daily study coins bonus">
+          <i class="fa-solid fa-gift anim-gift"></i>
+          <span>Daily Gift</span>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button class="ct-nav-circle-btn theme-btn" id="themeBtn" aria-label="Toggle dark mode" title="Toggle theme">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+
+        <!-- Logout Button -->
+        <button onclick="logout()" class="btn btn-ghost btn-sm" title="Sign out" style="display:inline-flex; gap:6px;">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          <span class="logout-btn-desktop">Logout</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN PRICING BODY -->
+    <main class="ct-pricing-wrapper">
+      <!-- Title Section -->
+      <div class="pricing-hero">
+        <div class="pricing-chip">
+          <i class="fa-solid fa-graduation-cap anim-bulb"></i>
+          <span>Academic Excellence Plans</span>
+        </div>
+        <h1>Upgrade Your Revision</h1>
+        <p>Choose the subscription or flexible pay-as-you-go coin pack that fits your academic goals.</p>
+      </div>
+
+      <!-- Switcher Pills -->
+      <div class="pricing-toggle-wrap">
+        <div class="pricing-toggle-box">
+          <button id="viewBtnSubs" class="pricing-view-pill active" onclick="switchPricingView('subs')">
+            <i class="fa-solid fa-crown anim-crown"></i>
+            <span>Monthly Subscriptions</span>
           </button>
-          <button id="viewBtnCoins" onclick="switchPricingView('coins')" style="padding: 10px 22px; border-radius: 99px; border: none; font-weight: 700; font-size: 0.92rem; cursor: pointer; background: transparent; color: var(--label2); transition: all 0.2s;">
-            <i class="fa-solid fa-coins anim-coin"></i> CampusCoins (Pay-As-You-Go)
+          <button id="viewBtnCoins" class="pricing-view-pill" onclick="switchPricingView('coins')">
+            <i class="fa-solid fa-coins anim-coin"></i>
+            <span>CampusCoins (Pay-As-You-Go)</span>
           </button>
         </div>
       </div>
 
-      <!-- Paywall / New User Banner -->
-      <div id="paywallBanner" style="display:none; margin-bottom: 28px; padding: 18px 22px; border-radius: 16px; background: linear-gradient(135deg, rgba(0, 122, 255, 0.12), rgba(88, 86, 214, 0.12)); border: 1.5px solid rgba(0, 122, 255, 0.35); box-shadow: 0 4px 18px rgba(0, 122, 255, 0.08);">
+      <!-- Paywall / New User Banner Notice -->
+      <div id="paywallBanner" style="display:none; padding:18px 22px; border-radius:18px; background:linear-gradient(135deg, rgba(37,99,235,0.1), rgba(139,92,246,0.1)); border:1.5px solid rgba(37,99,235,0.35); box-shadow:0 4px 18px rgba(37,99,235,0.08);">
         <div style="display:flex; align-items:center; gap:14px;">
-          <div style="font-size:2rem;" id="paywallBannerIcon"><i class="fa-solid fa-lock anim-lock"></i></div>
+          <div style="font-size:2rem; color:#2563eb;" id="paywallBannerIcon">
+            <i class="fa-solid fa-shield-halved anim-shield"></i>
+          </div>
           <div>
             <div style="font-weight:800; font-size:1.05rem; color:var(--label);" id="paywallBannerTitle">Subscription Required</div>
             <div style="font-size:0.88rem; color:var(--label2); margin-top:2px;" id="paywallBannerDesc">CampusTutor AI is a premium service. Subscribe below to unlock your study tools.</div>
@@ -318,169 +801,363 @@
         </div>
       </div>
 
-      <div style="margin-bottom: 32px; padding: 14px 18px; border-radius: var(--r); background: rgba(52, 199, 89, 0.08); border-left: 4px solid var(--green); display: none;" id="activePlanAlert">
-        <span style="font-weight: 700; color: var(--green);">Current Subscription: </span>
-        <span id="activePlanName" style="font-weight: 600;">Free Trial</span>
-        <span id="activePlanExpiry" style="font-size: 0.8rem; color: var(--label2); margin-left: 8px;"></span>
-      </div>
-
-      <div class="pricing-grid" id="subscriptionsGrid">
-        <!-- Plus Card -->
-        <div class="plan-card-claude" id="card-plus">
-          <div class="plan-card-header">
-            <h3>Plus Plan</h3>
-            <p>Boost your productivity with expanded limits</p>
-          </div>
-          
-          <div class="pricing-options-row">
-            <div class="pricing-option active" onclick="selectOption('plus', 1, 1000)" id="opt-plus-1">
-              <div class="option-radio"></div>
-              <div class="option-price">₦1,000</div>
-              <div class="option-billing">Billed monthly</div>
-            </div>
-            <div class="pricing-option" onclick="selectOption('plus', 3, 2500)" id="opt-plus-3">
-              <span class="save-badge">Save ₦500</span>
-              <div class="option-radio"></div>
-              <div class="option-price">₦2,500</div>
-              <div class="option-billing">Billed 3-monthly</div>
-            </div>
-            <div class="pricing-option" onclick="selectOption('plus', 6, 4500)" id="opt-plus-6">
-              <span class="save-badge">Save ₦1,500</span>
-              <div class="option-radio"></div>
-              <div class="option-price">₦4,500</div>
-              <div class="option-billing">Billed 6-monthly</div>
-            </div>
-          </div>
-
-          <button class="btn-primary-claude" onclick="triggerCheckout('plus')" id="btn-plus">Get Plus Plan</button>
-
-          <ul class="price-features-claude">
-            <li><i class="fa-solid fa-check"></i> Up to 15 documents per month</li>
-            <li><i class="fa-solid fa-check"></i> Lecture slides support</li>
-            <li><i class="fa-solid fa-check"></i> Detailed Point breakdowns</li>
-            <li><i class="fa-solid fa-check"></i> Up to 40-question quiz pools</li>
-            <li><i class="fa-solid fa-xmark reject"></i> No scanner image processing</li>
-          </ul>
-        </div>
-
-        <!-- Pro Card -->
-        <div class="plan-card-claude popular" id="card-pro">
-          <div class="popular-badge-claude" id="pro-badge-text">Most Popular</div>
-          <div class="plan-card-header">
-            <h3>Pro Plan</h3>
-            <p>Unlock absolute academic dominance and priority support</p>
-          </div>
-          
-          <div class="pricing-options-row">
-            <div class="pricing-option active" onclick="selectOption('pro', 1, 2500)" id="opt-pro-1">
-              <div class="option-radio"></div>
-              <div class="option-price">₦2,500</div>
-              <div class="option-billing">Billed monthly</div>
-            </div>
-            <div class="pricing-option" onclick="selectOption('pro', 3, 4000)" id="opt-pro-3">
-              <span class="save-badge">Save ₦3,500</span>
-              <div class="option-radio"></div>
-              <div class="option-price">₦4,000</div>
-              <div class="option-billing">Billed 3-monthly</div>
-            </div>
-            <div class="pricing-option" onclick="selectOption('pro', 6, 7500)" id="opt-pro-6">
-              <span class="save-badge">Save ₦7,500</span>
-              <div class="option-radio"></div>
-              <div class="option-price">₦7,500</div>
-              <div class="option-billing">Billed 6-monthly</div>
-            </div>
-          </div>
-
-          <button class="btn-primary-claude" onclick="triggerCheckout('pro')" id="btn-pro">Get Pro Plan</button>
-
-          <ul class="price-features-claude">
-            <li><i class="fa-solid fa-check"></i> Unlimited document uploads</li>
-            <li><i class="fa-solid fa-check"></i> Image scan / photo OCR</li>
-            <li><i class="fa-solid fa-check"></i> 1-Min Textbook summaries</li>
-            <li><i class="fa-solid fa-check"></i> 50-question Exam Master pools</li>
-            <li><i class="fa-solid fa-check"></i> Priority AI speeds</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- CampusCoins Packages Grid -->
-      <div id="coinsPackagesGrid" style="display:none; max-width: 900px; margin: 0 auto;">
-        <div style="background: rgba(245, 158, 11, 0.08); border: 1.5px solid rgba(245, 158, 11, 0.3); border-radius: 20px; padding: 20px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-          <div style="display: flex; align-items: center; gap: 14px;">
-            <div style="font-size: 2.2rem; color: #f59e0b;"><i class="fa-solid fa-coins"></i></div>
+      <!-- Active Subscription Alert Banner -->
+      <div id="activePlanAlert" style="display:none; padding:16px 20px; border-radius:18px; background:rgba(16,185,129,0.08); border-left:4px solid #10b981; border:1px solid rgba(16,185,129,0.25);">
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <i class="fa-solid fa-circle-check anim-pulse" style="color:#10b981; font-size:1.2rem;"></i>
             <div>
-              <div style="font-weight: 800; font-size: 1.15rem; color: var(--label);">Pay-As-You-Go with CampusCoins</div>
-              <div style="font-size: 0.86rem; color: var(--label2); margin-top: 2px;">No monthly lock-in. Spend coins only when you need solutions, thesis polishing, or mock exams!</div>
+              <span style="font-weight:800; color:#10b981;">Active Subscription: </span>
+              <span id="activePlanName" style="font-weight:800; text-transform:uppercase;">PLUS</span>
+              <span id="activePlanExpiry" style="font-size:0.82rem; color:var(--label2); margin-left:6px;"></span>
             </div>
           </div>
-          <button class="btn btn-primary" onclick="openCoinsModal()" style="background: #f59e0b; border-color: #d97706; color: #000; font-weight: 800;">
-            <i class="fa-solid fa-wallet"></i> View Wallet
+          <span style="font-size:0.78rem; font-weight:700; color:#10b981; background:rgba(16,185,129,0.15); padding:3px 10px; border-radius:999px;">
+            <i class="fa-solid fa-check"></i> Active Account
+          </span>
+        </div>
+      </div>
+
+      <!-- ── VIEW 1: SUBSCRIPTION PLANS GRID ── -->
+      <div class="plans-grid-2col" id="subscriptionsGrid">
+        
+        <!-- CARD 1: PLUS PLAN -->
+        <div class="plan-card-pro" id="card-plus">
+          <div>
+            <div class="plan-header-block">
+              <div class="plan-badge-icon plus">
+                <i class="fa-solid fa-book-open-reader anim-bulb"></i>
+              </div>
+              <h3 class="plan-title-name">Plus Plan</h3>
+              <p class="plan-title-desc">Boost your productivity with expanded document upload and revision limits.</p>
+            </div>
+
+            <!-- Dynamic Main Price -->
+            <div class="plan-price-hero">
+              <span class="plan-price-val" id="price-display-plus">₦1,000</span>
+              <span class="plan-price-period" id="period-display-plus">/ month</span>
+            </div>
+
+            <!-- Duration Selection Options -->
+            <div class="plan-duration-container">
+              <!-- 1 Month -->
+              <div class="plan-option-card active" onclick="selectOption('plus', 1, 1000)" id="opt-plus-1">
+                <div class="plan-option-left">
+                  <div class="plan-custom-radio"></div>
+                  <span class="plan-duration-title">1 Month</span>
+                </div>
+                <div class="plan-option-right">
+                  <div class="plan-option-price">₦1,000</div>
+                  <div class="plan-option-per-mo">Billed monthly</div>
+                </div>
+              </div>
+
+              <!-- 3 Months -->
+              <div class="plan-option-card" onclick="selectOption('plus', 3, 2500)" id="opt-plus-3">
+                <div class="plan-option-left">
+                  <div class="plan-custom-radio"></div>
+                  <span class="plan-duration-title">3 Months</span>
+                  <span class="plan-save-pill">Save ₦500</span>
+                </div>
+                <div class="plan-option-right">
+                  <div class="plan-option-price">₦2,500</div>
+                  <div class="plan-option-per-mo">₦833/mo</div>
+                </div>
+              </div>
+
+              <!-- 6 Months -->
+              <div class="plan-option-card" onclick="selectOption('plus', 6, 4500)" id="opt-plus-6">
+                <div class="plan-option-left">
+                  <div class="plan-custom-radio"></div>
+                  <span class="plan-duration-title">6 Months</span>
+                  <span class="plan-save-pill">Save ₦1,500</span>
+                </div>
+                <div class="plan-option-right">
+                  <div class="plan-option-price">₦4,500</div>
+                  <div class="plan-option-per-mo">₦750/mo</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Primary Action Button -->
+            <button class="btn-plan-action plus" id="btn-plus" onclick="triggerCheckout('plus')">
+              <i class="fa-solid fa-arrow-right-long anim-rocket"></i>
+              <span id="btn-text-plus">Get Plus Plan</span>
+            </button>
+          </div>
+
+          <!-- Feature Breakdown -->
+          <ul class="plan-features-list">
+            <li class="plan-feature-item">
+              <i class="fa-solid fa-circle-check anim-pulse" style="color:#10b981;"></i>
+              <span>Up to 15 document uploads per month</span>
+            </li>
+            <li class="plan-feature-item">
+              <i class="fa-solid fa-circle-check anim-pulse" style="color:#10b981;"></i>
+              <span>Lecture slides & PDF comprehensive breakdown</span>
+            </li>
+            <li class="plan-feature-item">
+              <i class="fa-solid fa-circle-check anim-pulse" style="color:#10b981;"></i>
+              <span>Smart Revision Points & Topic Summaries</span>
+            </li>
+            <li class="plan-feature-item">
+              <i class="fa-solid fa-circle-check anim-pulse" style="color:#10b981;"></i>
+              <span>Up to 40-question mock exam quiz pools</span>
+            </li>
+            <li class="plan-feature-item">
+              <i class="fa-solid fa-circle-xmark reject"></i>
+              <span>No image scanner / camera OCR</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- CARD 2: PRO PLAN (MOST POPULAR) -->
+        <div class="plan-card-pro featured" id="card-pro">
+          <div class="popular-ribbon" id="pro-badge-ribbon">
+            <i class="fa-solid fa-star anim-sparkle"></i>
+            <span>Most Popular</span>
+          </div>
+
+          <div>
+            <div class="plan-header-block">
+              <div class="plan-badge-icon pro">
+                <i class="fa-solid fa-award anim-sparkle"></i>
+              </div>
+              <h3 class="plan-title-name">Pro Plan</h3>
+              <p class="plan-title-desc">Unlock absolute academic dominance, camera OCR and priority AI speed.</p>
+            </div>
+
+            <!-- Dynamic Main Price -->
+            <div class="plan-price-hero">
+              <span class="plan-price-val" id="price-display-pro">₦2,500</span>
+              <span class="plan-price-period" id="period-display-pro">/ month</span>
+            </div>
+
+            <!-- Duration Selection Options -->
+            <div class="plan-duration-container">
+              <!-- 1 Month -->
+              <div class="plan-option-card active" onclick="selectOption('pro', 1, 2500)" id="opt-pro-1">
+                <div class="plan-option-left">
+                  <div class="plan-custom-radio"></div>
+                  <span class="plan-duration-title">1 Month</span>
+                </div>
+                <div class="plan-option-right">
+                  <div class="plan-option-price">₦2,500</div>
+                  <div class="plan-option-per-mo">Billed monthly</div>
+                </div>
+              </div>
+
+              <!-- 3 Months -->
+              <div class="plan-option-card" onclick="selectOption('pro', 3, 4000)" id="opt-pro-3">
+                <div class="plan-option-left">
+                  <div class="plan-custom-radio"></div>
+                  <span class="plan-duration-title">3 Months</span>
+                  <span class="plan-save-pill">Save ₦3,500</span>
+                </div>
+                <div class="plan-option-right">
+                  <div class="plan-option-price">₦4,000</div>
+                  <div class="plan-option-per-mo">₦1,333/mo</div>
+                </div>
+              </div>
+
+              <!-- 6 Months -->
+              <div class="plan-option-card" onclick="selectOption('pro', 6, 7500)" id="opt-pro-6">
+                <div class="plan-option-left">
+                  <div class="plan-custom-radio"></div>
+                  <span class="plan-duration-title">6 Months</span>
+                  <span class="plan-save-pill">Save ₦7,500</span>
+                </div>
+                <div class="plan-option-right">
+                  <div class="plan-option-price">₦7,500</div>
+                  <div class="plan-option-per-mo">₦1,250/mo</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Primary Action Button -->
+            <button class="btn-plan-action pro" id="btn-pro" onclick="triggerCheckout('pro')">
+              <i class="fa-solid fa-bolt anim-sparkle"></i>
+              <span id="btn-text-pro">Get Pro Plan</span>
+            </button>
+          </div>
+
+          <!-- Feature Breakdown -->
+          <ul class="plan-features-list">
+            <li class="plan-feature-item">
+              <i class="fa-solid fa-circle-check anim-pulse" style="color:#10b981;"></i>
+              <span><strong>Unlimited</strong> document & textbook uploads</span>
+            </li>
+            <li class="plan-feature-item">
+              <i class="fa-solid fa-circle-check anim-pulse" style="color:#10b981;"></i>
+              <span>Instant camera image scanner & handwritten OCR</span>
+            </li>
+            <li class="plan-feature-item">
+              <i class="fa-solid fa-circle-check anim-pulse" style="color:#10b981;"></i>
+              <span>1-Minute Textbook & Chapter Master summaries</span>
+            </li>
+            <li class="plan-feature-item">
+              <i class="fa-solid fa-circle-check anim-pulse" style="color:#10b981;"></i>
+              <span>50-question Exam Master pools with grading</span>
+            </li>
+            <li class="plan-feature-item">
+              <i class="fa-solid fa-circle-check anim-pulse" style="color:#10b981;"></i>
+              <span>Priority Gemini 2.0 AI computation speeds</span>
+            </li>
+            <li class="plan-feature-item">
+              <i class="fa-solid fa-circle-check anim-pulse" style="color:#10b981;"></i>
+              <span>VIP Academic Support & WhatsApp priority pass</span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- ── VIEW 2: CAMPUSCOINS (PAY-AS-YOU-GO) GRID ── -->
+      <div id="coinsPackagesGrid" style="display:none; width:100%;">
+        <!-- Hero Explanation Banner -->
+        <div class="coins-hero-banner">
+          <div style="display:flex; align-items:center; gap:16px;">
+            <div style="font-size:2.4rem; color:#f59e0b;">
+              <i class="fa-solid fa-coins anim-coin"></i>
+            </div>
+            <div>
+              <div style="font-weight:800; font-size:1.18rem; color:var(--label);">Pay-As-You-Go with CampusCoins</div>
+              <div style="font-size:0.86rem; color:var(--label2); margin-top:2px;">
+                No recurring monthly commitment. Spend coins on demand for thesis polishing, mock exams, or viva drills!
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="openCoinsModal()" style="background:#f59e0b; border-color:#d97706; color:#000; font-weight:800; border-radius:999px;">
+            <i class="fa-solid fa-wallet"></i>
+            <span>View Wallet</span>
           </button>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px;">
+        <!-- 4 Coin Packages -->
+        <div class="coins-pack-grid">
           <!-- Pack 100 -->
-          <div class="card liquid-glass-card" style="padding: 22px; text-align: center; border-radius: 20px; border: 1.5px solid rgba(118, 118, 128, 0.2); display: flex; flex-direction: column; justify-content: space-between;">
+          <div class="coin-pack-card">
             <div>
-              <div style="display:flex; justify-content:center; margin-bottom: 8px;">
-                <lord-icon src="https://cdn.lordicon.com/qhgmphtg.json" trigger="hover" colors="primary:#f59e0b,secondary:#d97706" style="width:52px;height:52px"></lord-icon>
+              <div style="display:flex; justify-content:center; margin-bottom:12px;">
+                <i class="fa-solid fa-coins anim-coin" style="font-size:2.4rem; color:#f59e0b;"></i>
               </div>
-              <div style="font-weight: 800; font-size: 1.25rem;">100 Coins</div>
-              <div style="font-size: 0.8rem; color: var(--label3); margin-top: 4px;">Starter Pack</div>
-              <div style="font-size: 1.6rem; font-weight: 800; color: var(--label); margin: 16px 0 8px 0;">₦1,500</div>
-              <div style="font-size: 0.76rem; color: var(--label3); margin-bottom: 18px;">20 Assignment Solutions or 12 Thesis Polishes</div>
+              <div style="font-weight:800; font-size:1.35rem; color:var(--label);">100 Coins</div>
+              <div style="font-size:0.8rem; color:var(--label3); margin-top:3px;">Starter Stash</div>
+              <div style="font-family:var(--font-d); font-size:1.75rem; font-weight:900; color:var(--label); margin:14px 0 6px 0;">₦1,500</div>
+              <div style="font-size:0.78rem; color:var(--label3); margin-bottom:18px; line-height:1.4;">20 Assignment Solutions or 12 Thesis Polishes</div>
             </div>
-            <button class="btn btn-primary" style="width: 100%; font-weight: 700;" onclick="triggerCoinPackBuy(100, 1500)">Buy 100 Coins</button>
+            <button class="btn btn-primary btn-full" style="border-radius:999px; font-weight:700;" onclick="triggerCoinPackBuy(100, 1500)">
+              Buy 100 Coins
+            </button>
           </div>
 
           <!-- Pack 250 -->
-          <div class="card liquid-glass-card" style="padding: 22px; text-align: center; border-radius: 20px; border: 1.5px solid rgba(0, 122, 255, 0.4); background: rgba(0, 122, 255, 0.03); display: flex; flex-direction: column; justify-content: space-between; position: relative;">
-            <div style="position: absolute; top: -10px; right: 14px; background: var(--blue); color: #fff; font-size: 0.7rem; font-weight: 800; padding: 3px 8px; border-radius: 99px;">Popular</div>
+          <div class="coin-pack-card popular-pack">
+            <span class="coin-pack-tag" style="background:#2563eb;">Popular</span>
             <div>
-              <div style="display:flex; justify-content:center; margin-bottom: 8px;">
-                <lord-icon src="https://cdn.lordicon.com/webtefou.json" trigger="hover" colors="primary:#007AFF,secondary:#5ac8fa" style="width:52px;height:52px"></lord-icon>
+              <div style="display:flex; justify-content:center; margin-bottom:12px;">
+                <i class="fa-solid fa-bolt anim-sparkle" style="font-size:2.4rem; color:#2563eb;"></i>
               </div>
-              <div style="font-weight: 800; font-size: 1.25rem;">250 Coins</div>
-              <div style="font-size: 0.8rem; color: var(--label3); margin-top: 4px;">Sprint Pack</div>
-              <div style="font-size: 1.6rem; font-weight: 800; color: var(--label); margin: 16px 0 8px 0;">₦3,500</div>
-              <div style="font-size: 0.76rem; color: var(--label3); margin-bottom: 18px;">50 Solutions or 30 Polishes</div>
+              <div style="font-weight:800; font-size:1.35rem; color:var(--label);">250 Coins</div>
+              <div style="font-size:0.8rem; color:var(--label3); margin-top:3px;">Scholar Sprint Pack</div>
+              <div style="font-family:var(--font-d); font-size:1.75rem; font-weight:900; color:var(--label); margin:14px 0 6px 0;">₦3,500</div>
+              <div style="font-size:0.78rem; color:var(--label3); margin-bottom:18px; line-height:1.4;">50 Solutions or 30 Project Chapters</div>
             </div>
-            <button class="btn btn-primary" style="width: 100%; font-weight: 700;" onclick="triggerCoinPackBuy(250, 3500)">Buy 250 Coins</button>
+            <button class="btn btn-primary btn-full" style="border-radius:999px; font-weight:700; background:#2563eb;" onclick="triggerCoinPackBuy(250, 3500)">
+              Buy 250 Coins
+            </button>
           </div>
 
           <!-- Pack 600 -->
-          <div class="card liquid-glass-card" style="padding: 22px; text-align: center; border-radius: 20px; border: 1.5px solid rgba(52, 199, 89, 0.4); background: rgba(52, 199, 89, 0.03); display: flex; flex-direction: column; justify-content: space-between; position: relative;">
-            <div style="position: absolute; top: -10px; right: 14px; background: var(--green); color: #fff; font-size: 0.7rem; font-weight: 800; padding: 3px 8px; border-radius: 99px;">Best Value</div>
+          <div class="coin-pack-card best-value">
+            <span class="coin-pack-tag" style="background:#10b981;">Best Value</span>
             <div>
-              <div style="display:flex; justify-content:center; margin-bottom: 8px;">
-                <lord-icon src="https://cdn.lordicon.com/lbjtvqiv.json" trigger="hover" colors="primary:#34c759,secondary:#30b0c7" style="width:52px;height:52px"></lord-icon>
+              <div style="display:flex; justify-content:center; margin-bottom:12px;">
+                <i class="fa-solid fa-graduation-cap anim-bulb" style="font-size:2.4rem; color:#10b981;"></i>
               </div>
-              <div style="font-weight: 800; font-size: 1.25rem;">600 Coins</div>
-              <div style="font-size: 0.8rem; color: var(--label3); margin-top: 4px;">Semester Pack (+100 Bonus)</div>
-              <div style="font-size: 1.6rem; font-weight: 800; color: var(--label); margin: 16px 0 8px 0;">₦7,500</div>
-              <div style="font-size: 0.76rem; color: var(--label3); margin-bottom: 18px;">Over 120 Solutions & Polishings</div>
+              <div style="font-weight:800; font-size:1.35rem; color:var(--label);">600 Coins</div>
+              <div style="font-size:0.8rem; color:var(--label3); margin-top:3px;">Semester Master (+100 Bonus)</div>
+              <div style="font-family:var(--font-d); font-size:1.75rem; font-weight:900; color:var(--label); margin:14px 0 6px 0;">₦7,500</div>
+              <div style="font-size:0.78rem; color:var(--label3); margin-bottom:18px; line-height:1.4;">Over 120 Solutions & Polishings</div>
             </div>
-            <button class="btn btn-primary" style="width: 100%; font-weight: 700;" onclick="triggerCoinPackBuy(600, 7500)">Buy 600 Coins</button>
+            <button class="btn btn-primary btn-full" style="border-radius:999px; font-weight:700; background:#10b981; border-color:#059669;" onclick="triggerCoinPackBuy(600, 7500)">
+              Buy 600 Coins
+            </button>
           </div>
 
           <!-- Pack 1600 -->
-          <div class="card liquid-glass-card" style="padding: 22px; text-align: center; border-radius: 20px; border: 1.5px solid rgba(175, 82, 222, 0.4); background: rgba(175, 82, 222, 0.03); display: flex; flex-direction: column; justify-content: space-between;">
+          <div class="coin-pack-card">
             <div>
-              <div style="display:flex; justify-content:center; margin-bottom: 8px;">
-                <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="hover" colors="primary:#af52de,secondary:#f59e0b" style="width:52px;height:52px"></lord-icon>
+              <div style="display:flex; justify-content:center; margin-bottom:12px;">
+                <i class="fa-solid fa-gem anim-gem" style="font-size:2.4rem; color:#8b5cf6;"></i>
               </div>
-              <div style="font-weight: 800; font-size: 1.25rem;">1,600 Coins</div>
-              <div style="font-size: 0.8rem; color: var(--label3); margin-top: 4px;">Scholar Vault (+350 Bonus)</div>
-              <div style="font-size: 1.6rem; font-weight: 800; color: var(--label); margin: 16px 0 8px 0;">₦18,000</div>
-              <div style="font-size: 0.76rem; color: var(--label3); margin-bottom: 18px;">Full Year Uncapped Power</div>
+              <div style="font-weight:800; font-size:1.35rem; color:var(--label);">1,600 Coins</div>
+              <div style="font-size:0.8rem; color:var(--label3); margin-top:3px;">Scholar Vault (+350 Bonus)</div>
+              <div style="font-family:var(--font-d); font-size:1.75rem; font-weight:900; color:var(--label); margin:14px 0 6px 0;">₦18,000</div>
+              <div style="font-size:0.78rem; color:var(--label3); margin-bottom:18px; line-height:1.4;">Full Academic Year Power</div>
             </div>
-            <button class="btn btn-primary" style="width: 100%; font-weight: 700;" onclick="triggerCoinPackBuy(1600, 18000)">Buy 1,600 Coins</button>
+            <button class="btn btn-primary btn-full" style="border-radius:999px; font-weight:700; background:#8b5cf6; border-color:#7c3aed;" onclick="triggerCoinPackBuy(1600, 18000)">
+              Buy 1,600 Coins
+            </button>
           </div>
         </div>
       </div>
-    </div>
-  </main>
+
+      <!-- Trust & Guarantee Section -->
+      <div class="pricing-trust-section">
+        <div class="trust-item">
+          <div class="trust-item-icon">
+            <i class="fa-solid fa-lock anim-shield"></i>
+          </div>
+          <div>
+            <div class="trust-item-title">Bank-Grade Security</div>
+            <div class="trust-item-desc">256-bit encrypted transactions processed safely through Paystack.</div>
+          </div>
+        </div>
+
+        <div class="trust-item">
+          <div class="trust-item-icon">
+            <i class="fa-solid fa-bolt anim-sparkle"></i>
+          </div>
+          <div>
+            <div class="trust-item-title">Instant Activation</div>
+            <div class="trust-item-desc">Your subscription or coins reflect automatically within seconds of payment.</div>
+          </div>
+        </div>
+
+        <div class="trust-item">
+          <div class="trust-item-icon">
+            <i class="fa-solid fa-hand-holding-heart anim-pulse"></i>
+          </div>
+          <div>
+            <div class="trust-item-title">Academic Freedom</div>
+            <div class="trust-item-desc">Cancel anytime with zero questions asked, or roll over your coins indefinitely.</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
 </div>
+
+<!-- Standardized Mobile Bottom Dock (Matches Dashboard, Tools & Progress) -->
+<nav class="ct-exact-dock" id="mobileBottomNav">
+  <a href="/pages/dashboard.html" class="ct-exact-dock-item">
+    <i class="fa-solid fa-house"></i>
+    <span>Home</span>
+  </a>
+  <a href="/pages/tools.html" class="ct-exact-dock-item">
+    <i class="fa-solid fa-book-open"></i>
+    <span>Tools</span>
+  </a>
+  <a href="/pages/progress.html" class="ct-exact-dock-item">
+    <i class="fa-solid fa-chart-line"></i>
+    <span>Progress</span>
+  </a>
+  <a href="/pages/settings.html" class="ct-exact-dock-item">
+    <i class="fa-solid fa-gear"></i>
+    <span>Settings</span>
+  </a>
+</nav>
 
 <script src="/js/api.js"></script>
 <script>
@@ -488,18 +1165,25 @@
 
   // Mobile Menu Toggle
   function toggleMobileMenu() {
+    const sidebar = document.getElementById('dashboardSidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
     const btn = document.getElementById('mobileMenuBtn');
-    const menu = document.getElementById('mobileMenu');
-    const overlay = document.getElementById('mobileMenuOverlay');
-    const sidebar = document.querySelector('.sidebar') || document.querySelector('.ct-sidebar') || document.querySelector('.adm-sidebar');
-    if (btn) btn.classList.toggle('is-active');
-    if (menu) menu.classList.toggle('open');
-    if (overlay) overlay.classList.toggle('open');
-    if (sidebar) sidebar.classList.toggle('mobile-open');
-  }
+    if (!sidebar) return;
+    const isOpen = sidebar.classList.toggle('is-open');
+    if (backdrop) backdrop.classList.toggle('is-active', isOpen);
+    if (btn) btn.classList.toggle('is-active', isOpen);
   }
 
-  // Theme Toggle
+  function closeMobileMenu() {
+    const sidebar = document.getElementById('dashboardSidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    const btn = document.getElementById('mobileMenuBtn');
+    if (sidebar) sidebar.classList.remove('is-open');
+    if (backdrop) backdrop.classList.remove('is-active');
+    if (btn) btn.classList.remove('is-active');
+  }
+
+  // Theme Toggle Sync
   const themeBtn = document.getElementById('themeBtn');
   const initialTheme = localStorage.getItem('ct_theme') || 'light';
   document.documentElement.setAttribute('data-theme', initialTheme);
@@ -511,6 +1195,7 @@
       document.documentElement.setAttribute('data-theme', nextTheme);
       localStorage.setItem('ct_theme', nextTheme);
       themeBtn.innerHTML = nextTheme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+      showToast('Switched to ' + nextTheme + ' mode', 'info');
     });
   }
 
@@ -520,74 +1205,177 @@
     pro: 1
   };
 
+  const planPricingMeta = {
+    plus: {
+      1: { priceStr: '₦1,000', periodStr: '/ month', btnStr: 'Get Plus Plan (1 Month)' },
+      3: { priceStr: '₦2,500', periodStr: '/ 3 months (₦833/mo)', btnStr: 'Get Plus Plan (3 Months)' },
+      6: { priceStr: '₦4,500', periodStr: '/ 6 months (₦750/mo)', btnStr: 'Get Plus Plan (6 Months)' }
+    },
+    pro: {
+      1: { priceStr: '₦2,500', periodStr: '/ month', btnStr: 'Get Pro Plan (1 Month)' },
+      3: { priceStr: '₦4,000', periodStr: '/ 3 months (₦1,333/mo)', btnStr: 'Get Pro Plan (3 Months)' },
+      6: { priceStr: '₦7,500', periodStr: '/ 6 months (₦1,250/mo)', btnStr: 'Get Pro Plan (6 Months)' }
+    }
+  };
+
   function selectOption(planType, duration, price) {
     selectedDuration[planType] = duration;
     
-    // Remove active class from options in the same plan card
-    document.querySelectorAll(`#card-${planType} .pricing-option`).forEach(opt => {
+    // Toggle active class on duration cards
+    document.querySelectorAll(`#card-${planType} .plan-option-card`).forEach(opt => {
       opt.classList.remove('active');
     });
     
-    // Add active class to clicked option
-    document.getElementById(`opt-${planType}-${duration}`).classList.add('active');
+    const chosenEl = document.getElementById(`opt-${planType}-${duration}`);
+    if (chosenEl) chosenEl.classList.add('active');
+
+    // Update main card price header & button text
+    const meta = planPricingMeta[planType]?.[duration];
+    if (meta) {
+      const priceDisplay = document.getElementById(`price-display-${planType}`);
+      const periodDisplay = document.getElementById(`period-display-${planType}`);
+      const btnText = document.getElementById(`btn-text-${planType}`);
+      if (priceDisplay) priceDisplay.textContent = meta.priceStr;
+      if (periodDisplay) periodDisplay.textContent = meta.periodStr;
+      if (btnText) btnText.textContent = meta.btnStr;
+    }
   }
 
+  // Load User Subscription Status
   async function loadUserSubscription() {
     const user = getUser();
     if (!user) return;
-    const { data: stats } = await apiGetUserStats(user.id);
-    if (stats) {
-      const plan = stats.plan || 'free';
-      const expiry = stats.subscriptionEnd || stats.subscription_end;
-      
-      const alertEl = document.getElementById('activePlanAlert');
-      const nameEl = document.getElementById('activePlanName');
-      const expEl = document.getElementById('activePlanExpiry');
-      
-      alertEl.style.display = 'block';
-      nameEl.textContent = plan.toUpperCase();
-      if (expiry) {
-        expEl.textContent = `(Renews/Expires: ${new Date(expiry).toLocaleDateString()})`;
-      }
-
-      // If user has plus or pro subscription, modify corresponding buttons
-      if (plan === 'plus' || plan === 'pro') {
-        const activeCard = document.getElementById(`card-${plan}`);
-        if (activeCard) {
-          activeCard.classList.add('current-subscription');
-          // Add current badge instead of popular
-          if (plan === 'pro') {
-            document.getElementById('pro-badge-text').textContent = 'Current Subscription';
-            document.getElementById('pro-badge-text').className = 'current-badge-claude';
-          } else {
-            // Create badge for plus
-            const badge = document.createElement('div');
-            badge.className = 'current-badge-claude';
-            badge.textContent = 'Current Subscription';
-            activeCard.appendChild(badge);
+    try {
+      const { data: stats } = await apiGetUserStats(user.id);
+      if (stats) {
+        const plan = (stats.plan || 'free').toLowerCase();
+        const expiry = stats.subscriptionEnd || stats.subscription_end;
+        
+        if (plan === 'plus' || plan === 'pro') {
+          const alertEl = document.getElementById('activePlanAlert');
+          const nameEl = document.getElementById('activePlanName');
+          const expEl = document.getElementById('activePlanExpiry');
+          
+          if (alertEl) alertEl.style.display = 'block';
+          if (nameEl) nameEl.textContent = plan.toUpperCase();
+          if (expEl && expiry) {
+            expEl.textContent = `(Renews/Expires: ${new Date(expiry).toLocaleDateString()})`;
           }
-          const btn = document.getElementById(`btn-${plan}`);
-          if (btn) {
-            btn.textContent = 'Current Plan';
-            btn.disabled = true;
+
+          const activeCard = document.getElementById(`card-${plan}`);
+          if (activeCard) {
+            activeCard.classList.add('active-subscription');
+            
+            // Pro ribbon or Plus badge
+            const ribbon = activeCard.querySelector('.popular-ribbon') || activeCard.querySelector('.current-plan-ribbon');
+            if (ribbon) {
+              ribbon.className = 'current-plan-ribbon';
+              ribbon.innerHTML = '<i class="fa-solid fa-shield-check anim-shield"></i> Active Plan';
+            } else {
+              const newRibbon = document.createElement('div');
+              newRibbon.className = 'current-plan-ribbon';
+              newRibbon.innerHTML = '<i class="fa-solid fa-shield-check anim-shield"></i> Active Plan';
+              activeCard.appendChild(newRibbon);
+            }
+
+            const btn = document.getElementById(`btn-${plan}`);
+            if (btn) {
+              btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Current Active Plan';
+              btn.disabled = true;
+            }
           }
         }
+      }
+    } catch (err) {
+      console.warn('Subscription fetch error:', err);
+    }
+  }
+
+  // Checkout Handler for Subscriptions
+  async function triggerCheckout(planType) {
+    const duration = selectedDuration[planType];
+    const btn = document.getElementById(`btn-${planType}`);
+    const originalContent = btn ? btn.innerHTML : '';
+    
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Initializing Paystack Checkout...';
+    }
+
+    showToast('Initializing secure checkout...', 'info');
+
+    try {
+      const { data, error } = await apiRequest('/api/paystack/initialize', 'POST', {
+        planType: planType,
+        planName: planType,
+        duration: duration,
+        callbackUrl: window.location.origin + '/pages/dashboard.html'
+      });
+
+      if (error || !data || !data.authorization_url) {
+        showToast(error || 'Failed to initialize checkout. Please try again.', 'error');
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalContent;
+        }
+        return;
+      }
+
+      // Redirect to Paystack
+      window.location.href = data.authorization_url;
+    } catch (err) {
+      showToast('Error connecting to checkout: ' + err.message, 'error');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
       }
     }
   }
 
-  async function triggerCheckout(planType) {
-    const duration = selectedDuration[planType];
-    showToast('Initializing checkout...', 'info');
-    
-    const { data, error } = await apiRequest('/api/paystack/initialize', 'POST', { planType, duration });
-    if (error || !data || !data.authorization_url) {
-      showToast(error || 'Failed to initialize checkout. Please try again.', 'error');
-      return;
+  // Switcher between Subscriptions and Coins Packages
+  function switchPricingView(view) {
+    const subsGrid = document.getElementById('subscriptionsGrid');
+    const coinsGrid = document.getElementById('coinsPackagesGrid');
+    const btnSubs = document.getElementById('viewBtnSubs');
+    const btnCoins = document.getElementById('viewBtnCoins');
+
+    if (view === 'coins') {
+      if (subsGrid) subsGrid.style.display = 'none';
+      if (coinsGrid) coinsGrid.style.display = 'block';
+      if (btnSubs) {
+        btnSubs.classList.remove('active');
+      }
+      if (btnCoins) {
+        btnCoins.classList.add('active', 'coins-active');
+      }
+    } else {
+      if (subsGrid) subsGrid.style.display = 'grid';
+      if (coinsGrid) coinsGrid.style.display = 'none';
+      if (btnSubs) {
+        btnSubs.classList.add('active');
+      }
+      if (btnCoins) {
+        btnCoins.classList.remove('active', 'coins-active');
+      }
     }
-    
-    // Redirect user to Paystack payment gateway
-    window.location.href = data.authorization_url;
+  }
+
+  // Coin pack direct purchase checkout
+  async function triggerCoinPackBuy(coins, price) {
+    showToast(`Initializing ₦${price.toLocaleString()} checkout for ${coins} coins...`, 'info');
+    try {
+      const { data, error } = await apiRequest('/api/coins/buy-package', 'POST', {
+        coins: Number(coins),
+        amountNgn: Number(price)
+      });
+      if (error || !data || !data.authorization_url) {
+        showToast(error || 'Failed to start coin pack purchase.', 'error');
+        return;
+      }
+      window.location.href = data.authorization_url;
+    } catch (err) {
+      showToast('Error connecting to checkout: ' + err.message, 'error');
+    }
   }
 
   // Check URL parameters for paywall or payment returns
@@ -620,86 +1408,19 @@
   if (banner) {
     if (isNewUser) {
       banner.style.display = 'block';
-      document.getElementById('paywallBannerIcon').innerHTML = '<i class="fa-solid fa-cake-candles anim-party"></i>';
+      document.getElementById('paywallBannerIcon').innerHTML = '<i class="fa-solid fa-graduation-cap anim-bulb"></i>';
       document.getElementById('paywallBannerTitle').textContent = 'Welcome! Choose Your Plan to Get Started';
       document.getElementById('paywallBannerDesc').textContent = 'Activate your account by choosing a flexible Plus or Pro plan below.';
     } else if (reason === 'paywall') {
       banner.style.display = 'block';
-      document.getElementById('paywallBannerIcon').innerHTML = '<i class="fa-solid fa-lock anim-lock"></i>';
+      document.getElementById('paywallBannerIcon').innerHTML = '<i class="fa-solid fa-lock anim-shield"></i>';
       document.getElementById('paywallBannerTitle').textContent = 'Subscription Required to Access CampusTutor AI';
-      document.getElementById('paywallBannerDesc').textContent = 'You need an active subscription to access the dashboard, upload lecture slides, and generate AI study content.';
-    }
-  }
-
-  // Pricing View Switcher
-  function switchPricingView(view) {
-    const subsGrid = document.getElementById('subscriptionsGrid');
-    const coinsGrid = document.getElementById('coinsPackagesGrid');
-    const btnSubs = document.getElementById('viewBtnSubs');
-    const btnCoins = document.getElementById('viewBtnCoins');
-
-    if (view === 'coins') {
-      if (subsGrid) subsGrid.style.display = 'none';
-      if (coinsGrid) coinsGrid.style.display = 'block';
-      if (btnSubs) {
-        btnSubs.style.background = 'transparent';
-        btnSubs.style.color = 'var(--label2)';
-      }
-      if (btnCoins) {
-        btnCoins.style.background = '#f59e0b';
-        btnCoins.style.color = '#000';
-      }
-    } else {
-      if (subsGrid) subsGrid.style.display = 'grid';
-      if (coinsGrid) coinsGrid.style.display = 'none';
-      if (btnSubs) {
-        btnSubs.style.background = 'var(--blue)';
-        btnSubs.style.color = '#fff';
-      }
-      if (btnCoins) {
-        btnCoins.style.background = 'transparent';
-        btnCoins.style.color = 'var(--label2)';
-      }
-    }
-  }
-
-  // Coin pack checkout
-  async function triggerCoinPackBuy(coins, price) {
-    showToast(`Initializing ₦${price.toLocaleString()} payment for ${coins} coins...`, 'info');
-    try {
-      const { data, error } = await apiRequest('/api/coins/buy-package', 'POST', { coins, amountNgn: price });
-      if (error || !data || !data.authorization_url) {
-        showToast(error || 'Failed to start coin pack purchase.', 'error');
-        return;
-      }
-      window.location.href = data.authorization_url;
-    } catch (err) {
-      showToast('Error connecting to checkout: ' + err.message, 'error');
+      document.getElementById('paywallBannerDesc').textContent = 'You need an active subscription to access the study tools, upload slides, and generate AI revision content.';
     }
   }
 
   // Load subscriptions on init
   loadUserSubscription();
 </script>
-<!-- STANDARDIZED MOBILE BOTTOM NAVIGATION BAR -->
-<nav class="ct-exact-dock" id="mobileBottomNav">
-  <a href="/pages/dashboard.html" class="ct-exact-dock-item">
-    <i class="fa-solid fa-house"></i>
-    <span>Home</span>
-  </a>
-  <a href="/pages/tools.html" class="ct-exact-dock-item">
-    <i class="fa-solid fa-book-open"></i>
-    <span>Tools</span>
-  </a>
-  <a href="/pages/progress.html" class="ct-exact-dock-item">
-    <i class="fa-solid fa-chart-line"></i>
-    <span>Progress</span>
-  </a>
-  <a href="/pages/settings.html" class="ct-exact-dock-item">
-    <i class="fa-solid fa-gear"></i>
-    <span>Settings</span>
-  </a>
-</nav>
-
 </body>
 </html>

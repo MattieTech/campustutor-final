@@ -1166,7 +1166,7 @@ function startExamSimulation(quizData) {
     updateExamTimerUI();
     if (examTimeSeconds <= 0) {
       clearInterval(examTimerInterval);
-      showToast('⏰ Time is up! Grading your exam paper...', 'warning');
+      showToast('Time is up! Grading your exam paper...', 'warning');
       finishExamSimulation(true);
     }
   }, 1000);
