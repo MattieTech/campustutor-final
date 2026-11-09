@@ -2,10 +2,10 @@
 // js/api.js — CampusTutor AI Frontend API Helper
 // ============================================================
 
-// Determine API_BASE: if hosted on same domain (e.g. localhost:3000 or custom domain), use relative path ""; otherwise fallback to live Render backend
-const API_BASE = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-  ? (window.location.port === "3000" ? "" : "http://localhost:3000")
-  : (window.location.origin.includes("vercel.app") || window.location.origin.includes("campustutor") ? "" : "https://campustutor-backend.onrender.com");
+// API_BASE: The backend API runs on Render. When developing locally on port 3000, use ""; otherwise always point to the live Render backend.
+const API_BASE = (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && window.location.port === "3000"
+  ? ""
+  : "https://campustutor-backend.onrender.com";
 
 // ── AUTH HELPERS ──────────────────────────────────────────────
 function getToken()    { return localStorage.getItem("ct_token"); }
