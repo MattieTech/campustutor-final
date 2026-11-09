@@ -24,7 +24,7 @@
     <span class="ct-hamburger-bar ct-bar-mid"></span>
     <span class="ct-hamburger-bar ct-bar-bot"></span>
   </button>
-  <a href="/" class="brand"><div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span> <span class="brand-ai">AI</span></a>
+  <a href="/" class="brand"><div class="brand-icon"><i class="fa-solid fa-graduation-cap anim-bulb"></i></div><span class="brand-campus">Campus</span><span class="brand-tutor">Tutor</span> <span class="brand-ai">AI</span></a>
   <div class="navbar-right">
     <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i class="fa-solid fa-moon"></i></button>
     <a href="/pages/dashboard.html" class="pill-btn">← Dashboard</a>
@@ -56,25 +56,25 @@
 
   <main class="main-content">
     <div class="page-header">
-      <h1><i class="fa-solid fa-chart-simple"></i> Your Study History</h1>
+      <h1><i class="fa-solid fa-chart-simple anim-sparkle" style="color:var(--blue);margin-right:8px;"></i> Your Study History</h1>
       <p>Track your learning journey, achievements, and progress.</p>
     </div>
 
     <!-- Stats Summary -->
     <div class="stats-row">
       <div class="stat-card"><div class="stat-num" id="userCoinsBalance" style="color:#d97706;">50</div><div class="stat-label"><i class="fa-solid fa-coins anim-coin"></i> CampusCoins</div></div>
-      <div class="stat-card"><div class="stat-num" id="currentLevel" style="color:var(--blue);">1</div><div class="stat-label">Current Level</div></div>
-      <div class="stat-card"><div class="stat-num" id="dayStreak" style="color:var(--orange);">0<i class="fa-solid fa-fire"></i></div><div class="stat-label">Day Streak</div></div>
-      <div class="stat-card"><div class="stat-num" id="totalDocs" style="color:var(--green);">0</div><div class="stat-label">Documents</div></div>
+      <div class="stat-card"><div class="stat-num" id="currentLevel" style="color:var(--blue);">1</div><div class="stat-label"><i class="fa-solid fa-graduation-cap anim-bulb" style="color:var(--blue);margin-right:4px;"></i> Current Level</div></div>
+      <div class="stat-card"><div class="stat-num" id="dayStreak" style="color:var(--orange);">0<i class="fa-solid fa-fire anim-fire" style="margin-left:4px;"></i></div><div class="stat-label">Day Streak</div></div>
+      <div class="stat-card"><div class="stat-num" id="totalDocs" style="color:var(--green);">0</div><div class="stat-label"><i class="fa-solid fa-book anim-book" style="color:var(--green);margin-right:4px;"></i> Documents</div></div>
     </div>
 
     <!-- Tabs -->
     <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;border-bottom:1px solid var(--sep);padding-bottom:12px;">
       <button class="tab-btn active" onclick="switchTab('activity')"><i class="fa-solid fa-list-check"></i> Activity</button>
-      <button class="tab-btn" onclick="switchTab('ai')"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Results</button>
+      <button class="tab-btn" onclick="switchTab('ai')"><i class="fa-solid fa-wand-magic-sparkles anim-sparkle"></i> AI Results</button>
       <button class="tab-btn" onclick="switchTab('documents')"><i class="fa-solid fa-file-pdf"></i> Documents</button>
-      <button class="tab-btn" onclick="switchTab('achievements')"><i class="fa-solid fa-trophy"></i> Achievements</button>
-      <button class="tab-btn" onclick="switchTab('xp')"><i class="fa-solid fa-coins"></i> Coins History</button>
+      <button class="tab-btn" onclick="switchTab('achievements')"><i class="fa-solid fa-trophy anim-crown"></i> Achievements</button>
+      <button class="tab-btn" onclick="switchTab('xp')"><i class="fa-solid fa-coins anim-coin"></i> Coins History</button>
     </div>
 
     <!-- Activity Tab -->
