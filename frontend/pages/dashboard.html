@@ -1718,7 +1718,7 @@ function esc(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-// ── PROMOTIONAL CAROUSEL CONTROLLER (Auto-scroll 5s + Touch Swipe) ──
+// ── PROMOTIONAL CAROUSEL CONTROLLER (Auto-scroll 3s + Touch Swipe) ──
 let currentPromoIndex = 0;
 const totalPromoSlides = 3;
 let promoTimer = null;
@@ -1741,7 +1741,7 @@ function nextPromoSlide() {
 
 function startPromoAutoPlay() {
   stopPromoAutoPlay();
-  promoTimer = setInterval(nextPromoSlide, 5000);
+  promoTimer = setInterval(nextPromoSlide, 3000);
 }
 
 function stopPromoAutoPlay() {
