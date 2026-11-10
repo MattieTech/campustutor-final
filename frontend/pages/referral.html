@@ -21,6 +21,14 @@
   *, *::before, *::after {
     box-sizing: border-box;
   }
+
+  html, body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+  }
   
   /* Guarantee consistent UI font across all headings and text */
   body, h1, h2, h3, h4, h5, h6, p, span, button, input, select {
@@ -28,12 +36,13 @@
   }
 
   .referral-container {
-    max-width: 860px;
+    max-width: 880px;
     margin: 0 auto;
     width: 100%;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 18px;
   }
 
   /* ── Hero Banner ── */
@@ -44,6 +53,8 @@
     padding: 26px 28px;
     position: relative;
     overflow: hidden;
+    width: 100%;
+    min-width: 0;
     box-shadow: 0 10px 30px rgba(0, 122, 255, 0.06);
   }
   [data-theme="dark"] .ref-hero-banner {
@@ -59,13 +70,14 @@
     background: linear-gradient(135deg, rgba(139, 92, 246, 0.18), rgba(99, 102, 241, 0.25));
     border: 1px solid rgba(139, 92, 246, 0.35);
     color: var(--purple);
-    font-size: 0.75rem;
+    font-size: 0.74rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     padding: 5px 14px;
     border-radius: 999px;
     margin-bottom: 12px;
+    max-width: 100%;
   }
   [data-theme="dark"] .ref-hero-badge {
     color: #c084fc;
@@ -79,6 +91,7 @@
     line-height: 1.2;
     color: var(--label);
     margin: 0 0 8px 0;
+    word-wrap: break-word;
   }
   .ref-hero-title .highlight-blue {
     background: linear-gradient(135deg, #0070F3, #5ac8fa);
@@ -97,19 +110,21 @@
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    width: 100%;
   }
   .ref-chip {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.7);
+    gap: 7px;
+    background: rgba(255, 255, 255, 0.78);
     border: 1px solid rgba(0, 0, 0, 0.06);
-    border-radius: 999px;
-    padding: 6px 14px;
+    border-radius: 12px;
+    padding: 7px 13px;
     font-size: 0.8rem;
     font-weight: 700;
     color: var(--label);
     box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    max-width: 100%;
   }
   [data-theme="dark"] .ref-chip {
     background: rgba(255, 255, 255, 0.08);
@@ -120,8 +135,10 @@
   /* ── KPI Stats Grid ── */
   .ref-kpi-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 14px;
+    width: 100%;
+    min-width: 0;
   }
   .ref-kpi-card {
     background: var(--glass);
@@ -133,7 +150,8 @@
     box-shadow: var(--gshadow);
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
+    min-width: 0;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
   .ref-kpi-card:hover {
@@ -141,12 +159,12 @@
     box-shadow: var(--gshadow-lg);
   }
   .ref-kpi-icon {
-    width: 48px;
-    height: 48px;
+    width: 46px;
+    height: 46px;
     border-radius: 14px;
     display: grid;
     place-items: center;
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     flex-shrink: 0;
   }
   .ref-kpi-icon.blue {
@@ -166,7 +184,7 @@
     flex: 1;
   }
   .ref-kpi-val {
-    font-size: 1.55rem;
+    font-size: 1.5rem;
     font-weight: 800;
     color: var(--label);
     letter-spacing: -0.02em;
@@ -180,11 +198,14 @@
     color: var(--green);
   }
   .ref-kpi-lbl {
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--label3);
     text-transform: uppercase;
     letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* ── Modern Card Container ── */
@@ -196,6 +217,10 @@
     border-radius: 22px;
     padding: 24px;
     box-shadow: var(--gshadow);
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
   }
   .ref-card-header {
     display: flex;
@@ -204,28 +229,43 @@
     margin-bottom: 16px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--sep);
+    min-width: 0;
+  }
+  .ref-card-header > div {
+    min-width: 0;
+    width: 100%;
   }
   .ref-card-title {
-    font-size: 1.15rem;
+    font-size: 1.12rem;
     font-weight: 800;
     color: var(--label);
     display: flex;
     align-items: center;
     gap: 9px;
     margin: 0;
+    flex-wrap: wrap;
   }
   .ref-card-sub {
     font-size: 0.84rem;
     color: var(--label3);
     margin: 4px 0 0 0;
+    line-height: 1.45;
   }
 
   /* ── Referral Link & Code Sharing ── */
   .ref-share-grid {
     display: grid;
-    grid-template-columns: 160px 1fr;
+    grid-template-columns: 180px minmax(0, 1fr);
     gap: 14px;
-    margin-bottom: 18px;
+    width: 100%;
+    min-width: 0;
+  }
+  .ref-link-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    width: 100%;
   }
   .ref-code-box {
     background: rgba(118, 128, 140, 0.06);
@@ -238,6 +278,8 @@
     align-items: center;
     text-align: center;
     position: relative;
+    width: 100%;
+    min-width: 0;
   }
   .ref-code-lbl {
     font-size: 0.7rem;
@@ -253,51 +295,76 @@
     color: var(--blue);
     letter-spacing: 0.04em;
     font-family: monospace, monospace !important;
+    word-break: break-all;
   }
 
   .ref-link-field {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     background: var(--bg2);
     border: 1.5px solid var(--sep);
     border-radius: var(--r);
-    padding: 8px 12px;
+    padding: 6px 8px 6px 12px;
     transition: border-color 0.2s;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
   }
   .ref-link-field:focus-within {
     border-color: var(--blue);
     box-shadow: 0 0 0 3px var(--blue-dim);
   }
   .ref-link-input {
-    flex: 1;
+    flex: 1 1 0%;
     border: none;
     background: transparent;
     color: var(--label);
-    font-size: 0.88rem;
+    font-size: 0.84rem;
     font-weight: 600;
     outline: none;
     min-width: 0;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ref-copy-link-btn {
+    border-radius: 999px !important;
+    padding: 7px 14px !important;
+    font-size: 0.78rem !important;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   /* Quick Social Buttons */
   .ref-social-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
-    margin-top: 14px;
+    margin-top: 12px;
+    width: 100%;
+    min-width: 0;
+  }
+  .ref-social-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--label3);
+    margin-right: 4px;
   }
   .ref-social-btn {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 9px 16px;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
     border-radius: 999px;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 700;
     cursor: pointer;
     border: none;
+    white-space: nowrap;
+    min-width: 0;
     transition: all 0.2s;
     text-decoration: none;
   }
@@ -343,9 +410,11 @@
   /* ── 3 Steps Visual Guide ── */
   .ref-steps-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 14px;
     margin: 6px 0;
+    width: 100%;
+    min-width: 0;
   }
   .ref-step-card {
     background: rgba(118, 128, 140, 0.04);
@@ -356,6 +425,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    min-width: 0;
   }
   .ref-step-num {
     width: 28px;
@@ -384,14 +454,18 @@
   /* ── Payout Form ── */
   .ref-payout-box {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 16px;
-    max-width: 540px;
+    width: 100%;
+    max-width: 560px;
+    min-width: 0;
   }
   .ref-input-group {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    min-width: 0;
+    width: 100%;
   }
   .ref-input-label {
     font-size: 0.78rem;
@@ -400,11 +474,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
   }
   .ref-input-wrap {
     position: relative;
     display: flex;
     align-items: center;
+    width: 100%;
+    min-width: 0;
   }
   .ref-input-icon {
     position: absolute;
@@ -415,6 +492,7 @@
   }
   .ref-form-input {
     width: 100%;
+    min-width: 0;
     background: var(--bg2);
     border: 1.5px solid var(--sep);
     border-radius: var(--r);
@@ -461,13 +539,16 @@
   /* ── History Table & Mobile Cards ── */
   .ref-table-wrap {
     width: 100%;
+    max-width: 100%;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     border-radius: 14px;
     border: 1px solid var(--sep);
     margin-top: 14px;
   }
   .ref-table {
     width: 100%;
+    min-width: 440px;
     border-collapse: collapse;
     font-size: 0.85rem;
   }
@@ -520,53 +601,102 @@
 
   /* ── Responsive Mobile Rules ── */
   @media (max-width: 768px) {
+    .main-content {
+      padding: 14px 12px 140px 12px !important;
+    }
     .referral-container {
-      padding: 0 4px 30px 4px;
-      gap: 16px;
+      padding: 0;
+      gap: 14px;
     }
     .ref-hero-banner {
-      padding: 20px 18px;
+      padding: 18px 16px;
       border-radius: 20px;
     }
     .ref-hero-title {
-      font-size: 1.5rem;
+      font-size: 1.45rem;
     }
     .ref-hero-desc {
       font-size: 0.86rem;
     }
+    .ref-hero-chips {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+    .ref-chip {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 0.78rem;
+    }
     .ref-kpi-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
     }
     .ref-kpi-card {
-      padding: 14px 16px;
+      padding: 14px 12px;
+      gap: 10px;
+      border-radius: 16px;
+    }
+    .ref-kpi-card:last-child {
+      grid-column: 1 / -1;
+    }
+    .ref-kpi-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      font-size: 1.05rem;
+    }
+    .ref-kpi-val {
+      font-size: 1.28rem;
+    }
+    .ref-kpi-lbl {
+      font-size: 0.68rem;
     }
     .ref-share-grid {
-      grid-template-columns: 1fr;
-      gap: 10px;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
     }
     .ref-steps-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       gap: 10px;
     }
     .ref-card {
-      padding: 18px 16px;
-      border-radius: 20px;
+      padding: 16px 14px;
+      border-radius: 18px;
     }
     .ref-payout-box {
       max-width: 100%;
     }
   }
 
-  @media (max-width: 480px) {
-    .ref-hero-title {
-      font-size: 1.35rem;
+  @media (max-width: 540px) {
+    .ref-social-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .ref-social-label {
+      grid-column: 1 / -1;
+      margin: 0;
     }
     .ref-social-btn {
-      flex: 1;
-      justify-content: center;
-      padding: 8px 12px;
+      width: 100%;
+      padding: 9px 10px;
       font-size: 0.78rem;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .ref-hero-title {
+      font-size: 1.3rem;
+    }
+    .ref-link-field {
+      padding: 5px 6px 5px 10px;
+      gap: 6px;
+    }
+    .ref-copy-link-btn {
+      padding: 7px 10px !important;
+      font-size: 0.74rem !important;
     }
   }
 </style>
@@ -713,18 +843,18 @@
           </div>
 
           <!-- Full Link Field -->
-          <div style="display:flex; flex-direction:column; justify-content:center;">
+          <div class="ref-link-col">
             <div class="ref-link-field">
-              <i class="fa-solid fa-link" style="color:var(--label3);"></i>
+              <i class="fa-solid fa-link" style="color:var(--label3); flex-shrink:0;"></i>
               <input type="text" id="refLink" class="ref-link-input" readonly value="Loading referral link..."/>
-              <button class="btn btn-primary btn-sm" onclick="copyRefLink()" style="border-radius:999px; padding:7px 18px;">
+              <button class="btn btn-primary btn-sm ref-copy-link-btn" onclick="copyRefLink()">
                 <i class="fa-solid fa-copy"></i> Copy Link
               </button>
             </div>
             
             <!-- Quick Social Share Row -->
             <div class="ref-social-row">
-              <span style="font-size:0.78rem; font-weight:700; color:var(--label3); margin-right:4px;">Share via:</span>
+              <span class="ref-social-label">Share via:</span>
               <button class="ref-social-btn whatsapp" onclick="shareWhatsApp()" title="Share on WhatsApp">
                 <i class="fa-brands fa-whatsapp" style="font-size:1.05rem;"></i> WhatsApp
               </button>
