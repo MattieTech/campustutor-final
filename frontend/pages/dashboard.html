@@ -770,63 +770,6 @@
     background: #2563eb;
   }
 
-  /* ── Fixed Mobile Bottom Navigation Bar ── */
-  .ct-exact-dock {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: 58px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    padding: 0 4px calc(env(safe-area-inset-bottom, 0px));
-    box-shadow: 0 -3px 15px rgba(0, 0, 0, 0.04);
-  }
-  [data-theme="dark"] .ct-exact-dock {
-    background: rgba(17, 25, 46, 0.96);
-    border-top-color: rgba(255, 255, 255, 0.1);
-  }
-  .ct-exact-dock-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    color: #94a3b8;
-    text-decoration: none;
-    background: none;
-    border: none;
-    font-size: 0.68rem;
-    font-weight: 600;
-    flex: 1;
-    height: 100%;
-    cursor: pointer;
-    position: relative;
-    padding: 0;
-  }
-  .ct-exact-dock-item i {
-    font-size: 1.15rem;
-  }
-  .ct-exact-dock-item.active {
-    color: #2563eb;
-    font-weight: 700;
-  }
-  .ct-exact-dock-indicator {
-    position: absolute;
-    bottom: 4px;
-    width: 20px;
-    height: 3px;
-    border-radius: 3px;
-    background: #2563eb;
-  }
-
   /* ── Interactive Concept Result Box ── */
   #conceptResult {
     display: none;
@@ -1127,20 +1070,24 @@
 
 <!-- FIXED BOTTOM NAVIGATION BAR DOCK (Optimized for Android) -->
 <nav class="ct-exact-dock" id="mobileBottomNav">
-  <a href="/pages/dashboard.html" class="ct-exact-dock-item active">
+  <a href="/pages/dashboard.html" class="ct-exact-dock-item active" title="Home">
     <i class="fa-solid fa-house"></i>
     <span>Home</span>
     <div class="ct-exact-dock-indicator"></div>
   </a>
-  <a href="/pages/tools.html" class="ct-exact-dock-item">
-    <i class="fa-solid fa-book-open"></i>
+  <a href="/pages/tools.html" class="ct-exact-dock-item" title="Tools">
+    <i class="fa-solid fa-book-open anim-book"></i>
     <span>Tools</span>
   </a>
-  <a href="/pages/progress.html" class="ct-exact-dock-item">
-    <i class="fa-solid fa-chart-line"></i>
+  <a href="/pages/progress.html" class="ct-exact-dock-item" title="Progress">
+    <i class="fa-solid fa-chart-line anim-pulse"></i>
     <span>Progress</span>
   </a>
-  <a href="/pages/settings.html" class="ct-exact-dock-item">
+  <a href="/pages/referral.html" class="ct-exact-dock-item" title="Earn">
+    <i class="fa-solid fa-users anim-sparkle"></i>
+    <span>Earn</span>
+  </a>
+  <a href="/pages/settings.html" class="ct-exact-dock-item" title="Settings">
     <i class="fa-solid fa-gear"></i>
     <span>Settings</span>
   </a>

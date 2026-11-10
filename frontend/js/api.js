@@ -1800,12 +1800,13 @@ window.installCampusTutorPWA = function() {
   }
 };
 
-// ── STANDARDIZED 4-ITEM BOTTOM NAVIGATION BAR ─────────────────
+// ── STANDARDIZED 5-ITEM BOTTOM NAVIGATION BAR ─────────────────
 // Renders the master navigation across all authenticated pages:
 // 1. Home (/pages/dashboard.html)
 // 2. Tools (/pages/tools.html)
 // 3. Progress (/pages/progress.html)
-// 4. Settings (/pages/settings.html)
+// 4. Earn (/pages/referral.html)
+// 5. Settings (/pages/settings.html)
 window.renderStandardBottomNav = function(activePage = 'home') {
   let nav = document.getElementById('mobileBottomNav');
   if (!nav) {
@@ -1817,8 +1818,9 @@ window.renderStandardBottomNav = function(activePage = 'home') {
 
   const items = [
     { key: 'home', label: 'Home', icon: 'fa-solid fa-house', href: '/pages/dashboard.html' },
-    { key: 'tools', label: 'Tools', icon: 'fa-solid fa-book-open', href: '/pages/tools.html' },
-    { key: 'progress', label: 'Progress', icon: 'fa-solid fa-chart-line', href: '/pages/progress.html' },
+    { key: 'tools', label: 'Tools', icon: 'fa-solid fa-book-open anim-book', href: '/pages/tools.html' },
+    { key: 'progress', label: 'Progress', icon: 'fa-solid fa-chart-line anim-pulse', href: '/pages/progress.html' },
+    { key: 'earn', label: 'Earn', icon: 'fa-solid fa-users anim-sparkle', href: '/pages/referral.html' },
     { key: 'settings', label: 'Settings', icon: 'fa-solid fa-gear', href: '/pages/settings.html' }
   ];
 
@@ -1833,4 +1835,31 @@ window.renderStandardBottomNav = function(activePage = 'home') {
     `;
   }).join('');
 };
+
+// Auto-initialize bottom nav immediately if empty or missing Earn item
+(function autoInitBottomNav() {
+  function initNav() {
+    const nav = document.getElementById('mobileBottomNav');
+    if (!nav) return;
+    const path = (window.location.pathname || '').toLowerCase();
+    let current = '';
+    if (path.includes('dashboard')) current = 'home';
+    else if (path.includes('tools')) current = 'tools';
+    else if (path.includes('progress')) current = 'progress';
+    else if (path.includes('referral')) current = 'earn';
+    else if (path.includes('settings')) current = 'settings';
+
+    const hasEarn = nav.querySelector('a[href*="referral"]');
+    const childCount = nav.querySelectorAll('.ct-exact-dock-item').length;
+    if (childCount < 5 || !hasEarn) {
+      window.renderStandardBottomNav(current);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initNav);
+  } else {
+    initNav();
+  }
+})();
 
