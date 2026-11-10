@@ -1,11 +1,12 @@
 // ============================================================
 // middleware/subscriptionMiddleware.js — Enforce Pay-First Access
 //
-// Ensures that only users with an active paid plan (plus or pro)
-// can access study, upload, and generation features.
+// Ensures that users have either an active paid plan (plus/pro)
+// or available CampusCoins before accessing premium tools.
 // ============================================================
 
 const supabase = require("../utils/supabase");
+const { getUserCoinBalance } = require("../utils/coins");
 
 async function subscriptionMiddleware(req, res, next) {
   try {
@@ -18,12 +19,12 @@ async function subscriptionMiddleware(req, res, next) {
 
     const userId = req.user.id;
 
-    // Fetch user profile to check subscription status and coin balance
+    // Fetch user profile safely using select('*') so schema differences don't break access
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select("id, role, plan, subscription_status, subscription_end, coins")
+      .select("*")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
     if (error || !profile) {
       return res.status(403).json({
@@ -33,7 +34,7 @@ async function subscriptionMiddleware(req, res, next) {
     }
 
     // Admins bypass subscription requirements
-    if (profile.role === "admin") {
+    if (profile.role === "admin" || req.user.app_metadata?.role === "admin") {
       req.userProfile = profile;
       req.userPlan = "pro";
       req.hasSubscription = true;
@@ -41,14 +42,25 @@ async function subscriptionMiddleware(req, res, next) {
       return next();
     }
 
-    const plan = (profile.plan || "free").toLowerCase();
-    const status = (profile.subscription_status || "inactive").toLowerCase();
+    let plan = (profile.plan || "free").toLowerCase();
+    let status = (profile.subscription_status || "inactive").toLowerCase();
     const hasExpired = profile.subscription_end
       ? new Date(profile.subscription_end).getTime() < Date.now()
       : false;
 
+    if (plan !== "free" && hasExpired) {
+      plan = "free";
+      status = "expired";
+      await supabase
+        .from("profiles")
+        .update({ plan: "free", subscription_status: "expired" })
+        .eq("id", userId)
+        .catch(() => {});
+    }
+
     const hasActiveSubscription = plan !== "free" && status === "active" && !hasExpired;
-    const userCoins = Number(profile.coins ?? 0);
+    const coinInfo = await getUserCoinBalance(userId, req.user);
+    const userCoins = Number(coinInfo.coins ?? 0);
 
     // If neither active subscription nor coins available
     if (!hasActiveSubscription && userCoins <= 0) {
@@ -56,9 +68,10 @@ async function subscriptionMiddleware(req, res, next) {
         error: "Active subscription or CampusCoins required. Please choose a plan or top up coins to continue.",
         subscriptionRequired: true,
         coinsNeeded: true,
+        insufficientCoins: true,
         coins: userCoins,
-        plan: plan,
-        status: hasExpired ? "expired" : status,
+        plan,
+        status,
       });
     }
 

@@ -558,10 +558,10 @@
     <div class="ct-exact-header-right">
       <div class="ct-exact-bell-btn" onclick="window.location.href='/pages/dashboard.html#activity'" title="Notifications">
         <i class="fa-solid fa-bell"></i>
-        <div class="ct-exact-bell-dot">2</div>
+        <div class="ct-exact-bell-dot" id="progressBellDot" style="display:none;">0</div>
       </div>
       <div class="ct-exact-user-pill" onclick="window.location.href='/pages/settings.html'" title="My Profile">
-        <div class="ct-exact-avatar-circle" id="userAvatarCircle">MA</div>
+        <div class="ct-exact-avatar-circle" id="userAvatarCircle">ST</div>
         <i class="fa-solid fa-chevron-down" style="font-size:0.7rem;color:#64748b;margin-left:2px;"></i>
       </div>
     </div>
@@ -576,7 +576,7 @@
       </div>
       <button class="ct-progress-hero-filter" type="button" onclick="cycleDateFilter(this)">
         <i class="fa-solid fa-calendar-days" style="color:#2563eb;"></i>
-        <span id="dateFilterLabel">Last 30 Days</span>
+        <span id="dateFilterLabel">All Time</span>
         <i class="fa-solid fa-chevron-down" style="font-size:0.6rem;"></i>
       </button>
     </div>
@@ -600,8 +600,8 @@
       </div>
       <div class="ct-metric-info">
         <div class="ct-metric-val-row">
-          <span class="ct-metric-val" id="metricTotalActivities">24</span>
-          <span class="ct-metric-badge"><i class="fa-solid fa-arrow-up"></i> 20%</span>
+          <span class="ct-metric-val" id="metricTotalActivities">--</span>
+          <span class="ct-metric-badge" id="badgeTotalDocs" style="background:rgba(37,99,235,0.1);color:#2563eb;">0 docs</span>
         </div>
         <div class="ct-metric-lbl">Total Activities</div>
       </div>
@@ -614,8 +614,8 @@
       </div>
       <div class="ct-metric-info">
         <div class="ct-metric-val-row">
-          <span class="ct-metric-val" id="metricCompletedTasks">18</span>
-          <span class="ct-metric-badge"><i class="fa-solid fa-arrow-up"></i> 12%</span>
+          <span class="ct-metric-val" id="metricCompletedTasks">--</span>
+          <span class="ct-metric-badge" id="badgeStreak" style="background:rgba(249,115,22,0.12);color:#ea580c;">0d streak</span>
         </div>
         <div class="ct-metric-lbl">Completed Tasks</div>
       </div>
@@ -628,10 +628,10 @@
       </div>
       <div class="ct-metric-info">
         <div class="ct-metric-val-row">
-          <span class="ct-metric-val" id="metricSuccessRate">92%</span>
-          <span class="ct-metric-badge"><i class="fa-solid fa-arrow-up"></i> 5%</span>
+          <span class="ct-metric-val" id="metricSuccessRate">--%</span>
+          <span class="ct-metric-badge" id="badgeMastery">Mastery</span>
         </div>
-        <div class="ct-metric-lbl">Success Rate</div>
+        <div class="ct-metric-lbl">Doc Completion</div>
       </div>
     </div>
 
@@ -642,10 +642,10 @@
       </div>
       <div class="ct-metric-info">
         <div class="ct-metric-val-row">
-          <span class="ct-metric-val" id="metricStudyTime">32h 15m</span>
-          <span class="ct-metric-badge"><i class="fa-solid fa-arrow-up"></i> 28%</span>
+          <span class="ct-metric-val" id="metricStudyTime">--</span>
+          <span class="ct-metric-badge" id="badgeCoins" style="background:rgba(234,179,8,0.14);color:#b45309;">0 coins</span>
         </div>
-        <div class="ct-metric-lbl">Study Time</div>
+        <div class="ct-metric-lbl">Est. Study Time</div>
       </div>
     </div>
   </div>
@@ -682,36 +682,36 @@
       </a>
     </div>
 
-    <div class="ct-achievements-row">
-      <div class="ct-badge-item">
+    <div class="ct-achievements-row" id="achievementsGrid">
+      <div class="ct-badge-item" data-ach="first_upload" style="opacity:0.35;">
         <div class="ct-badge-icon-box ct-badge-blue">
-          <i class="fa-solid fa-star"></i>
+          <i class="fa-solid fa-rocket"></i>
         </div>
-        <span class="ct-badge-label">Study Champion</span>
+        <span class="ct-badge-label">First Upload</span>
       </div>
-      <div class="ct-badge-item">
+      <div class="ct-badge-item" data-ach="first_summary" style="opacity:0.35;">
         <div class="ct-badge-icon-box ct-badge-purple">
-          <i class="fa-solid fa-crown anim-crown"></i>
+          <i class="fa-solid fa-list-check"></i>
         </div>
-        <span class="ct-badge-label">Task Master</span>
+        <span class="ct-badge-label">Summarizer</span>
       </div>
-      <div class="ct-badge-item">
+      <div class="ct-badge-item" data-ach="first_quiz" style="opacity:0.35;">
         <div class="ct-badge-icon-box ct-badge-green">
-          <i class="fa-solid fa-bullseye"></i>
+          <i class="fa-solid fa-pen-to-square"></i>
         </div>
-        <span class="ct-badge-label">Goal Achiever</span>
+        <span class="ct-badge-label">Quiz Ace</span>
       </div>
-      <div class="ct-badge-item">
+      <div class="ct-badge-item" data-ach="streak_3" style="opacity:0.35;">
         <div class="ct-badge-icon-box ct-badge-gold">
-          <i class="fa-solid fa-medal"></i>
+          <i class="fa-solid fa-fire"></i>
         </div>
-        <span class="ct-badge-label">Top Learner</span>
+        <span class="ct-badge-label">3-Day Streak</span>
       </div>
     </div>
 
-    <div class="ct-motivational-banner">
+    <div class="ct-motivational-banner" id="progressBannerText">
       <i class="fa-solid fa-star" style="color:#eab308;"></i>
-      <span>Keep going! You're doing great on your learning journey.</span>
+      <span>Loading your real study milestones...</span>
     </div>
   </div>
 
@@ -732,32 +732,32 @@
       <div class="ct-donut-wrap">
         <canvas id="donutChartCanvas"></canvas>
         <div class="ct-donut-center-text">
-          <span class="ct-donut-percent">68%</span>
-          <span class="ct-donut-label">Overall Usage</span>
+          <span class="ct-donut-percent" id="donutCenterCount">0</span>
+          <span class="ct-donut-label">Total Uses</span>
         </div>
       </div>
 
-      <div class="ct-usage-breakdown">
+      <div class="ct-usage-breakdown" id="toolsUsageBreakdown">
         <div class="ct-usage-item">
           <div class="ct-usage-left">
             <span class="ct-usage-dot" style="background:#2563eb;"></span>
-            <span class="ct-usage-name">Thesis & Coursework Polisher</span>
+            <span class="ct-usage-name">Summaries & Explanations</span>
           </div>
-          <span class="ct-usage-percent">68%</span>
+          <span class="ct-usage-percent" id="toolPct0">0%</span>
         </div>
         <div class="ct-usage-item">
           <div class="ct-usage-left">
             <span class="ct-usage-dot" style="background:#9333ea;"></span>
-            <span class="ct-usage-name">Project & Proposal Architect</span>
+            <span class="ct-usage-name">Quizzes & Flashcards</span>
           </div>
-          <span class="ct-usage-percent">18%</span>
+          <span class="ct-usage-percent" id="toolPct1">0%</span>
         </div>
         <div class="ct-usage-item">
           <div class="ct-usage-left">
             <span class="ct-usage-dot" style="background:#16a34a;"></span>
-            <span class="ct-usage-name">Viva Defense Panel Drill</span>
+            <span class="ct-usage-name">Solver & Coursework Tools</span>
           </div>
-          <span class="ct-usage-percent">14%</span>
+          <span class="ct-usage-percent" id="toolPct2">0%</span>
         </div>
       </div>
     </div>
@@ -804,26 +804,18 @@ if (user) {
 
 // ── Chart.js Setup for Learning Overview ──
 let learningChart = null;
+let donutChart = null;
+let currentPeriod = 'weekly';
+let realStatsCache = null;
 
-const chartDataSets = {
-  weekly: {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    data: [25, 42, 42, 64, 70, 95, 71]
-  },
-  monthly: {
-    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-    data: [45, 68, 82, 95]
-  },
-  all: {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    data: [30, 48, 65, 78, 88, 96]
-  }
+let chartDataSets = {
+  weekly: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], data: [0, 0, 0, 0, 0, 0, 0] },
+  monthly: { labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'], data: [0, 0, 0, 0] },
+  all: { labels: ['M-5', 'M-4', 'M-3', 'M-2', 'M-1', 'Now'], data: [0, 0, 0, 0, 0, 0] }
 };
 
 function initLearningChart() {
   const ctx = document.getElementById('learningOverviewChart').getContext('2d');
-  
-  // Gradient fill
   const gradient = ctx.createLinearGradient(0, 0, 0, 180);
   gradient.addColorStop(0, 'rgba(37, 99, 235, 0.35)');
   gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
@@ -833,13 +825,13 @@ function initLearningChart() {
     data: {
       labels: chartDataSets.weekly.labels,
       datasets: [{
-        label: 'Progress (%)',
+        label: 'Study Actions',
         data: chartDataSets.weekly.data,
         borderColor: '#2563eb',
         borderWidth: 3,
         backgroundColor: gradient,
         fill: true,
-        tension: 0.4,
+        tension: 0.38,
         pointBackgroundColor: '#2563eb',
         pointBorderColor: '#ffffff',
         pointBorderWidth: 2,
@@ -859,15 +851,15 @@ function initLearningChart() {
           padding: 8,
           cornerRadius: 8,
           callbacks: {
-            label: (ctx) => `${ctx.parsed.y}%`
+            label: (ctx) => `${ctx.parsed.y} study action${ctx.parsed.y === 1 ? '' : 's'}`
           }
         }
       },
       scales: {
         y: {
-          min: 0,
-          max: 100,
-          ticks: { stepSize: 25, font: { size: 10 }, color: '#94a3b8' },
+          beginAtZero: true,
+          suggestedMax: 5,
+          ticks: { precision: 0, font: { size: 10 }, color: '#94a3b8' },
           grid: { color: 'rgba(226, 232, 240, 0.6)' }
         },
         x: {
@@ -880,8 +872,9 @@ function initLearningChart() {
 }
 
 function setChartPeriod(period, btn) {
+  currentPeriod = period;
   document.querySelectorAll('.ct-chart-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  if (btn) btn.classList.add('active');
 
   const config = chartDataSets[period];
   if (learningChart && config) {
@@ -891,16 +884,16 @@ function setChartPeriod(period, btn) {
   }
 }
 
-// ── Chart.js Donut for Tools Usage ──
+// ── Chart.js Donut for Real Tools Usage ──
 function initDonutChart() {
   const ctx = document.getElementById('donutChartCanvas').getContext('2d');
-  new Chart(ctx, {
+  donutChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Thesis Polisher', 'Proposal Architect', 'Viva Drill'],
+      labels: ['Summaries & Explanations', 'Quizzes & Flashcards', 'Solver & Coursework Tools'],
       datasets: [{
-        data: [68, 18, 14],
-        backgroundColor: ['#2563eb', '#9333ea', '#16a34a'],
+        data: [1, 0, 0],
+        backgroundColor: ['#e2e8f0', '#e2e8f0', '#e2e8f0'],
         borderWidth: 0,
         hoverOffset: 3
       }]
@@ -917,37 +910,128 @@ function initDonutChart() {
   });
 }
 
-// Date Filter Cycle
-const filters = ['Last 7 Days', 'Last 30 Days', 'This Semester', 'All Time'];
-let currentFilterIdx = 1;
+function formatStudyTime(totalMinutes) {
+  const mins = Math.max(0, Math.round(totalMinutes || 0));
+  if (mins === 0) return '0m';
+  const hrs = Math.floor(mins / 60);
+  const rem = mins % 60;
+  return hrs > 0 ? `${hrs}h ${rem}m` : `${rem}m`;
+}
+
+// Date Filter Cycle connected to chart periods
+const filters = [
+  { label: 'Last 7 Days', period: 'weekly' },
+  { label: 'Last 30 Days', period: 'monthly' },
+  { label: 'All Time', period: 'all' }
+];
+let currentFilterIdx = 2;
 function cycleDateFilter(btn) {
   currentFilterIdx = (currentFilterIdx + 1) % filters.length;
-  document.getElementById('dateFilterLabel').textContent = filters[currentFilterIdx];
-  showToast(`Filtering metrics by ${filters[currentFilterIdx]}`, 'info');
+  const f = filters[currentFilterIdx];
+  document.getElementById('dateFilterLabel').textContent = f.label;
+  const tabBtns = document.querySelectorAll('.ct-chart-tab');
+  const idxMap = { weekly: 0, monthly: 1, all: 2 };
+  setChartPeriod(f.period, tabBtns[idxMap[f.period]]);
 }
 
 function showAllBadgesToast() {
-  showToast('You have earned 4 of 6 badges! Keep studying to unlock "Viva Master" and "Research Guru".', 'info');
+  const unlocked = realStatsCache?.achievements?.length ?? 0;
+  const total = realStatsCache?.allAchievements?.length ?? 8;
+  showToast(`You have unlocked ${unlocked} of ${total} study achievements!`, 'info');
 }
 
 // Fetch real progress from backend
 async function loadRealProgress() {
   try {
-    const me = await apiGetMe();
-    if (me) {
-      if (me.xp) {
-        document.getElementById('metricTotalActivities').textContent = Math.max(1, Math.round(me.xp / 10));
-      }
-      if (me.streak) {
-        document.getElementById('metricCompletedTasks').textContent = Math.max(1, me.streak * 2);
+    const freshUser = await apiGetMe().catch(() => null);
+    const activeUser = freshUser || user;
+    if (activeUser) {
+      const name = activeUser.fullName || activeUser.email?.split('@')[0] || 'Student';
+      const avatarCircle = document.getElementById('userAvatarCircle');
+      if (avatarCircle) avatarCircle.textContent = name.substring(0, 2).toUpperCase();
+    }
+
+    const userId = activeUser?.id;
+    if (!userId) return;
+
+    const { data: stats, error } = await apiGetUserStats(userId);
+    if (error || !stats) {
+      document.getElementById('metricTotalActivities').textContent = '0';
+      document.getElementById('metricCompletedTasks').textContent = '0';
+      document.getElementById('metricSuccessRate').textContent = '0%';
+      document.getElementById('metricStudyTime').textContent = '0m';
+      return;
+    }
+
+    realStatsCache = stats;
+    const analytics = stats.analytics || {};
+
+    document.getElementById('metricTotalActivities').textContent = Number(analytics.totalActivities ?? stats.activityCount ?? 0);
+    document.getElementById('metricCompletedTasks').textContent = Number(analytics.completedTasks ?? stats.aiResultsCount ?? 0);
+    document.getElementById('metricSuccessRate').textContent = `${Number(analytics.successRate ?? 0)}%`;
+    document.getElementById('metricStudyTime').textContent = formatStudyTime(analytics.studyTimeMinutes || 0);
+
+    document.getElementById('badgeTotalDocs').textContent = `${Number(stats.documentsCount ?? 0)} docs`;
+    document.getElementById('badgeStreak').textContent = `${Number(stats.streak ?? 0)}d streak`;
+    document.getElementById('badgeCoins').textContent = `${Number(stats.coins ?? 0)} coins`;
+
+    const bellDot = document.getElementById('progressBellDot');
+    if (bellDot) {
+      const actCount = Number(stats.activityCount ?? 0);
+      if (actCount > 0) {
+        bellDot.textContent = actCount > 99 ? '99+' : actCount;
+        bellDot.style.display = 'flex';
+      } else {
+        bellDot.style.display = 'none';
       }
     }
-    const docsRes = await apiGetMyDocs();
-    if (docsRes.data && Array.isArray(docsRes.data.documents)) {
-      const docCount = docsRes.data.documents.length;
-      if (docCount > 0) {
-        document.getElementById('metricTotalActivities').textContent = Math.max(docCount, 12);
-        document.getElementById('metricCompletedTasks').textContent = Math.max(Math.round(docCount * 0.8), 8);
+
+    // Update Learning Overview Chart with real backend timeseries
+    if (analytics.charts) {
+      chartDataSets = analytics.charts;
+      setChartPeriod(currentPeriod, document.querySelector(`.ct-chart-tab.active`));
+    }
+
+    // Update Donut Chart & breakdown percentages
+    const tb = analytics.toolsBreakdown;
+    if (tb) {
+      document.getElementById('donutCenterCount').textContent = tb.total || 0;
+      const counts = (tb.items || []).map(it => it.count);
+      (tb.items || []).forEach((it, idx) => {
+        const pctEl = document.getElementById(`toolPct${idx}`);
+        if (pctEl) pctEl.textContent = `${it.percent}%`;
+      });
+
+      if (donutChart) {
+        if ((tb.total || 0) > 0) {
+          donutChart.data.datasets[0].data = counts;
+          donutChart.data.datasets[0].backgroundColor = ['#2563eb', '#9333ea', '#16a34a'];
+        } else {
+          donutChart.data.datasets[0].data = [1];
+          donutChart.data.datasets[0].backgroundColor = ['#e2e8f0'];
+        }
+        donutChart.update();
+      }
+    }
+
+    // Highlight real unlocked achievements
+    const unlocked = stats.achievements || [];
+    document.querySelectorAll('#achievementsGrid .ct-badge-item').forEach(el => {
+      const key = el.getAttribute('data-ach');
+      if (unlocked.includes(key)) {
+        el.style.opacity = '1';
+      } else {
+        el.style.opacity = '0.35';
+      }
+    });
+
+    const banner = document.getElementById('progressBannerText');
+    if (banner) {
+      const span = banner.querySelector('span');
+      if (span) {
+        span.textContent = unlocked.length > 0
+          ? `You have unlocked ${unlocked.length} achievement${unlocked.length === 1 ? '' : 's'} with a ${stats.streak || 0}-day streak!`
+          : 'Upload your first document or solve a question to unlock your first achievement!';
       }
     }
   } catch (err) {

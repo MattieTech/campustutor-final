@@ -68,6 +68,20 @@ async function apiRequest(endpoint, method = "GET", body = null) {
         };
       }
 
+      // Check if insufficient coins (do NOT redirect to pricing if coins modal should handle it)
+      if (response.status === 403 && (data.insufficientCoins || data.needCoins || data.coinsNeeded)) {
+        return {
+          data: null,
+          error: data.error || "CampusCoins or an active subscription required.",
+          status: response.status,
+          needCoins: true,
+          insufficientCoins: true,
+          coinsNeeded: true,
+          needed: data.needed,
+          currentCoins: data.currentCoins ?? data.coins ?? 0,
+        };
+      }
+
       // Check if subscription required (403 with subscriptionRequired flag)
       if (response.status === 403 && data.subscriptionRequired) {
         console.warn("[Billing] Active subscription required. Redirecting to pricing...");
@@ -109,7 +123,13 @@ async function apiGetMe() {
     localStorage.setItem("ct_user", JSON.stringify(res.data.user));
     if (res.data.user.coins !== undefined) {
       userCoinState.coins = Number(res.data.user.coins);
-      updateCoinNavPill();
+      if (res.data.user.streak !== undefined) {
+        userCoinState.streak = Number(res.data.user.streak);
+      }
+      if (res.data.user.canClaimDaily !== undefined) {
+        userCoinState.canClaimDaily = Boolean(res.data.user.canClaimDaily);
+      }
+      updateCoinUIElements();
     }
     return res.data.user;
   }
@@ -172,6 +192,7 @@ async function apiGenerateFlashcards(documentId, flashcardSize = 25)  { return a
 
 // ── CAMPUS COINS & ECONOMY ─────────────────────────────────────
 async function apiGetCoinBalance() { return apiRequest("/api/coins/balance"); }
+window.apiGetWallet = apiGetCoinBalance;
 async function apiClaimDailyBonus() { return apiRequest("/api/coins/claim-daily", "POST"); }
 async function apiBuyCoinPackage(packageId) { return apiRequest("/api/coins/buy-package", "POST", { packageId, callbackUrl: window.location.href }); }
 async function apiGetCoinHistory() { return apiRequest("/api/coins/history"); }
@@ -1283,7 +1304,7 @@ async function loadUserTickets() {
 }
 
 // ── CAMPUS COINS & DAILY STREAK WALLET SYSTEM ─────────────────
-let userCoinState = { coins: 0, canClaimDaily: false, streak: 1 };
+let userCoinState = { coins: 0, canClaimDaily: false, streak: 0 };
 
 async function refreshUserCoins() {
   if (!isLoggedIn()) return;
@@ -1302,6 +1323,10 @@ function updateCoinUIElements() {
   if (modalBal) modalBal.textContent = `${userCoinState.coins} Coins`;
   const statCoins = document.getElementById("statCoins");
   if (statCoins) statCoins.textContent = userCoinState.coins;
+  const sideCoinCount = document.getElementById("sideCoinCount");
+  if (sideCoinCount) sideCoinCount.textContent = userCoinState.coins;
+  const statStreak = document.getElementById("statStreak");
+  if (statStreak && userCoinState.streak !== undefined) statStreak.textContent = userCoinState.streak;
   const heroCoins = document.getElementById("heroCoinsDisplay");
   if (heroCoins) heroCoins.textContent = userCoinState.coins;
   const studyCoins = document.getElementById("studyCoinsCount");
@@ -1316,7 +1341,7 @@ function updateCoinUIElements() {
       dailyBtn.title = "Daily study reward ready to claim!";
     } else {
       dailyBtn.classList.remove("has-bonus");
-      dailyBtn.title = `Streak active (Day ${userCoinState.streak})`;
+      dailyBtn.title = `Streak active (Day ${userCoinState.streak || 0})`;
     }
   }
 
@@ -1324,9 +1349,11 @@ function updateCoinUIElements() {
   const quickPill = document.getElementById("quickClaimPill");
   const tabBadge = document.getElementById("tabDailyBonusBadge");
   const streakEl = document.getElementById("rewardStreakCount");
-  if (streakEl) streakEl.textContent = userCoinState.streak || 1;
+  const effectiveStreak = Number(userCoinState.streak || 0);
+  if (streakEl) streakEl.textContent = effectiveStreak;
 
-  const bonusEstimate = 3 + Math.min(Math.floor(((userCoinState.streak || 1) - 1) / 2), 2);
+  const nextDay = userCoinState.canClaimDaily ? effectiveStreak + 1 : Math.max(1, effectiveStreak);
+  const bonusEstimate = 3 + Math.min(Math.floor((nextDay - 1) / 2), 2);
 
   if (userCoinState.canClaimDaily) {
     if (tabBadge) {
@@ -1342,7 +1369,7 @@ function updateCoinUIElements() {
       claimBoxBtn.disabled = false;
       claimBoxBtn.style.background = "linear-gradient(135deg,#ffb020,#d97806)";
       claimBoxBtn.style.color = "#fff";
-      claimBoxBtn.innerHTML = `<i class="fa-solid fa-gift anim-gift" style="margin-right:8px;"></i> Claim Day ${userCoinState.streak} Bonus (+${bonusEstimate} Coins)`;
+      claimBoxBtn.innerHTML = `<i class="fa-solid fa-gift anim-gift" style="margin-right:8px;"></i> Claim Day ${nextDay} Bonus (+${bonusEstimate} Coins)`;
     }
   } else {
     if (tabBadge) {
@@ -1366,11 +1393,12 @@ function updateCoinUIElements() {
 function renderStreakRoadmapTrack() {
   const track = document.getElementById("modalStreakTrack");
   if (!track) return;
-  const currentStreak = userCoinState.streak || 1;
-  const canClaim = userCoinState.canClaimDaily;
+  const currentStreak = Number(userCoinState.streak || 0);
+  const canClaim = Boolean(userCoinState.canClaimDaily);
+  const targetDay = canClaim ? currentStreak + 1 : Math.max(1, currentStreak);
   
   // 7-day rolling cycle
-  const currentCycleDay = ((currentStreak - 1) % 7) + 1;
+  const currentCycleDay = ((targetDay - 1) % 7) + 1;
 
   let html = "";
   for (let d = 1; d <= 7; d++) {

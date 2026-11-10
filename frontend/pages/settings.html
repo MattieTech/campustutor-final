@@ -825,9 +825,32 @@ function updateUIWithUser(u) {
   document.getElementById('editFullName').value = name;
   document.getElementById('editAcademicLevel').value = level;
 
-  // Preferences
-  const currentTheme = localStorage.getItem('ct_theme') || 'light';
+  // Preferences (DB user_metadata -> localStorage fallback)
+  let savedPrefs = {};
+  try {
+    savedPrefs = (u.preferences && Object.keys(u.preferences).length > 0)
+      ? u.preferences
+      : JSON.parse(localStorage.getItem('ct_user_prefs') || '{}');
+  } catch (_) {}
+
+  const currentTheme = savedPrefs.appearance || localStorage.getItem('ct_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', currentTheme);
   document.getElementById('themeLabelText').textContent = currentTheme === 'dark' ? 'Dark' : 'Light';
+
+  if (savedPrefs.language) {
+    const langEl = document.getElementById('languageLabelText');
+    if (langEl) langEl.textContent = savedPrefs.language;
+    const foundIdx = langs.indexOf(savedPrefs.language);
+    if (foundIdx !== -1) langIdx = foundIdx;
+  }
+  if (typeof savedPrefs.notifications === 'boolean') {
+    const notifEl = document.getElementById('toggleNotifications');
+    if (notifEl) notifEl.checked = savedPrefs.notifications;
+  }
+  if (typeof savedPrefs.autoDownload === 'boolean') {
+    const autoEl = document.getElementById('toggleAutoDownload');
+    if (autoEl) autoEl.checked = savedPrefs.autoDownload;
+  }
 }
 
 function openProfileModal() {

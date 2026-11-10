@@ -215,16 +215,15 @@ async function loadHistoryData(){
   // Get stats
   const {data:stats,error:statsErr}=await apiGetUserStats(userId);
   if(stats){
-    const liveCoins = (window.userCoinState && window.userCoinState.coins !== undefined) ? window.userCoinState.coins : (stats.coins || 50);
+    const liveCoins = Number(stats.coins ?? 0);
     const histEl = document.getElementById('userCoinsBalance');
     if (histEl) histEl.textContent = liveCoins;
     document.getElementById('currentLevel').textContent=stats.level||1;
     document.getElementById('dayStreak').innerHTML = (stats.streak||0)+' <i class="fa-solid fa-fire"></i>';
     document.getElementById('totalDocs').textContent=stats.documentsCount||0;
-    const currentCoins = (window.userCoinState && window.userCoinState.coins !== undefined) ? window.userCoinState.coins : (stats.coins || 50);
-    document.getElementById('xpToNext').textContent = currentCoins + ' Coins';
-    document.getElementById('lifetimeXP').textContent = (currentCoins + 40) + ' Coins';
-    document.getElementById('xpProgressBar').style.width = '100%';
+    document.getElementById('xpToNext').textContent = liveCoins + ' Coins';
+    document.getElementById('lifetimeXP').textContent = (stats.xp || 0) + ' XP';
+    document.getElementById('xpProgressBar').style.width = Math.min(100, Number(stats.xpProgressPercent || 0)) + '%';
   }
 
   // Load activity
@@ -235,17 +234,28 @@ async function loadHistoryData(){
       upload_document:'<i class="fa-solid fa-cloud-arrow-up"></i>',upload_image:'<i class="fa-solid fa-image"></i>',upload_video:'<i class="fa-solid fa-video"></i>',
       ai_summarize:'<i class="fa-solid fa-list-check"></i>',ai_explain:'<i class="fa-solid fa-lightbulb"></i>',ai_questions:'<i class="fa-solid fa-pen-to-square"></i>',ai_flashcards:'<i class="fa-solid fa-id-card"></i>',
       ai_quiz:'<i class="fa-solid fa-book-open"></i>',download_summary:'<i class="fa-solid fa-download"></i>',download_flashcards:'<i class="fa-solid fa-download"></i>',
+      coin_credit:'<i class="fa-solid fa-coins" style="color:#eab308;"></i>',coin_spend:'<i class="fa-solid fa-coins" style="color:#f97316;"></i>',daily_bonus:'<i class="fa-solid fa-gift" style="color:#ec4899;"></i>',
       other:'<i class="fa-solid fa-wand-magic-sparkles"></i>'
     };
-    document.getElementById('activityList').innerHTML=acts.map(a=>`
+    const parseDetails = (raw) => {
+      if (!raw) return '';
+      if (typeof raw === 'string' && raw.trim().startsWith('{')) {
+        try { return JSON.parse(raw).description || ''; } catch(_) {}
+      }
+      return String(raw);
+    };
+    document.getElementById('activityList').innerHTML=acts.map(a=>{
+      const cleanDet = parseDetails(a.details);
+      return `
       <div style="display:flex;gap:12px;padding:12px;background:rgba(118,118,128,.04);border-radius:var(--r);align-items:flex-start;">
         <div style="font-size:1.2rem;flex-shrink:0;">${actEmojis[a.action]||actEmojis.other}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:0.85rem;font-weight:600;">${a.action.replace(/_/g,' ')}</div>
-          ${a.details?'<div style="font-size:0.78rem;color:var(--label3);margin-top:2px;">'+a.details+'</div>':''}
+          <div style="font-size:0.85rem;font-weight:600;">${escapeHTML(a.action.replace(/_/g,' '))}</div>
+          ${cleanDet?'<div style="font-size:0.78rem;color:var(--label3);margin-top:2px;">'+escapeHTML(cleanDet)+'</div>':''}
           <div style="font-size:0.72rem;color:var(--label4);margin-top:2px;">${formatDateTime(a.created_at)}</div>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }else{
     document.getElementById('activityEmpty').style.display='block';
   }

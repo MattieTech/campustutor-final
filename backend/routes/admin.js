@@ -396,43 +396,37 @@ router.post("/users/:userId/ban", isAdmin, async (req, res) => {
       return res.status(400).json({ error: "You cannot ban your own account." });
     }
 
-    let banned = false;
+    const nowIso = new Date().toISOString();
     try {
-      const { data: profileData, error: profileError } = await supabase
+      await supabase
         .from("profiles")
         .update({
           status: "banned",
           banned_reason: reason.trim(),
-          banned_at: new Date().toISOString(),
+          banned_at: nowIso,
           banned_by: req.adminId,
         })
-        .eq("id", userId)
-        .select();
+        .eq("id", userId);
+    } catch (_) {}
 
-      if (!profileError && profileData && profileData.length > 0) {
-        banned = true;
-      }
-    } catch (profileErr) {}
+    const { data: authData, error: fetchErr } = await supabase.auth.admin.getUserById(userId);
+    const authUser = authData?.user;
+    if (fetchErr || !authUser) {
+      return res.status(404).json({ error: "User not found." });
+    }
 
-    if (!banned) {
-      const { data: user, error: fetchErr } = await supabase.auth.admin.getUserById(userId);
-      if (fetchErr || !user) {
-        return res.status(404).json({ error: "User not found." });
-      }
+    const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+      app_metadata: {
+        ...(authUser.app_metadata || {}),
+        status: "banned",
+        banned_reason: reason.trim(),
+        banned_at: nowIso,
+        banned_by: req.adminId,
+      },
+    });
 
-      const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
-        app_metadata: {
-          ...(user.app_metadata || {}),
-          status: "banned",
-          banned_reason: reason.trim(),
-          banned_at: new Date().toISOString(),
-          banned_by: req.adminId,
-        },
-      });
-
-      if (updateError) {
-        return res.status(500).json({ error: "Failed to ban user: " + updateError.message });
-      }
+    if (updateError) {
+      return res.status(500).json({ error: "Failed to ban user: " + updateError.message });
     }
 
     await logActivity(req.adminId, "ban_user", userId, reason.trim());
@@ -447,9 +441,8 @@ router.post("/users/:userId/unban", isAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
 
-    let unbanned = false;
     try {
-      const { data: profileData, error: profileError } = await supabase
+      await supabase
         .from("profiles")
         .update({
           status: "active",
@@ -457,33 +450,27 @@ router.post("/users/:userId/unban", isAdmin, async (req, res) => {
           banned_at: null,
           banned_by: null,
         })
-        .eq("id", userId)
-        .select();
+        .eq("id", userId);
+    } catch (_) {}
 
-      if (!profileError && profileData && profileData.length > 0) {
-        unbanned = true;
-      }
-    } catch (profileErr) {}
+    const { data: authData, error: fetchErr } = await supabase.auth.admin.getUserById(userId);
+    const authUser = authData?.user;
+    if (fetchErr || !authUser) {
+      return res.status(404).json({ error: "User not found." });
+    }
 
-    if (!unbanned) {
-      const { data: user, error: fetchErr } = await supabase.auth.admin.getUserById(userId);
-      if (fetchErr || !user) {
-        return res.status(404).json({ error: "User not found." });
-      }
+    const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+      app_metadata: {
+        ...(authUser.app_metadata || {}),
+        status: "active",
+        banned_reason: null,
+        banned_at: null,
+        banned_by: null,
+      },
+    });
 
-      const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
-        app_metadata: {
-          ...(user.app_metadata || {}),
-          status: "active",
-          banned_reason: null,
-          banned_at: null,
-          banned_by: null,
-        },
-      });
-
-      if (updateError) {
-        return res.status(500).json({ error: "Failed to unban user." });
-      }
+    if (updateError) {
+      return res.status(500).json({ error: "Failed to unban user." });
     }
 
     await logActivity(req.adminId, "unban_user", userId, "Account reinstated.");
@@ -557,35 +544,28 @@ router.post("/users/:userId/set-role", isAdmin, async (req, res) => {
       return res.status(400).json({ error: "You cannot remove your own admin privileges." });
     }
 
-    let roleUpdated = false;
     try {
-      const { data: profileData, error: profileError } = await supabase
+      await supabase
         .from("profiles")
         .update({ role })
-        .eq("id", userId)
-        .select();
+        .eq("id", userId);
+    } catch (_) {}
 
-      if (!profileError && profileData && profileData.length > 0) {
-        roleUpdated = true;
-      }
-    } catch (profileErr) {}
+    const { data: authData, error: fetchErr } = await supabase.auth.admin.getUserById(userId);
+    const authUser = authData?.user;
+    if (fetchErr || !authUser) {
+      return res.status(404).json({ error: "User not found." });
+    }
 
-    if (!roleUpdated) {
-      const { data: user, error: fetchErr } = await supabase.auth.admin.getUserById(userId);
-      if (fetchErr || !user) {
-        return res.status(404).json({ error: "User not found." });
-      }
+    const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+      app_metadata: {
+        ...(authUser.app_metadata || {}),
+        role: role,
+      },
+    });
 
-      const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
-        app_metadata: {
-          ...(user.app_metadata || {}),
-          role: role,
-        },
-      });
-
-      if (updateError) {
-        return res.status(500).json({ error: "Failed to update role: " + updateError.message });
-      }
+    if (updateError) {
+      return res.status(500).json({ error: "Failed to update role: " + updateError.message });
     }
 
     await logActivity(req.adminId, "set_role", userId, `Role changed to ${role}.`);

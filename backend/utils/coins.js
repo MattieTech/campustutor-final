@@ -8,97 +8,199 @@ let _hasCoinsColumn = null;
 
 /**
  * Check if profiles table has native 'coins' column.
- * If not, seamlessly falls back to existing 'xp', 'streak', and 'last_activity_date' columns.
+ * If not, persists coins & daily reward state in Supabase Auth user_metadata
+ * (never mixing or corrupting profiles.xp).
  */
 async function checkCoinsColumn() {
   if (_hasCoinsColumn !== null) return _hasCoinsColumn;
   try {
     const { error } = await supabase.from("profiles").select("coins").limit(1);
-    _hasCoinsColumn = !(error && error.code === "42703");
+    _hasCoinsColumn = !(error && (error.code === "42703" || (error.message || "").includes("does not exist")));
   } catch (e) {
     _hasCoinsColumn = false;
   }
   return _hasCoinsColumn;
 }
 
+function getTodayAndYesterdayUTC() {
+  const todayObj = new Date();
+  const todayStr = todayObj.toISOString().split("T")[0];
+  const yestObj = new Date(todayObj);
+  yestObj.setUTCDate(yestObj.getUTCDate() - 1);
+  const yesterdayStr = yestObj.toISOString().split("T")[0];
+  return { todayStr, yesterdayStr };
+}
+
 /**
- * Get user's current coin balance and daily bonus status
+ * Compute real active streak: returns 0 if user has never been active
+ * or missed yesterday & today.
  */
-async function getUserCoinBalance(userId) {
+function computeEffectiveStreak(rawStreak, lastDateStr) {
+  const numStreak = Number(rawStreak || 0);
+  if (!lastDateStr || numStreak <= 0) return 0;
+  const cleanDate = String(lastDateStr).split("T")[0];
+  const { todayStr, yesterdayStr } = getTodayAndYesterdayUTC();
+  if (cleanDate === todayStr || cleanDate === yesterdayStr) {
+    return numStreak;
+  }
+  return 0;
+}
+
+async function getAuthUser(userId, authUser = null) {
+  if (authUser && authUser.id === userId) return authUser;
+  const { data, error } = await supabase.auth.admin.getUserById(userId);
+  if (error || !data?.user) return null;
+  return data.user;
+}
+
+async function recordCoinTransaction(userId, amount, actionType, description, balanceAfter) {
+  const now = new Date().toISOString();
+  try {
+    const { error } = await supabase.from("coin_transactions").insert({
+      user_id: userId,
+      amount: Number(amount),
+      action_type: actionType,
+      description: description || `${actionType} (${amount >= 0 ? "+" : ""}${amount} coins)`,
+      balance_after: balanceAfter,
+      created_at: now,
+    });
+    if (!error) return;
+  } catch (_) {}
+
+  // Fallback to user_activity so students still get real coin history when coin_transactions table isn't migrated
+  try {
+    const actionLabel = Number(amount) >= 0 ? "coin_credit" : "coin_spend";
+    await supabase.from("user_activity").insert({
+      user_id: userId,
+      action: actionLabel,
+      details: JSON.stringify({
+        amount: Number(amount),
+        action_type: actionType,
+        description: description || `${actionType} (${amount >= 0 ? "+" : ""}${amount} coins)`,
+        balance_after: balanceAfter,
+      }),
+      created_at: now,
+    });
+  } catch (_) {}
+}
+
+/**
+ * Get user's real coin balance, daily bonus eligibility, and active streak
+ */
+async function getUserCoinBalance(userId, authUser = null) {
   try {
     const hasCol = await checkCoinsColumn();
-    const selectCols = hasCol
-      ? "coins, last_daily_bonus, daily_streak_count, role, plan, subscription_status"
-      : "xp, last_activity_date, streak, role, plan, subscription_status";
-
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select(selectCols)
+      .select("*")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
-    if (error || !profile) {
-      return { coins: 5, canClaimDaily: true, streak: 1, lastClaim: null, plan: "free" };
+    const { todayStr } = getTodayAndYesterdayUTC();
+
+    if (hasCol && profile) {
+      const lastClaim = profile.last_daily_bonus ? String(profile.last_daily_bonus).split("T")[0] : null;
+      const canClaimDaily = !lastClaim || lastClaim !== todayStr;
+      const dailyStreak = computeEffectiveStreak(profile.daily_streak_count, lastClaim);
+      const studyStreak = computeEffectiveStreak(profile.streak, profile.last_activity_date);
+      const streak = Math.max(dailyStreak, studyStreak);
+
+      let coins = profile.coins;
+      if (coins === null || coins === undefined) {
+        coins = 5;
+        await supabase.from("profiles").update({ coins: 5 }).eq("id", userId);
+      }
+
+      return {
+        coins: Number(coins),
+        canClaimDaily,
+        streak,
+        dailyStreak,
+        lastClaim,
+        plan: (profile.plan || "free").toLowerCase(),
+      };
     }
 
-    const todayStr = new Date().toISOString().split("T")[0];
-    const lastClaim = hasCol ? profile.last_daily_bonus : profile.last_activity_date;
+    // Fallback when profiles.coins column is not present: use Supabase Auth user_metadata
+    const userObj = await getAuthUser(userId, authUser);
+    const meta = userObj?.user_metadata || {};
+
+    let coins = meta.coins;
+    if (coins === undefined || coins === null) {
+      coins = 5; // Real initial starter coins for account
+      if (userObj) {
+        await supabase.auth.admin.updateUserById(userId, {
+          user_metadata: { ...meta, coins: 5 },
+        }).catch(() => {});
+      }
+    }
+
+    const lastClaim = meta.last_daily_bonus || null;
     const canClaimDaily = !lastClaim || lastClaim !== todayStr;
-    const streak = Math.max(1, Number((hasCol ? profile.daily_streak_count : profile.streak) || 1));
-    const rawVal = hasCol ? profile.coins : profile.xp;
-    // New accounts get initial 5 coins starter balance
-    const coins = (rawVal === null || rawVal === undefined) ? 5 : Number(rawVal);
+    const dailyStreak = computeEffectiveStreak(meta.daily_streak_count, lastClaim);
+    const studyStreak = computeEffectiveStreak(profile?.streak, profile?.last_activity_date);
+    const streak = Math.max(dailyStreak, studyStreak);
 
     return {
-      coins,
+      coins: Number(coins),
       canClaimDaily,
       streak,
+      dailyStreak,
       lastClaim,
-      plan: profile.plan || "free",
+      plan: (profile?.plan || "free").toLowerCase(),
     };
   } catch (err) {
     console.error("Error getting user coins:", err.message);
-    return { coins: 5, canClaimDaily: true, streak: 1, lastClaim: null, plan: "free" };
+    return { coins: 0, canClaimDaily: true, streak: 0, dailyStreak: 0, lastClaim: null, plan: "free" };
   }
 }
 
 /**
  * Add coins to a user's wallet
  */
-async function addCoins(userId, amount, actionType, description = "") {
+async function addCoins(userId, amount, actionType, description = "", authUser = null) {
   try {
-    const hasCol = await checkCoinsColumn();
-    const colName = hasCol ? "coins" : "xp";
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select(colName)
-      .eq("id", userId)
-      .single();
-
-    const currentCoins = Number((hasCol ? profile?.coins : profile?.xp) ?? 0);
-    const newBalance = currentCoins + Number(amount);
-
-    const updatePayload = hasCol ? { coins: newBalance } : { xp: newBalance };
-    await supabase
-      .from("profiles")
-      .update(updatePayload)
-      .eq("id", userId);
-
-    // Record ledger transaction if table exists
-    try {
-      await supabase.from("coin_transactions").insert({
-        user_id: userId,
-        amount: Number(amount),
-        action_type: actionType,
-        description: description || `Earned ${amount} coins via ${actionType}`,
-        balance_after: newBalance,
-        created_at: new Date().toISOString(),
-      });
-    } catch (err) {
-      // Ledger table is optional
+    const numAmount = Number(amount);
+    if (!Number.isFinite(numAmount) || numAmount <= 0) {
+      return { success: false, error: "Invalid coin amount." };
     }
 
+    const hasCol = await checkCoinsColumn();
+    if (hasCol) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("coins")
+        .eq("id", userId)
+        .maybeSingle();
+
+      const currentCoins = Number(profile?.coins ?? 0);
+      const newBalance = currentCoins + numAmount;
+
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({ coins: newBalance })
+        .eq("id", userId);
+
+      if (updErr) return { success: false, error: updErr.message };
+
+      await recordCoinTransaction(userId, numAmount, actionType, description, newBalance);
+      return { success: true, coins: newBalance };
+    }
+
+    // Fallback via Supabase Auth user_metadata
+    const userObj = await getAuthUser(userId, authUser);
+    if (!userObj) return { success: false, error: "User account not found." };
+
+    const meta = userObj.user_metadata || {};
+    const currentCoins = Number(meta.coins ?? 5);
+    const newBalance = currentCoins + numAmount;
+
+    const { error: updErr } = await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: { ...meta, coins: newBalance },
+    });
+    if (updErr) return { success: false, error: updErr.message };
+
+    await recordCoinTransaction(userId, numAmount, actionType, description, newBalance);
     return { success: true, coins: newBalance };
   } catch (err) {
     console.error("Error adding coins:", err.message);
@@ -109,28 +211,55 @@ async function addCoins(userId, amount, actionType, description = "") {
 /**
  * Deduct coins from user's wallet
  */
-async function deductCoins(userId, amount, actionType, description = "") {
+async function deductCoins(userId, amount, actionType, description = "", authUser = null) {
   try {
+    const numAmount = Number(amount);
     const hasCol = await checkCoinsColumn();
-    const selectCols = hasCol ? "coins, role" : "xp, role";
 
-    const { data: profile, error } = await supabase
+    const { data: profile, error: profErr } = await supabase
       .from("profiles")
-      .select(selectCols)
+      .select(hasCol ? "coins, role" : "role")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
-    if (error || !profile) {
+    if (profErr || !profile) {
       return { success: false, error: "Profile not found." };
     }
 
-    // Admins have infinite coins
     if (profile.role === "admin") {
       return { success: true, coins: 9999 };
     }
 
-    const currentCoins = Number((hasCol ? profile.coins : profile.xp) ?? 0);
-    const numAmount = Number(amount);
+    if (hasCol) {
+      const currentCoins = Number(profile.coins ?? 0);
+      if (currentCoins < numAmount) {
+        return {
+          success: false,
+          insufficient: true,
+          currentCoins,
+          needed: numAmount,
+          error: `Insufficient coins. You have ${currentCoins} coins, but ${numAmount} coins are required.`,
+        };
+      }
+
+      const newBalance = currentCoins - numAmount;
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({ coins: newBalance })
+        .eq("id", userId);
+
+      if (updErr) return { success: false, error: updErr.message };
+
+      await recordCoinTransaction(userId, -numAmount, actionType, description, newBalance);
+      return { success: true, coins: newBalance };
+    }
+
+    // Fallback via Supabase Auth user_metadata
+    const userObj = await getAuthUser(userId, authUser);
+    if (!userObj) return { success: false, error: "User account not found." };
+
+    const meta = userObj.user_metadata || {};
+    const currentCoins = Number(meta.coins ?? 5);
 
     if (currentCoins < numAmount) {
       return {
@@ -143,26 +272,12 @@ async function deductCoins(userId, amount, actionType, description = "") {
     }
 
     const newBalance = currentCoins - numAmount;
-    const updatePayload = hasCol ? { coins: newBalance } : { xp: newBalance };
+    const { error: updErr } = await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: { ...meta, coins: newBalance },
+    });
+    if (updErr) return { success: false, error: updErr.message };
 
-    await supabase
-      .from("profiles")
-      .update(updatePayload)
-      .eq("id", userId);
-
-    try {
-      await supabase.from("coin_transactions").insert({
-        user_id: userId,
-        amount: -numAmount,
-        action_type: actionType,
-        description: description || `Spent ${numAmount} coins on ${actionType}`,
-        balance_after: newBalance,
-        created_at: new Date().toISOString(),
-      });
-    } catch (err) {
-      // Ledger table is optional
-    }
-
+    await recordCoinTransaction(userId, -numAmount, actionType, description, newBalance);
     return { success: true, coins: newBalance };
   } catch (err) {
     console.error("Error deducting coins:", err.message);
@@ -173,96 +288,192 @@ async function deductCoins(userId, amount, actionType, description = "") {
 /**
  * Claim Daily Login Reward (Gamification retention loop)
  */
-async function claimDailyBonus(userId) {
+async function claimDailyBonus(userId, authUser = null) {
   try {
     const hasCol = await checkCoinsColumn();
-    const selectCols = hasCol
-      ? "coins, last_daily_bonus, daily_streak_count"
-      : "xp, last_activity_date, streak";
+    const { todayStr, yesterdayStr } = getTodayAndYesterdayUTC();
 
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select(selectCols)
-      .eq("id", userId)
-      .single();
+    if (hasCol) {
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("coins, last_daily_bonus, daily_streak_count, streak, last_activity_date")
+        .eq("id", userId)
+        .single();
 
-    if (error || !profile) return { success: false, error: "Profile not found." };
+      if (error || !profile) return { success: false, error: "Profile not found." };
 
-    const today = new Date();
-    const todayStr = today.toISOString().split("T")[0];
-    const lastClaim = hasCol ? profile.last_daily_bonus : profile.last_activity_date;
+      const lastClaim = profile.last_daily_bonus ? String(profile.last_daily_bonus).split("T")[0] : null;
+      if (lastClaim === todayStr) {
+        return {
+          success: false,
+          alreadyClaimed: true,
+          message: "You already claimed your daily bonus today! Check back tomorrow.",
+        };
+      }
+
+      const prevStreak = computeEffectiveStreak(profile.daily_streak_count, lastClaim);
+      const newStreak = lastClaim === yesterdayStr ? prevStreak + 1 : 1;
+
+      const baseReward = 3;
+      const streakBonus = Math.min(Math.floor((newStreak - 1) / 2), 2);
+      const totalCoinsAwarded = baseReward + streakBonus;
+
+      const currentCoins = Number(profile.coins ?? 0);
+      const newBalance = currentCoins + totalCoinsAwarded;
+
+      const { error: updateErr } = await supabase
+        .from("profiles")
+        .update({
+          coins: newBalance,
+          last_daily_bonus: todayStr,
+          daily_streak_count: newStreak,
+          streak: Math.max(Number(profile.streak || 0), newStreak),
+          last_activity_date: todayStr,
+        })
+        .eq("id", userId);
+
+      if (updateErr) {
+        return { success: false, error: "Failed to update wallet balance." };
+      }
+
+      await recordCoinTransaction(
+        userId,
+        totalCoinsAwarded,
+        "daily_bonus",
+        `Claimed Day ${newStreak} Daily Study Reward (+${totalCoinsAwarded} coins)`,
+        newBalance
+      );
+
+      return {
+        success: true,
+        coinsAwarded: totalCoinsAwarded,
+        newBalance,
+        coins: newBalance,
+        streak: newStreak,
+        message: `+${totalCoinsAwarded} CampusCoins added! (Streak: Day ${newStreak})`,
+      };
+    }
+
+    // Fallback via Supabase Auth user_metadata + profiles streak sync
+    const userObj = await getAuthUser(userId, authUser);
+    if (!userObj) return { success: false, error: "User account not found." };
+
+    const meta = userObj.user_metadata || {};
+    const lastClaim = meta.last_daily_bonus ? String(meta.last_daily_bonus).split("T")[0] : null;
 
     if (lastClaim === todayStr) {
-      return { success: false, alreadyClaimed: true, message: "You already claimed your daily bonus today! Check back tomorrow." };
+      return {
+        success: false,
+        alreadyClaimed: true,
+        message: "You already claimed your daily bonus today! Check back tomorrow.",
+      };
     }
 
-    // Check streak
-    let currentStreak = Number((hasCol ? profile.daily_streak_count : profile.streak) || 1);
-    let newStreak = 1;
-    if (lastClaim) {
-      const lastDate = new Date(lastClaim);
-      const diffTime = today.getTime() - lastDate.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays <= 1) {
-        newStreak = currentStreak + 1;
-      } else {
-        newStreak = 1;
-      }
-    }
+    const prevStreak = computeEffectiveStreak(meta.daily_streak_count, lastClaim);
+    const newStreak = lastClaim === yesterdayStr ? prevStreak + 1 : 1;
 
-    // Daily reward: 3 coins base reward, scales with streak (Day 1-2: 3, Day 3-4: 4, Day 5+: 5)
     const baseReward = 3;
     const streakBonus = Math.min(Math.floor((newStreak - 1) / 2), 2);
     const totalCoinsAwarded = baseReward + streakBonus;
 
-    const currentCoins = Number((hasCol ? profile.coins : profile.xp) ?? 0);
+    const currentCoins = Number(meta.coins ?? 5);
     const newBalance = currentCoins + totalCoinsAwarded;
 
-    const updatePayload = hasCol
-      ? {
-          coins: newBalance,
-          last_daily_bonus: todayStr,
-          daily_streak_count: newStreak,
-        }
-      : {
-          xp: newBalance,
-          last_activity_date: todayStr,
-          streak: newStreak,
-        };
+    const { error: authUpdErr } = await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: {
+        ...meta,
+        coins: newBalance,
+        last_daily_bonus: todayStr,
+        daily_streak_count: newStreak,
+      },
+    });
 
-    const { error: updateErr } = await supabase
-      .from("profiles")
-      .update(updatePayload)
-      .eq("id", userId);
-
-    if (updateErr) {
-      console.error("Daily bonus DB update failed:", updateErr.message);
+    if (authUpdErr) {
       return { success: false, error: "Failed to update wallet balance." };
     }
 
-    try {
-      await supabase.from("coin_transactions").insert({
-        user_id: userId,
-        amount: totalCoinsAwarded,
-        action_type: "daily_bonus",
-        description: `Claimed Day ${newStreak} Daily Study Reward (+${totalCoinsAwarded} coins)`,
-        balance_after: newBalance,
-        created_at: new Date().toISOString(),
-      });
-    } catch (err) {
-      // Optional ledger
-    }
+    // Also sync profiles.streak and profiles.last_activity_date
+    await supabase
+      .from("profiles")
+      .update({
+        streak: newStreak,
+        last_activity_date: todayStr,
+      })
+      .eq("id", userId)
+      .catch(() => {});
+
+    await recordCoinTransaction(
+      userId,
+      totalCoinsAwarded,
+      "daily_bonus",
+      `Claimed Day ${newStreak} Daily Study Reward (+${totalCoinsAwarded} coins)`,
+      newBalance
+    );
 
     return {
       success: true,
       coinsAwarded: totalCoinsAwarded,
       newBalance,
+      coins: newBalance,
       streak: newStreak,
-      message: `🎉 +${totalCoinsAwarded} CampusCoins added! (Streak: Day ${newStreak})`,
+      message: `+${totalCoinsAwarded} CampusCoins added! (Streak: Day ${newStreak})`,
     };
   } catch (err) {
     console.error("Daily bonus error:", err.message);
     return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Get real coin transaction history for user
+ */
+async function getCoinHistory(userId) {
+  try {
+    const { data: logs, error } = await supabase
+      .from("coin_transactions")
+      .select("amount, action_type, description, balance_after, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(25);
+
+    if (!error && Array.isArray(logs)) {
+      return logs;
+    }
+  } catch (_) {}
+
+  // Fallback: read coin events from user_activity
+  try {
+    const { data: acts, error } = await supabase
+      .from("user_activity")
+      .select("action, details, created_at")
+      .eq("user_id", userId)
+      .in("action", ["coin_credit", "coin_spend", "daily_bonus"])
+      .order("created_at", { ascending: false })
+      .limit(25);
+
+    if (error || !acts) return [];
+    return acts.map((a) => {
+      try {
+        const parsed = JSON.parse(a.details || "{}");
+        return {
+          amount: parsed.amount ?? 0,
+          action_type: parsed.action_type || a.action,
+          description: parsed.description || a.details,
+          balance_after: parsed.balance_after ?? null,
+          created_at: a.created_at,
+        };
+      } catch (_) {
+        return {
+          amount: 0,
+          action_type: a.action,
+          description: a.details,
+          balance_after: null,
+          created_at: a.created_at,
+        };
+      }
+    });
+  } catch (_) {
+    return [];
   }
 }
 
@@ -271,4 +482,7 @@ module.exports = {
   addCoins,
   deductCoins,
   claimDailyBonus,
+  getCoinHistory,
+  computeEffectiveStreak,
+  checkCoinsColumn,
 };

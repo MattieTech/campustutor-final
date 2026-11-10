@@ -1491,7 +1491,13 @@ async function executeCurrentTool() {
     resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     showToast('Generated successfully!', 'success');
 
-    // Update coins display
+    // Update coins display immediately from response & refresh from server
+    if (typeof res.data?.coinsRemaining === 'number') {
+      const navEl = document.getElementById('navCoinCount');
+      const sideEl = document.getElementById('sideCoinCount');
+      if (navEl) navEl.textContent = res.data.coinsRemaining;
+      if (sideEl) sideEl.textContent = res.data.coinsRemaining;
+    }
     updateUserCoinsDisplay();
   } catch (err) {
     console.error('Tool execution error:', err);
@@ -1540,14 +1546,15 @@ function downloadToolResult() {
 
 async function updateUserCoinsDisplay() {
   try {
-    if (typeof apiGetWallet === 'function') {
-      const { data } = await apiGetWallet();
+    if (typeof refreshUserCoins === 'function') {
+      await refreshUserCoins();
+    } else if (typeof apiGetCoinBalance === 'function') {
+      const { data } = await apiGetCoinBalance();
       if (data && typeof data.coins !== 'undefined') {
-        const count = data.coins;
         const navEl = document.getElementById('navCoinCount');
         const sideEl = document.getElementById('sideCoinCount');
-        if (navEl) navEl.textContent = count;
-        if (sideEl) sideEl.textContent = count;
+        if (navEl) navEl.textContent = data.coins;
+        if (sideEl) sideEl.textContent = data.coins;
       }
     }
   } catch (e) {

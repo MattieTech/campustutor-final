@@ -571,17 +571,17 @@ async function logUserActivity(userId, action, details) {
 function handleAIError(err, res) {
   if (err.message?.includes("busy") || err.message?.includes("routes")) {
     return res.status(503).json({
-      error: "📚 CampusTutor AI is grading a rush of papers right now! Please wait a few seconds and try generating your questions again.",
+      error: "CampusTutor AI is grading a rush of papers right now! Please wait a few seconds and try again.",
     });
   }
   if (err.status === 429 || err.message?.includes("quota")) {
     return res.status(429).json({
-      error: "🤔 CampusTutor AI is thinking a bit too hard right now! Please wait a moment before trying your next question.",
+      error: "CampusTutor AI is thinking a bit too hard right now! Please wait a moment before trying your next question.",
     });
   }
   if (err.status === 404 || err.message?.includes("not found")) {
     return res.status(500).json({
-      error: "❌ The AI model is temporarily unavailable. Please try again in a moment.",
+      error: "The AI model is temporarily unavailable. Please try again in a moment.",
     });
   }
   res.status(500).json({ error: err.message || "Failed to process your request." });
@@ -673,20 +673,14 @@ router.post("/summarize", async (req, res) => {
       return res.status(400).json({ error: "documentId is required." });
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("plan")
-      .eq("id", req.user.id)
-      .single();
-    const userPlan = profile?.plan || 'free';
-
+    const userPlan = req.userPlan || "free";
     const size = Number(summarySize || 1);
 
-    if (userPlan === 'free') {
-      if (size > 1) {
+    if (userPlan === "free" || userPlan === "coins") {
+      if (size > 1 && userPlan === "free") {
         return res.status(403).json({ error: "Summary options 2 and 3 are only available on Plus and Pro plans. Please upgrade." });
       }
-    } else if (userPlan === 'plus') {
+    } else if (userPlan === "plus") {
       if (size > 2) {
         return res.status(403).json({ error: "Summary option 3 is only available on the Pro Plan. Please upgrade." });
       }
@@ -700,104 +694,26 @@ router.post("/summarize", async (req, res) => {
   }
 });
 
-// ── EXPLAIN CONCEPT ───────────────────────────────────────────
-router.post("/explain", authMiddleware, async (req, res) => {
-  try {
-    const { documentId, concept } = req.body;
-
-    if (!concept) {
-      return res.status(400).json({ error: "concept is required." });
-    }
-
-    let doc = null;
-    let docContext = "";
-    
-    if (documentId) {
-      try {
-        doc = await getDocumentText(documentId, req.user.id);
-        docContext = `A student is studying the following lecture notes:\n---\n${doc.extracted_text}\n---\n\n`;
-      } catch (docErr) {
-        console.log("Document not found, proceeding without document context:", docErr.message);
-      }
-    }
-
-    const prompt = `
-You are CampusTutor AI, a patient university lecturer who explains things simply.
-
-${docContext}The student wants you to explain this concept in beginner-friendly terms: "${concept}"
-
-IMPORTANT: Format ALL mathematical expressions using LaTeX.
-Use $ for inline math (e.g., $f(x) = x^2$) and $$ for display equations (e.g., $$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$).
-Never write math as plain text.
-
-Please explain it like this:
-## 💡 Explaining: "${concept}"
-
-**Simple Definition:** [Explain it like the student is 16 years old. Use LaTeX for any maths.]
-
-**Real-World Example:** [A relatable analogy or everyday example]
-
-**Mathematical Expression (if applicable):**
-$$
-\text{Key equation(s) here}
-$$
-
-**How it relates to the notes:** ${docContext ? "[Connect it back to what's in the lecture]" : "[General explanation without specific notes]"}
-
-**Quick Memory Trick:** [A tip to remember this concept]
-
-Keep the language simple, warm, and encouraging.
-    `.trim();
-
-    const explanation = await askGemini(prompt);
-    
-    if (doc && documentId) {
-      await saveAIResult(documentId, req.user.id, "explanation", explanation);
-      await logUserActivity(req.user.id, "ai_explain", `Asked: "${concept}" | Document: "${doc.file_name}"`);
-    } else {
-      await logUserActivity(req.user.id, "ai_explain", `Asked: "${concept}" | No document`);
-    }
-    
-    try {
-      await awardXP(req.user.id, "ai_explain", { concept });
-      await updateStreak(req.user.id);
-    } catch (xpErr) {
-      console.log("Note: Could not award XP:", xpErr.message);
-    }
-    
-    res.json({ explanation });
-  } catch (err) {
-    console.error("Explain error:", err.message);
-    handleAIError(err, res);
-  }
-});
-
 // ── REVISION QUESTIONS ────────────────────────────────────────
-router.post("/questions", authMiddleware, async (req, res) => {
+router.post("/questions", async (req, res) => {
   try {
     const { documentId, quizSize } = req.body;
     if (!documentId) {
       return res.status(400).json({ error: "documentId is required." });
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("plan")
-      .eq("id", req.user.id)
-      .single();
-    const userPlan = profile?.plan || 'free';
-
+    const userPlan = req.userPlan || "free";
     const size = Number(quizSize || 10);
 
-    if (userPlan === 'free') {
+    if (userPlan === "free") {
       if (size < 10 || size > 20) {
         return res.status(403).json({ error: "Free Plan allows 10-20 quiz questions. Please upgrade your plan." });
       }
-    } else if (userPlan === 'plus') {
+    } else if (userPlan === "plus") {
       if (size > 40) {
         return res.status(403).json({ error: "Plus Plan is limited to up to 40 quiz questions. Please upgrade to Pro." });
       }
-    } else if (userPlan === 'pro') {
+    } else if (userPlan === "pro") {
       if (size > 50) {
         return res.status(403).json({ error: "Pro Plan is limited to up to 50 quiz questions." });
       }
@@ -827,32 +743,60 @@ router.post("/flashcards", authMiddleware, async (req, res) => {
   }
 });
 
+// Helper: Execute coin-gated AI tool with refund-on-error, activity logging, XP, and streak update
+async function executeCoinTool(req, res, { cost, actionType, description, activityDetails, prompt, buildResponse }) {
+  const userId = req.user.id;
+  const { deductCoins, addCoins } = require("../utils/coins");
+  let deductedCoins = 0;
+  let updatedBalance = req.userCoins;
+
+  if (!req.hasSubscription) {
+    const coinRes = await deductCoins(userId, cost, actionType, description, req.user);
+    if (!coinRes.success) {
+      return res.status(403).json({
+        error: coinRes.error || `${cost} CampusCoins required.`,
+        insufficientCoins: true,
+        needCoins: true,
+        needed: cost,
+        currentCoins: coinRes.currentCoins ?? req.userCoins ?? 0,
+      });
+    }
+    deductedCoins = cost;
+    updatedBalance = coinRes.coins;
+  }
+
+  let output;
+  try {
+    output = await askGemini(prompt);
+  } catch (aiErr) {
+    if (deductedCoins > 0) {
+      await addCoins(userId, deductedCoins, "coin_refund", `Refund for failed ${actionType}`, req.user).catch(() => {});
+    }
+    throw aiErr;
+  }
+
+  // Record real activity, XP, and streak for Progress & Dashboard tracking
+  await Promise.allSettled([
+    logUserActivity(userId, actionType, activityDetails),
+    awardXP(userId, actionType, { description }),
+    updateStreak(userId),
+  ]);
+
+  return res.json({
+    success: true,
+    ...buildResponse(output),
+    coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : updatedBalance,
+  });
+}
+
 // ── AI ASSIGNMENT & PROBLEM SOLVER (STEP-BY-STEP) ─────────────
-// POST /api/ai/solve-problem
-router.post("/solve-problem", authMiddleware, subscriptionMiddleware, async (req, res) => {
+router.post("/solve-problem", async (req, res) => {
   try {
     const question = req.body.problemText || req.body.question || req.body.problem;
     const subject = req.body.subject || "General Academic Problem";
 
     if (!question || !question.trim()) {
       return res.status(400).json({ error: "Please provide a question or problem to solve." });
-    }
-
-    const userId = req.user.id;
-    const { deductCoins } = require("../utils/coins");
-
-    // Coin check: If user does not have active subscription, deduct 5 coins
-    if (!req.hasSubscription) {
-      const coinRes = await deductCoins(userId, 5, "problem_solver", `Solved: "${question.substring(0, 30)}..."`);
-      if (!coinRes.success) {
-        return res.status(403).json({
-          error: coinRes.error || "5 CampusCoins required to solve this problem.",
-          insufficientCoins: true,
-          needCoins: true,
-          needed: 5,
-          currentCoins: req.userCoins || 0,
-        });
-      }
     }
 
     const prompt = `
@@ -869,18 +813,19 @@ Rules:
 1. State the underlying concepts, laws, or formulas first.
 2. Provide step-by-step mathematical working or conceptual derivation.
 3. Box the final answer clearly: **Final Answer: ...**
-4. Include an "💡 Examiner Tip" explaining how university markers award points for this type of question.
-5. Format ALL mathematical expressions in LaTeX (\( ... \) for inline, \[ ... \] for display blocks).
+4. Include an "Examiner Tip" explaining how university markers award points for this type of question.
+5. Format ALL mathematical expressions in LaTeX (\\( ... \\) for inline, \\[ ... \\] for display blocks).
 
 Language: Clear, encouraging, textbook standard.
 `.trim();
 
-    const solution = await askGemini(prompt);
-
-    res.json({
-      success: true,
-      solution,
-      coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : ((req.userCoins || 0) - 5),
+    await executeCoinTool(req, res, {
+      cost: 5,
+      actionType: "solve_problem",
+      description: `Solved: "${question.trim().substring(0, 30)}..."`,
+      activityDetails: `Problem Solver (${subject}): "${question.trim().substring(0, 50)}"`,
+      prompt,
+      buildResponse: (solution) => ({ solution }),
     });
   } catch (err) {
     console.error("Problem solver error:", err.message);
@@ -889,31 +834,13 @@ Language: Clear, encouraging, textbook standard.
 });
 
 // ── AI ESSAY & COURSEWORK POLISHER ────────────────────────────
-// POST /api/ai/polish-essay
-router.post("/polish-essay", authMiddleware, subscriptionMiddleware, async (req, res) => {
+router.post("/polish-essay", async (req, res) => {
   try {
     const text = req.body.draftText || req.body.text || req.body.draft;
     const citationStyle = req.body.style || req.body.citationStyle || "APA 7th Edition";
 
     if (!text || text.trim().length < 30) {
       return res.status(400).json({ error: "Please provide an essay or draft with at least 30 characters." });
-    }
-
-    const userId = req.user.id;
-    const { deductCoins } = require("../utils/coins");
-
-    // Coin check: If user does not have active subscription, deduct 8 coins
-    if (!req.hasSubscription) {
-      const coinRes = await deductCoins(userId, 8, "essay_polish", `Polished coursework draft`);
-      if (!coinRes.success) {
-        return res.status(403).json({
-          error: coinRes.error || "8 CampusCoins required to polish this coursework.",
-          insufficientCoins: true,
-          needCoins: true,
-          needed: 8,
-          currentCoins: req.userCoins || 0,
-        });
-      }
     }
 
     const prompt = `
@@ -935,13 +862,13 @@ Conduct a rigorous, constructive academic review:
 Format in clean markdown with structured headings.
 `.trim();
 
-    const review = await askGemini(prompt);
-
-    res.json({
-      success: true,
-      review,
-      polished: review,
-      coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : ((req.userCoins || 0) - 8),
+    await executeCoinTool(req, res, {
+      cost: 8,
+      actionType: "polish_essay",
+      description: "Polished coursework draft",
+      activityDetails: `Coursework Polisher (${citationStyle})`,
+      prompt,
+      buildResponse: (review) => ({ review, polished: review }),
     });
   } catch (err) {
     console.error("Essay polish error:", err.message);
@@ -950,29 +877,11 @@ Format in clean markdown with structured headings.
 });
 
 // ── FINAL YEAR PROJECT & PROPOSAL ARCHITECT (10 COINS) ────────
-// POST /api/ai/project-proposals
-router.post("/project-proposals", authMiddleware, subscriptionMiddleware, async (req, res) => {
+router.post("/project-proposals", async (req, res) => {
   try {
     const field = req.body.field || req.body.department || "Computer Science / Engineering";
     const interests = req.body.interests || "Modern applied systems and AI";
     const level = req.body.level || "Undergraduate / BSc";
-
-    const userId = req.user.id;
-    const { deductCoins } = require("../utils/coins");
-
-    // Deduct 10 coins if not on active subscription
-    if (!req.hasSubscription) {
-      const coinRes = await deductCoins(userId, 10, "project_proposals", `Project proposals in ${field}`);
-      if (!coinRes.success) {
-        return res.status(403).json({
-          error: coinRes.error || "10 CampusCoins required to architect project proposals.",
-          insufficientCoins: true,
-          needCoins: true,
-          needed: 10,
-          currentCoins: req.userCoins || 0,
-        });
-      }
-    }
 
     const prompt = `
 You are CampusTutor AI University Thesis Committee Chair and Academic Research Supervisor.
@@ -992,12 +901,13 @@ For each project topic provide:
 Format in rich markdown with clean cards/dividers.
 `.trim();
 
-    const proposals = await askGemini(prompt);
-
-    res.json({
-      success: true,
-      proposals,
-      coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : ((req.userCoins || 0) - 10),
+    await executeCoinTool(req, res, {
+      cost: 10,
+      actionType: "project_proposals",
+      description: `Project proposals in ${field}`,
+      activityDetails: `Project Architect: ${field} (${level})`,
+      prompt,
+      buildResponse: (proposals) => ({ proposals }),
     });
   } catch (err) {
     console.error("Project proposals error:", err.message);
@@ -1006,31 +916,13 @@ Format in rich markdown with clean cards/dividers.
 });
 
 // ── VIVA & THESIS ORAL DEFENSE DRILL SIMULATOR (12 COINS) ──────
-// POST /api/ai/viva-defense
-router.post("/viva-defense", authMiddleware, subscriptionMiddleware, async (req, res) => {
+router.post("/viva-defense", async (req, res) => {
   try {
     const projectTitle = req.body.projectTitle || req.body.title;
     const abstractText = req.body.abstract || req.body.text || "";
 
     if (!projectTitle || projectTitle.trim().length < 5) {
       return res.status(400).json({ error: "Please provide your project/thesis title." });
-    }
-
-    const userId = req.user.id;
-    const { deductCoins } = require("../utils/coins");
-
-    // Deduct 12 coins if not on active subscription
-    if (!req.hasSubscription) {
-      const coinRes = await deductCoins(userId, 12, "viva_defense", `Viva defense prep for: "${projectTitle.substring(0, 30)}..."`);
-      if (!coinRes.success) {
-        return res.status(403).json({
-          error: coinRes.error || "12 CampusCoins required for Viva Oral Defense Simulation.",
-          insufficientCoins: true,
-          needCoins: true,
-          needed: 12,
-          currentCoins: req.userCoins || 0,
-        });
-      }
     }
 
     const prompt = `
@@ -1047,12 +939,13 @@ Generate a high-stakes Oral Defense Preparation Dossier:
 Format in rich, highly structured markdown with clear callout blocks.
 `.trim();
 
-    const defenseDossier = await askGemini(prompt);
-
-    res.json({
-      success: true,
-      defenseDossier,
-      coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : ((req.userCoins || 0) - 12),
+    await executeCoinTool(req, res, {
+      cost: 12,
+      actionType: "viva_defense",
+      description: `Viva defense prep for: "${projectTitle.substring(0, 30)}..."`,
+      activityDetails: `Viva Defense Drill: "${projectTitle.trim().substring(0, 50)}"`,
+      prompt,
+      buildResponse: (defenseDossier) => ({ defenseDossier }),
     });
   } catch (err) {
     console.error("Viva defense error:", err.message);
@@ -1061,31 +954,13 @@ Format in rich, highly structured markdown with clear callout blocks.
 });
 
 // ── EXAM PAST QUESTIONS & HIGH-PROBABILITY PREDICTOR (15 COINS) ──
-// POST /api/ai/predict-past-questions
-router.post("/predict-past-questions", authMiddleware, subscriptionMiddleware, async (req, res) => {
+router.post("/predict-past-questions", async (req, res) => {
   try {
     const courseCode = req.body.courseCode || req.body.course || "General University Course";
     const syllabusOrTopics = req.body.syllabus || req.body.topics || "";
 
     if (!courseCode || courseCode.trim().length < 2) {
       return res.status(400).json({ error: "Please provide the course code or title (e.g. MTH101, CSC302)." });
-    }
-
-    const userId = req.user.id;
-    const { deductCoins } = require("../utils/coins");
-
-    // Deduct 15 coins if not on active subscription
-    if (!req.hasSubscription) {
-      const coinRes = await deductCoins(userId, 15, "exam_predict", `Exam predictions for: ${courseCode}`);
-      if (!coinRes.success) {
-        return res.status(403).json({
-          error: coinRes.error || "15 CampusCoins required for Past Question & Exam Predictor.",
-          insufficientCoins: true,
-          needCoins: true,
-          needed: 15,
-          currentCoins: req.userCoins || 0,
-        });
-      }
     }
 
     const prompt = `
@@ -1095,19 +970,20 @@ ${syllabusOrTopics ? `Lecture Topics / Key Themes:\n"""\n${syllabusOrTopics.trim
 
 Generate a high-probability "Exam Master Dossier" based on standard university examination patterns:
 1. **Top 5 High-Probability Theoretical / Essay Questions** that examiners love to repeat, complete with detailed marking guide points.
-2. **Top 5 Critical Calculation / Problem Questions** with full step-by-step model workings and standard formulas in LaTeX (\( ... \) or \[ ... \]).
+2. **Top 5 Critical Calculation / Problem Questions** with full step-by-step model workings and standard formulas in LaTeX (\\( ... \\) or \\[ ... \\]).
 3. **10 CBT Rapid-Fire Practice MCQs** with correct options and brief explanations.
 4. **"Lecturer's Trap Alert":** 3 areas where over 60% of students lose marks on this course.
 
 Format in clean, high-density markdown with distinct section cards.
 `.trim();
 
-    const predictionDossier = await askGemini(prompt);
-
-    res.json({
-      success: true,
-      predictionDossier,
-      coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : ((req.userCoins || 0) - 15),
+    await executeCoinTool(req, res, {
+      cost: 15,
+      actionType: "exam_predict",
+      description: `Exam predictions for: ${courseCode}`,
+      activityDetails: `Exam Predictor: ${courseCode.trim().substring(0, 40)}`,
+      prompt,
+      buildResponse: (predictionDossier) => ({ predictionDossier }),
     });
   } catch (err) {
     console.error("Exam predictor error:", err.message);
@@ -1116,29 +992,11 @@ Format in clean, high-density markdown with distinct section cards.
 });
 
 // ── AI TURNITIN PLAGIARISM BYPASSER & HUMANIZER (10 COINS) ─────
-// POST /api/ai/humanize-rewrite
-router.post("/humanize-rewrite", authMiddleware, subscriptionMiddleware, async (req, res) => {
+router.post("/humanize-rewrite", async (req, res) => {
   try {
     const rawText = req.body.text || req.body.draftText || "";
     if (!rawText || rawText.trim().length < 40) {
       return res.status(400).json({ error: "Please provide at least 40 characters of text to humanize." });
-    }
-
-    const userId = req.user.id;
-    const { deductCoins } = require("../utils/coins");
-
-    // Deduct 10 coins if not on active subscription
-    if (!req.hasSubscription) {
-      const coinRes = await deductCoins(userId, 10, "humanize_rewrite", `Turnitin humanizer & originality rewrite`);
-      if (!coinRes.success) {
-        return res.status(403).json({
-          error: coinRes.error || "10 CampusCoins required for Turnitin Plagiarism Reducer & Humanizer.",
-          insufficientCoins: true,
-          needCoins: true,
-          needed: 10,
-          currentCoins: req.userCoins || 0,
-        });
-      }
     }
 
     const prompt = `
@@ -1161,12 +1019,13 @@ Task:
 Format cleanly in markdown.
 `.trim();
 
-    const humanizedResult = await askGemini(prompt);
-
-    res.json({
-      success: true,
-      humanizedResult,
-      coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : ((req.userCoins || 0) - 10),
+    await executeCoinTool(req, res, {
+      cost: 10,
+      actionType: "humanize_rewrite",
+      description: "Turnitin humanizer & originality rewrite",
+      activityDetails: `Academic Humanizer (${rawText.trim().split(/\s+/).length} words)`,
+      prompt,
+      buildResponse: (humanizedResult) => ({ humanizedResult }),
     });
   } catch (err) {
     console.error("Humanize rewrite error:", err.message);

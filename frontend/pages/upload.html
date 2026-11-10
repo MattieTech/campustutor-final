@@ -219,11 +219,7 @@ async function uploadPDF(){
     pdfUploadBtn.disabled=false;return;
   }
   fill.style.width='100%';lbl.innerHTML='<i class="fa-solid fa-circle-check"></i> Done! Redirecting...';
-  // Award XP + badge
-  const xp=parseInt(localStorage.getItem('ct_xp')||'0');localStorage.setItem('ct_xp',xp+20);
-  const badges=JSON.parse(localStorage.getItem('ct_badges')||'[]');
-  if(!badges.includes('first_upload')){badges.push('first_upload');localStorage.setItem('ct_badges',JSON.stringify(badges));}
-  showToast('Document uploaded! +20 XP <i class="fa-solid fa-star"></i>','success');
+  showToast('Document uploaded and processed! <i class="fa-solid fa-circle-check"></i>','success');
   setTimeout(()=>{window.location.href=`/pages/study.html?docId=${data.document.id}&name=${encodeURIComponent(data.document.fileName)}`;},1000);
 }
 
@@ -265,7 +261,7 @@ async function uploadImage(){
   try{
     const formData=new FormData();
     formData.append('image',selectedImageFile);
-    const response=await fetch(`/api/upload/image`,{
+    const response=await fetch(`${API_BASE}/api/upload/image`,{
       method:'POST',
       headers:{Authorization:`Bearer ${getToken()}`},
       body:formData
@@ -281,10 +277,7 @@ async function uploadImage(){
         imageUploadBtn.disabled=false;return;
       }
       fill.style.width='100%';lbl.innerHTML='<i class="fa-solid fa-circle-check"></i> Done! Redirecting...';
-      const xp=parseInt(localStorage.getItem('ct_xp')||'0');localStorage.setItem('ct_xp',xp+15);
-      const badges=JSON.parse(localStorage.getItem('ct_badges')||'[]');
-      if(!badges.includes('first_upload')){badges.push('first_upload');localStorage.setItem('ct_badges',JSON.stringify(badges));}
-      showToast('Image uploaded! +15 XP <i class="fa-solid fa-star"></i>','success');
+      showToast('Image uploaded and processed! <i class="fa-solid fa-circle-check"></i>','success');
       setTimeout(()=>{window.location.href=`/pages/study.html?docId=${data.document.id}&name=${encodeURIComponent(data.document.fileName)}`;},1000);
   }catch(err){
     clearInterval(iv);fill.style.width='100%';fill.style.background='var(--red)';lbl.textContent='Upload failed.';

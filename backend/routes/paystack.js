@@ -111,6 +111,108 @@ router.post("/initialize", authMiddleware, async (req, res) => {
   }
 });
 
+// Helper: Idempotent fulfillment for Paystack payment (coins or subscription)
+async function processPaystackTransaction(reference, userId, meta = {}) {
+  const { addCoins, getUserCoinBalance } = require("../utils/coins");
+
+  // Check idempotency via Supabase Auth user_metadata
+  const { data: userData } = await supabase.auth.admin.getUserById(userId);
+  const authUser = userData?.user || null;
+  const userMeta = authUser?.user_metadata || {};
+  const processedRefs = Array.isArray(userMeta.processed_paystack_refs) ? userMeta.processed_paystack_refs : [];
+
+  if (reference && processedRefs.includes(reference)) {
+    const { data: freshProfile } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+    const coinInfo = await getUserCoinBalance(userId, authUser);
+    return {
+      alreadyProcessed: true,
+      type: meta.type === "coins" || meta.coinsAwarded ? "coins" : "plan",
+      plan: (freshProfile?.plan || "free").toLowerCase(),
+      coins: Number(coinInfo.coins ?? 0),
+      user: freshProfile,
+    };
+  }
+
+  // Record reference first to prevent concurrent double-crediting
+  if (reference && authUser) {
+    const updatedRefs = [...processedRefs, reference].slice(-50);
+    await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: { ...userMeta, processed_paystack_refs: updatedRefs },
+    }).catch(() => {});
+  }
+
+  // Case 1: Coin Pack Purchase
+  if (meta.type === "coins" || meta.coinsAwarded) {
+    const coinsToAdd = Number(meta.coinsAwarded || 100);
+    const addRes = await addCoins(userId, coinsToAdd, "buy_coins", `Purchased coin pack (+${coinsToAdd} coins)`, authUser);
+    const { data: freshProfile } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+
+    return {
+      alreadyProcessed: false,
+      type: "coins",
+      coinsAdded: coinsToAdd,
+      coins: Number(addRes.coins ?? 0),
+      plan: (freshProfile?.plan || "free").toLowerCase(),
+      user: freshProfile,
+    };
+  }
+
+  // Case 2: Subscription Plan Purchase
+  const planName = (meta.planName || meta.planType || "plus").toLowerCase();
+  const durationMonths = parseInt(meta.duration || "1") || 1;
+  const subscriptionEnd = new Date();
+  subscriptionEnd.setMonth(subscriptionEnd.getMonth() + durationMonths);
+
+  const { data: updatedProfile, error: updateErr } = await supabase
+    .from("profiles")
+    .update({
+      plan: planName,
+      subscription_status: "active",
+      subscription_end: subscriptionEnd.toISOString(),
+    })
+    .eq("id", userId)
+    .select()
+    .single();
+
+  if (updateErr) {
+    throw new Error("Failed to activate subscription in database.");
+  }
+
+  // Process Referral Commission (₦200 for Plus, ₦500 for Pro)
+  if (updatedProfile && updatedProfile.referred_by) {
+    const reward = planName === "pro" ? 500 : 200;
+    const { data: existingRef } = await supabase
+      .from("referrals")
+      .select("*")
+      .eq("referrer_id", updatedProfile.referred_by)
+      .eq("referee_id", userId)
+      .maybeSingle();
+
+    if (existingRef && existingRef.status !== "completed") {
+      await supabase
+        .from("referrals")
+        .update({ reward_amount: reward, status: "completed" })
+        .eq("id", existingRef.id);
+    } else if (!existingRef) {
+      await supabase.from("referrals").insert({
+        referrer_id: updatedProfile.referred_by,
+        referee_id: userId,
+        reward_amount: reward,
+        status: "completed",
+        created_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  return {
+    alreadyProcessed: false,
+    type: "plan",
+    plan: planName,
+    subscriptionEnd: subscriptionEnd.toISOString(),
+    user: updatedProfile,
+  };
+}
+
 // ── VERIFY TRANSACTION DIRECTLY ───────────────────────────────
 // GET /api/paystack/verify/:reference
 router.get("/verify/:reference", async (req, res) => {
@@ -120,7 +222,6 @@ router.get("/verify/:reference", async (req, res) => {
       return res.status(400).json({ error: "Reference parameter is required." });
     }
 
-    // Recover userId from Auth Token or Fallback to Paystack transaction metadata
     let tokenUserId = null;
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -160,58 +261,28 @@ router.get("/verify/:reference", async (req, res) => {
               return res.status(400).json({ error: "Could not associate payment with a user profile." });
             }
 
-            // If this transaction was for purchasing coins
-            if (meta.type === "coins" || meta.coinsAwarded) {
-              const coinsToAdd = Number(meta.coinsAwarded || 100);
-              const { addCoins } = require("../utils/coins");
-              await addCoins(effectiveUserId, coinsToAdd, "buy_coins", `Purchased coin pack (+${coinsToAdd} coins)`);
-              
-              const { data: freshProfile } = await supabase
-                .from("profiles")
-                .select("*")
-                .eq("id", effectiveUserId)
-                .maybeSingle();
-
+            const result = await processPaystackTransaction(reference, effectiveUserId, meta);
+            if (result.type === "coins") {
               return res.json({
                 success: true,
                 type: "coins",
-                plan: (freshProfile?.plan || "free").toLowerCase(),
-                coinsAdded: coinsToAdd,
-                user: freshProfile,
-                coins: freshProfile?.coins ?? freshProfile?.xp ?? 0,
-                message: `🎉 +${coinsToAdd} CampusCoins added to your wallet!`,
+                plan: result.plan,
+                coinsAdded: result.coinsAdded || 0,
+                user: result.user,
+                coins: result.coins,
+                message: result.alreadyProcessed
+                  ? "CampusCoins already credited to your wallet."
+                  : `+${result.coinsAdded} CampusCoins added to your wallet!`,
               });
-            }
-
-            const planName = (meta.planName || meta.planType || "plus").toLowerCase();
-            const durationMonths = parseInt(meta.duration || "1") || 1;
-
-            const subscriptionEnd = new Date();
-            subscriptionEnd.setMonth(subscriptionEnd.getMonth() + durationMonths);
-
-            const { data: updatedProfile, error: updateErr } = await supabase
-              .from("profiles")
-              .update({
-                plan: planName,
-                subscription_status: "active",
-                subscription_end: subscriptionEnd.toISOString(),
-              })
-              .eq("id", effectiveUserId)
-              .select()
-              .single();
-
-            if (updateErr) {
-              console.error("Failed to update profile after payment verification:", updateErr.message);
-              return res.status(500).json({ error: "Failed to activate subscription in database." });
             }
 
             return res.json({
               success: true,
-              message: `Successfully upgraded to ${planName.toUpperCase()} plan!`,
-              plan: planName,
+              message: `Successfully upgraded to ${result.plan.toUpperCase()} plan!`,
+              plan: result.plan,
               type: "plan",
-              subscriptionEnd: subscriptionEnd.toISOString(),
-              user: updatedProfile,
+              subscriptionEnd: result.subscriptionEnd || null,
+              user: result.user,
             });
           } else {
             return res.status(400).json({
@@ -260,85 +331,16 @@ router.post("/webhook", async (req, res) => {
     console.log(`🔌 Paystack Webhook Event: ${event.event}`);
 
     if (event.event === "charge.success") {
-      const metadata = event.data.metadata;
-      const { userId, planName, duration, type, coinsAwarded } = metadata || {};
+      const metadata = event.data?.metadata || {};
+      const reference = event.data?.reference;
+      const userId = metadata.userId;
 
       if (!userId) {
         console.warn("⚠️ Webhook event missing userId.");
         return res.sendStatus(200);
       }
 
-      // Handle coin purchases in webhook
-      if (type === "coins" || coinsAwarded) {
-        const { addCoins } = require("../utils/coins");
-        const count = Number(coinsAwarded || 100);
-        await addCoins(userId, count, "buy_coins", `Webhook: Purchased coin pack (+${count} coins)`);
-        console.log(`🪙 Webhook: Added ${count} coins to User ${userId}`);
-        return res.sendStatus(200);
-      }
-
-      if (!planName) {
-        console.warn("⚠️ Webhook event missing planName.");
-        return res.sendStatus(200);
-      }
-
-      const durationMonths = parseInt(duration || "1") || 1;
-      const subscriptionEnd = new Date();
-      subscriptionEnd.setMonth(subscriptionEnd.getMonth() + durationMonths);
-
-      // 1. Upgrade user plan in profiles
-      const { data: profile, error: updateErr } = await supabase
-        .from("profiles")
-        .update({
-          plan: planName,
-          subscription_status: "active",
-          subscription_end: subscriptionEnd.toISOString(),
-        })
-        .eq("id", userId)
-        .select()
-        .single();
-
-      if (updateErr) {
-        console.error("❌ Failed to update user plan on success:", updateErr.message);
-        return res.status(500).json({ error: "Database update failed." });
-      }
-
-      console.log(`🚀 User ${userId} upgraded to ${planName.toUpperCase()} plan.`);
-
-      // 2. Process Referral Rewards
-      if (profile && profile.referred_by) {
-        const reward = planName === "pro" ? 250 : 200;
-
-        // Update referrals record if exists
-        const { data: existingRef } = await supabase
-          .from("referrals")
-          .select("*")
-          .eq("referrer_id", profile.referred_by)
-          .eq("referee_id", userId)
-          .single();
-
-        if (existingRef) {
-          await supabase
-            .from("referrals")
-            .update({
-              reward_amount: reward,
-              status: "completed",
-            })
-            .eq("id", existingRef.id);
-          
-          console.log(`🎁 Reward of ${reward} awarded to Referrer ${profile.referred_by} for Referee ${userId}`);
-        } else {
-          // If no pre-existing record, insert one anyway
-          await supabase.from("referrals").insert({
-            referrer_id: profile.referred_by,
-            referee_id: userId,
-            reward_amount: reward,
-            status: "completed",
-            created_at: new Date().toISOString(),
-          });
-          console.log(`🎁 Created referral record and awarded ${reward} to Referrer ${profile.referred_by}`);
-        }
-      }
+      await processPaystackTransaction(reference, userId, metadata);
     }
 
     res.sendStatus(200);

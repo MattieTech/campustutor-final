@@ -199,15 +199,17 @@ router.post("/pdf", authMiddleware, subscriptionMiddleware, upload.single("pdf")
       },
     });
 
-    setImmediate(() => {
-      supabase.from("user_activity").insert({
-        user_id: userId,
-        action: "upload_document",
-        details: `Uploaded PDF "${fileName}" (${pageCount} pages)`,
-        created_at: new Date().toISOString(),
-      }).catch((activityErr) => {
+    setImmediate(async () => {
+      try {
+        await supabase.from("user_activity").insert({
+          user_id: userId,
+          action: "upload_document",
+          details: `Uploaded PDF "${fileName}" (${pageCount} pages)`,
+          created_at: new Date().toISOString(),
+        });
+      } catch (activityErr) {
         console.log("Note: Could not log activity:", activityErr.message);
-      });
+      }
 
       Promise.allSettled([
         awardXP(userId, "upload_pdf", { fileName, pageCount }),
@@ -304,15 +306,17 @@ router.post(
         },
       });
 
-      setImmediate(() => {
-        supabase.from("user_activity").insert({
-          user_id: userId,
-          action: "upload_image",
-          details: `Uploaded image "${fileName}" (${req.file.mimetype})`,
-          created_at: new Date().toISOString(),
-        }).catch((activityErr) => {
+      setImmediate(async () => {
+        try {
+          await supabase.from("user_activity").insert({
+            user_id: userId,
+            action: "upload_image",
+            details: `Uploaded image "${fileName}" (${req.file.mimetype})`,
+            created_at: new Date().toISOString(),
+          });
+        } catch (activityErr) {
           console.log("Note: Could not log activity:", activityErr.message);
-        });
+        }
 
         Promise.allSettled([
           awardXP(userId, "upload_image", { fileName }),
@@ -384,18 +388,33 @@ router.get("/my-activity", authMiddleware, async (req, res) => {
 // ── GET LEADERBOARD DATA ──────────────────────────────────────
 router.get("/leaderboard", authMiddleware, async (req, res) => {
   try {
-    const { data: leaderboard, error } = await supabase
+    const { getUserCoinBalance } = require("../utils/coins");
+    const { data: profilesList, error } = await supabase
       .from("profiles")
-      .select("id, full_name, xp, level")
+      .select("id, full_name, xp, level, streak")
       .order("xp", { ascending: false })
-      .limit(5);
+      .limit(10);
 
     if (error) {
       console.error("Leaderboard query error:", error.message);
       return res.status(500).json({ error: "Failed to fetch leaderboard data." });
     }
 
-    res.json({ leaderboard: leaderboard || [] });
+    const enriched = await Promise.all(
+      (profilesList || []).map(async (p) => {
+        const coinInfo = await getUserCoinBalance(p.id);
+        return {
+          id: p.id,
+          full_name: p.full_name || "Student",
+          xp: p.xp || 0,
+          level: p.level || 1,
+          coins: Number(coinInfo.coins ?? 0),
+        };
+      })
+    );
+
+    enriched.sort((a, b) => b.coins - a.coins || b.xp - a.xp);
+    res.json({ leaderboard: enriched.slice(0, 5) });
   } catch (err) {
     console.error("Leaderboard error:", err.message);
     res.status(500).json({ error: "Failed to fetch leaderboard." });
@@ -439,7 +458,9 @@ router.delete("/:id", authMiddleware, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: "Failed to delete document." });
   }
-});// Auto-heals missing profiles in the database
+});
+
+// Auto-heals missing profiles in the database
 async function ensureProfile(userId, email) {
   try {
     const cleanEmail = email ? email.trim().toLowerCase() : null;
@@ -480,7 +501,8 @@ async function ensureProfile(userId, email) {
 
 router.get("/stats/:userId", authMiddleware, async (req, res) => {
   try {
-    const { getUserStats, updateStreak } = require("../utils/xp");
+    const { getUserStats } = require("../utils/xp");
+    const { getUserCoinBalance, computeEffectiveStreak } = require("../utils/coins");
     const userId = req.params.userId;
     
     if (userId !== req.user.id) {
@@ -490,39 +512,38 @@ router.get("/stats/:userId", authMiddleware, async (req, res) => {
     // Auto-heal profile if it is missing
     await ensureProfile(userId, req.user.email);
 
-    try {
-      await updateStreak(userId);
-    } catch (streakErr) {
-      console.error("Failed to automatically update streak on stats load:", streakErr.message);
-    }
-
     let stats = null;
     try {
-      stats = await getUserStats(userId);
+      stats = await getUserStats(userId, req.user);
     } catch (xpErr) {
       console.error("XP utility fetch error:", xpErr.message);
     }
 
     if (!stats) {
-      // Return a basic mock stats response as a safe fallback to prevent page crashing
-      const cleanEmail = req.user.email ? req.user.email.trim().toLowerCase() : "";
       const { data: fallbackProfile } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .maybeSingle();
+      const coinInfo = await getUserCoinBalance(userId, req.user);
 
       stats = {
         level: fallbackProfile?.level || 1,
         xp: fallbackProfile?.xp || 0,
+        coins: Number(coinInfo.coins ?? 0),
+        canClaimDaily: Boolean(coinInfo.canClaimDaily),
         xpInLevel: (fallbackProfile?.xp || 0) % 100,
         xpForNextLevel: 100,
         xpProgressPercent: (fallbackProfile?.xp || 0) % 100,
-        streak: fallbackProfile?.streak || 0,
+        streak: Math.max(
+          computeEffectiveStreak(fallbackProfile?.streak, fallbackProfile?.last_activity_date),
+          Number(coinInfo.streak || 0)
+        ),
         documentsCount: 0,
         activityCount: 0,
-        plan: fallbackProfile?.plan || 'free',
-        is_verified: fallbackProfile?.is_verified || true
+        aiResultsCount: 0,
+        plan: (fallbackProfile?.plan || "free").toLowerCase(),
+        is_verified: Boolean(fallbackProfile?.is_verified),
       };
     }
 
@@ -560,11 +581,12 @@ router.get("/my-results", authMiddleware, async (req, res) => {
     const groupedResults = {};
     (results || []).forEach(result => {
       const docId = result.document_id;
+      const docObj = Array.isArray(result.documents) ? result.documents[0] : result.documents;
       if (!groupedResults[docId]) {
         groupedResults[docId] = {
           document_id: docId,
-          document_name: result.documents?.[0]?.file_name || 'Unknown Document',
-          document_created_at: result.documents?.[0]?.created_at || null,
+          document_name: docObj?.file_name || 'Untitled Document',
+          document_created_at: docObj?.created_at || null,
           results: []
         };
       }
@@ -595,7 +617,7 @@ router.get("/referrals/stats", authMiddleware, async (req, res) => {
     await ensureProfile(userId, req.user.email);
 
     // 1. Get profile referral code
-    const { data: profile, error: profileErr } = await supabase
+    let { data: profile, error: profileErr } = await supabase
       .from("profiles")
       .select("referral_code, referred_by")
       .eq("id", userId)

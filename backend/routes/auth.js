@@ -6,6 +6,7 @@ const express = require("express");
 const router = express.Router();
 const supabase = require("../utils/supabase");
 const authMiddleware = require("../middleware/authMiddleware");
+const { getUserCoinBalance, computeEffectiveStreak } = require("../utils/coins");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 
@@ -133,7 +134,7 @@ router.post("/signup", async (req, res) => {
       email: cleanEmail,
       password,
       email_confirm: true, // Bypass Supabase default flow so we handle via nodemailer OTP
-      user_metadata: { full_name: fullName },
+      user_metadata: { full_name: fullName, coins: 5 },
     });
 
     if (error) {
@@ -266,13 +267,16 @@ router.post("/verify", async (req, res) => {
 
     // Create referrals table entry if referred_by is set
     if (profile.referred_by) {
-      await supabase.from("referrals").insert({
+      const { error: refInsertErr } = await supabase.from("referrals").insert({
         referrer_id: profile.referred_by,
         referee_id: profile.id,
         reward_amount: 0,
         status: "pending",
         created_at: new Date().toISOString()
-      }).catch((e) => console.error("Error creating referral record:", e.message));
+      });
+      if (refInsertErr) {
+        console.error("Error creating referral record:", refInsertErr.message);
+      }
     }
 
     res.json({ message: "Email verified successfully! You can now log in." });
@@ -288,7 +292,7 @@ router.get("/me", authMiddleware, async (req, res) => {
     const userId = req.user.id;
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select("id, full_name, email, role, plan, subscription_status, subscription_end, coins, is_verified, referral_code, streak, xp, level, created_at")
+      .select("*")
       .eq("id", userId)
       .maybeSingle();
 
@@ -296,22 +300,41 @@ router.get("/me", authMiddleware, async (req, res) => {
       return res.status(404).json({ error: "User profile not found." });
     }
 
+    let activePlan = (profile.plan || "free").toLowerCase();
+    let subStatus = (profile.subscription_status || "inactive").toLowerCase();
+    const subEnd = profile.subscription_end ? new Date(profile.subscription_end) : null;
+    if (activePlan !== "free" && subEnd && subEnd < new Date()) {
+      activePlan = "free";
+      subStatus = "expired";
+      await supabase
+        .from("profiles")
+        .update({ plan: "free", subscription_status: "expired" })
+        .eq("id", userId);
+    }
+
+    const coinInfo = await getUserCoinBalance(userId, req.user);
+    const effectiveProfileStreak = computeEffectiveStreak(profile.streak, profile.last_activity_date);
+    const streak = Math.max(effectiveProfileStreak, Number(coinInfo.streak || 0));
+    const meta = req.user.user_metadata || {};
+
     res.json({
       user: {
         id: profile.id,
         email: profile.email || req.user.email,
         fullName: profile.full_name,
-        role: profile.role || "student",
-        plan: (profile.plan || "free").toLowerCase(),
-        subscriptionStatus: profile.subscription_status || "inactive",
+        role: profile.role || req.user.app_metadata?.role || "student",
+        plan: activePlan,
+        subscriptionStatus: subStatus,
         subscriptionEnd: profile.subscription_end || null,
-        coins: Number(profile.coins || 0),
+        coins: Number(coinInfo.coins ?? 0),
+        canClaimDaily: Boolean(coinInfo.canClaimDaily),
         isVerified: profile.is_verified ?? true,
         referralCode: profile.referral_code,
-        streak: profile.streak || 0,
+        streak,
         xp: profile.xp || 0,
         level: profile.level || 1,
-        academicLevel: profile.academic_level || "200L Student"
+        academicLevel: profile.academic_level || meta.academic_level || "200L Student",
+        preferences: profile.preferences || meta.preferences || {},
       }
     });
   } catch (err) {
@@ -325,13 +348,25 @@ router.put("/profile", authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
     const { fullName, academicLevel } = req.body;
-    const updates = {};
-    if (fullName && fullName.trim()) updates.full_name = fullName.trim();
-    if (academicLevel !== undefined) updates.academic_level = academicLevel;
+    const profileUpdates = {};
+    if (fullName && fullName.trim()) profileUpdates.full_name = fullName.trim();
 
-    if (Object.keys(updates).length > 0) {
-      await supabase.from("profiles").update(updates).eq("id", userId);
+    if (Object.keys(profileUpdates).length > 0) {
+      await supabase.from("profiles").update(profileUpdates).eq("id", userId);
     }
+
+    // Attempt optional academic_level column update if schema has it
+    if (academicLevel !== undefined) {
+      try {
+        await supabase.from("profiles").update({ academic_level: academicLevel }).eq("id", userId);
+      } catch (_) {}
+    }
+
+    // Always persist in Auth user_metadata so settings survive refreshes
+    const metaUpdates = { ...(req.user.user_metadata || {}) };
+    if (fullName && fullName.trim()) metaUpdates.full_name = fullName.trim();
+    if (academicLevel !== undefined) metaUpdates.academic_level = academicLevel;
+    await supabase.auth.admin.updateUserById(userId, { user_metadata: metaUpdates });
 
     res.json({ success: true, message: "Profile updated successfully." });
   } catch (err) {
@@ -347,10 +382,14 @@ router.put("/preferences", authMiddleware, async (req, res) => {
     const { appearance, language, notifications, autoDownload } = req.body;
     const prefs = { appearance, language, notifications, autoDownload };
     
-    // Attempt save to DB if column exists, but always succeed for frontend
+    // Attempt save to DB if column exists
     try {
       await supabase.from("profiles").update({ preferences: prefs }).eq("id", userId);
-    } catch (ignore) {}
+    } catch (_) {}
+
+    // Always persist in Auth user_metadata
+    const metaUpdates = { ...(req.user.user_metadata || {}), preferences: prefs };
+    await supabase.auth.admin.updateUserById(userId, { user_metadata: metaUpdates });
 
     res.json({ success: true, message: "Preferences saved successfully.", preferences: prefs });
   } catch (err) {
@@ -500,6 +539,12 @@ router.post("/google-login", async (req, res) => {
       .update({ last_login: new Date().toISOString() })
       .eq("id", userId);
 
+    const googleCoinInfo = await getUserCoinBalance(userId, user);
+    const googleStreak = Math.max(
+      computeEffectiveStreak(profile?.streak, profile?.last_activity_date),
+      Number(googleCoinInfo.streak || 0)
+    );
+
     res.json({
       message: "Login successful!",
       token: sessionData.session.access_token,
@@ -509,7 +554,13 @@ router.post("/google-login", async (req, res) => {
         fullName: profile?.full_name || fullName,
         role: userRole,
         status: userStatus,
-        plan: profile?.plan || 'free',
+        plan: (profile?.plan || "free").toLowerCase(),
+        coins: Number(googleCoinInfo.coins ?? 5),
+        streak: googleStreak,
+        xp: profile?.xp || 0,
+        level: profile?.level || 1,
+        referralCode: profile?.referral_code || null,
+        academicLevel: profile?.academic_level || user.user_metadata?.academic_level || "200L Student",
         isVerified: true
       }
     });
@@ -542,7 +593,7 @@ router.post("/login", async (req, res) => {
     // Try to get user profile
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("full_name, role, status, is_verified, plan, subscription_end")
+      .select("*")
       .eq("id", data.user.id)
       .maybeSingle();
 
@@ -575,7 +626,7 @@ router.post("/login", async (req, res) => {
     console.log("🔐 Login for:", email);
 
     // Auto-downgrade if subscription has expired
-    let activePlan = profile?.plan || "free";
+    let activePlan = (profile?.plan || "free").toLowerCase();
     if (activePlan !== "free" && profile?.subscription_end) {
       const subEnd = new Date(profile.subscription_end);
       if (subEnd < new Date()) {
@@ -587,6 +638,12 @@ router.post("/login", async (req, res) => {
       }
     }
 
+    const coinInfo = await getUserCoinBalance(data.user.id, data.user);
+    const loginStreak = Math.max(
+      computeEffectiveStreak(profile?.streak, profile?.last_activity_date),
+      Number(coinInfo.streak || 0)
+    );
+
     res.json({
       message: "Login successful!",
       token: data.session.access_token,
@@ -597,6 +654,12 @@ router.post("/login", async (req, res) => {
         role: userRole,
         status: userStatus,
         plan: activePlan,
+        coins: Number(coinInfo.coins ?? 5),
+        streak: loginStreak,
+        xp: profile?.xp || 0,
+        level: profile?.level || 1,
+        referralCode: profile?.referral_code || null,
+        academicLevel: profile?.academic_level || data.user.user_metadata?.academic_level || "200L Student",
         isVerified: profile ? profile.is_verified : false,
       },
     });
@@ -797,47 +860,33 @@ router.post("/logout", async (req, res) => {
   }
 });
 
-// ── DIAGNOSTIC ROUTE ──────────────────────────────────────────
-router.get("/diagnostic", async (req, res) => {
+// ── DIAGNOSTIC ROUTE (Admin Only) ─────────────────────────────
+router.get("/diagnostic", authMiddleware, async (req, res) => {
   try {
-    const supabaseUrl = process.env.SUPABASE_URL || "NOT SET";
-    const rawKey = process.env.SUPABASE_SERVICE_KEY || "";
-    const serviceKeySnippet = rawKey ? `${rawKey.substring(0, 10)}...[len=${rawKey.length}]...${rawKey.substring(rawKey.length - 5)}` : "NOT SET";
-    
-    // Count profiles
+    if (req.user.app_metadata?.role !== "admin") {
+      return res.status(403).json({ error: "Admin access required." });
+    }
+
     const { count, error: countErr } = await supabase
       .from("profiles")
       .select("*", { count: "exact", head: true });
-      
-    // Fetch user profile specifically
-    const email = req.query.email || "comfortolateru234@gmail.com";
-    const { data: profile, error: profileErr } = await supabase
-      .from("profiles")
-      .select("*")
-      .ilike("email", email.trim().toLowerCase())
-      .maybeSingle();
 
     res.json({
-      supabaseUrl,
-      supabaseServiceKeySnippet: serviceKeySnippet,
+      status: "ok",
       profilesCount: countErr ? `Error: ${countErr.message}` : count,
-      searchedEmail: email,
-      profileFound: !!profile,
-      profileData: profile || null,
-      profileError: profileErr ? profileErr.message : null,
-      smtpHost: process.env.SMTP_HOST || "NOT SET",
-      smtpPort: process.env.SMTP_PORT || "NOT SET",
-      smtpUser: process.env.SMTP_USER || "NOT SET",
-      brevoApiKeyExists: !!process.env.BREVO_API_KEY,
-      brevoApiKeySnippet: process.env.BREVO_API_KEY ? `${process.env.BREVO_API_KEY.substring(0, 5)}...[len=${process.env.BREVO_API_KEY.length}]` : "NOT SET"
+      smtpConfigured: !!(process.env.SMTP_HOST || process.env.EMAIL_HOST || process.env.GMAIL_USER),
+      brevoConfigured: !!process.env.BREVO_API_KEY,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ── TEST SMTP ROUTE ───────────────────────────────────────────
-router.get("/test-smtp", async (req, res) => {
+// ── TEST SMTP ROUTE (Admin Only) ──────────────────────────────
+router.get("/test-smtp", authMiddleware, async (req, res) => {
+  if (req.user.app_metadata?.role !== "admin") {
+    return res.status(403).json({ error: "Admin access required." });
+  }
   const results = {};
   const recipient = req.query.to || "mattietechdev@gmail.com";
   

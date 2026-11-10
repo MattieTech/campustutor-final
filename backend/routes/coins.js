@@ -6,7 +6,7 @@ const express = require("express");
 const router = express.Router();
 const https = require("https");
 const authMiddleware = require("../middleware/authMiddleware");
-const { getUserCoinBalance, claimDailyBonus } = require("../utils/coins");
+const { getUserCoinBalance, claimDailyBonus, getCoinHistory } = require("../utils/coins");
 const supabase = require("../utils/supabase");
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || "sk_test_mockkey";
@@ -29,7 +29,7 @@ router.get("/packages", (req, res) => {
 // GET /api/coins/balance
 router.get("/balance", authMiddleware, async (req, res) => {
   try {
-    const data = await getUserCoinBalance(req.user.id);
+    const data = await getUserCoinBalance(req.user.id, req.user);
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: "Failed to retrieve coin balance." });
@@ -40,7 +40,7 @@ router.get("/balance", authMiddleware, async (req, res) => {
 // POST /api/coins/claim-daily
 router.post("/claim-daily", authMiddleware, async (req, res) => {
   try {
-    const result = await claimDailyBonus(req.user.id);
+    const result = await claimDailyBonus(req.user.id, req.user);
     if (!result.success) {
       return res.status(400).json(result);
     }
@@ -155,17 +155,8 @@ router.post("/buy-package", authMiddleware, async (req, res) => {
 // GET /api/coins/history
 router.get("/history", authMiddleware, async (req, res) => {
   try {
-    const { data: logs, error } = await supabase
-      .from("coin_transactions")
-      .select("amount, action_type, description, created_at")
-      .eq("user_id", req.user.id)
-      .order("created_at", { ascending: false })
-      .limit(20);
-
-    if (error) {
-      return res.json({ history: [] });
-    }
-    res.json({ history: logs || [] });
+    const history = await getCoinHistory(req.user.id);
+    res.json({ history });
   } catch (err) {
     res.json({ history: [] });
   }

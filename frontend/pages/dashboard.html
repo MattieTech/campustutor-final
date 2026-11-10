@@ -814,7 +814,7 @@
       <!-- Notification Bell -->
       <button class="ct-exact-bell-btn" aria-label="Notifications" onclick="openActivityModal()" title="Notifications & Activity">
         <i class="fa-solid fa-bell"></i>
-        <span class="ct-exact-bell-badge">2</span>
+        <span class="ct-exact-bell-badge" id="navBellBadge" style="display:none;">0</span>
       </button>
 
       <!-- User Avatar with Dropdown Chevron -->
@@ -840,7 +840,7 @@
   <div class="ct-exact-hero">
     <div class="ct-exact-hero-left">
       <span class="ct-exact-hero-welcome">Welcome back,</span>
-      <h1 id="welcomeMsg" class="ct-exact-hero-username">matthewaliu001</h1>
+      <h1 id="welcomeMsg" class="ct-exact-hero-username">Student</h1>
       <p class="ct-exact-hero-tagline">Your study hub – track progress, manage documents and stay motivated.</p>
       <div class="ct-exact-quote-pill">
         <span><i class="fa-solid fa-quote-left" style="opacity:0.7;margin-right:4px;"></i>Dream big, study smart, achieve more.</span>
@@ -859,7 +859,7 @@
       <div class="ct-exact-stat-icon" style="background:#eff6ff; color:#2563eb;">
         <i class="fa-solid fa-file-lines"></i>
       </div>
-      <div class="ct-exact-stat-val" id="statDocs">19</div>
+      <div class="ct-exact-stat-val" id="statDocs">--</div>
       <div class="ct-exact-stat-lbl">Documents</div>
       <div class="ct-exact-stat-arrow"><i class="fa-solid fa-chevron-right"></i></div>
     </div>
@@ -869,7 +869,7 @@
       <div class="ct-exact-stat-icon" style="background:#fff7ed; color:#f97316;">
         <i class="fa-solid fa-fire anim-fire"></i>
       </div>
-      <div class="ct-exact-stat-val" id="statStreak">10</div>
+      <div class="ct-exact-stat-val" id="statStreak">--</div>
       <div class="ct-exact-stat-lbl">Day Streak</div>
       <div class="ct-exact-stat-arrow"><i class="fa-solid fa-chevron-right"></i></div>
     </div>
@@ -879,7 +879,7 @@
       <div class="ct-exact-stat-icon" style="background:#fefce8; color:#eab308;">
         <i class="fa-solid fa-coins anim-coin"></i>
       </div>
-      <div class="ct-exact-stat-val" id="statCoins" style="color:#d97706;">50</div>
+      <div class="ct-exact-stat-val" id="statCoins" style="color:#d97706;">--</div>
       <div class="ct-exact-stat-lbl">Coins</div>
       <div class="ct-exact-stat-arrow"><i class="fa-solid fa-chevron-right"></i></div>
     </div>
@@ -889,7 +889,7 @@
       <div class="ct-exact-stat-icon" style="background:#f0fdf4; color:#10b981;">
         <i class="fa-solid fa-crown anim-crown"></i>
       </div>
-      <div class="ct-exact-stat-val" id="statPlan" style="font-size:0.86rem; color:#10b981;">PLUS</div>
+      <div class="ct-exact-stat-val" id="statPlan" style="font-size:0.86rem; color:#10b981;">--</div>
       <div class="ct-exact-stat-lbl">Plan</div>
       <div class="ct-exact-stat-arrow"><i class="fa-solid fa-chevron-right"></i></div>
     </a>
@@ -1265,11 +1265,12 @@ requireAuth();
 })();
 
 const user = getUser();
-if (user) {
-  const name = user.fullName || user.email || 'Student';
+function applyUserIdentityUI(u) {
+  if (!u) return;
+  const name = u.fullName || u.email?.split('@')[0] || 'Student';
   const welcomeMsg = document.getElementById('welcomeMsg');
-  if (welcomeMsg) welcomeMsg.textContent = user.fullName || user.email?.split('@')[0] || 'matthewaliu001';
-  
+  if (welcomeMsg) welcomeMsg.textContent = name;
+
   const initials = name.substring(0, 2).toUpperCase();
   const avatarInitials = document.getElementById('userAvatarInitials');
   if (avatarInitials) avatarInitials.textContent = initials;
@@ -1278,12 +1279,16 @@ if (user) {
   const modalUserName = document.getElementById('modalUserName');
   if (modalUserName) modalUserName.textContent = name;
   const modalUserEmail = document.getElementById('modalUserEmail');
-  if (modalUserEmail) modalUserEmail.textContent = user.email || '';
+  if (modalUserEmail) modalUserEmail.textContent = u.email || '';
 
-  if (user.isVerified === false) {
-    const banner = document.getElementById('verificationBanner');
-    if (banner) banner.style.display = 'flex';
+  const banner = document.getElementById('verificationBanner');
+  if (banner) {
+    banner.style.display = u.isVerified === false ? 'flex' : 'none';
   }
+}
+
+if (user) {
+  applyUserIdentityUI(user);
 }
 
 // ── THEME TOGGLE ──
@@ -1304,34 +1309,45 @@ function toggleTheme() {
 }
 initTheme();
 
-// ── USER STATS LOADER (COINS ONLY - NO XP) ──
+// ── USER STATS LOADER (REAL ACCOUNT DETAILS ONLY) ──
 async function loadUserStats() {
-  const userId = user?.id;
+  const freshUser = await apiGetMe().catch(() => null);
+  const activeUser = freshUser || user;
+  if (activeUser) applyUserIdentityUI(activeUser);
+
+  const userId = activeUser?.id;
   if (!userId) return;
+
   const { data: stats, error } = await apiGetUserStats(userId);
   if (error || !stats) {
-    loadStatsFromLocalStorage();
+    renderCachedUserStats(activeUser);
     return;
   }
 
   const statDocs = document.getElementById('statDocs');
-  if (statDocs) statDocs.textContent = stats.documentsCount || 0;
+  if (statDocs) statDocs.textContent = Number(stats.documentsCount ?? 0);
 
   const statStreak = document.getElementById('statStreak');
-  if (statStreak) statStreak.textContent = stats.streak || 0;
+  if (statStreak) statStreak.textContent = Number(stats.streak ?? 0);
 
-  // ONLY COINS - User explicitly requested NO XP anywhere
-  const liveCoins = (window.userCoinState && window.userCoinState.coins !== undefined) 
-    ? window.userCoinState.coins 
-    : (stats.coins !== undefined ? stats.coins : parseInt(localStorage.getItem('ct_coins') || '50'));
-  
+  const liveCoins = stats.coins !== undefined
+    ? Number(stats.coins)
+    : (activeUser?.coins !== undefined ? Number(activeUser.coins) : 0);
+
+  if (typeof userCoinState !== 'undefined') {
+    userCoinState.coins = liveCoins;
+    userCoinState.streak = Number(stats.streak ?? 0);
+    if (stats.canClaimDaily !== undefined) userCoinState.canClaimDaily = Boolean(stats.canClaimDaily);
+    if (typeof updateCoinUIElements === 'function') updateCoinUIElements();
+  }
+
   const statCoins = document.getElementById('statCoins');
   if (statCoins) statCoins.textContent = liveCoins;
 
   const modalCoins = document.getElementById('modalCoinsVal');
   if (modalCoins) modalCoins.textContent = liveCoins + ' Coins';
 
-  const currentPlan = (stats.plan || 'plus').toLowerCase();
+  const currentPlan = (stats.plan || activeUser?.plan || 'free').toLowerCase();
   const statPlan = document.getElementById('statPlan');
   if (statPlan) {
     const planText = currentPlan === 'pro' ? 'PRO' : (currentPlan === 'plus' ? 'PLUS' : 'FREE');
@@ -1343,26 +1359,47 @@ async function loadUserStats() {
     modalPlan.textContent = currentPlan.toUpperCase();
     modalPlan.style.color = currentPlan === 'free' ? '#10b981' : (currentPlan === 'plus' ? '#2563eb' : '#a855f7');
   }
+
+  const bellBadge = document.getElementById('navBellBadge');
+  if (bellBadge) {
+    const actCount = Number(stats.activityCount ?? 0);
+    if (actCount > 0) {
+      bellBadge.textContent = actCount > 99 ? '99+' : actCount;
+      bellBadge.style.display = 'flex';
+    } else {
+      bellBadge.style.display = 'none';
+    }
+  }
+
+  // Persist real synced snapshot
+  if (activeUser) {
+    activeUser.coins = liveCoins;
+    activeUser.streak = Number(stats.streak ?? 0);
+    activeUser.plan = currentPlan;
+    localStorage.setItem('ct_user', JSON.stringify(activeUser));
+  }
 }
 
-function loadStatsFromLocalStorage() {
-  const docs = JSON.parse(localStorage.getItem('ct_docs') || '[]');
+function renderCachedUserStats(activeUser) {
   const statDocs = document.getElementById('statDocs');
-  if (statDocs) statDocs.textContent = docs.length || 19;
+  if (statDocs) statDocs.textContent = 0;
 
-  const streak = parseInt(localStorage.getItem('ct_streak') || '10');
+  const streak = Number(activeUser?.streak ?? 0);
   const statStreak = document.getElementById('statStreak');
   if (statStreak) statStreak.textContent = streak;
 
-  const liveCoins = (window.userCoinState && window.userCoinState.coins !== undefined) 
-    ? window.userCoinState.coins 
-    : parseInt(localStorage.getItem('ct_coins') || '50');
-  
+  const liveCoins = Number(activeUser?.coins ?? 0);
   const statCoins = document.getElementById('statCoins');
   if (statCoins) statCoins.textContent = liveCoins;
 
   const modalCoins = document.getElementById('modalCoinsVal');
   if (modalCoins) modalCoins.textContent = liveCoins + ' Coins';
+
+  const currentPlan = (activeUser?.plan || 'free').toLowerCase();
+  const statPlan = document.getElementById('statPlan');
+  if (statPlan) {
+    statPlan.textContent = currentPlan.toUpperCase();
+  }
 }
 
 // ── DOCUMENTS MODAL LOADER ──
@@ -1442,13 +1479,13 @@ async function loadLeaderboard() {
       else medal = `<span style="color:#64748b;font-weight:700;">#${index + 1}</span>`;
 
       const isMe = rankUser.id === user?.id ? 'background:rgba(37,99,235,0.08);border-left:3px solid #2563eb;font-weight:700;' : '';
-      const userCoins = rankUser.coins !== undefined ? rankUser.coins : (rankUser.xp ? Math.round(rankUser.xp / 2) : 50);
+      const userCoins = rankUser.coins !== undefined ? Number(rankUser.coins) : Number(rankUser.xp || 0);
 
       return `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:10px;font-size:0.82rem;margin-bottom:4px;${isMe}">
           <div style="display:flex;align-items:center;gap:6px;min-width:0;">
             <span style="font-weight:800;min-width:20px;">${medal}</span>
-            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;">${rankUser.full_name}</span>
+            <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;">${esc(rankUser.full_name)}</span>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
             <span style="font-weight:800;color:#d97706;display:flex;align-items:center;gap:3px;"><i class="fa-solid fa-coins anim-coin" style="font-size:0.75rem;"></i> ${userCoins} Coins</span>
@@ -1470,6 +1507,17 @@ function closeLeaderboardModal() {
 }
 
 // ── ACTIVITY LOG MODAL ──
+function formatActivityDetails(raw) {
+  if (!raw) return '';
+  if (typeof raw === 'string' && raw.trim().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed.description || '';
+    } catch (_) {}
+  }
+  return String(raw);
+}
+
 async function loadActivity() {
   const actList = document.getElementById('activityList');
   if (!actList) return;
@@ -1484,18 +1532,24 @@ async function loadActivity() {
     ai_explain: '<i class="fa-solid fa-lightbulb" style="color:#f59e0b;"></i>',
     ai_summarize: '<i class="fa-solid fa-list-check" style="color:#10b981;"></i>',
     ai_quiz: '<i class="fa-solid fa-book-open" style="color:#a855f7;"></i>',
+    coin_credit: '<i class="fa-solid fa-coins" style="color:#eab308;"></i>',
+    coin_spend: '<i class="fa-solid fa-coins" style="color:#f97316;"></i>',
+    daily_bonus: '<i class="fa-solid fa-gift" style="color:#ec4899;"></i>',
     other: '<i class="fa-solid fa-sparkles" style="color:#2563eb;"></i>'
   };
-  actList.innerHTML = acts.map(a => `
+  actList.innerHTML = acts.map(a => {
+    const cleanDetails = formatActivityDetails(a.details);
+    return `
     <div style="display:flex;gap:10px;padding:8px 10px;background:#f8fafc;border:1px solid #edf2f7;border-radius:12px;align-items:flex-start;">
       <div style="font-size:1rem;flex-shrink:0;margin-top:2px;">${actIcons[a.action] || actIcons.other}</div>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:0.8rem;font-weight:700;color:#0f172a;">${a.action.replace(/_/g, ' ')}</div>
-        ${a.details ? '<div style="font-size:0.7rem;color:#64748b;margin-top:1px;">' + a.details + '</div>' : ''}
+        <div style="font-size:0.8rem;font-weight:700;color:#0f172a;">${esc(a.action.replace(/_/g, ' '))}</div>
+        ${cleanDetails ? '<div style="font-size:0.7rem;color:#64748b;margin-top:1px;">' + esc(cleanDetails) + '</div>' : ''}
         <div style="font-size:0.65rem;color:#94a3b8;margin-top:2px;">${formatDateTime(a.created_at)}</div>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function openActivityModal() {
@@ -1547,7 +1601,8 @@ async function explainConcept() {
 
   try {
     const docs = await apiGetMyDocs();
-    let docId = (docs.data && docs.data.length > 0 && docs.data[0]) ? docs.data[0].id : null;
+    const docList = docs.data?.documents || (Array.isArray(docs.data) ? docs.data : []);
+    const docId = docList.length > 0 ? docList[0].id : null;
     const response = await apiRequest('/api/ai/explain', 'POST', { documentId: docId, concept: concept });
 
     if (btn) {
@@ -1572,6 +1627,7 @@ async function explainConcept() {
     if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
       window.MathJax.typesetPromise([resultDiv]).catch(err => console.log('MathJax error:', err));
     }
+    loadUserStats();
   } catch (err) {
     if (btn) {
       btn.disabled = false;
