@@ -141,11 +141,13 @@ async function awardXP(userId, activityType, details = {}) {
           };
         }
 
-        await supabase.from("awarded_xp").insert({
-          user_id: userId,
-          document_id: details.documentId,
-          activity_type: activityType,
-        }).catch(() => {});
+        try {
+          await supabase.from("awarded_xp").insert({
+            user_id: userId,
+            document_id: details.documentId,
+            activity_type: activityType,
+          });
+        } catch (_) {}
       }
     }
 
@@ -428,11 +430,12 @@ async function getUserStats(userId, authUser = null) {
     if (activePlan !== "free" && subEnd && subEnd < new Date()) {
       activePlan = "free";
       subStatus = "expired";
-      await supabase
-        .from("profiles")
-        .update({ plan: "free", subscription_status: "expired" })
-        .eq("id", userId)
-        .catch(() => {});
+      try {
+        await supabase
+          .from("profiles")
+          .update({ plan: "free", subscription_status: "expired" })
+          .eq("id", userId);
+      } catch (_) {}
     }
 
     const effectiveProfileStreak = computeEffectiveStreak(profile.streak, profile.last_activity_date);

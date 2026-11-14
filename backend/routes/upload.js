@@ -1,22 +1,25 @@
 // ============================================================
-// routes/upload.js — PDF & Image Upload & Storage
+// routes/upload.js — PDF, PPTX, DOCX & Image Upload & Extraction
 // ============================================================
 
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const pdfParse = require("pdf-parse");
+const officeParser = require("officeparser");
 const supabase = require("../utils/supabase");
 const authMiddleware = require("../middleware/authMiddleware");
 const subscriptionMiddleware = require("../middleware/subscriptionMiddleware");
 const { awardXP, updateStreak } = require("../utils/xp");
 const { warmDocumentStudyAssets } = require("./ai");
-const { ocrScannedPDF } = require("../utils/gemini");
+const { ocrScannedPDF, extractTextFromImage } = require("../utils/gemini");
+const { evaluateToolAccess, recordToolUsage, withUserLock } = require("../utils/usageService");
+const { deductCoins, addCoins } = require("../utils/coins");
 
 const storage = multer.memoryStorage();
 
 const upload = multer({
-  storage: storage,
+  storage,
   limits: {
     fileSize: 50 * 1024 * 1024,
   },
@@ -25,18 +28,22 @@ const upload = multer({
       "application/pdf",
       "application/vnd.openxmlformats-officedocument.presentationml.presentation",
       "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "text/plain",
       "image/jpeg",
       "image/jpg",
       "image/png",
       "image/webp",
     ];
+    const ext = (file.originalname || "").split(".").pop().toLowerCase();
+    const allowedExts = ["pdf", "pptx", "ppt", "docx", "txt", "jpg", "jpeg", "png", "webp"];
 
-    if (allowedMimes.includes(file.mimetype)) {
+    if (allowedMimes.includes(file.mimetype) || allowedExts.includes(ext)) {
       cb(null, true);
     } else {
       cb(
         new Error(
-          "Only PDF, PowerPoint (.pptx) and image files (JPG, PNG, WEBP) are allowed!"
+          "Only PDF, PowerPoint (.pptx), Word (.docx), Text (.txt), and image files (JPG, PNG, WEBP) are allowed!"
         ),
         false
       );
@@ -44,12 +51,20 @@ const upload = multer({
   },
 });
 
+async function parseOfficeToText(fileBuffer) {
+  const ast = await officeParser.parseOffice(fileBuffer);
+  if (typeof ast === "string") return ast;
+  if (ast && typeof ast.toText === "function") return ast.toText();
+  return String(ast || "");
+}
+
 async function uploadFileToStorage(userId, file, fileType) {
-  const fileName = `${userId}/${Date.now()}-${file.originalname}`;
-  const bucketName = (fileType === "pdf" || fileType === "pptx") ? "documents" : "images";
+  const safeName = String(file.originalname || "file").replace(/[^a-zA-Z0-9._-]/g, "_");
+  const fileName = `${userId}/${Date.now()}-${safeName}`;
+  const bucketName = fileType === "image" ? "images" : "documents";
 
   try {
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from(bucketName)
       .upload(fileName, file.buffer, {
         contentType: file.mimetype,
@@ -70,97 +85,117 @@ async function uploadFileToStorage(userId, file, fileType) {
       bucket: bucketName,
     };
   } catch (err) {
-    console.error(`❌ Storage upload error:`, err.message);
+    console.error("❌ Storage upload error:", err.message);
     return null;
   }
 }
 
-// ── UPLOAD PDF & PPTX ──────────────────────────────────────────
+// ── UPLOAD PDF / PPTX / DOCX / TXT ─────────────────────────────
 router.post("/pdf", authMiddleware, subscriptionMiddleware, upload.single("pdf"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No document file was uploaded." });
     }
 
-    const isPdf = req.file.mimetype === "application/pdf";
-    const isPptx = req.file.mimetype === "application/vnd.openxmlformats-officedocument.presentationml.presentation" || 
-                   req.file.mimetype === "application/vnd.ms-powerpoint";
+    const ext = (req.file.originalname || "").split(".").pop().toLowerCase();
+    const isPdf = req.file.mimetype === "application/pdf" || ext === "pdf";
+    const isPptx =
+      req.file.mimetype === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+      req.file.mimetype === "application/vnd.ms-powerpoint" ||
+      ext === "pptx" ||
+      ext === "ppt";
+    const isDocx =
+      req.file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      ext === "docx";
+    const isTxt = req.file.mimetype === "text/plain" || ext === "txt";
 
-    if (!isPdf && !isPptx) {
-      return res.status(400).json({ error: "Only PDF and PowerPoint files are allowed!" });
+    if (!isPdf && !isPptx && !isDocx && !isTxt) {
+      return res.status(400).json({ error: "Only PDF, PPTX, DOCX, and TXT files are allowed here!" });
     }
 
     const userId = req.user.id;
-    const userPlan = req.userPlan || 'plus';
+    const access = await withUserLock(userId, () =>
+      evaluateToolAccess({
+        userId,
+        plan: req.effectivePlan,
+        coins: req.userCoins,
+        isAdmin: req.isAdmin,
+        toolKey: "upload_pdf",
+        useCoins: Boolean(req.body?.useCoins),
+      })
+    );
 
-    if (userPlan === 'free') {
-      return res.status(403).json({ 
-        error: "Active subscription required. Please subscribe to Plus or Pro to upload documents.",
-        subscriptionRequired: true 
-      });
-    } else if (userPlan === 'plus') {
-      const startOfMonth = new Date();
-      startOfMonth.setUTCDate(1);
-      startOfMonth.setUTCHours(0, 0, 0, 0);
+    if (!access.allowed) {
+      return res.status(access.statusCode || 403).json(access.errorPayload);
+    }
 
-      const { count: monthlyDocs } = await supabase
-        .from("documents")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .gte("created_at", startOfMonth.toISOString());
-      
-      if (monthlyDocs >= 15) {
-        return res.status(403).json({ error: "Plus Plan tier limits reached (maximum 15 documents per month). Please upgrade to Pro." });
+    let deductedCoins = 0;
+    if (access.chargeCoins > 0) {
+      const coinRes = await deductCoins(userId, access.chargeCoins, "upload_pdf", `Uploaded "${req.file.originalname}"`, req.user);
+      if (!coinRes.success) {
+        return res.status(403).json({
+          error: coinRes.error,
+          insufficientCoins: true,
+          needCoins: true,
+          needed: access.chargeCoins,
+          currentCoins: coinRes.currentCoins ?? req.userCoins,
+        });
       }
+      deductedCoins = access.chargeCoins;
     }
 
     const fileName = req.file.originalname;
     const fileBuffer = req.file.buffer;
-    const fileType = isPdf ? "pdf" : "pptx";
+    const fileType = isPdf ? "pdf" : isPptx ? "pptx" : isDocx ? "docx" : "txt";
 
     console.log(`📄 Processing ${fileType.toUpperCase()}: ${fileName} for user ${userId}`);
 
     let extractedText = "";
-    let pageCount = 0;
+    let pageCount = 1;
 
-    if (isPdf) {
-      try {
-        const pdfData = await pdfParse(fileBuffer);
-        extractedText = pdfData.text;
-        pageCount = pdfData.numpages || 0;
-      } catch (pdfErr) {
-        console.warn("⚠️ PDF parsing failed:", pdfErr.message);
-        return res.status(400).json({
-          error: "Could not read this PDF. It may be encrypted, scanned, or corrupted. Please try another PDF.",
-        });
-      }
-
-      if (!extractedText || extractedText.trim().length < 50) {
+    try {
+      if (isPdf) {
         try {
-          extractedText = await ocrScannedPDF(fileBuffer);
-        } catch (ocrErr) {
-          console.error("❌ Scanned PDF OCR fallback failed:", ocrErr.message);
-          return res.status(400).json({
-            error: "This PDF appears to be a scanned image and OCR processing failed. Please use a text-based PDF.",
-          });
+          const pdfData = await pdfParse(fileBuffer);
+          extractedText = pdfData.text || "";
+          pageCount = pdfData.numpages || 1;
+        } catch (pdfErr) {
+          console.warn("⚠️ pdf-parse failed, attempting OCR:", pdfErr.message);
         }
+
+        if (!extractedText || extractedText.trim().length < 50) {
+          extractedText = await ocrScannedPDF(fileBuffer);
+          pageCount = pageCount || Math.max(1, Math.ceil(extractedText.length / 2500));
+        }
+      } else if (isTxt) {
+        extractedText = fileBuffer.toString("utf-8");
+        pageCount = Math.max(1, Math.ceil(extractedText.length / 3000));
+      } else {
+        extractedText = await parseOfficeToText(fileBuffer);
+        pageCount = Math.max(1, Math.ceil(extractedText.length / 2500));
       }
-    } else {
-      try {
-        const officeParser = require("officeparser");
-        extractedText = await officeParser.parseOffice(fileBuffer);
-        pageCount = 1;
-      } catch (pptxErr) {
-        console.error("❌ PPTX parsing failed:", pptxErr.message);
-        return res.status(400).json({
-          error: "Could not read this PowerPoint file. It may be corrupted. Please try another file.",
-        });
+    } catch (parseErr) {
+      if (deductedCoins > 0) {
+        await addCoins(userId, deductedCoins, "coin_refund", "Refund for failed document extraction", req.user).catch(() => {});
       }
+      return res.status(400).json({
+        error: parseErr.message || "Could not extract text from this document. It may be encrypted or corrupted.",
+      });
     }
 
-    const truncatedText =
-      extractedText.length > 15000
-        ? extractedText.substring(0, 15000) + "\n\n[Document truncated...]"
+    if (!extractedText || !extractedText.trim()) {
+      if (deductedCoins > 0) {
+        await addCoins(userId, deductedCoins, "coin_refund", "Refund for empty document", req.user).catch(() => {});
+      }
+      return res.status(400).json({
+        error: "No readable text was found in this document. Please upload a text-based PDF, PPTX, DOCX, or clear scanned document.",
+      });
+    }
+
+    const maxChars = 120000;
+    const storedText =
+      extractedText.length > maxChars
+        ? extractedText.substring(0, maxChars) + "\n\n[Document truncated at 120,000 characters...]"
         : extractedText;
 
     const fileStorageData = await uploadFileToStorage(userId, req.file, fileType);
@@ -172,7 +207,7 @@ router.post("/pdf", authMiddleware, subscriptionMiddleware, upload.single("pdf")
         file_name: fileName,
         file_type: fileType,
         file_path: fileStorageData?.path || null,
-        extracted_text: truncatedText,
+        extracted_text: storedText,
         page_count: pageCount,
         created_at: new Date().toISOString(),
       })
@@ -180,22 +215,27 @@ router.post("/pdf", authMiddleware, subscriptionMiddleware, upload.single("pdf")
       .single();
 
     if (dbError) {
+      if (deductedCoins > 0) {
+        await addCoins(userId, deductedCoins, "coin_refund", "Refund for failed database save", req.user).catch(() => {});
+      }
       console.error("Database error:", dbError.message);
       return res.status(500).json({ error: "Failed to save document to database." });
     }
 
+    await recordToolUsage(userId, "upload_pdf");
+
     res.json({
       success: true,
       documentId: document.id,
-      message: "PDF uploaded and processed successfully!",
+      message: `${fileType.toUpperCase()} uploaded and processed successfully!`,
       document: {
         id: document.id,
         fileName: document.file_name,
-        fileType: "pdf",
+        fileType,
         fileUrl: fileStorageData?.url,
         pageCount: document.page_count,
-        textLength: truncatedText.length,
-        extractedText: truncatedText,
+        textLength: storedText.length,
+        extractedText: storedText,
       },
     });
 
@@ -204,7 +244,7 @@ router.post("/pdf", authMiddleware, subscriptionMiddleware, upload.single("pdf")
         await supabase.from("user_activity").insert({
           user_id: userId,
           action: "upload_document",
-          details: `Uploaded PDF "${fileName}" (${pageCount} pages)`,
+          details: `Uploaded ${fileType.toUpperCase()} "${fileName}" (${pageCount} pages)`,
           created_at: new Date().toISOString(),
         });
       } catch (activityErr) {
@@ -214,13 +254,7 @@ router.post("/pdf", authMiddleware, subscriptionMiddleware, upload.single("pdf")
       Promise.allSettled([
         awardXP(userId, "upload_pdf", { fileName, pageCount }),
         updateStreak(userId),
-      ]).catch((xpErr) => {
-        console.log("Note: Could not award XP:", xpErr.message);
-      });
-
-      warmDocumentStudyAssets(document.id, userId).catch((err) => {
-        console.log("Note: Background study asset warmup failed:", err.message);
-      });
+      ]).catch(() => {});
     });
   } catch (err) {
     console.error("Upload error:", err.message);
@@ -231,7 +265,7 @@ router.post("/pdf", authMiddleware, subscriptionMiddleware, upload.single("pdf")
   }
 });
 
-// ── UPLOAD IMAGE ──────────────────────────────────────────────
+// ── UPLOAD IMAGE (Pro Plan / Centrally Configured OCR) ────────
 router.post(
   "/image",
   authMiddleware,
@@ -251,25 +285,53 @@ router.post(
       }
 
       const userId = req.user.id;
+      const access = await withUserLock(userId, () =>
+        evaluateToolAccess({
+          userId,
+          plan: req.effectivePlan,
+          coins: req.userCoins,
+          isAdmin: req.isAdmin,
+          toolKey: "upload_image",
+          useCoins: Boolean(req.body?.useCoins),
+        })
+      );
 
-      // Enforce Plan Boundaries (Rejects free & plus)
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("plan")
-        .eq("id", userId)
-        .single();
-      const userPlan = profile?.plan || 'free';
+      if (!access.allowed) {
+        return res.status(access.statusCode || 403).json(access.errorPayload);
+      }
 
-      if (userPlan === 'free' || userPlan === 'plus') {
-        return res.status(403).json({ error: "Image uploads and photo scans are only available on the Pro Plan. Please upgrade." });
+      let deductedCoins = 0;
+      if (access.chargeCoins > 0) {
+        const coinRes = await deductCoins(userId, access.chargeCoins, "upload_image", `Scanned image "${req.file.originalname}"`, req.user);
+        if (!coinRes.success) {
+          return res.status(403).json({
+            error: coinRes.error,
+            insufficientCoins: true,
+            needCoins: true,
+            needed: access.chargeCoins,
+            currentCoins: coinRes.currentCoins ?? req.userCoins,
+          });
+        }
+        deductedCoins = access.chargeCoins;
       }
 
       const fileName = req.file.originalname;
       const fileBuffer = req.file.buffer;
 
-      console.log(`📸 Processing image: ${fileName} for user ${userId}`);
+      console.log(`📸 Processing & OCR-scanning image: ${fileName} for user ${userId}`);
 
-      const base64Image = fileBuffer.toString("base64");
+      let extractedText = "";
+      try {
+        extractedText = await extractTextFromImage(fileBuffer, req.file.mimetype);
+      } catch (ocrErr) {
+        if (deductedCoins > 0) {
+          await addCoins(userId, deductedCoins, "coin_refund", "Refund for failed image OCR", req.user).catch(() => {});
+        }
+        return res.status(502).json({
+          error: ocrErr.message || "Could not transcribe text from this image. Please try a clearer photo.",
+        });
+      }
+
       const fileStorageData = await uploadFileToStorage(userId, req.file, "image");
 
       const { data: document, error: dbError } = await supabase
@@ -279,7 +341,7 @@ router.post(
           file_name: fileName,
           file_type: "image",
           file_path: fileStorageData?.path || null,
-          extracted_text: `[Image: ${fileName}]\n\nBase64 encoded for AI analysis.\n\nMIME Type: ${req.file.mimetype}`,
+          extracted_text: extractedText,
           page_count: 1,
           created_at: new Date().toISOString(),
         })
@@ -287,14 +349,19 @@ router.post(
         .single();
 
       if (dbError) {
+        if (deductedCoins > 0) {
+          await addCoins(userId, deductedCoins, "coin_refund", "Refund for failed image DB save", req.user).catch(() => {});
+        }
         console.error("Database error:", dbError.message);
         return res.status(500).json({ error: "Failed to save image to database." });
       }
 
+      await recordToolUsage(userId, "upload_image");
+
       res.json({
         success: true,
         documentId: document.id,
-        message: "Image uploaded successfully!",
+        message: "Image scanned and transcribed successfully!",
         document: {
           id: document.id,
           fileName: document.file_name,
@@ -302,7 +369,8 @@ router.post(
           fileUrl: fileStorageData?.url,
           mimeType: req.file.mimetype,
           size: req.file.size,
-          base64: base64Image,
+          textLength: extractedText.length,
+          extractedText,
         },
       });
 
@@ -311,23 +379,15 @@ router.post(
           await supabase.from("user_activity").insert({
             user_id: userId,
             action: "upload_image",
-            details: `Uploaded image "${fileName}" (${req.file.mimetype})`,
+            details: `Scanned & uploaded image "${fileName}" (${req.file.mimetype})`,
             created_at: new Date().toISOString(),
           });
-        } catch (activityErr) {
-          console.log("Note: Could not log activity:", activityErr.message);
-        }
+        } catch (_) {}
 
         Promise.allSettled([
           awardXP(userId, "upload_image", { fileName }),
           updateStreak(userId),
-        ]).catch((xpErr) => {
-          console.log("Note: Could not award XP:", xpErr.message);
-        });
-
-        warmDocumentStudyAssets(document.id, userId).catch((err) => {
-          console.log("Note: Background study asset warmup failed:", err.message);
-        });
+        ]).catch(() => {});
       });
     } catch (err) {
       console.error("Image upload error:", err.message);
@@ -344,7 +404,7 @@ router.get("/my-docs", authMiddleware, async (req, res) => {
   try {
     const { data: documents, error } = await supabase
       .from("documents")
-      .select("id, file_name, page_count, created_at")
+      .select("id, file_name, file_type, page_count, created_at")
       .eq("user_id", req.user.id)
       .order("created_at", { ascending: false });
 
@@ -358,7 +418,7 @@ router.get("/my-docs", authMiddleware, async (req, res) => {
   }
 });
 
-// ── GET USER'S ACTIVITY LOG ────────────────────────────────────
+// ── GET USER'S ACTIVITY LOG ───────────────────────────────────
 router.get("/my-activity", authMiddleware, async (req, res) => {
   try {
     const { data: activities, error } = await supabase
@@ -377,10 +437,9 @@ router.get("/my-activity", authMiddleware, async (req, res) => {
 
     res.json({
       total: (activities || []).length,
-      activities: activities || []
+      activities: activities || [],
     });
   } catch (err) {
-    console.log("Note: Could not fetch user activity:", err.message);
     res.json({ activities: [], total: 0 });
   }
 });
@@ -396,7 +455,6 @@ router.get("/leaderboard", authMiddleware, async (req, res) => {
       .limit(10);
 
     if (error) {
-      console.error("Leaderboard query error:", error.message);
       return res.status(500).json({ error: "Failed to fetch leaderboard data." });
     }
 
@@ -416,7 +474,6 @@ router.get("/leaderboard", authMiddleware, async (req, res) => {
     enriched.sort((a, b) => b.coins - a.coins || b.xp - a.xp);
     res.json({ leaderboard: enriched.slice(0, 5) });
   } catch (err) {
-    console.error("Leaderboard error:", err.message);
     res.status(500).json({ error: "Failed to fetch leaderboard." });
   }
 });
@@ -460,16 +517,12 @@ router.delete("/:id", authMiddleware, async (req, res) => {
   }
 });
 
-// Auto-heals missing profiles in the database
 async function ensureProfile(userId, email) {
   try {
     const cleanEmail = email ? email.trim().toLowerCase() : null;
     let query = supabase.from("profiles").select("*");
-    if (userId) {
-      query = query.eq("id", userId);
-    } else if (cleanEmail) {
-      query = query.ilike("email", cleanEmail);
-    }
+    if (userId) query = query.eq("id", userId);
+    else if (cleanEmail) query = query.ilike("email", cleanEmail);
 
     const { data: profile } = await query.maybeSingle();
 
@@ -484,32 +537,26 @@ async function ensureProfile(userId, email) {
         referral_code: refCode,
         created_at: new Date().toISOString(),
       });
-      console.log(`✅ Auto-healed profile row for user ${userId}`);
     } else if (!profile.referral_code) {
       const refCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-      await supabase
-        .from("profiles")
-        .update({ referral_code: refCode })
-        .eq("id", profile.id);
-      console.log(`✅ Added referral code to existing profile for user ${profile.id}`);
+      await supabase.from("profiles").update({ referral_code: refCode }).eq("id", profile.id);
     }
   } catch (err) {
     console.error("Failed to ensure profile:", err.message);
   }
 }
 
-
 router.get("/stats/:userId", authMiddleware, async (req, res) => {
   try {
     const { getUserStats } = require("../utils/xp");
     const { getUserCoinBalance, computeEffectiveStreak } = require("../utils/coins");
+    const { getUserUsageSummary } = require("../utils/usageService");
     const userId = req.params.userId;
-    
-    if (userId !== req.user.id) {
+
+    if (userId !== req.user.id && req.user.app_metadata?.role !== "admin") {
       return res.status(403).json({ error: "Cannot view other users' stats." });
     }
 
-    // Auto-heal profile if it is missing
     await ensureProfile(userId, req.user.email);
 
     let stats = null;
@@ -543,9 +590,16 @@ router.get("/stats/:userId", authMiddleware, async (req, res) => {
         activityCount: 0,
         aiResultsCount: 0,
         plan: (fallbackProfile?.plan || "free").toLowerCase(),
+        subscriptionStatus: (fallbackProfile?.subscription_status || "inactive").toLowerCase(),
+        subscriptionEnd: fallbackProfile?.subscription_end || null,
         is_verified: Boolean(fallbackProfile?.is_verified),
       };
     }
+
+    const isAdmin = req.user.app_metadata?.role === "admin";
+    try {
+      stats.usage = await getUserUsageSummary(userId, stats.plan || "free", isAdmin);
+    } catch (_) {}
 
     res.json(stats);
   } catch (err) {
@@ -554,7 +608,7 @@ router.get("/stats/:userId", authMiddleware, async (req, res) => {
   }
 });
 
-// ── GET USER'S AI RESULTS ──────────────────────────────────────
+// ── GET USER'S AI RESULTS ─────────────────────────────────────
 router.get("/my-results", authMiddleware, async (req, res) => {
   try {
     const { data: results, error } = await supabase
@@ -579,52 +633,47 @@ router.get("/my-results", authMiddleware, async (req, res) => {
     }
 
     const groupedResults = {};
-    (results || []).forEach(result => {
+    (results || []).forEach((result) => {
       const docId = result.document_id;
       const docObj = Array.isArray(result.documents) ? result.documents[0] : result.documents;
       if (!groupedResults[docId]) {
         groupedResults[docId] = {
           document_id: docId,
-          document_name: docObj?.file_name || 'Untitled Document',
+          document_name: docObj?.file_name || "Untitled Document",
           document_created_at: docObj?.created_at || null,
-          results: []
+          results: [],
         };
       }
       groupedResults[docId].results.push({
         id: result.id,
         type: result.result_type,
         content: result.content,
-        created_at: result.created_at
+        created_at: result.created_at,
       });
     });
 
     res.json({
       total: (results || []).length,
-      results: Object.values(groupedResults)
+      results: Object.values(groupedResults),
     });
   } catch (err) {
-    console.log("Error fetching AI results:", err.message);
     res.json({ results: [], total: 0 });
   }
 });
 
-// ── GET REFERRAL DASHBOARD STATS ──────────────────────────────────────
+// ── GET REFERRAL DASHBOARD STATS ──────────────────────────────
 router.get("/referrals/stats", authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
-
-    // Auto-heal profile if missing
     await ensureProfile(userId, req.user.email);
 
-    // 1. Get profile referral code
-    let { data: profile, error: profileErr } = await supabase
+    let { data: profile } = await supabase
       .from("profiles")
       .select("referral_code, referred_by")
       .eq("id", userId)
       .maybeSingle();
 
-    if (profileErr || !profile) {
-      // Retry lookup using clean email as backup
+    if (!profile) {
       const cleanEmail = req.user.email ? req.user.email.trim().toLowerCase() : null;
       if (cleanEmail) {
         const { data: retryProfile } = await supabase
@@ -633,13 +682,7 @@ router.get("/referrals/stats", authMiddleware, async (req, res) => {
           .ilike("email", cleanEmail)
           .maybeSingle();
         if (retryProfile) {
-          // If we found it by email but ID didn't match, heal it
-          await supabase
-            .from("profiles")
-            .update({ id: userId })
-            .eq("email", cleanEmail);
-          
-          // Re-query to get updated model
+          await supabase.from("profiles").update({ id: userId }).eq("email", cleanEmail);
           const { data: healed } = await supabase
             .from("profiles")
             .select("referral_code, referred_by")
@@ -653,80 +696,11 @@ router.get("/referrals/stats", authMiddleware, async (req, res) => {
       }
     }
 
-    // 2. Count total referees (people referred by user)
-    const { count: refereeCount, error: countErr } = await supabase
+    const { count: refereeCount } = await supabase
       .from("profiles")
       .select("id", { count: "exact", head: true })
       .eq("referred_by", userId);
 
-    if (countErr) {
-      console.error("Referee count error:", countErr.message);
-    }
-
-    // 3. Get completed referral rewards
-    const { data: completedRefs, error: refsErr } = await supabase
-      .from("referrals")
-      .select("reward_amount")
-      .eq("referrer_id", userId)
-      .eq("status", "completed");
-
-    if (refsErr) {
-      console.error("Referrals rewards select error:", refsErr.message);
-    }
-
-    const totalEarned = (completedRefs || []).reduce((acc, curr) => acc + Number(curr.reward_amount || 0), 0);
-
-    // 4. Get withdrawals history
-    const { data: withdrawals, error: wErr } = await supabase
-      .from("withdrawals")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-
-    if (wErr) {
-      console.error("Withdrawals select error:", wErr.message);
-    }
-
-    const totalWithdrawn = (withdrawals || [])
-      .filter(w => w.status === "approved")
-      .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
-
-    const pendingWithdrawn = (withdrawals || [])
-      .filter(w => w.status === "pending")
-      .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
-
-    // Balance is total earned minus both approved and pending withdrawals
-    const balance = Math.max(0, totalEarned - totalWithdrawn - pendingWithdrawn);
-
-    res.json({
-      referral_code: profile.referral_code,
-      referee_count: refereeCount || 0,
-      balance: balance,
-      total_withdrawn: totalWithdrawn,
-      withdrawals: withdrawals || [],
-    });
-  } catch (err) {
-    console.error("Referral stats error:", err.message);
-    res.status(500).json({ error: "Failed to load referral statistics." });
-  }
-});
-
-// ── SUBMIT WITHDRAWAL REQUEST ────────────────────────────────────────
-router.post("/referrals/withdraw", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { amount, bankName, accountName, accountNumber } = req.body;
-    const withdrawAmt = parseInt(amount);
-
-    if (!withdrawAmt || withdrawAmt < 1500) {
-      return res.status(400).json({ error: "Minimum payout request is ₦1,500." });
-    }
-
-    if (!bankName || !accountNumber || !accountName) {
-      return res.status(400).json({ error: "Bank details (Bank Name, Account Number, Account Name) are required." });
-    }
-
-    // Calculate current balance
     const { data: completedRefs } = await supabase
       .from("referrals")
       .select("reward_amount")
@@ -738,14 +712,61 @@ router.post("/referrals/withdraw", authMiddleware, async (req, res) => {
     const { data: withdrawals } = await supabase
       .from("withdrawals")
       .select("*")
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
 
     const totalWithdrawn = (withdrawals || [])
-      .filter(w => w.status === "approved")
+      .filter((w) => w.status === "approved")
       .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
 
     const pendingWithdrawn = (withdrawals || [])
-      .filter(w => w.status === "pending")
+      .filter((w) => w.status === "pending")
+      .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+
+    const balance = Math.max(0, totalEarned - totalWithdrawn - pendingWithdrawn);
+
+    res.json({
+      referral_code: profile.referral_code,
+      referee_count: refereeCount || 0,
+      balance,
+      total_withdrawn: totalWithdrawn,
+      withdrawals: withdrawals || [],
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load referral statistics." });
+  }
+});
+
+// ── SUBMIT WITHDRAWAL REQUEST ─────────────────────────────────
+router.post("/referrals/withdraw", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { amount, bankName, accountName, accountNumber } = req.body;
+    const withdrawAmt = parseInt(amount, 10);
+
+    if (!withdrawAmt || withdrawAmt < 1500) {
+      return res.status(400).json({ error: "Minimum payout request is ₦1,500." });
+    }
+    if (!bankName || !accountNumber || !accountName) {
+      return res.status(400).json({ error: "Bank details (Bank Name, Account Number, Account Name) are required." });
+    }
+
+    const { data: completedRefs } = await supabase
+      .from("referrals")
+      .select("reward_amount")
+      .eq("referrer_id", userId)
+      .eq("status", "completed");
+
+    const totalEarned = (completedRefs || []).reduce((acc, curr) => acc + Number(curr.reward_amount || 0), 0);
+
+    const { data: withdrawals } = await supabase.from("withdrawals").select("*").eq("user_id", userId);
+
+    const totalWithdrawn = (withdrawals || [])
+      .filter((w) => w.status === "approved")
+      .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+
+    const pendingWithdrawn = (withdrawals || [])
+      .filter((w) => w.status === "pending")
       .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
 
     const balance = Math.max(0, totalEarned - totalWithdrawn - pendingWithdrawn);
@@ -754,7 +775,6 @@ router.post("/referrals/withdraw", authMiddleware, async (req, res) => {
       return res.status(400).json({ error: "Insufficient wallet balance." });
     }
 
-    // Insert new pending withdrawal
     const { data, error } = await supabase
       .from("withdrawals")
       .insert({
@@ -771,15 +791,14 @@ router.post("/referrals/withdraw", authMiddleware, async (req, res) => {
       .single();
 
     if (error) {
-      console.error("Insertion error:", error.message);
       return res.status(500).json({ error: "Failed to submit withdrawal request." });
     }
 
     res.json({ message: "Withdrawal request submitted successfully.", withdrawal: data });
   } catch (err) {
-    console.error("Submit withdrawal error:", err.message);
     res.status(500).json({ error: "Failed to submit withdrawal request." });
   }
 });
 
 module.exports = router;
+module.exports.parseOfficeToText = parseOfficeToText;

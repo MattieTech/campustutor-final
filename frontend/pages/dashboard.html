@@ -811,6 +811,12 @@
     </a>
 
     <div class="ct-exact-header-right">
+      <!-- Admin Quick Link (Visible to admins only) -->
+      <a href="/pages/admin.html" id="adminHeaderLink" style="display:none;align-items:center;gap:5px;padding:6px 11px;border-radius:999px;background:rgba(124,58,237,0.12);color:#7c3aed;font-size:0.74rem;font-weight:800;text-decoration:none;border:1px solid rgba(124,58,237,0.25);" title="Open Admin Dashboard">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>Admin</span>
+      </a>
+
       <!-- Notification Bell -->
       <button class="ct-exact-bell-btn" aria-label="Notifications" onclick="openActivityModal()" title="Notifications & Activity">
         <i class="fa-solid fa-bell"></i>
@@ -874,7 +880,7 @@
       <div class="ct-exact-stat-arrow"><i class="fa-solid fa-chevron-right"></i></div>
     </div>
 
-    <!-- 3. CampusCoins (ONLY COINS - REPLACED XP PER USER REQUEST) -->
+    <!-- 3. CampusCoins -->
     <div class="ct-exact-stat-card" onclick="openCoinsModal('packages')" title="View CampusCoins balance">
       <div class="ct-exact-stat-icon" style="background:#fefce8; color:#eab308;">
         <i class="fa-solid fa-coins anim-coin"></i>
@@ -891,6 +897,7 @@
       </div>
       <div class="ct-exact-stat-val" id="statPlan" style="font-size:0.86rem; color:#10b981;">--</div>
       <div class="ct-exact-stat-lbl">Plan</div>
+      <div id="statPlanSub" style="font-size:0.64rem; color:#64748b; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;"></div>
       <div class="ct-exact-stat-arrow"><i class="fa-solid fa-chevron-right"></i></div>
     </a>
   </div>
@@ -904,7 +911,13 @@
           <i class="fa-solid fa-sparkles" style="color:#2563eb;"></i>
           <span>Explain a Concept</span>
         </h2>
-        <div class="ct-exact-concept-sub">Ask the AI to explain any topic or concept instantly</div>
+        <div class="ct-exact-concept-sub">Ask the AI to explain any general topic or reference one of your uploaded notes</div>
+
+        <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
+          <select id="explainDocSelect" style="width:100%; max-width:280px; padding:5px 10px; border-radius:9px; border:1px solid rgba(148,163,184,0.35); background:rgba(255,255,255,0.75); color:#0f172a; font-size:0.75rem; font-weight:600;">
+            <option value="">General AI Tutor (Any Topic)</option>
+          </select>
+        </div>
 
         <div class="ct-exact-concept-input-row" style="margin-top:6px;">
           <input type="text" class="ct-exact-concept-input" id="conceptInput" placeholder="e.g., Photosynthesis, Newton's Laws..." onkeydown="if(event.key==='Enter') explainConcept()" />
@@ -983,6 +996,30 @@
       </div>
     </div>
   </div>
+
+  <!-- AI USAGE & ALLOWANCES SECTION -->
+  <section id="aiUsageAllowancesCard" class="ct-exact-concept-card" style="padding:16px 18px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+      <div>
+        <h2 class="ct-exact-concept-title" style="margin-bottom:2px;">
+          <i class="fa-solid fa-gauge-high" style="color:#10b981;"></i>
+          <span>AI Usage &amp; Plan Allowances</span>
+        </h2>
+        <div id="usagePlanSummaryText" style="font-size:0.78rem;color:#64748b;">Loading live subscription and per-tool limits...</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button type="button" onclick="openCoinsModal('packages')" class="btn btn-ghost btn-sm" style="border-radius:10px;border:1px solid rgba(148,163,184,0.3);font-size:0.75rem;">
+          <i class="fa-solid fa-coins" style="color:#eab308;"></i> Coins
+        </button>
+        <a href="/pages/pricing.html" id="usageUpgradeLink" class="btn btn-primary btn-sm" style="border-radius:10px;font-size:0.75rem;text-decoration:none;">
+          <i class="fa-solid fa-crown"></i> Upgrade Plan
+        </a>
+      </div>
+    </div>
+    <div id="usageAllowancesGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;">
+      <div style="font-size:0.8rem;color:#64748b;padding:8px 0;">Fetching real-time tool allowances...</div>
+    </div>
+  </section>
 
   <!-- PROMOTIONAL BANNER CAROUSEL (3 Auto-Scrolling & Swipable Banners) -->
   <div class="ct-promo-carousel-wrap" id="promoCarouselWrap">
@@ -1180,7 +1217,12 @@
 
         <a href="/pages/pricing.html" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:9px 12px;border-radius:12px;border:1px solid #edf2f7;font-weight:600;text-decoration:none;color:inherit;">
           <span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-crown" style="color:#f59e0b;"></i> Subscription Plan</span>
-          <span id="modalPlanBadge" style="font-size:0.72rem;font-weight:700;color:#10b981;">PLUS</span>
+          <span id="modalPlanBadge" style="font-size:0.72rem;font-weight:700;color:#10b981;">FREE</span>
+        </a>
+
+        <a href="/pages/admin.html" id="adminSettingsLink" class="btn btn-ghost btn-sm" style="display:none;justify-content:space-between;width:100%;padding:9px 12px;border-radius:12px;border:1px solid rgba(124,58,237,0.25);background:rgba(124,58,237,0.06);font-weight:700;text-decoration:none;color:#7c3aed;">
+          <span style="display:flex;align-items:center;gap:8px;"><i class="fa-solid fa-shield-halved"></i> Admin Control Center</span>
+          <span style="font-size:0.72rem;font-weight:700;">Open</span>
         </a>
 
         <button onclick="openCoinsModal(); closeSettingsModal();" class="btn btn-ghost btn-sm" style="justify-content:space-between;width:100%;padding:9px 12px;border-radius:12px;border:1px solid #edf2f7;font-weight:600;">
@@ -1281,6 +1323,12 @@ function applyUserIdentityUI(u) {
   const modalUserEmail = document.getElementById('modalUserEmail');
   if (modalUserEmail) modalUserEmail.textContent = u.email || '';
 
+  const isAdmin = u.role === 'admin' || u.isAdmin === true;
+  const adminHeaderLink = document.getElementById('adminHeaderLink');
+  if (adminHeaderLink) adminHeaderLink.style.display = isAdmin ? 'inline-flex' : 'none';
+  const adminSettingsLink = document.getElementById('adminSettingsLink');
+  if (adminSettingsLink) adminSettingsLink.style.display = isAdmin ? 'flex' : 'none';
+
   const banner = document.getElementById('verificationBanner');
   if (banner) {
     banner.style.display = u.isVerified === false ? 'flex' : 'none';
@@ -1309,6 +1357,91 @@ function toggleTheme() {
 }
 initTheme();
 
+function formatPlanSourceLabel(source) {
+  const s = String(source || '').toLowerCase();
+  if (s === 'paystack') return 'Paystack';
+  if (s === 'admin_grant') return 'Admin Grant';
+  return 'Free Tier';
+}
+
+function renderUsageAllowances(usage) {
+  const summaryEl = document.getElementById('usagePlanSummaryText');
+  const gridEl = document.getElementById('usageAllowancesGrid');
+  const upgradeEl = document.getElementById('usageUpgradeLink');
+  if (!gridEl) return;
+
+  if (!usage || !Array.isArray(usage.tools)) {
+    gridEl.innerHTML = '<div style="font-size:0.8rem;color:#64748b;">Usage metrics will appear once synced.</div>';
+    return;
+  }
+
+  const plan = String(usage.plan || 'free').toLowerCase();
+  const planBadgeText = plan.toUpperCase();
+  const expiryStr = usage.subscriptionEnd
+    ? `Expires ${new Date(usage.subscriptionEnd).toLocaleDateString()}`
+    : (plan === 'free' ? 'No active subscription' : 'Active');
+  const sourceStr = formatPlanSourceLabel(usage.subscriptionSource);
+
+  if (summaryEl) {
+    summaryEl.innerHTML = `Current Plan: <strong>${planBadgeText}</strong> · Source: <strong>${sourceStr}</strong> · <span>${expiryStr}</span>`;
+  }
+  if (upgradeEl) {
+    upgradeEl.style.display = plan === 'pro' ? 'none' : 'inline-flex';
+  }
+
+  gridEl.innerHTML = usage.tools.map(t => {
+    if (!t.enabled) {
+      return `
+        <div style="padding:10px 12px;border-radius:12px;border:1px solid rgba(148,163,184,0.22);background:rgba(148,163,184,0.06);">
+          <div style="font-size:0.78rem;font-weight:700;">${esc(t.name)}</div>
+          <div style="font-size:0.71rem;color:#94a3b8;margin-top:4px;">Temporarily paused by admin</div>
+        </div>
+      `;
+    }
+
+    const dailyUnlimited = t.dailyLimit === -1;
+    const monthlyUnlimited = t.monthlyLimit === -1;
+    const planBlocked = !t.planAllowed || t.dailyLimit === 0 || t.monthlyLimit === 0;
+
+    let dailyLabel = dailyUnlimited ? `${t.usedToday} used today · Unlimited` : `${t.usedToday}/${t.dailyLimit} today`;
+    let monthlyLabel = monthlyUnlimited ? `${t.usedThisMonth} this month · Unlimited` : `${t.usedThisMonth}/${t.monthlyLimit} this month`;
+    let pct = 0;
+    let barColor = '#10b981';
+
+    if (planBlocked) {
+      dailyLabel = t.allowCoinsBypass ? `Coins only (${t.coinCost}c/use)` : 'Plus / Pro required';
+      monthlyLabel = 'Upgrade to unlock free allowance';
+      pct = 100;
+      barColor = '#94a3b8';
+    } else if (!dailyUnlimited && t.dailyLimit > 0) {
+      pct = Math.min(100, Math.round((t.usedToday / t.dailyLimit) * 100));
+      barColor = pct >= 90 ? '#ef4444' : pct >= 70 ? '#f59e0b' : '#2563eb';
+    } else if (!monthlyUnlimited && t.monthlyLimit > 0) {
+      pct = Math.min(100, Math.round((t.usedThisMonth / t.monthlyLimit) * 100));
+      barColor = pct >= 90 ? '#ef4444' : pct >= 70 ? '#f59e0b' : '#2563eb';
+    } else {
+      pct = 100;
+      barColor = '#10b981';
+    }
+
+    return `
+      <div style="padding:10px 12px;border-radius:12px;border:1px solid rgba(148,163,184,0.22);background:rgba(15,23,42,0.02);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px;">
+          <span style="font-size:0.78rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.name)}</span>
+          <span style="font-size:0.68rem;font-weight:700;color:${planBlocked ? '#64748b' : '#0f766e'};flex-shrink:0;">${planBlocked ? (t.allowCoinsBypass ? `${t.coinCost}c` : 'Locked') : (dailyUnlimited ? 'Unlimited' : `${t.remainingDaily} left`)}</span>
+        </div>
+        <div style="height:6px;border-radius:999px;background:rgba(148,163,184,0.22);overflow:hidden;margin-bottom:5px;">
+          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:999px;transition:width 0.3s ease;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.69rem;color:#64748b;">
+          <span>${esc(dailyLabel)}</span>
+          <span>${esc(monthlyLabel)}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 // ── USER STATS LOADER (REAL ACCOUNT DETAILS ONLY) ──
 async function loadUserStats() {
   const freshUser = await apiGetMe().catch(() => null);
@@ -1321,6 +1454,7 @@ async function loadUserStats() {
   const { data: stats, error } = await apiGetUserStats(userId);
   if (error || !stats) {
     renderCachedUserStats(activeUser);
+    if (activeUser?.usage) renderUsageAllowances(activeUser.usage);
     return;
   }
 
@@ -1347,18 +1481,37 @@ async function loadUserStats() {
   const modalCoins = document.getElementById('modalCoinsVal');
   if (modalCoins) modalCoins.textContent = liveCoins + ' Coins';
 
-  const currentPlan = (stats.plan || activeUser?.plan || 'free').toLowerCase();
+  const currentPlan = (activeUser?.plan || stats.plan || 'free').toLowerCase();
+  const subEnd = activeUser?.subscriptionEnd || activeUser?.usage?.subscriptionEnd || null;
+  const subSource = activeUser?.subscriptionSource || activeUser?.usage?.subscriptionSource || null;
+
   const statPlan = document.getElementById('statPlan');
   if (statPlan) {
     const planText = currentPlan === 'pro' ? 'PRO' : (currentPlan === 'plus' ? 'PLUS' : 'FREE');
     statPlan.textContent = planText;
     statPlan.style.color = currentPlan === 'free' ? '#10b981' : (currentPlan === 'plus' ? '#2563eb' : '#a855f7');
   }
+  const statPlanSub = document.getElementById('statPlanSub');
+  if (statPlanSub) {
+    if (subEnd && currentPlan !== 'free') {
+      statPlanSub.textContent = `Exp ${new Date(subEnd).toLocaleDateString()} (${formatPlanSourceLabel(subSource)})`;
+    } else {
+      statPlanSub.textContent = currentPlan === 'free' ? 'Free Tier' : formatPlanSourceLabel(subSource);
+    }
+  }
   const modalPlan = document.getElementById('modalPlanBadge');
   if (modalPlan) {
-    modalPlan.textContent = currentPlan.toUpperCase();
+    const expTxt = subEnd && currentPlan !== 'free' ? ` · Exp ${new Date(subEnd).toLocaleDateString()}` : '';
+    modalPlan.textContent = `${currentPlan.toUpperCase()}${expTxt}`;
     modalPlan.style.color = currentPlan === 'free' ? '#10b981' : (currentPlan === 'plus' ? '#2563eb' : '#a855f7');
   }
+
+  let usagePayload = stats.usage || activeUser?.usage || null;
+  if (!usagePayload && typeof apiGetUsage === 'function') {
+    const usageRes = await apiGetUsage().catch(() => null);
+    if (usageRes?.data) usagePayload = usageRes.data;
+  }
+  renderUsageAllowances(usagePayload);
 
   const bellBadge = document.getElementById('navBellBadge');
   if (bellBadge) {
@@ -1371,11 +1524,12 @@ async function loadUserStats() {
     }
   }
 
-  // Persist real synced snapshot
   if (activeUser) {
     activeUser.coins = liveCoins;
     activeUser.streak = Number(stats.streak ?? 0);
     activeUser.plan = currentPlan;
+    if (subEnd) activeUser.subscriptionEnd = subEnd;
+    if (subSource) activeUser.subscriptionSource = subSource;
     localStorage.setItem('ct_user', JSON.stringify(activeUser));
   }
 }
@@ -1405,13 +1559,22 @@ function renderCachedUserStats(activeUser) {
 // ── DOCUMENTS MODAL LOADER ──
 async function loadDocumentsList() {
   const container = document.getElementById('docListContainer');
-  if (!container) return;
   const { data, error } = await apiGetMyDocs();
+  const docs = (!error && data && data.documents) ? data.documents : [];
+
+  const explainSelect = document.getElementById('explainDocSelect');
+  if (explainSelect) {
+    const prev = explainSelect.value;
+    explainSelect.innerHTML = '<option value="">General AI Tutor (Any Topic)</option>' +
+      docs.map(d => `<option value="${esc(d.id)}">From Note: ${esc(d.file_name)}</option>`).join('');
+    if (prev && docs.some(d => String(d.id) === String(prev))) explainSelect.value = prev;
+  }
+
+  if (!container) return;
   if (error || !data || !data.documents) {
     container.innerHTML = '<div style="text-align:center;padding:20px;color:#64748b;">No documents found. Click "Upload New PDF" to add one!</div>';
     return;
   }
-  const docs = data.documents;
   const statDocs = document.getElementById('statDocs');
   if (statDocs) statDocs.textContent = docs.length;
 
@@ -1583,7 +1746,7 @@ function parseWithMath(text) {
   return marked.parse(parseMathDelimiters(text));
 }
 
-async function explainConcept() {
+async function explainConcept(forceUseCoins = false) {
   const input = document.getElementById('conceptInput');
   const concept = input ? input.value.trim() : '';
   if (!concept) {
@@ -1592,6 +1755,9 @@ async function explainConcept() {
   }
   const resultDiv = document.getElementById('conceptResult');
   const btn = document.getElementById('btnSendConcept');
+  const docSelect = document.getElementById('explainDocSelect');
+  const selectedDocId = docSelect && docSelect.value ? docSelect.value : null;
+
   if (btn) {
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
@@ -1600,10 +1766,11 @@ async function explainConcept() {
   resultDiv.style.display = 'block';
 
   try {
-    const docs = await apiGetMyDocs();
-    const docList = docs.data?.documents || (Array.isArray(docs.data) ? docs.data : []);
-    const docId = docList.length > 0 ? docList[0].id : null;
-    const response = await apiRequest('/api/ai/explain', 'POST', { documentId: docId, concept: concept });
+    const payload = { concept };
+    if (selectedDocId) payload.documentId = selectedDocId;
+    if (forceUseCoins) payload.useCoins = true;
+
+    const response = await apiRequest('/api/ai/explain', 'POST', payload);
 
     if (btn) {
       btn.disabled = false;
@@ -1611,14 +1778,33 @@ async function explainConcept() {
     }
 
     if (response.error) {
-      resultDiv.innerHTML = '<div style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> ' + response.error + '</div>';
+      const resetNote = response.resetsAt
+        ? `<div style="font-size:0.75rem;color:#64748b;margin-top:4px;">Resets: ${esc(new Date(response.resetsAt).toLocaleString())}</div>`
+        : '';
+      const coinBtn = (response.canUseCoins && !forceUseCoins)
+        ? `<button type="button" onclick="explainConcept(true)" class="btn btn-primary btn-sm" style="border-radius:9px;font-size:0.75rem;">Use ${response.coinCost || 2} Coins Instead</button>`
+        : '';
+      const upgBtn = (response.limitReached || response.planRestricted || response.recommendedUpgrade)
+        ? `<a href="/pages/pricing.html" class="btn btn-outline btn-sm" style="border-radius:9px;font-size:0.75rem;text-decoration:none;">Upgrade Plan</a>`
+        : '';
+      resultDiv.innerHTML = `
+        <div style="color:#b45309;background:rgba(245,158,11,0.09);padding:12px;border-radius:12px;border:1px solid rgba(245,158,11,0.35);">
+          <div><i class="fa-solid fa-triangle-exclamation"></i> ${esc(response.error)}</div>
+          ${resetNote}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+            ${coinBtn}
+            ${upgBtn}
+            <button type="button" onclick="explainConcept(${forceUseCoins})" class="btn btn-ghost btn-sm" style="border-radius:9px;font-size:0.75rem;">Retry</button>
+          </div>
+        </div>`;
       return;
     }
 
     const explanation = response.data?.explanation || response.data?.result || response.data || 'No explanation generated.';
+    const scopeBadge = selectedDocId ? 'From Uploaded Note' : 'General AI Tutor';
     resultDiv.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid rgba(37,99,235,0.15);padding-bottom:6px;">
-        <span style="font-weight:800;color:#2563eb;font-size:0.82rem;"><i class="fa-solid fa-sparkles"></i> AI Explanation</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid rgba(37,99,235,0.15);padding-bottom:6px;gap:8px;">
+        <span style="font-weight:800;color:#2563eb;font-size:0.82rem;"><i class="fa-solid fa-sparkles"></i> AI Explanation · <span style="font-weight:600;color:#64748b;">${scopeBadge}</span></span>
         <button onclick="document.getElementById('conceptResult').style.display='none'" class="btn btn-ghost btn-sm" style="padding:2px 8px;border-radius:999px;font-size:0.75rem;"><i class="fa-solid fa-xmark"></i> Close</button>
       </div>
       <div>${parseWithMath(explanation)}</div>
@@ -1633,7 +1819,7 @@ async function explainConcept() {
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i><span>Send</span>';
     }
-    resultDiv.innerHTML = '<div style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Error: ' + (err.message || String(err)) + '</div>';
+    resultDiv.innerHTML = '<div style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Error: ' + esc(err.message || String(err)) + '</div>';
   }
 }
 

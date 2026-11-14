@@ -79,28 +79,38 @@ async function apiRequest(endpoint, method = "GET", body = null) {
           coinsNeeded: true,
           needed: data.needed,
           currentCoins: data.currentCoins ?? data.coins ?? 0,
+          recommendedUpgrade: data.recommendedUpgrade || null,
+          toolKey: data.toolKey || null,
         };
       }
 
-      // Check if subscription required (403 with subscriptionRequired flag)
-      if (response.status === 403 && data.subscriptionRequired) {
-        console.warn("[Billing] Active subscription required. Redirecting to pricing...");
-        if (!window.location.pathname.includes("pricing.html")) {
-          window.location.href = "/pages/pricing.html?reason=paywall";
-        }
+      // Pass along rich limitReached / planRestricted / subscriptionRequired metadata without abrupt forced redirect
+      if (data.limitReached || data.planRestricted || data.subscriptionRequired || response.status === 429) {
         return {
           data: null,
-          error: data.error || "Active subscription required.",
+          error: data.error || `Server error (${response.status})`,
           status: response.status,
-          subscriptionRequired: true
+          limitReached: Boolean(data.limitReached),
+          planRestricted: Boolean(data.planRestricted),
+          subscriptionRequired: Boolean(data.subscriptionRequired),
+          toolDisabled: Boolean(data.toolDisabled),
+          toolKey: data.toolKey || null,
+          toolName: data.toolName || null,
+          period: data.period || null,
+          used: data.used,
+          limit: data.limit,
+          resetsAt: data.resetsAt || null,
+          recommendedUpgrade: data.recommendedUpgrade || null,
+          canUseCoins: Boolean(data.canUseCoins),
+          coinCost: data.coinCost || 0,
+          currentCoins: data.currentCoins ?? 0,
         };
       }
-      
-      // Pass along the status code for better error handling (especially 429)
-      return { 
-        data: null, 
+
+      return {
+        data: null,
         error: data.error || `Server error (${response.status})`,
-        status: response.status
+        status: response.status,
       };
     }
     return { data, error: null, status: response.status };
@@ -137,17 +147,14 @@ async function apiGetMe() {
 }
 window.apiGetMe = apiGetMe;
 
+async function apiGetUsage()       { return apiRequest("/api/auth/usage"); }
+async function apiGetPlansConfig() { return apiRequest("/api/auth/plans-config"); }
+
 async function apiLogin(email, password) {
   const result = await apiRequest("/api/auth/login", "POST", { email, password });
   if (result.data) {
     localStorage.setItem("ct_token", result.data.token);
     localStorage.setItem("ct_user", JSON.stringify(result.data.user));
-    
-    // DEBUG: Log what we got back from the server
-    console.log("[Auth] Login successful. User data:", result.data.user);
-    console.log("[Auth] app_metadata:", result.data.user.app_metadata);
-    console.log("[Auth] role:", result.data.user.role);
-    console.log("[Auth] Is admin?", result.data.user.app_metadata?.role === "admin" || result.data.user.role === "admin");
   }
   return result;
 }
@@ -163,10 +170,27 @@ async function apiUploadPDF(file) {
       body: formData,
     });
     const data = await response.json();
-    if (!response.ok) return { data: null, error: data.error || "Upload failed." };
+    if (!response.ok) return { data: null, error: data.error || "Upload failed.", ...data };
     return { data, error: null };
   } catch (err) {
     return { data: null, error: "Upload failed. Check your connection." };
+  }
+}
+
+async function apiExtractFileText(file) {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await fetch(`${API_BASE}/api/ai/extract-file-text`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${getToken()}` },
+      body: formData,
+    });
+    const data = await response.json();
+    if (!response.ok) return { data: null, error: data.error || "Could not read attached file." };
+    return { data, error: null };
+  } catch (err) {
+    return { data: null, error: "Failed to upload attached file." };
   }
 }
 
@@ -174,28 +198,23 @@ async function apiGetMyDocs()           { return apiRequest("/api/upload/my-docs
 async function apiDeleteDoc(id)         { return apiRequest(`/api/upload/${id}`, "DELETE"); }
 
 // ── ACTIVITY ──────────────────────────────────────────────────
-// Get user's activity log
 async function apiGetActivity()         { return apiRequest("/api/upload/my-activity"); }
-// Get user's AI results (summaries, flashcards, etc.)
 async function apiGetMyAIResults()      { return apiRequest("/api/upload/my-results"); }
-
-// Get user's XP, level, streak, and achievements
-async function apiGetUserStats(userId) { return apiRequest(`/api/upload/stats/${userId}`); }
-// Get leaderboard top users by XP
+async function apiGetUserStats(userId)  { return apiRequest(`/api/upload/stats/${userId}`); }
 async function apiGetLeaderboard()      { return apiRequest("/api/upload/leaderboard"); }
 
 // ── AI ────────────────────────────────────────────────────────
-async function apiSummarize(documentId, summarySize = 'standard')           { return apiRequest("/api/ai/summarize", "POST", { documentId, summarySize }); }
-async function apiExplain(documentId, concept)    { return apiRequest("/api/ai/explain", "POST", { documentId, concept }); }
-async function apiGenerateQuestions(documentId, quizSize = 10)   { return apiRequest("/api/ai/questions", "POST", { documentId, quizSize }); }
-async function apiGenerateFlashcards(documentId, flashcardSize = 25)  { return apiRequest("/api/ai/flashcards", "POST", { documentId, flashcardSize }); }
+async function apiSummarize(documentId, summarySize = 'standard') { return apiRequest("/api/ai/summarize", "POST", { documentId, summarySize }); }
+async function apiExplain(documentId, concept)                    { return apiRequest("/api/ai/explain", "POST", { documentId, concept }); }
+async function apiGenerateQuestions(documentId, quizSize = 10)    { return apiRequest("/api/ai/questions", "POST", { documentId, quizSize }); }
+async function apiGenerateFlashcards(documentId, flashcardSize = 25) { return apiRequest("/api/ai/flashcards", "POST", { documentId, flashcardSize }); }
 
-// ── CAMPUS COINS & ECONOMY ─────────────────────────────────────
-async function apiGetCoinBalance() { return apiRequest("/api/coins/balance"); }
+// ── CAMPUS COINS & ECONOMY ────────────────────────────────────
+async function apiGetCoinBalance()            { return apiRequest("/api/coins/balance"); }
 window.apiGetWallet = apiGetCoinBalance;
-async function apiClaimDailyBonus() { return apiRequest("/api/coins/claim-daily", "POST"); }
-async function apiBuyCoinPackage(packageId) { return apiRequest("/api/coins/buy-package", "POST", { packageId, callbackUrl: window.location.href }); }
-async function apiGetCoinHistory() { return apiRequest("/api/coins/history"); }
+async function apiClaimDailyBonus()           { return apiRequest("/api/coins/claim-daily", "POST"); }
+async function apiBuyCoinPackage(packageId)   { return apiRequest("/api/coins/buy-package", "POST", { packageId, callbackUrl: window.location.href }); }
+async function apiGetCoinHistory()            { return apiRequest("/api/coins/history"); }
 
 // ── PROBLEM SOLVER & ESSAY POLISH ─────────────────────────────
 async function apiSolveProblem(question, subject = "General") { return apiRequest("/api/ai/solve-problem", "POST", { question, subject }); }
@@ -320,38 +339,52 @@ function renderQuizCorrections(reviewData) {
 }
 window.renderQuizCorrections = renderQuizCorrections;
 // ── DOWNLOADS ──────────────────────────────────────────────
-// Download generated content as files (TXT, CSV)
-function downloadFile(url, filename) {
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+// Download generated content with Authorization header (Blob download)
+async function downloadFile(endpoint, filename) {
+  try {
+    const token = getToken();
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      method: "GET",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || `Download failed (${response.status})`);
+    }
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(blobUrl);
+    return true;
+  } catch (err) {
+    showToast(err.message || "Failed to download file.", "error");
+    return false;
+  }
 }
 
 async function downloadSummaryTXT(documentId) {
-  const url = `/api/ai/download/summary/${documentId}/txt`;
-  downloadFile(url, "summary.txt");
-  showToast("Summary downloaded successfully!", "success");
+  const ok = await downloadFile(`/api/ai/download/summary/${documentId}/txt`, "summary.txt");
+  if (ok) showToast("Summary downloaded successfully!", "success");
 }
 
 async function downloadFlashcardsCSV(documentId) {
-  const url = `/api/ai/download/flashcards/${documentId}/csv`;
-  downloadFile(url, "flashcards.csv");
-  showToast("Flashcards downloaded successfully!", "success");
+  const ok = await downloadFile(`/api/ai/download/flashcards/${documentId}/csv`, "flashcards.csv");
+  if (ok) showToast("Flashcards downloaded successfully!", "success");
 }
 
 async function downloadQuestionsTXT(documentId) {
-  const url = `/api/ai/download/questions/${documentId}/txt`;
-  downloadFile(url, "questions.txt");
-  showToast("Questions downloaded successfully!", "success");
+  const ok = await downloadFile(`/api/ai/download/questions/${documentId}/txt`, "questions.txt");
+  if (ok) showToast("Questions downloaded successfully!", "success");
 }
 
 async function downloadExplanationTXT(documentId) {
-  const url = `/api/ai/download/explanation/${documentId}/txt`;
-  downloadFile(url, "explanation.txt");
-  showToast("Explanation downloaded successfully!", "success");
+  const ok = await downloadFile(`/api/ai/download/explanation/${documentId}/txt`, "explanation.txt");
+  if (ok) showToast("Explanation downloaded successfully!", "success");
 }
 // ── CONTACT ───────────────────────────────────────────────────
 async function apiSendContactMessage(name, email, message) {
@@ -361,13 +394,21 @@ async function apiSendContactMessage(name, email, message) {
 // ── ADMIN ─────────────────────────────────────────────────────
 async function apiAdminGetStats()                         { return apiRequest("/api/admin/stats"); }
 async function apiAdminGetRecentActivities(limit = 50)    { return apiRequest(`/api/admin/recent-activities?limit=${limit}`); }
-async function apiAdminGetUsers(search = "", status = "") {
+async function apiAdminGetUsers(search = "", status = "", plan = "") {
   const params = new URLSearchParams();
   if (search) params.set("search", search);
   if (status) params.set("status", status);
+  if (plan) params.set("plan", plan);
   const qs = params.toString() ? `?${params}` : "";
   return apiRequest(`/api/admin/users${qs}`);
 }
+async function apiAdminGetUserDetails(userId)             { return apiRequest(`/api/admin/users/${userId}`); }
+async function apiAdminAdjustCoins(userId, payload)       { return apiRequest(`/api/admin/users/${userId}/coins`, "POST", payload); }
+async function apiAdminGetCoinTransactions(limit = 100)   { return apiRequest(`/api/admin/coin-transactions?limit=${limit}`); }
+async function apiAdminManageSubscription(userId, payload){ return apiRequest(`/api/admin/users/${userId}/subscription`, "POST", payload); }
+async function apiAdminGetSubscriptionOverview()          { return apiRequest("/api/admin/subscriptions/overview"); }
+async function apiAdminGetAITools()                       { return apiRequest("/api/admin/ai-tools"); }
+async function apiAdminUpdateAITool(toolKey, payload)     { return apiRequest(`/api/admin/ai-tools/${toolKey}`, "PUT", payload); }
 async function apiAdminGetActivity(userId)                { return apiRequest(`/api/admin/users/${userId}/activity`); }
 async function apiAdminGetUserFiles(userId)               { return apiRequest(`/api/admin/users/${userId}/files`); }
 async function apiAdminGetAIInteractions(userId)          { return apiRequest(`/api/admin/users/${userId}/ai-interactions`); }
@@ -891,8 +932,21 @@ function markdownToHTML(text) {
   // Preprocess brackets/parentheses to add missing backslashes for LaTeX
   text = preProcessMathDelimiters(text);
 
+  // Protect fenced code blocks ```lang ... ```
+  const codeBlocks = [];
+  let cIdx = 0;
+  text = text.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (_, lang, code) => {
+    const key = `CODEBLOCKTOKEN${cIdx++}`;
+    const safeCode = escapeHTML(code.replace(/\n$/, ""));
+    const langAttr = lang ? ` class="language-${escapeHTML(lang)}"` : "";
+    codeBlocks.push({
+      key,
+      val: `<pre style="background:rgba(15,23,42,0.92);color:#e2e8f0;padding:14px 16px;border-radius:12px;overflow-x:auto;font-size:0.86rem;line-height:1.55;margin:12px 0;"><code${langAttr}>${safeCode}</code></pre>`,
+    });
+    return `\n${key}\n`;
+  });
+
   // Protect LaTeX math blocks from being mangled by markdown parsing.
-  // We replace them with placeholders, process markdown, then restore.
   const mathBlocks = [];
   let idx = 0;
 
@@ -930,7 +984,12 @@ function markdownToHTML(text) {
   let outputLines = [];
 
   for (let line of lines) {
-    // Check headers
+    if (/^CODEBLOCKTOKEN\d+$/.test(line.trim())) {
+      while (listLevel > 0) { outputLines.push("</ul>"); listLevel--; }
+      outputLines.push(line.trim());
+      continue;
+    }
+
     if (line.startsWith("## ")) {
       while (listLevel > 0) { outputLines.push("</ul>"); listLevel--; }
       outputLines.push(`<h2>${line.substring(3).trim()}</h2>`);
@@ -952,8 +1011,7 @@ function markdownToHTML(text) {
       continue;
     }
 
-    // Match list item with spaces before marker: e.g., "  - Option" or "* Option"
-    const listMatch = line.match(/^(\s*)([-*+])\s+(.+)$/);
+    const listMatch = line.match(/^(\s*)([-*+]|\d+\.)\s+(.+)$/);
     if (listMatch) {
       const spaces = listMatch[1].length;
       const content = listMatch[3].trim();
@@ -976,14 +1034,12 @@ function markdownToHTML(text) {
       continue;
     }
 
-    // Blank line closes lists
     if (line.trim() === "") {
       while (listLevel > 0) { outputLines.push("</ul>"); listLevel--; }
       outputLines.push("");
       continue;
     }
 
-    // Normal paragraph text
     if (listLevel > 0) {
       while (listLevel > 0) { outputLines.push("</ul>"); listLevel--; }
     }
@@ -1004,8 +1060,11 @@ function markdownToHTML(text) {
     .replace(/`([^`\n]+)`/g, "<code>$1</code>")
     .replace(/<p><\/p>/g, "");
 
-  // Restore math blocks safely using function replacement
+  // Restore math and code blocks safely
   mathBlocks.forEach(({ key, val }) => {
+    html = html.replace(key, () => val);
+  });
+  codeBlocks.forEach(({ key, val }) => {
     html = html.replace(key, () => val);
   });
 

@@ -8,6 +8,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
 <script src="https://cdn.lordicon.com/lordicon.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
 <meta name="theme-color" content="#060d24"/>
 <meta name="mobile-web-app-capable" content="yes"/>
@@ -856,6 +859,10 @@ html, body {
           <span class="anim-edu-icon"><i class="fa-solid fa-pen-nib" style="color:#0070F3;"></i></span>
           <span>Thesis Polisher</span>
         </button>
+        <button type="button" class="tool-switcher-pill" onclick="switchAcademicTool('solver', this)">
+          <span class="anim-edu-icon"><i class="fa-solid fa-calculator" style="color:#06b6d4;"></i></span>
+          <span>Problem Solver</span>
+        </button>
         <button type="button" class="tool-switcher-pill" onclick="switchAcademicTool('proposals', this)">
           <span class="anim-edu-icon"><i class="fa-solid fa-diagram-project" style="color:#10b981;"></i></span>
           <span>Proposal Architect</span>
@@ -886,9 +893,9 @@ html, body {
           </div>
         </div>
 
-        <div class="tool-cost-badge-compact" onclick="openCoinsModal('packages')" id="toolCostBadge">
+        <div class="tool-cost-badge-compact" onclick="openCoinsModal('packages')" id="toolCostBadge" title="Live allowance & CampusCoins cost">
           <i class="fa-solid fa-bolt" style="color:#eab308;"></i>
-          <span id="toolCostText">8 Coins · Pro Free</span>
+          <span id="toolCostText">Checking quota...</span>
         </div>
       </div>
 
@@ -940,21 +947,22 @@ html, body {
 
         <!-- 2. File Upload View -->
         <div id="fileUploadAreaWrap" style="display:none;">
-          <input type="file" id="toolFileInput" accept=".pdf,.doc,.docx,.txt" style="display:none;" onchange="handleFileSelected(this)" />
+          <input type="file" id="toolFileInput" accept=".pdf,.pptx,.docx,.txt,image/*" style="display:none;" onchange="handleFileSelected(this)" />
           
           <div class="tool-file-upload-box" onclick="document.getElementById('toolFileInput').click()">
             <div class="tool-file-icon-box">
               <i class="fa-solid fa-cloud-arrow-up"></i>
             </div>
-            <div class="tool-file-title" id="dropzoneTitle">Select Document</div>
-            <div class="tool-file-sub" id="dropzoneSubtitle">Tap to browse PDF, DOCX, DOC or TXT (Max 10MB)</div>
+            <div class="tool-file-title" id="dropzoneTitle">Select Document or Image</div>
+            <div class="tool-file-sub" id="dropzoneSubtitle">Tap to browse PDF, PPTX, DOCX, TXT, or Image (Max 15MB)</div>
           </div>
 
           <div class="attached-file-badge" id="attachedFileBadge">
-            <div style="display:flex; align-items:center; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1;">
               <i class="fa-solid fa-file-lines"></i>
-              <span id="attachedFileName">document.pdf</span>
-              <span id="attachedFileSize" style="font-size:0.72rem; color:#64748b;">(24 KB)</span>
+              <span id="attachedFileName" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">document.pdf</span>
+              <span id="attachedFileSize" style="font-size:0.72rem; color:#64748b; flex-shrink:0;">(24 KB)</span>
+              <span id="attachedFileExtractStatus" style="font-size:0.72rem; color:#0070F3; font-weight:600; flex-shrink:0;"></span>
             </div>
             <button type="button" class="attached-file-remove" onclick="removeAttachedFile()" title="Remove file">
               <i class="fa-solid fa-xmark"></i>
@@ -1009,6 +1017,18 @@ html, body {
           </div>
         </div>
 
+        <!-- Inline Limit / Plan / Error Banner with Retry & Coin Bypass -->
+        <div id="toolStatusBanner" style="display:none; margin-top:12px; padding:14px 16px; border-radius:14px; border:1px solid rgba(245,158,11,0.35); background:rgba(245,158,11,0.08);">
+          <div style="display:flex; align-items:flex-start; gap:10px;">
+            <i id="toolStatusIcon" class="fa-solid fa-circle-exclamation" style="color:#f59e0b; margin-top:3px; font-size:1rem;"></i>
+            <div style="flex:1; min-width:0;">
+              <div id="toolStatusTitle" style="font-weight:800; font-size:0.9rem; margin-bottom:4px;">Notice</div>
+              <div id="toolStatusMsg" style="font-size:0.83rem; line-height:1.5; color:var(--text-muted, #475569);"></div>
+              <div id="toolStatusActions" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- 4. LIVE OUTPUT CARD (Smoothly appears upon generation) -->
@@ -1033,10 +1053,35 @@ html, body {
         <div class="tool-output-body" id="toolOutputBody"></div>
       </div>
 
+      <!-- 5. RECENT GENERATIONS (Mobile & Desktop accessible) -->
+      <div class="tool-workspace-card" id="recentHistoryWrap" style="margin-top:14px; padding:14px 16px; display:none;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+          <div style="font-weight:800; font-size:0.88rem; display:flex; align-items:center; gap:8px;">
+            <i class="fa-solid fa-clock-rotate-left" style="color:#0070F3;"></i>
+            <span>Recent AI Outputs (Saved Locally)</span>
+          </div>
+          <button type="button" class="input-action-mini-btn btn-clear" onclick="clearToolHistory()">Clear</button>
+        </div>
+        <div id="recentHistoryList" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+
     </div>
 
     <!-- RIGHT COLUMN: DESKTOP ONLY SIDEBAR (Hidden on mobile) -->
     <div class="desktop-side-col">
+      <!-- Plan & Allowance Card -->
+      <div class="desktop-info-card">
+        <div class="desktop-info-title">
+          <i class="fa-solid fa-gauge-high" style="color:#10b981;"></i>
+          <span>Plan & Allowance</span>
+        </div>
+        <div id="sidePlanBadge" style="font-size:0.88rem; font-weight:800; color:#0070F3; margin-bottom:6px;">Loading plan...</div>
+        <div id="sideToolQuota" style="font-size:0.79rem; color:#64748b; line-height:1.5; margin-bottom:10px;">Checking limits...</div>
+        <a href="/pages/pricing.html" class="btn btn-outline btn-sm btn-full" style="border-radius:10px;">
+          <i class="fa-solid fa-crown" style="color:#f59e0b;"></i> Compare Plus &amp; Pro
+        </a>
+      </div>
+
       <!-- Wallet Card -->
       <div class="desktop-info-card">
         <div class="desktop-info-title">
@@ -1109,15 +1154,21 @@ let currentToolKey = 'polisher';
 let currentSubMode = 'polisher';
 let currentInputMode = 'text'; // 'text' | 'file'
 let currentGeneratedText = '';
+let extractedAttachmentText = '';
+let isExtractingAttachment = false;
+let liveUsageState = null;
+
+const TOOL_HISTORY_KEY = 'ct_tool_history';
 
 const TOOL_CONFIGS = {
   polisher: {
+    backendKey: 'polish_essay',
     title: 'Thesis & Coursework Polisher',
     tagline: 'Elevate tone, structure, grammar & academic rigor.',
-    cost: '8 Coins · Pro Free',
+    defaultCoinCost: 8,
     icon: 'fa-solid fa-feather-pointed',
-    btnText: 'Polish Content (8 Coins)',
-    placeholder: 'Paste your essay, thesis, coursework, or literature review here...',
+    btnAction: 'Polish Content',
+    placeholder: 'Paste your essay, thesis, coursework, or literature review here (min 30 characters)...',
     showSubmodes: true,
     opt1Label: 'Tone',
     opt1Options: [
@@ -1142,12 +1193,44 @@ const TOOL_CONFIGS = {
       { val: 'IEEE', text: 'IEEE' }
     ]
   },
+  solver: {
+    backendKey: 'solve_problem',
+    title: 'Assignment & Problem Solver',
+    tagline: 'Step-by-step math, science, coding & theory workings with LaTeX.',
+    defaultCoinCost: 5,
+    icon: 'fa-solid fa-calculator',
+    btnAction: 'Solve Step-by-Step',
+    placeholder: 'Paste an equation, assignment question, physics/calculus problem, or code bug to solve...',
+    showSubmodes: false,
+    opt1Label: 'Subject',
+    opt1Options: [
+      { val: 'Mathematics & Calculus', text: 'Mathematics' },
+      { val: 'Physics & Engineering', text: 'Physics / Eng.' },
+      { val: 'Chemistry & Biology', text: 'Chem / Bio' },
+      { val: 'Computer Science & Code', text: 'CS & Coding' },
+      { val: 'Economics & Accounting', text: 'Econ / Finance' },
+      { val: 'General Academic Problem', text: 'General' }
+    ],
+    opt2Label: 'Detail Level',
+    opt2Options: [
+      { val: 'Full Step-by-Step Working', text: 'Step-by-Step' },
+      { val: 'Conceptual + Formulas', text: 'Formulas & Proofs' },
+      { val: 'Concise Exam Method', text: 'Exam Method' }
+    ],
+    opt3Label: 'Output Format',
+    opt3Options: [
+      { val: 'Full Textbook Solution', text: 'Textbook Style' },
+      { val: 'Marking Scheme Breakdown', text: 'Marking Guide' },
+      { val: 'Quick Verification', text: 'Quick Check' }
+    ]
+  },
   proposals: {
+    backendKey: 'project_proposals',
     title: 'Project & Proposal Architect',
     tagline: 'Generate 3 original research topics, problem statement & methodology.',
-    cost: '10 Coins · Pro Free',
+    defaultCoinCost: 10,
     icon: 'fa-solid fa-diagram-project',
-    btnText: 'Architect 3 Proposals (10 Coins)',
+    btnAction: 'Architect 3 Proposals',
     placeholder: 'Enter your field of study, department, or research interests (e.g. Computer Science, Public Health, Electrical Engineering)...',
     showSubmodes: false,
     opt1Label: 'Level',
@@ -1172,12 +1255,13 @@ const TOOL_CONFIGS = {
     ]
   },
   viva: {
+    backendKey: 'viva_defense',
     title: 'Viva Defense Panel Drill',
     tagline: 'Simulate tough examiner questions, model answers & trap warnings.',
-    cost: '12 Coins · Pro Free',
+    defaultCoinCost: 12,
     icon: 'fa-solid fa-shield-halved',
-    btnText: 'Generate Defense Drill (12 Coins)',
-    placeholder: 'Paste your project/thesis title, research abstract, or key methodology...',
+    btnAction: 'Generate Defense Drill',
+    placeholder: 'Paste your project/thesis title first, followed by your abstract or key methodology...',
     showSubmodes: false,
     opt1Label: 'Panel Rigor',
     opt1Options: [
@@ -1199,11 +1283,12 @@ const TOOL_CONFIGS = {
     ]
   },
   exam: {
+    backendKey: 'exam_predict',
     title: 'Exam Past Question Predictor',
     tagline: 'Predict high-probability exam essays, calculations & CBT MCQs.',
-    cost: '15 Coins · Pro Free',
+    defaultCoinCost: 15,
     icon: 'fa-solid fa-book-bookmark',
-    btnText: 'Predict Exam Dossier (15 Coins)',
+    btnAction: 'Predict Exam Dossier',
     placeholder: 'Enter course code and lecture topics (e.g. MTH101 Calculus & Algebra; Topics: Limits, Integration, Matrices)...',
     showSubmodes: false,
     opt1Label: 'Exam Style',
@@ -1227,12 +1312,13 @@ const TOOL_CONFIGS = {
     ]
   },
   humanizer: {
+    backendKey: 'humanize_rewrite',
     title: 'Turnitin Originality Humanizer',
     tagline: 'Remove robotic AI patterns, vary sentence burstiness & bypass flags.',
-    cost: '10 Coins · Pro Free',
+    defaultCoinCost: 10,
     icon: 'fa-solid fa-fingerprint',
-    btnText: 'Humanize Content (10 Coins)',
-    placeholder: 'Paste your draft or AI-generated coursework to rewrite into natural academic phrasing...',
+    btnAction: 'Humanize Content',
+    placeholder: 'Paste your draft or AI-generated coursework (min 40 characters) to rewrite into natural academic phrasing...',
     showSubmodes: false,
     opt1Label: 'Human Voice',
     opt1Options: [
@@ -1255,53 +1341,165 @@ const TOOL_CONFIGS = {
   }
 };
 
-function switchAcademicTool(toolKey, clickedBtn) {
-  currentToolKey = toolKey;
+function getToolAllowanceInfo(toolKey) {
   const cfg = TOOL_CONFIGS[toolKey] || TOOL_CONFIGS.polisher;
+  if (!liveUsageState || !Array.isArray(liveUsageState.tools)) return null;
+  return liveUsageState.tools.find(t => t.toolKey === cfg.backendKey) || null;
+}
 
-  // Update switcher strip active button
+function updateAllowanceUI() {
+  const cfg = TOOL_CONFIGS[currentToolKey] || TOOL_CONFIGS.polisher;
+  const info = getToolAllowanceInfo(currentToolKey);
+  const costBadge = document.getElementById('toolCostText');
+  const btnText = document.getElementById('btnSubmitText');
+  const sidePlanEl = document.getElementById('sidePlanBadge');
+  const sideQuotaEl = document.getElementById('sideToolQuota');
+
+  let actionLabel = cfg.btnAction;
+  if (currentToolKey === 'polisher') {
+    if (currentSubMode === 'paraphraser') actionLabel = 'Paraphrase Content';
+    else if (currentSubMode === 'summarizer') actionLabel = 'Summarize Content';
+    else if (currentSubMode === 'grammar') actionLabel = 'Check Grammar & Style';
+  }
+
+  if (!info) {
+    if (costBadge) costBadge.textContent = `${cfg.defaultCoinCost} Coins · Plan Included`;
+    if (btnText) btnText.textContent = actionLabel;
+    return;
+  }
+
+  const planName = String(liveUsageState.plan || 'free').toUpperCase();
+  const dailyStr = info.dailyLimit === -1 ? 'Unlimited/day' : `${info.remainingDaily ?? Math.max(0, info.dailyLimit - info.usedToday)}/${info.dailyLimit} left today`;
+  const monthlyStr = info.monthlyLimit === -1 ? 'Unlimited/mo' : `${info.remainingMonthly ?? Math.max(0, info.monthlyLimit - info.usedThisMonth)}/${info.monthlyLimit} left this month`;
+
+  if (!info.enabled) {
+    if (costBadge) costBadge.textContent = 'Temporarily Paused';
+    if (btnText) btnText.textContent = `${actionLabel} (Disabled)`;
+  } else if (!info.planAllowed || info.dailyLimit === 0 || info.monthlyLimit === 0) {
+    if (costBadge) {
+      costBadge.textContent = info.allowCoinsBypass ? `${info.coinCost} Coins / Use · Plus+ Free` : 'Plus / Pro Feature';
+    }
+    if (btnText) {
+      btnText.textContent = info.allowCoinsBypass ? `${actionLabel} (${info.coinCost} Coins)` : `${actionLabel} (Upgrade)`;
+    }
+  } else if (info.dailyLimit === -1 && info.monthlyLimit === -1) {
+    if (costBadge) costBadge.textContent = `${planName} · Unlimited`;
+    if (btnText) btnText.textContent = `${actionLabel} (Free on ${planName})`;
+  } else {
+    const remDay = info.remainingDaily ?? Math.max(0, info.dailyLimit - info.usedToday);
+    if (costBadge) costBadge.textContent = `${remDay} left today · ${info.coinCost}c fallback`;
+    if (btnText) {
+      btnText.textContent = remDay > 0
+        ? `${actionLabel} (${remDay} free left)`
+        : (info.allowCoinsBypass ? `${actionLabel} (${info.coinCost} Coins)` : `${actionLabel} (Limit Reached)`);
+    }
+  }
+
+  if (sidePlanEl) {
+    const expStr = liveUsageState.subscriptionEnd
+      ? ` · Expires ${new Date(liveUsageState.subscriptionEnd).toLocaleDateString()}`
+      : '';
+    sidePlanEl.textContent = `${planName} PLAN${expStr}`;
+  }
+  if (sideQuotaEl) {
+    sideQuotaEl.innerHTML = `<strong>${escapeHTML(cfg.title)}</strong><br>Daily: ${escapeHTML(dailyStr)}<br>Monthly: ${escapeHTML(monthlyStr)}<br>Coin Fallback: ${info.allowCoinsBypass ? `${info.coinCost} Coins` : 'Plan only'}`;
+  }
+}
+
+async function refreshLiveUsage() {
+  try {
+    const { data } = await apiGetUsage();
+    if (data && Array.isArray(data.tools)) {
+      liveUsageState = data;
+      const navEl = document.getElementById('navCoinCount');
+      const sideEl = document.getElementById('sideCoinCount');
+      if (typeof data.coins === 'number') {
+        if (navEl) navEl.textContent = data.coins;
+        if (sideEl) sideEl.textContent = data.coins;
+      }
+      updateAllowanceUI();
+    }
+  } catch (_) {}
+}
+
+function hideToolStatusBanner() {
+  const banner = document.getElementById('toolStatusBanner');
+  if (banner) banner.style.display = 'none';
+}
+
+function showToolStatusBanner({ title, message, tone = 'warn', actions = [] }) {
+  const banner = document.getElementById('toolStatusBanner');
+  const icon = document.getElementById('toolStatusIcon');
+  const titleEl = document.getElementById('toolStatusTitle');
+  const msgEl = document.getElementById('toolStatusMsg');
+  const actEl = document.getElementById('toolStatusActions');
+  if (!banner) return;
+
+  const isErr = tone === 'error';
+  banner.style.borderColor = isErr ? 'rgba(239,68,68,0.4)' : 'rgba(245,158,11,0.4)';
+  banner.style.background = isErr ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)';
+  if (icon) {
+    icon.className = isErr ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-circle-info';
+    icon.style.color = isErr ? '#ef4444' : '#f59e0b';
+  }
+  titleEl.textContent = title;
+  msgEl.innerHTML = message;
+  actEl.innerHTML = '';
+
+  actions.forEach(a => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = a.primary ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm';
+    btn.style.borderRadius = '10px';
+    btn.innerHTML = a.label;
+    btn.onclick = a.onClick;
+    actEl.appendChild(btn);
+  });
+
+  banner.style.display = 'block';
+  banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function switchAcademicTool(toolKey, clickedBtn) {
+  currentToolKey = TOOL_CONFIGS[toolKey] ? toolKey : 'polisher';
+  const cfg = TOOL_CONFIGS[currentToolKey];
+
   document.querySelectorAll('.tool-switcher-pill').forEach(btn => btn.classList.remove('active'));
   if (clickedBtn) {
     clickedBtn.classList.add('active');
+  } else {
+    document.querySelectorAll('.tool-switcher-pill').forEach(btn => {
+      if (btn.getAttribute('onclick')?.includes(`'${currentToolKey}'`)) btn.classList.add('active');
+    });
   }
 
-  // Update Tool Info Card
   document.getElementById('toolTitleDisplay').textContent = cfg.title;
   document.getElementById('toolTaglineDisplay').textContent = cfg.tagline;
-  document.getElementById('toolCostText').textContent = cfg.cost;
-  document.getElementById('btnSubmitText').textContent = cfg.btnText;
   document.getElementById('toolInputText').placeholder = cfg.placeholder;
-  
-  // Update Squircle Icon
+
   const iconEl = document.getElementById('toolInfoIcon');
   if (iconEl) iconEl.className = cfg.icon;
 
-  // Toggle Submodes (Only Polisher has submodes)
   const submodeStrip = document.getElementById('submodeStrip');
   if (submodeStrip) {
     submodeStrip.style.display = cfg.showSubmodes ? 'flex' : 'none';
   }
 
-  // Populate dynamic dropdown options
   renderToolOptions(cfg);
-
-  // Hide previous result
-  document.getElementById('toolResultCard').style.display = 'none';
+  hideToolStatusBanner();
+  updateAllowanceUI();
 }
 
 function renderToolOptions(cfg) {
-  // Label 1 & Select 1
-  document.getElementById('lblTone').innerHTML = `<i class="fa-solid fa-sliders"></i> ${cfg.opt1Label}`;
+  document.getElementById('lblTone').innerHTML = `<i class="fa-solid fa-sliders"></i> ${escapeHTML(cfg.opt1Label)}`;
   const sel1 = document.getElementById('optTone');
   sel1.innerHTML = cfg.opt1Options.map(o => `<option value="${escapeHTML(o.val)}">${escapeHTML(o.text)}</option>`).join('');
 
-  // Label 2 & Select 2
-  document.getElementById('lblFocus').innerHTML = `<i class="fa-solid fa-bullseye"></i> ${cfg.opt2Label}`;
+  document.getElementById('lblFocus').innerHTML = `<i class="fa-solid fa-bullseye"></i> ${escapeHTML(cfg.opt2Label)}`;
   const sel2 = document.getElementById('optFocus');
   sel2.innerHTML = cfg.opt2Options.map(o => `<option value="${escapeHTML(o.val)}">${escapeHTML(o.text)}</option>`).join('');
 
-  // Label 3 & Select 3
-  document.getElementById('lblLang').innerHTML = `<i class="fa-solid fa-quote-left"></i> ${cfg.opt3Label}`;
+  document.getElementById('lblLang').innerHTML = `<i class="fa-solid fa-quote-left"></i> ${escapeHTML(cfg.opt3Label)}`;
   const sel3 = document.getElementById('optLang');
   sel3.innerHTML = cfg.opt3Options.map(o => `<option value="${escapeHTML(o.val)}">${escapeHTML(o.text)}</option>`).join('');
 }
@@ -1309,18 +1507,8 @@ function renderToolOptions(cfg) {
 function switchToolSubMode(subMode, btn) {
   currentSubMode = subMode;
   document.querySelectorAll('.submode-chip').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-
-  const btnText = document.getElementById('btnSubmitText');
-  if (subMode === 'paraphraser') {
-    btnText.textContent = 'Paraphrase Content (8 Coins)';
-  } else if (subMode === 'summarizer') {
-    btnText.textContent = 'Summarize Content (8 Coins)';
-  } else if (subMode === 'grammar') {
-    btnText.textContent = 'Check Grammar & Style (8 Coins)';
-  } else {
-    btnText.textContent = 'Polish Content (8 Coins)';
-  }
+  if (btn) btn.classList.add('active');
+  updateAllowanceUI();
 }
 
 function setInputMode(mode) {
@@ -1348,7 +1536,6 @@ function handleTextInputChange(textarea) {
   const words = text ? text.split(/\s+/).length : 0;
   document.getElementById('inputWordCount').textContent = `${words} words`;
 
-  // Auto-expand textarea slightly on input
   textarea.style.height = 'auto';
   textarea.style.height = Math.min(Math.max(textarea.scrollHeight, 105), 240) + 'px';
 }
@@ -1373,42 +1560,173 @@ function clearToolContent() {
   textarea.value = '';
   handleTextInputChange(textarea);
   removeAttachedFile();
+  hideToolStatusBanner();
   document.getElementById('toolResultCard').style.display = 'none';
 }
 
-function handleFileSelected(input) {
+async function handleFileSelected(input) {
   const file = input.files[0];
   if (!file) return;
 
+  if (file.size > 15 * 1024 * 1024) {
+    showToast('File exceeds 15MB limit. Please choose a smaller file.', 'error');
+    input.value = '';
+    return;
+  }
+
   document.getElementById('attachedFileName').textContent = file.name;
   document.getElementById('attachedFileSize').textContent = `(${(file.size / 1024).toFixed(1)} KB)`;
+  const statusEl = document.getElementById('attachedFileExtractStatus');
+  if (statusEl) {
+    statusEl.textContent = 'Extracting text...';
+    statusEl.style.color = '#0070F3';
+  }
   document.getElementById('attachedFileBadge').style.display = 'flex';
   document.querySelector('.tool-file-upload-box').style.display = 'none';
-  showToast(`Attached ${file.name}`, 'success');
+
+  isExtractingAttachment = true;
+  extractedAttachmentText = '';
+  try {
+    const { data, error } = await apiExtractFileText(file);
+    if (error || !data?.text) {
+      if (statusEl) {
+        statusEl.textContent = 'Extraction failed';
+        statusEl.style.color = '#ef4444';
+      }
+      showToast(error || 'Could not extract readable text from that file.', 'error');
+      return;
+    }
+
+    extractedAttachmentText = data.text.trim();
+    const textarea = document.getElementById('toolInputText');
+    if (textarea) {
+      textarea.value = extractedAttachmentText;
+      handleTextInputChange(textarea);
+    }
+    const wordCount = extractedAttachmentText.split(/\s+/).length;
+    if (statusEl) {
+      statusEl.textContent = `Extracted ${wordCount.toLocaleString()} words`;
+      statusEl.style.color = '#10b981';
+    }
+    showToast(`Extracted ${wordCount} words from ${file.name}`, 'success');
+  } finally {
+    isExtractingAttachment = false;
+  }
 }
 
 function removeAttachedFile() {
   const input = document.getElementById('toolFileInput');
   if (input) input.value = '';
+  extractedAttachmentText = '';
+  isExtractingAttachment = false;
+  const statusEl = document.getElementById('attachedFileExtractStatus');
+  if (statusEl) statusEl.textContent = '';
   document.getElementById('attachedFileBadge').style.display = 'none';
   document.querySelector('.tool-file-upload-box').style.display = 'block';
 }
 
-async function executeCurrentTool() {
-  const text = document.getElementById('toolInputText').value.trim();
+function saveToolHistoryEntry(toolKey, inputPreview, markdown) {
+  try {
+    const existing = JSON.parse(localStorage.getItem(TOOL_HISTORY_KEY) || '[]');
+    const cfg = TOOL_CONFIGS[toolKey] || TOOL_CONFIGS.polisher;
+    const entry = {
+      id: Date.now(),
+      toolKey,
+      toolTitle: cfg.title,
+      preview: String(inputPreview || '').trim().slice(0, 70),
+      markdown,
+      createdAt: new Date().toISOString(),
+    };
+    const updated = [entry, ...existing].slice(0, 10);
+    localStorage.setItem(TOOL_HISTORY_KEY, JSON.stringify(updated));
+    renderRecentToolHistory();
+  } catch (_) {}
+}
+
+function renderRecentToolHistory() {
+  const wrap = document.getElementById('recentHistoryWrap');
+  const list = document.getElementById('recentHistoryList');
+  if (!wrap || !list) return;
+  let items = [];
+  try { items = JSON.parse(localStorage.getItem(TOOL_HISTORY_KEY) || '[]'); } catch (_) {}
+  if (!items.length) {
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = 'block';
+  list.innerHTML = items.map(item => `
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border-radius:10px; border:1px solid rgba(148,163,184,0.22); background:rgba(15,23,42,0.02);">
+      <div style="min-width:0; flex:1;">
+        <div style="font-size:0.8rem; font-weight:700;">${escapeHTML(item.toolTitle)}</div>
+        <div style="font-size:0.74rem; color:#64748b; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHTML(item.preview || 'Generated output')}</div>
+      </div>
+      <button type="button" class="tool-output-btn" onclick="openSavedHistoryItem(${item.id})">View</button>
+    </div>
+  `).join('');
+}
+
+function openSavedHistoryItem(id) {
+  let items = [];
+  try { items = JSON.parse(localStorage.getItem(TOOL_HISTORY_KEY) || '[]'); } catch (_) {}
+  const item = items.find(x => x.id === id);
+  if (!item) return;
+  displayGeneratedOutput(item.markdown);
+  showToast(`Loaded saved ${item.toolTitle} output`, 'success');
+}
+
+function clearToolHistory() {
+  localStorage.removeItem(TOOL_HISTORY_KEY);
+  renderRecentToolHistory();
+  showToast('Cleared local tool history.', 'success');
+}
+
+function displayGeneratedOutput(resultMarkdown) {
+  currentGeneratedText = resultMarkdown;
+  const resultCard = document.getElementById('toolResultCard');
+  const resultBody = document.getElementById('toolOutputBody');
+  resultCard.style.display = 'block';
+
+  if (typeof markdownToHTML === 'function') {
+    resultBody.innerHTML = markdownToHTML(resultMarkdown);
+  } else if (typeof marked !== 'undefined') {
+    resultBody.innerHTML = marked.parse(resultMarkdown);
+  } else {
+    resultBody.textContent = resultMarkdown;
+  }
+
+  if (typeof renderMath === 'function') {
+    setTimeout(() => renderMath(resultBody), 60);
+  }
+
+  const words = resultMarkdown.trim() ? resultMarkdown.trim().split(/\s+/).length : 0;
+  document.getElementById('outputWordCount').textContent = `(${words} words generated)`;
+  resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function executeCurrentTool(forceUseCoins = false) {
+  if (isExtractingAttachment) {
+    showToast('Still extracting text from your attached file. Please wait a second...', 'info');
+    return;
+  }
+
+  const textareaVal = document.getElementById('toolInputText').value.trim();
+  const effectiveText = textareaVal || extractedAttachmentText;
   const fileInput = document.getElementById('toolFileInput');
   const file = fileInput ? fileInput.files[0] : null;
 
-  if (currentInputMode === 'text' && !text) {
-    showToast('Please enter or paste your content first.', 'error');
-    document.getElementById('toolInputText').focus();
-    return;
-  }
-  if (currentInputMode === 'file' && !file && !text) {
-    showToast('Please attach a document or switch to Write/Paste mode.', 'error');
+  if (!effectiveText) {
+    if (currentInputMode === 'file' && !file) {
+      showToast('Please attach a document/image or switch to Write / Paste.', 'error');
+    } else if (currentInputMode === 'file' && file) {
+      showToast('No readable text could be extracted from that file. Please paste text manually.', 'error');
+    } else {
+      showToast('Please enter or paste your content first.', 'error');
+      document.getElementById('toolInputText').focus();
+    }
     return;
   }
 
+  hideToolStatusBanner();
   const btn = document.getElementById('btnSubmitTool');
   const originalHtml = btn.innerHTML;
   btn.disabled = true;
@@ -1419,97 +1737,160 @@ async function executeCurrentTool() {
   const opt3 = document.getElementById('optLang').value;
 
   try {
+    let res = null;
     let resultMarkdown = '';
+    const extraFlags = forceUseCoins ? { useCoins: true } : {};
 
     if (currentToolKey === 'polisher') {
-      const res = await apiRequest('/api/ai/polish-essay', 'POST', {
-        text: text || file?.name,
-        style: opt3, // Citation style
+      res = await apiRequest('/api/ai/polish-essay', 'POST', {
+        text: effectiveText,
+        subMode: currentSubMode,
+        tone: opt1,
         focus: opt2,
-        lang: opt1
+        style: opt3,
+        ...extraFlags
       });
-      if (res.needCoins || res.insufficientCoins) {
-        showCoinsAlert(8);
-        return;
-      }
-      resultMarkdown = res.data?.polished || res.data?.review || res.data?.content || res.error || 'Execution complete.';
+      resultMarkdown = res.data?.polished || res.data?.review || res.data?.content || '';
+    } else if (currentToolKey === 'solver') {
+      res = await apiRequest('/api/ai/solve-problem', 'POST', {
+        problemText: effectiveText,
+        subject: opt1,
+        focus: opt2,
+        outputFormat: opt3,
+        ...extraFlags
+      });
+      resultMarkdown = res.data?.solution || res.data?.content || '';
     } else if (currentToolKey === 'proposals') {
-      const res = await apiRequest('/api/ai/project-proposals', 'POST', {
-        field: text || 'Computer Science & Engineering',
+      res = await apiRequest('/api/ai/project-proposals', 'POST', {
+        field: effectiveText,
+        level: opt1,
         interests: opt2,
-        level: opt1
+        outputFormat: opt3,
+        ...extraFlags
       });
-      if (res.needCoins || res.insufficientCoins) {
-        showCoinsAlert(10);
-        return;
-      }
-      resultMarkdown = res.data?.proposals || res.data?.content || res.error || 'Execution complete.';
+      resultMarkdown = res.data?.proposals || res.data?.content || '';
     } else if (currentToolKey === 'viva') {
-      const res = await apiRequest('/api/ai/viva-defense', 'POST', {
-        projectTitle: text.substring(0, 150) || 'Thesis Oral Defense',
-        abstract: text.length > 150 ? text : opt2
+      const lines = effectiveText.split('\n').filter(Boolean);
+      const firstLine = lines[0] || effectiveText.substring(0, 140);
+      res = await apiRequest('/api/ai/viva-defense', 'POST', {
+        projectTitle: firstLine.slice(0, 180),
+        abstract: effectiveText,
+        rigor: opt1,
+        studyLevel: opt2,
+        outputFormat: opt3,
+        ...extraFlags
       });
-      if (res.needCoins || res.insufficientCoins) {
-        showCoinsAlert(12);
-        return;
-      }
-      resultMarkdown = res.data?.defenseDossier || res.data?.content || res.error || 'Execution complete.';
+      resultMarkdown = res.data?.defenseDossier || res.data?.content || '';
     } else if (currentToolKey === 'exam') {
-      const res = await apiRequest('/api/ai/predict-past-questions', 'POST', {
-        courseCode: text.substring(0, 80) || 'University Academic Exam',
-        syllabus: text
+      const firstLine = effectiveText.split('\n')[0] || effectiveText.substring(0, 80);
+      res = await apiRequest('/api/ai/predict-past-questions', 'POST', {
+        courseCode: firstLine.slice(0, 100),
+        syllabus: effectiveText,
+        examStyle: opt1,
+        level: opt2,
+        outputFormat: opt3,
+        ...extraFlags
       });
-      if (res.needCoins || res.insufficientCoins) {
-        showCoinsAlert(15);
-        return;
-      }
-      resultMarkdown = res.data?.predictionDossier || res.data?.content || res.error || 'Execution complete.';
+      resultMarkdown = res.data?.predictionDossier || res.data?.content || '';
     } else if (currentToolKey === 'humanizer') {
-      const res = await apiRequest('/api/ai/humanize-rewrite', 'POST', {
-        text: text || file?.name
+      res = await apiRequest('/api/ai/humanize-rewrite', 'POST', {
+        text: effectiveText,
+        voice: opt1,
+        originalityGoal: opt2,
+        languageStyle: opt3,
+        ...extraFlags
       });
-      if (res.needCoins || res.insufficientCoins) {
-        showCoinsAlert(10);
-        return;
-      }
-      resultMarkdown = res.data?.humanizedResult || res.data?.content || res.error || 'Execution complete.';
+      resultMarkdown = res.data?.humanizedResult || res.data?.content || '';
     }
 
-    currentGeneratedText = resultMarkdown;
+    if (!res || res.error) {
+      const actions = [];
+      if (res?.canUseCoins && !forceUseCoins) {
+        actions.push({
+          label: `<i class="fa-solid fa-coins"></i> Use ${res.coinCost || 5} Coins Instead`,
+          primary: true,
+          onClick: () => executeCurrentTool(true)
+        });
+      }
+      if (res?.needCoins || res?.insufficientCoins) {
+        actions.push({
+          label: `<i class="fa-solid fa-plus"></i> Top Up Coins`,
+          primary: true,
+          onClick: () => typeof openCoinsModal === 'function' && openCoinsModal('packages')
+        });
+      }
+      if (res?.limitReached || res?.planRestricted || res?.subscriptionRequired || res?.recommendedUpgrade) {
+        const upgLabel = res?.recommendedUpgrade ? `Upgrade to ${String(res.recommendedUpgrade).toUpperCase()}` : 'View Plans';
+        actions.push({
+          label: `<i class="fa-solid fa-crown"></i> ${upgLabel}`,
+          primary: !res?.canUseCoins,
+          onClick: () => { window.location.href = '/pages/pricing.html'; }
+        });
+      }
+      actions.push({
+        label: `<i class="fa-solid fa-rotate-right"></i> Retry`,
+        primary: false,
+        onClick: () => executeCurrentTool(forceUseCoins)
+      });
 
-    // Display Output
-    const resultCard = document.getElementById('toolResultCard');
-    const resultBody = document.getElementById('toolOutputBody');
-    resultCard.style.display = 'block';
-    resultBody.innerHTML = typeof marked !== 'undefined' ? marked.parse(resultMarkdown) : resultMarkdown;
-    
-    // Calculate output words
-    const words = resultMarkdown.split(/\s+/).length;
-    document.getElementById('outputWordCount').textContent = `(${words} words generated)`;
+      const resetNote = res?.resetsAt ? `<br><strong>Allowance resets:</strong> ${escapeHTML(new Date(res.resetsAt).toLocaleString())}` : '';
+      const title = res?.limitReached
+        ? 'Usage Limit Reached'
+        : res?.planRestricted
+          ? 'Plan Upgrade Required'
+          : res?.insufficientCoins
+            ? 'Insufficient CampusCoins'
+            : 'Request Could Not Complete';
 
-    // Scroll gently to output
-    resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      showToolStatusBanner({
+        title,
+        message: `${escapeHTML(res?.error || 'Unable to process your request.')}${resetNote}`,
+        tone: (res?.limitReached || res?.planRestricted || res?.insufficientCoins) ? 'warn' : 'error',
+        actions
+      });
+      showToast(res?.error || 'Request could not complete', 'error');
+      return;
+    }
+
+    if (!resultMarkdown) {
+      showToolStatusBanner({
+        title: 'Empty AI Response',
+        message: 'The AI model returned an empty response. No coins were deducted if the request failed — please click Retry.',
+        tone: 'error',
+        actions: [{ label: '<i class="fa-solid fa-rotate-right"></i> Retry', primary: true, onClick: () => executeCurrentTool(forceUseCoins) }]
+      });
+      return;
+    }
+
+    displayGeneratedOutput(resultMarkdown);
+    saveToolHistoryEntry(currentToolKey, effectiveText, resultMarkdown);
     showToast('Generated successfully!', 'success');
 
-    // Update coins display immediately from response & refresh from server
     if (typeof res.data?.coinsRemaining === 'number') {
       const navEl = document.getElementById('navCoinCount');
       const sideEl = document.getElementById('sideCoinCount');
       if (navEl) navEl.textContent = res.data.coinsRemaining;
       if (sideEl) sideEl.textContent = res.data.coinsRemaining;
     }
-    updateUserCoinsDisplay();
+    await Promise.all([updateUserCoinsDisplay(), refreshLiveUsage()]);
   } catch (err) {
     console.error('Tool execution error:', err);
-    showToast(err.message || 'Error processing request. Check your connection.', 'error');
+    showToolStatusBanner({
+      title: 'Connection / Processing Error',
+      message: escapeHTML(err.message || 'Error processing request. Check your connection and try again.'),
+      tone: 'error',
+      actions: [{ label: '<i class="fa-solid fa-rotate-right"></i> Retry', primary: true, onClick: () => executeCurrentTool(forceUseCoins) }]
+    });
+    showToast(err.message || 'Error processing request.', 'error');
   } finally {
     btn.disabled = false;
     btn.innerHTML = originalHtml;
+    updateAllowanceUI();
   }
 }
 
 function showCoinsAlert(neededCoins) {
-  showToast(`Requires ${neededCoins} CampusCoins (or an Active Pro Plan). Top up to continue!`, 'error');
+  showToast(`Requires ${neededCoins} CampusCoins (or an Active Plan allowance).`, 'error');
   if (typeof openCoinsModal === 'function') {
     openCoinsModal('packages');
   }
@@ -1557,14 +1938,11 @@ async function updateUserCoinsDisplay() {
         if (sideEl) sideEl.textContent = data.coins;
       }
     }
-  } catch (e) {
-    // silent fallback
-  }
+  } catch (e) {}
 }
 
 // ── Page Initialization ──
 window.addEventListener('DOMContentLoaded', () => {
-  // Theme Toggle
   const saved = localStorage.getItem('ct_theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
   const themeBtn = document.getElementById('themeBtn');
@@ -1579,29 +1957,22 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Populate avatar initials
   const initialsEl = document.getElementById('userAvatarInitials');
   if (initialsEl && user?.fullName) {
     initialsEl.textContent = user.fullName.substring(0, 2).toUpperCase();
   }
 
-  // Check URL query parameter e.g. ?tool=proposals
   const params = new URLSearchParams(window.location.search);
   const toolParam = params.get('tool');
   if (toolParam && TOOL_CONFIGS[toolParam]) {
-    const pills = document.querySelectorAll('.tool-switcher-pill');
-    pills.forEach(pill => {
-      if (pill.getAttribute('onclick')?.includes(toolParam)) {
-        switchAcademicTool(toolParam, pill);
-      }
-    });
+    switchAcademicTool(toolParam, null);
   } else {
-    // Default to polisher
     switchAcademicTool('polisher', document.querySelector('.tool-switcher-pill'));
   }
 
-  // Update coin balance on page load
+  renderRecentToolHistory();
   updateUserCoinsDisplay();
+  refreshLiveUsage();
 });
 </script>
 

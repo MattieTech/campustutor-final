@@ -495,7 +495,6 @@
 <!-- KaTeX auto-render (processes \( \) and \[ \] in the page) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
 <script src="/js/api.js"></script>
 <script>
@@ -623,26 +622,55 @@ async function triggerSummaryGeneration() {
     if (data?.results) cached = data.results;
   }
 
-  if (cached?.summary) {
+  const cachedDepth = localStorage.getItem(`ct_summary_depth_${docId}`) || 'standard';
+  if (cached?.summary && cachedDepth === summarySize) {
     resetBtn(btn, '<i class="fa-solid fa-list-check"></i>', 'Summarize Notes', 'Get a clean overview of all key points');
     showResult('summary', '<i class="fa-solid fa-list-check"></i> Summary', cached.summary);
-    awardCoins(15, 'first_summary');
-    showToast('Summary ready! +15 Coins <i class="fa-solid fa-star"></i>', 'success');
+    showToast('Summary ready!', 'success');
     return;
   }
 
   showLoaderResult('summary', '<i class="fa-solid fa-list-check"></i> Summary', buildPolishingLoaderHTML("Estimated waiting time: ~" + waitTimeLabel + ". Please keep this tab open..."));
-  const { data, error } = await apiSummarize(docId, summarySize);
+  const res = await apiSummarize(docId, summarySize);
   resetBtn(btn, '<i class="fa-solid fa-list-check"></i>', 'Summarize Notes', 'Get a clean overview of all key points');
-  if (error) { 
-    showToast(error, 'error');
-    const panelEl = document.getElementById('panel-summary');
-    if (panelEl) panelEl.innerHTML = '';
+  if (res.error) { 
+    renderStudyLimitError('panel-summary', res, 'triggerSummaryGeneration()');
     return; 
   }
-  showResult('summary', '<i class="fa-solid fa-list-check"></i> Summary', data.summary);
-  awardCoins(15, 'first_summary');
-  showToast('Summary ready! +15 Coins <i class="fa-solid fa-star"></i>', 'success');
+  localStorage.setItem(`ct_summary_depth_${docId}`, summarySize);
+  if (window.studyAssetCache && window.studyAssetCache[docId]) {
+    window.studyAssetCache[docId].summary = res.data.summary;
+  }
+  showResult('summary', '<i class="fa-solid fa-list-check"></i> Summary', res.data.summary);
+  if (typeof refreshUserCoins === 'function') refreshUserCoins();
+  showToast('Summary generated!', 'success');
+}
+
+function renderStudyLimitError(panelId, res, retryCall) {
+  const msg = res?.error || 'Request could not be completed.';
+  showToast(msg, 'error');
+  const panelEl = document.getElementById(panelId);
+  if (!panelEl) return;
+  const resetInfo = res?.resetsAt
+    ? `<div style="font-size:0.82rem;color:var(--label3);margin-bottom:14px;">Allowance resets: <strong>${escapeHTML(new Date(res.resetsAt).toLocaleString())}</strong></div>`
+    : '';
+  const upgradeBtn = (res?.limitReached || res?.planRestricted || res?.subscriptionRequired || res?.recommendedUpgrade)
+    ? `<a href="/pages/pricing.html" class="btn btn-primary btn-sm"><i class="fa-solid fa-crown"></i> Upgrade to ${escapeHTML((res?.recommendedUpgrade || 'Plus').toUpperCase())}</a>`
+    : '';
+  const coinsBtn = (res?.needCoins || res?.insufficientCoins)
+    ? `<button type="button" class="btn btn-primary btn-sm" onclick="typeof openCoinsModal==='function'&&openCoinsModal('packages')"><i class="fa-solid fa-coins"></i> Top Up Coins</button>`
+    : '';
+  panelEl.innerHTML = `
+    <div class="card"><div class="card-body" style="text-align:center;padding:28px;">
+      <div style="font-size:1.8rem;margin-bottom:8px;color:#f59e0b;"><i class="fa-solid fa-circle-exclamation"></i></div>
+      <div style="font-weight:700;font-size:0.98rem;margin-bottom:8px;">${escapeHTML(msg)}</div>
+      ${resetInfo}
+      <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+        ${upgradeBtn}
+        ${coinsBtn}
+        <button type="button" class="btn btn-glass btn-sm" onclick="${retryCall}"><i class="fa-solid fa-rotate-right"></i> Retry</button>
+      </div>
+    </div></div>`;
 }
 
 function runQuestions() {
@@ -670,16 +698,16 @@ async function triggerQuestionGeneration() {
   
   let waitText = "Generating Questions...";
   let waitTimeLabel = "1-2 minutes";
-  if (quizSize === 10) { waitText = "Generating (30s)..."; waitTimeLabel = "30 seconds"; }
-  else if (quizSize === 20) { waitText = "Generating (1m)..."; waitTimeLabel = "1 minute"; }
-  else if (quizSize === 30) { waitText = "Generating (1.5m)..."; waitTimeLabel = "1.5 minutes"; }
-  else if (quizSize === 40) { waitText = "Generating (2m)..."; waitTimeLabel = "2 minutes"; }
-  else if (quizSize === 50) { waitText = "Generating (2.5m)..."; waitTimeLabel = "2.5 minutes"; }
+  if (quizSize <= 10) { waitText = "Generating (30s)..."; waitTimeLabel = "30 seconds"; }
+  else if (quizSize <= 20) { waitText = "Generating (1m)..."; waitTimeLabel = "1 minute"; }
+  else if (quizSize <= 30) { waitText = "Generating (1.5m)..."; waitTimeLabel = "1.5 minutes"; }
+  else if (quizSize <= 40) { waitText = "Generating (2m)..."; waitTimeLabel = "2 minutes"; }
+  else { waitText = "Generating (2.5m)..."; waitTimeLabel = "2.5 minutes"; }
 
   setBtnLoading(btn, waitText);
   
   const forceFresh = window.mattieForceFreshQuiz;
-  window.mattieForceFreshQuiz = false; // Reset flag
+  window.mattieForceFreshQuiz = false;
 
   if (forceFresh) {
     if (window.studyAssetCache && window.studyAssetCache[docId]) {
@@ -693,12 +721,11 @@ async function triggerQuestionGeneration() {
     if (data?.results) cached = data.results;
   }
 
-  // Note: if user selects a different size, we force generation of the new size
-  if (!forceFresh && cached?.questions && cached.questions.mcqs?.length === (quizSize === 10 ? 8 : quizSize === 20 ? 14 : quizSize === 30 ? 20 : quizSize === 40 ? 25 : 30)) {
+  const cachedSize = Number(localStorage.getItem(`ct_quiz_size_${docId}`) || 0);
+  if (!forceFresh && cached?.questions?.mcqs?.length && cachedSize === quizSize) {
     resetBtn(btn, '<i class="fa-solid fa-pen-to-square"></i>', 'Revision Questions', 'MCQs + essay questions with model answers');
     showResult('questions', '<i class="fa-solid fa-pen-to-square"></i> Questions', { questions: cached.questions });
-    awardCoins(20, 'first_quiz');
-    showToast('Questions ready! +20 Coins <i class="fa-solid fa-star"></i>', 'success');
+    showToast('Questions ready!', 'success');
     return;
   }
 
@@ -706,14 +733,16 @@ async function triggerQuestionGeneration() {
   const response = await apiGenerateQuestions(docId, quizSize);
   resetBtn(btn, '<i class="fa-solid fa-pen-to-square"></i>', 'Revision Questions', 'MCQs + essay questions with model answers');
   if (response.error) {
-    showToast(response.error, 'error');
-    const panelEl = document.getElementById('panel-questions');
-    if (panelEl) panelEl.innerHTML = '';
+    renderStudyLimitError('panel-questions', response, 'triggerQuestionGeneration()');
     return;
   }
+  localStorage.setItem(`ct_quiz_size_${docId}`, String(quizSize));
+  if (window.studyAssetCache && window.studyAssetCache[docId]) {
+    window.studyAssetCache[docId].questions = response.data.questions;
+  }
   showResult('questions', '<i class="fa-solid fa-pen-to-square"></i> Questions', response.data);
-  awardCoins(20, 'first_quiz');
-  showToast('Questions ready! +20 Coins <i class="fa-solid fa-star"></i>', 'success');
+  if (typeof refreshUserCoins === 'function') refreshUserCoins();
+  showToast('Questions generated!', 'success');
 }
 
 function runFlashcards() {
@@ -755,23 +784,23 @@ async function triggerFlashcardGeneration() {
   if (cached?.flashcards && cached.flashcards.length === flashcardSize) {
     resetBtn(btn, '<i class="fa-solid fa-id-card"></i>', 'Create Flashcards', 'Interactive flip-card study set');
     showFlashcards(cached.flashcards);
-    awardCoins(15, 'first_flash');
-    showToast('Flashcards ready! +15 Coins <i class="fa-solid fa-star"></i>', 'success');
+    showToast('Flashcards ready!', 'success');
     return;
   }
 
   showLoaderResult('flashcards', '<i class="fa-solid fa-id-card"></i> Flashcards', buildPolishingLoaderHTML("Estimated waiting time: ~" + waitTimeLabel + ". Please keep this tab open..."));
-  const { data, error } = await apiGenerateFlashcards(docId, flashcardSize);
+  const res = await apiGenerateFlashcards(docId, flashcardSize);
   resetBtn(btn, '<i class="fa-solid fa-id-card"></i>', 'Create Flashcards', 'Interactive flip-card study set');
-  if (error) { 
-    showToast(error, 'error');
-    const panelEl = document.getElementById('panel-flashcards');
-    if (panelEl) panelEl.innerHTML = '';
+  if (res.error) { 
+    renderStudyLimitError('panel-flashcards', res, 'triggerFlashcardGeneration()');
     return; 
   }
-  showFlashcards(data.flashcards);
-  awardCoins(15, 'first_flash');
-  showToast('Flashcards ready! +15 Coins <i class="fa-solid fa-star"></i>', 'success');
+  if (window.studyAssetCache && window.studyAssetCache[docId]) {
+    window.studyAssetCache[docId].flashcards = res.data.flashcards;
+  }
+  showFlashcards(res.data.flashcards);
+  if (typeof refreshUserCoins === 'function') refreshUserCoins();
+  showToast('Flashcards generated!', 'success');
 }
 
 async function runExplain() {
@@ -782,17 +811,32 @@ async function runExplain() {
   btn.disabled = true;
   btn.innerHTML = 'Thinking... <i class="fa-solid fa-brain"></i>';
 
-  const { data, error } = await apiExplain(docId, concept);
+  const res = await apiExplain(docId, concept);
   btn.disabled = false;
   btn.innerHTML = 'Explain It <i class="fa-solid fa-lightbulb"></i>';
 
-  if (error) { showToast(error, 'error'); return; }
+  if (res.error) {
+    showToast(res.error, 'error');
+    const box = document.getElementById('explainResult');
+    if (box) {
+      box.style.display = 'block';
+      box.innerHTML = `<div style="padding:14px;border-radius:12px;border:1px solid rgba(245,158,11,0.4);background:rgba(245,158,11,0.08);font-size:0.86rem;">
+        <strong>${escapeHTML(res.error)}</strong>
+        ${res.resetsAt ? `<div style="margin-top:4px;font-size:0.78rem;">Resets: ${escapeHTML(new Date(res.resetsAt).toLocaleString())}</div>` : ''}
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+          ${(res.limitReached || res.recommendedUpgrade) ? '<a href="/pages/pricing.html" class="btn btn-primary btn-sm">Upgrade Plan</a>' : ''}
+          <button type="button" class="btn btn-glass btn-sm" onclick="runExplain()">Retry</button>
+        </div>
+      </div>`;
+    }
+    return;
+  }
 
   const box = document.getElementById('explainResult');
   box.style.display = 'block';
-  // Render markdown + then run KaTeX over the result
-  box.innerHTML = `<div class="ai-output">${markdownToHTML(data.explanation)}</div>`;
+  box.innerHTML = `<div class="ai-output">${markdownToHTML(res.data.explanation)}</div>`;
   renderMath(box);
+  if (typeof refreshUserCoins === 'function') refreshUserCoins();
   showToast('Explanation ready!', 'success');
 }
 
@@ -992,6 +1036,13 @@ document.getElementById('conceptInput').addEventListener('keydown', e => {
 // Modern Choice Selector Function
 let userPlan = 'free';
 async function fetchUserPlan() {
+  try {
+    const me = await apiGetMe();
+    if (me && me.plan) {
+      userPlan = me.plan.toLowerCase();
+      return;
+    }
+  } catch (_) {}
   const u = getUser();
   if (!u) return;
   const { data: stats } = await apiGetUserStats(u.id);
@@ -1002,27 +1053,30 @@ async function fetchUserPlan() {
 fetchUserPlan();
 
 function selectMattieChoice(type, value) {
-  // Validate premium tier restrictions
   if (userPlan === 'free') {
     if (type === 'summary' && value !== 'standard') {
-      showToast('This summary depth requires a Premium Plan. Redirecting to upgrade...', 'info');
-      setTimeout(() => { window.location.href = '/pages/pricing.html'; }, 1500);
+      showToast('Detailed & Comprehensive summaries require Plus or Pro. Visit Plans to upgrade.', 'error');
       return;
     }
-    if (type === 'flashcard' && String(value) !== '10') {
-      showToast('Generating more than 10 flashcards requires a Premium Plan. Redirecting to upgrade...', 'info');
-      setTimeout(() => { window.location.href = '/pages/pricing.html'; }, 1500);
+    if (type === 'flashcard' && Number(value) > 10) {
+      showToast('Generating more than 10 flashcards requires Plus or Pro. Visit Plans to upgrade.', 'error');
       return;
     }
-    if (type === 'quiz' && String(value) !== '10') {
-      showToast('Generating more than 10 quiz questions requires a Premium Plan. Redirecting to upgrade...', 'info');
-      setTimeout(() => { window.location.href = '/pages/pricing.html'; }, 1500);
+    if (type === 'quiz' && Number(value) > 15) {
+      showToast('Generating more than 15 quiz questions requires Plus or Pro. Visit Plans to upgrade.', 'error');
       return;
     }
   } else if (userPlan === 'plus') {
     if (type === 'summary' && value === 'comprehensive') {
-      showToast('Comprehensive Textbook Summary requires Pro Plan. Redirecting to upgrade...', 'info');
-      setTimeout(() => { window.location.href = '/pages/pricing.html'; }, 1500);
+      showToast('Comprehensive Textbook Summary requires the Pro Plan.', 'error');
+      return;
+    }
+    if (type === 'flashcard' && Number(value) > 25) {
+      showToast('50-card mega decks require the Pro Plan (Plus supports up to 25).', 'error');
+      return;
+    }
+    if (type === 'quiz' && Number(value) > 40) {
+      showToast('50-question mega quizzes require the Pro Plan (Plus supports up to 40).', 'error');
       return;
     }
   }
@@ -1043,7 +1097,6 @@ function selectMattieChoice(type, value) {
     });
   }
 
-  // Trigger generation immediately
   if (type === 'summary') {
     triggerSummaryGeneration();
   } else if (type === 'flashcard') {
@@ -1055,11 +1108,11 @@ function selectMattieChoice(type, value) {
 
 // ── AI EXAM SIMULATOR ENGINE ──────────────────────────────────
 let examTimerInterval = null;
-let examTimeSeconds = 15 * 60; // 15 mins default
+let examTimeSeconds = 15 * 60;
 let examQuestions = [];
 let examAnswers = {};
 
-async function runExamSimulator() {
+async function runExamSimulator(forceFresh = false) {
   const btn = document.getElementById('btnExam');
   setBtnLoading(btn, "Preparing Exam Paper...");
 
@@ -1069,17 +1122,18 @@ async function runExamSimulator() {
   panel.innerHTML = buildPolishingLoaderHTML("Drafting university-grade exam simulation from your lecture notes...");
 
   try {
-    let cached = getCachedAIResults(docId);
+    let cached = forceFresh ? null : getCachedAIResults(docId);
     let quizData = cached?.questions;
 
     if (!quizData) {
-      const { data, error } = await apiGenerateQuestions(docId, 15);
-      if (error || !data || !data.questions) {
+      const res = await apiGenerateQuestions(docId, 15);
+      if (res.error || !res.data || !res.data.questions) {
         resetBtn(btn, '<i class="fa-solid fa-graduation-cap"></i>', 'AI Exam Simulator', 'Timed mock test with letter grade prediction');
-        panel.innerHTML = `<div class="card"><div class="card-body" style="text-align:center;padding:32px;"><p style="color:var(--red);margin-bottom:12px;">Failed to generate exam questions. Please try again.</p><button class="btn btn-primary" onclick="runExamSimulator()">Retry Exam Generation</button></div></div>`;
+        renderStudyLimitError('panel-exam', res.error ? res : { error: 'Failed to generate exam questions. Please try again.' }, 'runExamSimulator()');
         return;
       }
-      quizData = data.questions;
+      quizData = res.data.questions;
+      if (typeof refreshUserCoins === 'function') refreshUserCoins();
     }
 
     resetBtn(btn, '<i class="fa-solid fa-graduation-cap"></i>', 'AI Exam Simulator', 'Timed mock test with letter grade prediction');
@@ -1254,12 +1308,13 @@ function finishExamSimulation(force = false) {
       <div class="exam-grade-banner ${gradeClass}">
         <div class="exam-letter-grade">${grade}</div>
         <h2 style="font-size:1.6rem;font-weight:800;margin-bottom:6px;">${gradeTitle}</h2>
-        <div style="font-size:1.1rem;font-weight:700;margin-bottom:10px;">Predicted Score: ${percentage}% (${Math.round(correctCount)}/${totalScored} pts)</div>
+        <div style="font-size:1.1rem;font-weight:700;margin-bottom:6px;">Predicted Score: ${percentage}% (${correctCount.toFixed(1).replace(/\.0$/, '')}/${totalScored} pts)</div>
+        <div style="font-size:0.84rem;margin-bottom:10px;opacity:0.9;">${attemptedWritten > 0 ? `Includes ${attemptedWritten} written response(s) — compare carefully with the marking guide below.` : 'Auto-graded against the examination key.'}</div>
         <p style="font-size:0.92rem;max-width:540px;margin:0 auto;opacity:0.9;">${advice}</p>
       </div>
 
-      <div style="display:flex;justify-content:center;gap:12px;margin-bottom:28px;">
-        <button class="btn btn-primary" onclick="runExamSimulator()"><i class="fa-solid fa-rotate-right"></i> Retake Exam (Fresh Pool)</button>
+      <div style="display:flex;justify-content:center;gap:12px;margin-bottom:28px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="runExamSimulator(true)"><i class="fa-solid fa-rotate-right"></i> Retake Exam (Fresh Pool)</button>
         <button class="btn btn-glass" onclick="activateTab('summary')"><i class="fa-solid fa-book-open"></i> Review Summary</button>
       </div>
 
@@ -1289,7 +1344,7 @@ function finishExamSimulation(force = false) {
   `;
 
   renderMath(panel);
-  showToast(`Exam graded: Predicted Grade ${grade} (${percentage}%)! +30 Coins`, 'success');
+  showToast(`Exam graded: Predicted Grade ${grade} (${percentage}%)!`, 'success');
 }
 
 // ── AUDIO LECTURE NOTES (VOICE REVISION) ───────────────────────

@@ -1,20 +1,30 @@
 // ============================================================
-// routes/ai.js — MattieTech AI-powered study features
+// routes/ai.js — CampusTutor AI-Powered Study & Academic Tools
 // ============================================================
 
 const express = require("express");
 const router = express.Router();
-const { askGemini } = require("../utils/gemini");
+const multer = require("multer");
+const pdfParse = require("pdf-parse");
+const officeParser = require("officeparser");
+const { askGemini, ocrScannedPDF, extractTextFromImage } = require("../utils/gemini");
 const supabase = require("../utils/supabase");
 const authMiddleware = require("../middleware/authMiddleware");
 const subscriptionMiddleware = require("../middleware/subscriptionMiddleware");
 const { awardXP, updateStreak } = require("../utils/xp");
+const { deductCoins, addCoins } = require("../utils/coins");
+const { evaluateToolAccess, recordToolUsage, withUserLock } = require("../utils/usageService");
+
+const fileExtractUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 },
+});
 
 // Helper: fetch document text from Supabase and verify ownership
 async function getDocumentText(documentId, userId) {
   const { data, error } = await supabase
     .from("documents")
-    .select("extracted_text, file_name, page_count")
+    .select("extracted_text, file_name, page_count, file_type")
     .eq("id", documentId)
     .eq("user_id", userId)
     .single();
@@ -26,21 +36,50 @@ async function getDocumentText(documentId, userId) {
   return data;
 }
 
-// Helper: save AI result to Supabase
 async function saveAIResult(documentId, userId, resultType, content) {
   await supabase.from("ai_results").upsert(
     {
       document_id: documentId,
       user_id: userId,
       result_type: resultType,
-      content: content,
+      content,
       created_at: new Date().toISOString(),
     },
     { onConflict: "document_id,result_type" }
   );
 }
 
-function buildSummaryPrompt(doc) {
+function normalizeSummaryLevel(summarySize) {
+  if (summarySize === undefined || summarySize === null || summarySize === "") return 1;
+  const s = String(summarySize).trim().toLowerCase();
+  if (s === "1" || s === "standard") return 1;
+  if (s === "2" || s === "detailed") return 2;
+  if (s === "3" || s === "comprehensive") return 3;
+  const num = Number(summarySize);
+  if (Number.isFinite(num) && num >= 1 && num <= 3) return Math.round(num);
+  return 1;
+}
+
+function buildSummaryPrompt(doc, level = 1) {
+  const depthConfig = {
+    1: {
+      label: "Standard Overview",
+      instructions:
+        "Generate a clean, concise, high-yield textbook overview highlighting the core topic, key definitions, and essential takeaways. Keep sections focused and easy to scan quickly.",
+    },
+    2: {
+      label: "Detailed Study Summary",
+      instructions:
+        "Generate a thorough, multi-section academic breakdown covering every major topic, supporting explanations, examples, formulas, and conceptual links. Include a dedicated Exam Revision Checklist.",
+    },
+    3: {
+      label: "Comprehensive Textbook Master Summary",
+      instructions:
+        "Generate an exhaustive, university-textbook-grade master dossier covering every concept, sub-topic, technical nuance, formula derivation, worked example, edge case, and cross-topic synthesis.",
+    },
+  };
+  const depth = depthConfig[level] || depthConfig[1];
+
   return `
 You are CampusTutor AI, a premium academic assistant.
 
@@ -48,9 +87,10 @@ Lecture notes from "${doc.file_name}":
 ---
 ${doc.extracted_text}
 ---
-Requirement: Generate a tightly packed, core textbook-style overview using high-density markdown headings. Focus on structural hierarchy and conceptual density. Avoid long-form rambling; use precise, technical language and subsection headers to categorize information.
+Requested Depth: ${depth.label}
+Requirement: ${depth.instructions}
 
-IMPORTANT: Format ALL mathematical expressions using LaTeX (\( ... \) for inline, \[ ... \] for display).
+IMPORTANT: Format ALL mathematical expressions using LaTeX ($...$ for inline, $$...$$ for display).
 
 Format your response like this:
 ## 📋 Summary of "${doc.file_name}"
@@ -58,12 +98,15 @@ Format your response like this:
 **Main Topic:** [1-sentence overview]
 
 ### 📖 Core Technical Overview
-[Use high-density headings (###, ####) and bullet points to break down the material textbook-style. Cover every key technical nuance briefly.]
+[Use clear markdown headings (###, ####) and bullet points to break down the material.]
+
+${level >= 2 ? "### 🔗 Key Concepts & Relationships\n[Explain how major ideas connect and contrast.]\n" : ""}
+${level >= 3 ? "### 🧪 Worked Examples & Exam Traps\n[Include key applications, derivations, and common exam pitfalls.]\n" : ""}
 
 **Core Takeaway:** [2-3 sentences on what this is really about]
 
-Use simple English. Assume the reader is a first-year university student.
-    `.trim();
+Use clear, student-friendly academic English.
+  `.trim();
 }
 
 function estimateDocumentPages(doc) {
@@ -90,7 +133,7 @@ function splitDocumentIntoChunks(doc, chunkPageSpan = 5) {
       const nextMatch = markerMatches[i + 1];
       const pageNumber = Number(currentMatch[2]);
       const sectionStart = currentMatch.index || 0;
-      const sectionEnd = nextMatch ? (nextMatch.index || text.length) : text.length;
+      const sectionEnd = nextMatch ? nextMatch.index || text.length : text.length;
       pageSections.push({
         pageNumber,
         text: text.substring(sectionStart, sectionEnd).trim(),
@@ -133,37 +176,19 @@ function splitDocumentIntoChunks(doc, chunkPageSpan = 5) {
   return chunks.filter((chunk) => chunk.text.length > 0);
 }
 
-function calculateQuestionTargets(doc) {
-  const pages = estimateDocumentPages(doc);
-  const textLength = (doc.extracted_text || "").length;
-
-  if (pages >= 25 || textLength >= 90000) {
-    return { mcqCount: 40, shortCount: 20, essayCount: 8 };
-  }
-  if (pages >= 14 || textLength >= 50000) {
-    return { mcqCount: 32, shortCount: 16, essayCount: 6 };
-  }
-  if (pages >= 7 || textLength >= 23000) {
-    return { mcqCount: 24, shortCount: 12, essayCount: 4 };
-  }
-
-  return { mcqCount: 16, shortCount: 8, essayCount: 2 };
-}
-
 function calculateQuestionTargetsWithSize(quizSize) {
-  switch (quizSize) {
-    case 10:
-      return { mcqCount: 8, shortCount: 0, essayCount: 2 };
-    case 20:
-      return { mcqCount: 14, shortCount: 4, essayCount: 2 };
-    case 30:
-      return { mcqCount: 20, shortCount: 8, essayCount: 2 };
-    case 40:
-      return { mcqCount: 25, shortCount: 11, essayCount: 4 };
-    case 50:
-    default:
-      return { mcqCount: 30, shortCount: 15, essayCount: 5 };
-  }
+  const total = Math.max(5, Math.min(50, Math.round(Number(quizSize) || 10)));
+  if (total === 10) return { mcqCount: 8, shortCount: 0, essayCount: 2 };
+  if (total === 15) return { mcqCount: 10, shortCount: 3, essayCount: 2 };
+  if (total === 20) return { mcqCount: 14, shortCount: 4, essayCount: 2 };
+  if (total === 30) return { mcqCount: 20, shortCount: 8, essayCount: 2 };
+  if (total === 40) return { mcqCount: 25, shortCount: 11, essayCount: 4 };
+  if (total === 50) return { mcqCount: 30, shortCount: 15, essayCount: 5 };
+
+  const mcqCount = Math.max(3, Math.round(total * 0.65));
+  const essayCount = Math.max(1, Math.round(total * 0.1));
+  const shortCount = Math.max(0, total - mcqCount - essayCount);
+  return { mcqCount, shortCount, essayCount };
 }
 
 function calculateFlashcardTarget(doc) {
@@ -194,11 +219,20 @@ function safeExtractJSON(rawResponse) {
     throw new Error("No JSON object or array found in model response.");
   }
 
-  if (canUseObject && (!canUseArray || objectStart < arrayStart)) {
-    return JSON.parse(cleaned.substring(objectStart, objectEnd + 1));
-  }
+  const jsonStr = canUseObject && (!canUseArray || objectStart < arrayStart)
+    ? cleaned.substring(objectStart, objectEnd + 1)
+    : cleaned.substring(arrayStart, arrayEnd + 1);
 
-  return JSON.parse(cleaned.substring(arrayStart, arrayEnd + 1));
+  try {
+    return JSON.parse(jsonStr);
+  } catch (_) {
+    // Sanitize trailing commas and unescaped LaTeX backslashes inside JSON strings
+    const sanitized = jsonStr
+      .replace(/,\s*([}\]])/g, "$1")
+      .replace(/\\(?=(?:frac|theta|tau|times|text|right|rho|beta|bar|binom|nabla|nu|neq|leq|geq|approx|sqrt|int|sum|prod|lim|infty|alpha|gamma|delta|Delta|lambda|sigma|omega|Omega|pi|mu|phi|psi))/g, "\\\\")
+      .replace(/\\(?!["\\/bfnrtu])/g, "\\\\");
+    return JSON.parse(sanitized);
+  }
 }
 
 function dedupeByQuestion(items = []) {
@@ -235,18 +269,22 @@ ${chunk.text}
 
 Generate a precise technical summary for this chunk only.
 Use compact structure with headings and bullet points.
-IMPORTANT: Format all mathematical expressions using LaTeX (\( ... \) for inline, \[ ... \] for display).
+IMPORTANT: Format all mathematical expressions using LaTeX ($...$ for inline, $$...$$ for display).
 
 Output markdown only.
   `.trim();
 }
 
-function buildFinalSummaryPrompt(doc, partialSummaries) {
+function buildFinalSummaryPrompt(doc, partialSummaries, level = 1) {
+  const extraSections =
+    level >= 3
+      ? "### 🧪 Worked Applications & Deep Nuances\n[Provide detailed derivations, examples, and exam traps.]\n\n"
+      : "";
   return `
 You are CampusTutor AI, a premium academic assistant.
 
 You are given chunk-level summaries for "${doc.file_name}".
-Combine them into one comprehensive textbook-grade summary.
+Combine them into one ${level === 3 ? "comprehensive textbook-grade" : level === 2 ? "detailed" : "concise, high-yield"} summary.
 
 Chunk summaries:
 ---
@@ -259,18 +297,18 @@ Output format:
 **Main Topic:** [1-sentence overview]
 
 ### 📖 Core Technical Overview
-[Use compact technical sections and bullets. Preserve full conceptual coverage.]
+[Use clean technical sections and bullets. Preserve full conceptual coverage.]
 
 ### 🧠 Concept Relationships
 [Show how major ideas connect across the document.]
 
-### 🎯 Exam-Focused Takeaways
+${extraSections}### 🎯 Exam-Focused Takeaways
 [High-yield revision points likely to be tested.]
 
 **Core Takeaway:** [2-3 sentences]
 
-IMPORTANT: Format all mathematical expressions using LaTeX (\( ... \) for inline, \[ ... \] for display).
-Keep language clear for first-year students.
+IMPORTANT: Format all mathematical expressions using LaTeX ($...$ for inline, $$...$$ for display).
+Keep language clear for university students.
   `.trim();
 }
 
@@ -286,13 +324,13 @@ ${chunk.text}
 ---
 
 Generate a high-yield interactive revision quiz.
-Ensure your questions are selected randomly from different sections of the text context so that subsequent attempts yield fresh variations.
 Required Volumes:
 - Multiple Choice Questions (MCQs): ${allocation.mcqCount} (Include 4 distinct options A, B, C, D)
-- Short Answer Questions: ${allocation.shortCount} (Include detailed grading criteria)
-- Essay Questions: ${allocation.essayCount} (Broad synthesis questions)
+- Short Answer Questions: ${allocation.shortCount} (Include modelAnswer and detailed gradingCriteria)
+- Essay Questions: ${allocation.essayCount} (Broad synthesis questions with keyPoints)
 
-IMPORTANT: Format ALL mathematical expressions using LaTeX (\( ... \) for inline, \[ ... \] for display).
+IMPORTANT: Format ALL mathematical expressions using LaTeX ($...$ for inline, $$...$$ for display).
+Escape all backslashes properly inside JSON strings (e.g., "\\\\frac{a}{b}").
 
 You MUST return the output as a valid JSON object only. No markdown code blocks.
 JSON Structure:
@@ -325,7 +363,7 @@ JSON Structure:
 }
 
 function buildFlashcardsPrompt(chunk, targetCount, contextMeta) {
-  const prompt = `Create exactly ${targetCount} high-yield, conceptually dense study flashcards from this text covering all complex terminologies. Return ONLY a JSON array - no markdown, no code blocks.
+  const prompt = `Create exactly ${targetCount} high-yield, conceptually dense study flashcards from this text covering key terminologies and concepts. Return ONLY a JSON array - no markdown, no code blocks.
 
 Document context: "${contextMeta.fileName}" | ${chunk.rangeLabel} | chunk ${contextMeta.chunkIndex + 1} of ${contextMeta.totalChunks}
 
@@ -339,10 +377,7 @@ Return valid JSON array ONLY (start with [ end with ]):
 
 Rules:
 - Generate exactly ${targetCount} flashcards with id, front, back, category
-- IMPORTANT: Format ALL mathematical expressions using LaTeX delimiters
-  * Use $ for inline math
-  * Use $$ for display/standalone equations
-- Never write math as plain text: always use LaTeX notation
+- Format ALL mathematical expressions using LaTeX delimiters ($...$ inline, $$...$$ display) and escape backslashes properly in JSON
 - Keep answers concise and clear
 - Valid JSON format only
 
@@ -352,9 +387,10 @@ Generate:`.trim();
 }
 
 async function generateSummaryForDocument(documentId, userId, options = {}) {
-  const { persist = true, log = true, award = true } = options;
+  const { persist = true, log = true, award = true, summarySize = 1 } = options;
+  const level = normalizeSummaryLevel(summarySize);
   const doc = await getDocumentText(documentId, userId);
-  const chunks = splitDocumentIntoChunks(doc, 5);
+  const chunks = splitDocumentIntoChunks(doc, 5).slice(0, 6);
 
   const partialSummaryPromises = chunks.map(async (chunk, i) => {
     const chunkPrompt = buildChunkSummaryPrompt(doc, chunk, i, chunks.length);
@@ -365,8 +401,8 @@ async function generateSummaryForDocument(documentId, userId, options = {}) {
 
   const finalPrompt =
     partialSummaries.length > 1
-      ? buildFinalSummaryPrompt(doc, partialSummaries)
-      : buildSummaryPrompt({ ...doc, extracted_text: chunks[0]?.text || doc.extracted_text });
+      ? buildFinalSummaryPrompt(doc, partialSummaries, level)
+      : buildSummaryPrompt({ ...doc, extracted_text: chunks[0]?.text || doc.extracted_text }, level);
   const summary = await askGemini(finalPrompt);
 
   if (persist) {
@@ -374,26 +410,24 @@ async function generateSummaryForDocument(documentId, userId, options = {}) {
   }
 
   if (log) {
-    await logUserActivity(userId, "ai_summarize", `Generated summary | Document: "${doc.file_name}"`);
+    await logUserActivity(userId, "ai_summarize", `Generated summary (depth ${level}) | Document: "${doc.file_name}"`);
   }
 
   if (award) {
     try {
       await awardXP(userId, "ai_summarize", { document: doc.file_name, documentId });
       await updateStreak(userId);
-    } catch (xpErr) {
-      console.log("Note: Could not award XP:", xpErr.message);
-    }
+    } catch (_) {}
   }
 
-  return { summary, doc };
+  return { summary, doc, level };
 }
 
 async function generateQuestionsForDocument(documentId, userId, options = {}) {
   const { persist = true, log = true, award = true, quizSize = 10 } = options;
   const doc = await getDocumentText(documentId, userId);
   const targets = calculateQuestionTargetsWithSize(quizSize);
-  const chunks = splitDocumentIntoChunks(doc, 5);
+  const chunks = splitDocumentIntoChunks(doc, 5).slice(0, 5);
 
   const perChunkAllocation = chunks.map((_, index) => {
     const chunkCount = chunks.length;
@@ -412,9 +446,10 @@ async function generateQuestionsForDocument(documentId, userId, options = {}) {
 
   const merged = { mcqs: [], shortAnswer: [], essays: [] };
 
-  const promises = chunks.map(async (chunk, i) => {
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
     const allocation = perChunkAllocation[i];
-    if (allocation.mcqCount + allocation.shortCount + allocation.essayCount <= 0) return null;
+    if (!allocation || allocation.mcqCount + allocation.shortCount + allocation.essayCount <= 0) continue;
 
     const { prompt } = buildQuestionsPrompt(chunk, allocation, {
       fileName: doc.file_name,
@@ -424,20 +459,16 @@ async function generateQuestionsForDocument(documentId, userId, options = {}) {
 
     try {
       const rawResponse = await askGemini(prompt);
-      return safeExtractJSON(rawResponse);
+      const chunkData = safeExtractJSON(rawResponse);
+      if (chunkData) {
+        merged.mcqs.push(...(Array.isArray(chunkData.mcqs) ? chunkData.mcqs : []));
+        merged.shortAnswer.push(...(Array.isArray(chunkData.shortAnswer) ? chunkData.shortAnswer : []));
+        merged.essays.push(...(Array.isArray(chunkData.essays) ? chunkData.essays : []));
+      }
     } catch (parseErr) {
       console.error("❌ Questions parsing error for chunk", i + 1, parseErr.message);
-      return null;
     }
-  });
-
-  const results = await Promise.all(promises);
-  results.forEach((chunkData) => {
-    if (!chunkData) return;
-    merged.mcqs.push(...(Array.isArray(chunkData.mcqs) ? chunkData.mcqs : []));
-    merged.shortAnswer.push(...(Array.isArray(chunkData.shortAnswer) ? chunkData.shortAnswer : []));
-    merged.essays.push(...(Array.isArray(chunkData.essays) ? chunkData.essays : []));
-  });
+  }
 
   const questionsData = {
     mcqs: dedupeByQuestion(merged.mcqs).slice(0, targets.mcqCount),
@@ -446,7 +477,18 @@ async function generateQuestionsForDocument(documentId, userId, options = {}) {
   };
 
   if (!questionsData.mcqs.length && !questionsData.shortAnswer.length && !questionsData.essays.length) {
-    throw new Error("Failed to generate structured quiz data.");
+    try {
+      const retryPrompt = `Return ONLY valid JSON with keys "mcqs" (array of {question, options:{A,B,C,D}, correctAnswer, explanation}) and "shortAnswer" (array of {question, modelAnswer, gradingCriteria}) based on:\n${doc.extracted_text.slice(0, 12000)}`;
+      const retryRaw = await askGemini(retryPrompt);
+      const retryData = safeExtractJSON(retryRaw);
+      questionsData.mcqs = dedupeByQuestion(Array.isArray(retryData?.mcqs) ? retryData.mcqs : []).slice(0, targets.mcqCount);
+      questionsData.shortAnswer = dedupeByQuestion(Array.isArray(retryData?.shortAnswer) ? retryData.shortAnswer : []).slice(0, targets.shortCount);
+      questionsData.essays = dedupeByQuestion(Array.isArray(retryData?.essays) ? retryData.essays : []).slice(0, targets.essayCount);
+    } catch (_) {}
+  }
+
+  if (!questionsData.mcqs.length && !questionsData.shortAnswer.length && !questionsData.essays.length) {
+    throw new Error("Failed to generate structured quiz data. Please try again.");
   }
 
   if (persist) {
@@ -466,9 +508,7 @@ async function generateQuestionsForDocument(documentId, userId, options = {}) {
       const totalQ = (questionsData.mcqs?.length || 0) + (questionsData.shortAnswer?.length || 0) + (questionsData.essays?.length || 0);
       await awardXP(userId, "ai_questions", { document: doc.file_name, count: totalQ, documentId });
       await updateStreak(userId);
-    } catch (xpErr) {
-      console.log("Note: Could not award XP:", xpErr.message);
-    }
+    } catch (_) {}
   }
 
   return { questionsData, doc };
@@ -478,7 +518,7 @@ async function generateFlashcardsForDocument(documentId, userId, options = {}) {
   const { persist = true, log = true, award = true, flashcardSize } = options;
   const doc = await getDocumentText(documentId, userId);
   const targetCount = flashcardSize ? Number(flashcardSize) : calculateFlashcardTarget(doc);
-  const chunks = splitDocumentIntoChunks(doc, 5);
+  const chunks = splitDocumentIntoChunks(doc, 5).slice(0, 5);
   const perChunkTargets = chunks.map((_, index) => {
     const base = Math.floor(targetCount / chunks.length);
     return base + (index < targetCount % chunks.length ? 1 : 0);
@@ -486,9 +526,10 @@ async function generateFlashcardsForDocument(documentId, userId, options = {}) {
 
   const mergedCards = [];
 
-  const promises = chunks.map(async (chunk, i) => {
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
     const chunkTarget = perChunkTargets[i];
-    if (!chunkTarget) return null;
+    if (!chunkTarget) continue;
 
     const { prompt } = buildFlashcardsPrompt(chunk, chunkTarget, {
       fileName: doc.file_name,
@@ -498,26 +539,21 @@ async function generateFlashcardsForDocument(documentId, userId, options = {}) {
 
     try {
       const rawResponse = await askGemini(prompt);
-      return safeExtractJSON(rawResponse);
+      const parsed = safeExtractJSON(rawResponse);
+      if (Array.isArray(parsed)) {
+        mergedCards.push(...parsed);
+      }
     } catch (parseErr) {
       console.error("❌ Flashcards parsing error for chunk", i + 1, parseErr.message);
-      return null;
     }
-  });
+  }
 
-  const results = await Promise.all(promises);
-  results.forEach((parsed) => {
-    if (Array.isArray(parsed)) {
-      mergedCards.push(...parsed);
-    }
-  });
-
-  let flashcards = dedupeByFront(mergedCards)
+  const flashcards = dedupeByFront(mergedCards)
     .slice(0, targetCount)
     .map((card, idx) => ({
       id: idx + 1,
-      front: String(card.front || "").trim().substring(0, 220),
-      back: String(card.back || "").trim().substring(0, 520),
+      front: String(card.front || "").trim().substring(0, 260),
+      back: String(card.back || "").trim().substring(0, 600),
       category: String(card.category || "General").trim(),
     }));
 
@@ -537,9 +573,7 @@ async function generateFlashcardsForDocument(documentId, userId, options = {}) {
     try {
       await awardXP(userId, "ai_flashcards", { document: doc.file_name, count: flashcards.length, documentId });
       await updateStreak(userId);
-    } catch (xpErr) {
-      console.log("Note: Could not award XP:", xpErr.message);
-    }
+    } catch (_) {}
   }
 
   return { flashcards, doc };
@@ -553,13 +587,12 @@ async function warmDocumentStudyAssets(documentId, userId) {
   ]);
 }
 
-// Helper: Log user activity
 async function logUserActivity(userId, action, details) {
   try {
     await supabase.from("user_activity").insert({
       user_id: userId,
-      action: action,
-      details: details,
+      action,
+      details,
       created_at: new Date().toISOString(),
     });
   } catch (err) {
@@ -567,103 +600,276 @@ async function logUserActivity(userId, action, details) {
   }
 }
 
-// Helper: Handle API errors with user-friendly messages
 function handleAIError(err, res) {
   if (err.message?.includes("busy") || err.message?.includes("routes")) {
     return res.status(503).json({
-      error: "CampusTutor AI is grading a rush of papers right now! Please wait a few seconds and try again.",
+      error: "CampusTutor AI is experiencing high traffic right now. Please wait a few seconds and retry.",
     });
   }
   if (err.status === 429 || err.message?.includes("quota")) {
     return res.status(429).json({
-      error: "CampusTutor AI is thinking a bit too hard right now! Please wait a moment before trying your next question.",
+      error: "CampusTutor AI rate limit reached temporarily. Please wait a moment and try again.",
     });
   }
   if (err.status === 404 || err.message?.includes("not found")) {
-    return res.status(500).json({
-      error: "The AI model is temporarily unavailable. Please try again in a moment.",
+    return res.status(404).json({
+      error: err.message || "Requested document or resource was not found.",
     });
   }
   res.status(500).json({ error: err.message || "Failed to process your request." });
 }
 
-// Require authentication for all AI routes
+// Require authentication + subscription/plan resolution for all AI routes
 router.use(authMiddleware);
+router.use(subscriptionMiddleware);
 
-// ── EXPLAIN CONCEPT (Accessible to all authenticated users) ───
+// Helper: execute any usage-managed & optionally coin-gated AI tool safely
+async function executeManagedTool(req, res, {
+  toolKey,
+  actionType,
+  description,
+  activityDetails,
+  prompt,
+  buildResponse,
+}) {
+  const userId = req.user.id;
+  const useCoins = Boolean(req.body?.useCoins);
+
+  const access = await withUserLock(userId, () =>
+    evaluateToolAccess({
+      userId,
+      plan: req.effectivePlan,
+      coins: req.userCoins,
+      isAdmin: req.isAdmin,
+      toolKey,
+      useCoins,
+    })
+  );
+
+  if (!access.allowed) {
+    return res.status(access.statusCode || 403).json(access.errorPayload);
+  }
+
+  let deductedCoins = 0;
+  let updatedBalance = req.userCoins;
+
+  if (access.chargeCoins > 0) {
+    const coinRes = await deductCoins(userId, access.chargeCoins, actionType, description, req.user);
+    if (!coinRes.success) {
+      return res.status(403).json({
+        error: coinRes.error || `${access.chargeCoins} CampusCoins required.`,
+        insufficientCoins: true,
+        needCoins: true,
+        needed: access.chargeCoins,
+        currentCoins: coinRes.currentCoins ?? req.userCoins ?? 0,
+      });
+    }
+    deductedCoins = access.chargeCoins;
+    updatedBalance = coinRes.coins;
+  }
+
+  let output;
+  try {
+    output = await askGemini(prompt);
+  } catch (aiErr) {
+    if (deductedCoins > 0) {
+      await addCoins(
+        userId,
+        deductedCoins,
+        "coin_refund",
+        `Automatic refund for failed ${actionType}`,
+        req.user,
+        { transactionType: "refund", reason: aiErr.message }
+      ).catch(() => {});
+    }
+    throw aiErr;
+  }
+
+  await Promise.allSettled([
+    recordToolUsage(userId, toolKey),
+    logUserActivity(userId, actionType, activityDetails),
+    awardXP(userId, actionType, { description }),
+    updateStreak(userId),
+  ]);
+
+  return res.json({
+    success: true,
+    ...buildResponse(output),
+    coinsCharged: deductedCoins,
+    coinsRemaining: deductedCoins > 0 ? updatedBalance : req.userCoins,
+    plan: req.effectivePlan,
+  });
+}
+
+// ── EXTRACT TEXT FROM ATTACHED FILE (For Academic Tools Page) ─
+router.post("/extract-file-text", fileExtractUpload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded." });
+    }
+    const ext = (req.file.originalname || "").split(".").pop().toLowerCase();
+    const mime = req.file.mimetype || "";
+    let extractedText = "";
+
+    if (ext === "doc" && mime === "application/msword") {
+      return res.status(400).json({
+        error: "Legacy binary .doc files are not supported. Please save as .docx, .pdf, or .txt and upload again.",
+      });
+    }
+
+    if (mime === "application/pdf" || ext === "pdf") {
+      try {
+        const pdfData = await pdfParse(req.file.buffer);
+        extractedText = pdfData.text || "";
+      } catch (_) {}
+      if (!extractedText || extractedText.trim().length < 40) {
+        extractedText = await ocrScannedPDF(req.file.buffer);
+      }
+    } else if (mime === "text/plain" || ext === "txt") {
+      extractedText = req.file.buffer.toString("utf-8");
+    } else if (["docx", "pptx", "ppt"].includes(ext) || mime.includes("officedocument")) {
+      const ast = await officeParser.parseOffice(req.file.buffer);
+      extractedText = typeof ast === "string" ? ast : typeof ast?.toText === "function" ? ast.toText() : String(ast || "");
+    } else if (mime.startsWith("image/") || ["jpg", "jpeg", "png", "webp"].includes(ext)) {
+      extractedText = await extractTextFromImage(req.file.buffer, mime || "image/jpeg");
+    } else {
+      return res.status(400).json({ error: "Unsupported file format. Please upload PDF, DOCX, PPTX, TXT, or an image." });
+    }
+
+    if (!extractedText || !extractedText.trim()) {
+      return res.status(400).json({ error: "No readable text could be extracted from the attached file." });
+    }
+
+    const finalText = extractedText.trim().slice(0, 60000);
+    res.json({
+      success: true,
+      fileName: req.file.originalname,
+      text: finalText,
+      extractedText: finalText,
+      charCount: finalText.length,
+    });
+  } catch (err) {
+    console.error("Extract file text error:", err.message);
+    res.status(400).json({ error: err.message || "Failed to read attached file." });
+  }
+});
+
+// ── EXPLAIN CONCEPT ───────────────────────────────────────────
 router.post("/explain", async (req, res) => {
   try {
     const { documentId, concept } = req.body;
+    const userId = req.user.id;
 
-    if (!concept || !concept.trim()) {
+    if (!concept || !String(concept).trim()) {
       return res.status(400).json({ error: "Concept or question is required." });
+    }
+
+    const cleanConcept = String(concept).trim();
+    if (cleanConcept.length > 4000) {
+      return res.status(400).json({ error: "Concept query is too long (maximum 4,000 characters)." });
+    }
+
+    const access = await withUserLock(userId, () =>
+      evaluateToolAccess({
+        userId,
+        plan: req.effectivePlan,
+        coins: req.userCoins,
+        isAdmin: req.isAdmin,
+        toolKey: "explain",
+        useCoins: Boolean(req.body?.useCoins),
+      })
+    );
+
+    if (!access.allowed) {
+      return res.status(access.statusCode || 403).json(access.errorPayload);
+    }
+
+    let deductedCoins = 0;
+    let updatedBalance = req.userCoins;
+    if (access.chargeCoins > 0) {
+      const coinRes = await deductCoins(userId, access.chargeCoins, "ai_explain", `Explained: "${cleanConcept.slice(0, 30)}"`, req.user);
+      if (!coinRes.success) {
+        return res.status(403).json({
+          error: coinRes.error,
+          insufficientCoins: true,
+          needCoins: true,
+          needed: access.chargeCoins,
+          currentCoins: coinRes.currentCoins ?? req.userCoins,
+        });
+      }
+      deductedCoins = access.chargeCoins;
+      updatedBalance = coinRes.coins;
     }
 
     let doc = null;
     let docContext = "";
-    
     if (documentId) {
       try {
-        doc = await getDocumentText(documentId, req.user.id);
-        docContext = `A student is studying the following lecture notes:\n---\n${doc.extracted_text}\n---\n\n`;
-      } catch (docErr) {
-        console.log("Document not found, proceeding without document context:", docErr.message);
-      }
+        doc = await getDocumentText(documentId, userId);
+        docContext = `A student is studying the following lecture notes:\n---\n${doc.extracted_text.slice(0, 25000)}\n---\n\n`;
+      } catch (_) {}
     }
 
     const prompt = `
-You are CampusTutor AI, a patient university lecturer who explains things simply.
+You are CampusTutor AI, a patient university lecturer who explains things clearly.
 
-${docContext}The student wants you to explain this concept in beginner-friendly terms: "${concept.trim()}"
+${docContext}The student wants you to explain this concept: "${cleanConcept}"
 
-IMPORTANT: Format ALL mathematical expressions using LaTeX.
-Use $ for inline math (e.g., $f(x) = x^2$) and $$ for display equations (e.g., $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$).
-Never write math as plain text.
+IMPORTANT: Format ALL mathematical expressions using LaTeX ($...$ for inline, $$...$$ for display). Never write math as plain text without delimiters.
 
-Please explain it like this:
-## 💡 Explaining: "${concept.trim()}"
+Please structure your explanation cleanly:
+## 💡 Explaining: "${cleanConcept}"
 
-**Simple Definition:** [Explain it like the student is 16 years old. Use LaTeX for any maths.]
+**Simple Definition:** [Clear, beginner-friendly explanation.]
 
 **Real-World Example:** [A relatable analogy or everyday example]
 
-**Mathematical Expression (if applicable):**
-$$
-\\text{Key equation(s) here}
-$$
+**Mathematical Expression / Core Formula (if applicable):**
+[Provide key equations in $$...$$ if the topic involves math or science; omit if purely non-mathematical.]
 
-**How it relates to the notes:** ${docContext ? "[Connect it back to what's in the lecture]" : "[General explanation without specific notes]"}
+**How it relates to the notes:** ${docContext ? "[Connect it back to the uploaded lecture notes]" : "[General academic context and key applications]"}
 
-**Quick Memory Trick:** [A tip to remember this concept]
-
-Keep the language simple, warm, and encouraging.
+**Quick Memory Trick:** [A practical tip to remember this concept]
     `.trim();
 
-    const explanation = await askGemini(prompt);
-    
-    if (doc && documentId) {
-      await saveAIResult(documentId, req.user.id, "explanation", explanation);
-      await logUserActivity(req.user.id, "ai_explain", `Asked: "${concept}" | Document: "${doc.file_name}"`);
-    } else {
-      await logUserActivity(req.user.id, "ai_explain", `Asked: "${concept}" | General Concept`);
-    }
-    
+    let explanation;
     try {
-      await awardXP(req.user.id, "ai_explain", { concept });
-      await updateStreak(req.user.id);
-    } catch (xpErr) {
-      console.log("Note: Could not award XP:", xpErr.message);
+      explanation = await askGemini(prompt);
+    } catch (aiErr) {
+      if (deductedCoins > 0) {
+        await addCoins(userId, deductedCoins, "coin_refund", "Refund for failed explain request", req.user, {
+          transactionType: "refund",
+        }).catch(() => {});
+      }
+      throw aiErr;
     }
-    
-    res.json({ explanation, content: explanation });
+
+    await recordToolUsage(userId, "explain");
+
+    if (doc && documentId) {
+      await saveAIResult(documentId, userId, "explanation", explanation);
+      await logUserActivity(userId, "ai_explain", `Asked: "${cleanConcept.slice(0, 60)}" | Document: "${doc.file_name}"`);
+    } else {
+      await logUserActivity(userId, "ai_explain", `Asked: "${cleanConcept.slice(0, 60)}" | General Concept`);
+    }
+
+    Promise.allSettled([
+      awardXP(userId, "ai_explain", { concept: cleanConcept }),
+      updateStreak(userId),
+    ]).catch(() => {});
+
+    res.json({
+      success: true,
+      explanation,
+      content: explanation,
+      coinsCharged: deductedCoins,
+      coinsRemaining: deductedCoins > 0 ? updatedBalance : req.userCoins,
+    });
   } catch (err) {
     console.error("Explain error:", err.message);
     handleAIError(err, res);
   }
 });
-
-// Enforce active subscription or coins on premium study & tool routes
-router.use(subscriptionMiddleware);
 
 // ── SUMMARIZE ─────────────────────────────────────────────────
 router.post("/summarize", async (req, res) => {
@@ -673,21 +879,66 @@ router.post("/summarize", async (req, res) => {
       return res.status(400).json({ error: "documentId is required." });
     }
 
-    const userPlan = req.userPlan || "free";
-    const size = Number(summarySize || 1);
+    const userId = req.user.id;
+    const requestedDepth = normalizeSummaryLevel(summarySize);
 
-    if (userPlan === "free" || userPlan === "coins") {
-      if (size > 1 && userPlan === "free") {
-        return res.status(403).json({ error: "Summary options 2 and 3 are only available on Plus and Pro plans. Please upgrade." });
-      }
-    } else if (userPlan === "plus") {
-      if (size > 2) {
-        return res.status(403).json({ error: "Summary option 3 is only available on the Pro Plan. Please upgrade." });
-      }
+    const access = await withUserLock(userId, () =>
+      evaluateToolAccess({
+        userId,
+        plan: req.effectivePlan,
+        coins: req.userCoins,
+        isAdmin: req.isAdmin,
+        toolKey: "summarize",
+        useCoins: Boolean(req.body?.useCoins),
+      })
+    );
+
+    if (!access.allowed) {
+      return res.status(access.statusCode || 403).json(access.errorPayload);
     }
 
-    const { summary } = await generateSummaryForDocument(documentId, req.user.id, { summarySize: size });
-    res.json({ summary });
+    const maxDepth = req.isAdmin
+      ? 3
+      : Number(access.cfg?.extraConfig?.maxDepth?.[req.effectivePlan] ?? (req.effectivePlan === "pro" ? 3 : req.effectivePlan === "plus" ? 2 : 1));
+
+    if (requestedDepth > maxDepth) {
+      const neededPlan = requestedDepth >= 3 ? "PRO" : "PLUS";
+      return res.status(403).json({
+        error: `Summary depth level ${requestedDepth} requires ${neededPlan} Plan. Your ${req.effectivePlan.toUpperCase()} Plan supports up to depth ${maxDepth}.`,
+        planRestricted: true,
+        recommendedUpgrade: neededPlan.toLowerCase(),
+      });
+    }
+
+    let deductedCoins = 0;
+    if (access.chargeCoins > 0) {
+      const coinRes = await deductCoins(userId, access.chargeCoins, "ai_summarize", `Generated summary`, req.user);
+      if (!coinRes.success) {
+        return res.status(403).json({
+          error: coinRes.error,
+          insufficientCoins: true,
+          needCoins: true,
+          needed: access.chargeCoins,
+          currentCoins: coinRes.currentCoins ?? req.userCoins,
+        });
+      }
+      deductedCoins = access.chargeCoins;
+    }
+
+    let result;
+    try {
+      result = await generateSummaryForDocument(documentId, userId, { summarySize: requestedDepth });
+    } catch (aiErr) {
+      if (deductedCoins > 0) {
+        await addCoins(userId, deductedCoins, "coin_refund", "Refund for failed summary", req.user, {
+          transactionType: "refund",
+        }).catch(() => {});
+      }
+      throw aiErr;
+    }
+
+    await recordToolUsage(userId, "summarize");
+    res.json({ success: true, summary: result.summary, level: result.level });
   } catch (err) {
     console.error("Summarize error:", err.message);
     handleAIError(err, res);
@@ -697,30 +948,72 @@ router.post("/summarize", async (req, res) => {
 // ── REVISION QUESTIONS ────────────────────────────────────────
 router.post("/questions", async (req, res) => {
   try {
-    const { documentId, quizSize } = req.body;
+    const documentId = req.body.documentId;
+    const quizSize = req.body.quizSize ?? req.body.count;
     if (!documentId) {
       return res.status(400).json({ error: "documentId is required." });
     }
 
-    const userPlan = req.userPlan || "free";
-    const size = Number(quizSize || 10);
+    const userId = req.user.id;
+    const requestedSize = Math.max(5, Math.min(50, Math.round(Number(quizSize) || 10)));
 
-    if (userPlan === "free") {
-      if (size < 10 || size > 20) {
-        return res.status(403).json({ error: "Free Plan allows 10-20 quiz questions. Please upgrade your plan." });
-      }
-    } else if (userPlan === "plus") {
-      if (size > 40) {
-        return res.status(403).json({ error: "Plus Plan is limited to up to 40 quiz questions. Please upgrade to Pro." });
-      }
-    } else if (userPlan === "pro") {
-      if (size > 50) {
-        return res.status(403).json({ error: "Pro Plan is limited to up to 50 quiz questions." });
-      }
+    const access = await withUserLock(userId, () =>
+      evaluateToolAccess({
+        userId,
+        plan: req.effectivePlan,
+        coins: req.userCoins,
+        isAdmin: req.isAdmin,
+        toolKey: "questions",
+        useCoins: Boolean(req.body?.useCoins),
+      })
+    );
+
+    if (!access.allowed) {
+      return res.status(access.statusCode || 403).json(access.errorPayload);
     }
 
-    const { questionsData } = await generateQuestionsForDocument(documentId, req.user.id, { quizSize: size });
-    res.json({ questions: questionsData });
+    const maxQuestions = req.isAdmin
+      ? 50
+      : Number(access.cfg?.extraConfig?.maxQuestions?.[req.effectivePlan] ?? (req.effectivePlan === "pro" ? 50 : req.effectivePlan === "plus" ? 40 : 15));
+
+    if (requestedSize > maxQuestions) {
+      const neededPlan = requestedSize > 40 ? "PRO" : "PLUS";
+      return res.status(403).json({
+        error: `Your ${req.effectivePlan.toUpperCase()} Plan supports up to ${maxQuestions} questions per quiz. Upgrade to ${neededPlan} for up to ${requestedSize} questions.`,
+        planRestricted: true,
+        recommendedUpgrade: neededPlan.toLowerCase(),
+      });
+    }
+
+    let deductedCoins = 0;
+    if (access.chargeCoins > 0) {
+      const coinRes = await deductCoins(userId, access.chargeCoins, "ai_questions", `Generated ${requestedSize} quiz questions`, req.user);
+      if (!coinRes.success) {
+        return res.status(403).json({
+          error: coinRes.error,
+          insufficientCoins: true,
+          needCoins: true,
+          needed: access.chargeCoins,
+          currentCoins: coinRes.currentCoins ?? req.userCoins,
+        });
+      }
+      deductedCoins = access.chargeCoins;
+    }
+
+    let result;
+    try {
+      result = await generateQuestionsForDocument(documentId, userId, { quizSize: requestedSize });
+    } catch (aiErr) {
+      if (deductedCoins > 0) {
+        await addCoins(userId, deductedCoins, "coin_refund", "Refund for failed quiz generation", req.user, {
+          transactionType: "refund",
+        }).catch(() => {});
+      }
+      throw aiErr;
+    }
+
+    await recordToolUsage(userId, "questions");
+    res.json({ success: true, questions: result.questionsData });
   } catch (err) {
     console.error("Questions error:", err.message);
     handleAIError(err, res);
@@ -728,104 +1021,121 @@ router.post("/questions", async (req, res) => {
 });
 
 // ── FLASHCARDS ────────────────────────────────────────────────
-router.post("/flashcards", authMiddleware, async (req, res) => {
+router.post("/flashcards", async (req, res) => {
   try {
-    const { documentId, flashcardSize } = req.body;
+    const documentId = req.body.documentId;
+    const flashcardSize = req.body.flashcardSize ?? req.body.count;
     if (!documentId) {
       return res.status(400).json({ error: "documentId is required." });
     }
 
-    const { flashcards } = await generateFlashcardsForDocument(documentId, req.user.id, { flashcardSize: Number(flashcardSize || 25) });
-    res.json({ flashcards });
+    const userId = req.user.id;
+    const requestedCards = Math.max(5, Math.min(50, Math.round(Number(flashcardSize) || 10)));
+
+    const access = await withUserLock(userId, () =>
+      evaluateToolAccess({
+        userId,
+        plan: req.effectivePlan,
+        coins: req.userCoins,
+        isAdmin: req.isAdmin,
+        toolKey: "flashcards",
+        useCoins: Boolean(req.body?.useCoins),
+      })
+    );
+
+    if (!access.allowed) {
+      return res.status(access.statusCode || 403).json(access.errorPayload);
+    }
+
+    const maxCards = req.isAdmin
+      ? 50
+      : Number(access.cfg?.extraConfig?.maxCards?.[req.effectivePlan] ?? (req.effectivePlan === "pro" ? 50 : req.effectivePlan === "plus" ? 25 : 10));
+
+    if (requestedCards > maxCards) {
+      const neededPlan = requestedCards > 25 ? "PRO" : "PLUS";
+      return res.status(403).json({
+        error: `Your ${req.effectivePlan.toUpperCase()} Plan allows up to ${maxCards} flashcards per deck. Upgrade to ${neededPlan} for up to ${requestedCards} flashcards.`,
+        planRestricted: true,
+        recommendedUpgrade: neededPlan.toLowerCase(),
+      });
+    }
+
+    let deductedCoins = 0;
+    if (access.chargeCoins > 0) {
+      const coinRes = await deductCoins(userId, access.chargeCoins, "ai_flashcards", `Generated ${requestedCards} flashcards`, req.user);
+      if (!coinRes.success) {
+        return res.status(403).json({
+          error: coinRes.error,
+          insufficientCoins: true,
+          needCoins: true,
+          needed: access.chargeCoins,
+          currentCoins: coinRes.currentCoins ?? req.userCoins,
+        });
+      }
+      deductedCoins = access.chargeCoins;
+    }
+
+    let result;
+    try {
+      result = await generateFlashcardsForDocument(documentId, userId, { flashcardSize: requestedCards });
+    } catch (aiErr) {
+      if (deductedCoins > 0) {
+        await addCoins(userId, deductedCoins, "coin_refund", "Refund for failed flashcards", req.user, {
+          transactionType: "refund",
+        }).catch(() => {});
+      }
+      throw aiErr;
+    }
+
+    await recordToolUsage(userId, "flashcards");
+    res.json({ success: true, flashcards: result.flashcards });
   } catch (err) {
     console.error("Flashcards error:", err.message);
     handleAIError(err, res);
   }
 });
 
-// Helper: Execute coin-gated AI tool with refund-on-error, activity logging, XP, and streak update
-async function executeCoinTool(req, res, { cost, actionType, description, activityDetails, prompt, buildResponse }) {
-  const userId = req.user.id;
-  const { deductCoins, addCoins } = require("../utils/coins");
-  let deductedCoins = 0;
-  let updatedBalance = req.userCoins;
-
-  if (!req.hasSubscription) {
-    const coinRes = await deductCoins(userId, cost, actionType, description, req.user);
-    if (!coinRes.success) {
-      return res.status(403).json({
-        error: coinRes.error || `${cost} CampusCoins required.`,
-        insufficientCoins: true,
-        needCoins: true,
-        needed: cost,
-        currentCoins: coinRes.currentCoins ?? req.userCoins ?? 0,
-      });
-    }
-    deductedCoins = cost;
-    updatedBalance = coinRes.coins;
-  }
-
-  let output;
-  try {
-    output = await askGemini(prompt);
-  } catch (aiErr) {
-    if (deductedCoins > 0) {
-      await addCoins(userId, deductedCoins, "coin_refund", `Refund for failed ${actionType}`, req.user).catch(() => {});
-    }
-    throw aiErr;
-  }
-
-  // Record real activity, XP, and streak for Progress & Dashboard tracking
-  await Promise.allSettled([
-    logUserActivity(userId, actionType, activityDetails),
-    awardXP(userId, actionType, { description }),
-    updateStreak(userId),
-  ]);
-
-  return res.json({
-    success: true,
-    ...buildResponse(output),
-    coinsRemaining: req.hasSubscription ? "Unlimited (Active Plan)" : updatedBalance,
-  });
-}
-
-// ── AI ASSIGNMENT & PROBLEM SOLVER (STEP-BY-STEP) ─────────────
+// ── AI ASSIGNMENT & PROBLEM SOLVER ────────────────────────────
 router.post("/solve-problem", async (req, res) => {
   try {
-    const question = req.body.problemText || req.body.question || req.body.problem;
-    const subject = req.body.subject || "General Academic Problem";
+    const question = req.body.problemText || req.body.question || req.body.problem || req.body.text;
+    const subject = req.body.subject || req.body.tone || "General Academic Problem";
+    const detailLevel = req.body.focus || req.body.detailLevel || "Step-by-Step Working";
+    const outputFormat = req.body.outputFormat || "Full Textbook Solution";
 
-    if (!question || !question.trim()) {
-      return res.status(400).json({ error: "Please provide a question or problem to solve." });
+    if (!question || !String(question).trim() || String(question).trim().length < 5) {
+      return res.status(400).json({ error: "Please provide a complete question or problem (at least 5 characters) to solve." });
     }
 
+    const cleanQ = String(question).trim().slice(0, 20000);
     const prompt = `
 You are CampusTutor AI Master Problem Solver.
-Subject / Context: ${subject}
+Subject / Discipline: ${subject}
+Detail Preference: ${detailLevel}
+Output Style: ${outputFormat}
 
 Problem to Solve:
 """
-${question.trim()}
+${cleanQ}
 """
 
 Provide an exhaustive, crystal-clear, step-by-step academic solution.
 Rules:
-1. State the underlying concepts, laws, or formulas first.
-2. Provide step-by-step mathematical working or conceptual derivation.
+1. State the underlying concepts, theorems, laws, or formulas first.
+2. Provide complete step-by-step mathematical working or conceptual derivation.
 3. Box the final answer clearly: **Final Answer: ...**
 4. Include an "Examiner Tip" explaining how university markers award points for this type of question.
-5. Format ALL mathematical expressions in LaTeX (\\( ... \\) for inline, \\[ ... \\] for display blocks).
-
-Language: Clear, encouraging, textbook standard.
+5. Format ALL mathematical expressions in LaTeX ($...$ for inline, $$...$$ for display blocks).
+6. If it is a coding problem, use properly fenced markdown code blocks.
 `.trim();
 
-    await executeCoinTool(req, res, {
-      cost: 5,
+    await executeManagedTool(req, res, {
+      toolKey: "solve_problem",
       actionType: "solve_problem",
-      description: `Solved: "${question.trim().substring(0, 30)}..."`,
-      activityDetails: `Problem Solver (${subject}): "${question.trim().substring(0, 50)}"`,
+      description: `Solved: "${cleanQ.substring(0, 35)}..."`,
+      activityDetails: `Problem Solver (${subject}): "${cleanQ.substring(0, 50)}"`,
       prompt,
-      buildResponse: (solution) => ({ solution }),
+      buildResponse: (solution) => ({ solution, content: solution }),
     });
   } catch (err) {
     console.error("Problem solver error:", err.message);
@@ -833,42 +1143,62 @@ Language: Clear, encouraging, textbook standard.
   }
 });
 
-// ── AI ESSAY & COURSEWORK POLISHER ────────────────────────────
+// ── AI ESSAY & COURSEWORK POLISHER (Polisher / Paraphraser / Summarizer / Grammar) ─
 router.post("/polish-essay", async (req, res) => {
   try {
     const text = req.body.draftText || req.body.text || req.body.draft;
     const citationStyle = req.body.style || req.body.citationStyle || "APA 7th Edition";
+    const subMode = String(req.body.subMode || "polisher").toLowerCase();
+    const tone = req.body.tone || req.body.lang || "Academic";
+    const focus = req.body.focus || "Overall Quality";
 
-    if (!text || text.trim().length < 30) {
+    if (!text || String(text).trim().length < 30) {
       return res.status(400).json({ error: "Please provide an essay or draft with at least 30 characters." });
+    }
+
+    const cleanText = String(text).trim().slice(0, 40000);
+
+    let modeInstruction = "";
+    if (subMode === "paraphraser") {
+      modeInstruction = `Paraphrase the entire excerpt into fresh, plagiarism-free ${tone} academic phrasing while preserving 100% of the factual meaning and technical terms.`;
+    } else if (subMode === "summarizer") {
+      modeInstruction = `Distill the excerpt into a high-density executive academic summary with key thesis points, supporting evidence, and core conclusions.`;
+    } else if (subMode === "grammar") {
+      modeInstruction = `Perform a strict line-by-line grammar, punctuation, syntax, and academic style audit, listing exact corrections and providing the clean corrected manuscript.`;
+    } else {
+      modeInstruction = `Conduct a rigorous academic polish focusing on **${focus}** in a **${tone}** voice:
+1. **Academic Tone & Vocabulary Elevation**
+2. **Structural Coherence & Thesis Strength**
+3. **Originality & Citation Guidance**
+4. **Polished Exemplar Version**
+5. **Sample Citations (${citationStyle})**`;
     }
 
     const prompt = `
 You are CampusTutor AI Academic Editor and University Professor.
-Citation Format Preferred: ${citationStyle}
+Mode: ${subMode.toUpperCase()}
+Preferred Tone: ${tone}
+Focus Area: ${focus}
+Citation Format: ${citationStyle}
 
-Student Essay / Coursework Draft:
+Student Text:
 """
-${text.trim()}
+${cleanText}
 """
 
-Conduct a rigorous, constructive academic review:
-1. **Academic Tone & Vocabulary Elevation:** Identify informal phrasings and upgrade them to university-level academic phrasing.
-2. **Structural Coherence & Thesis Strength:** Analyze if arguments flow logically between paragraphs.
-3. **Plagiarism Risk & Originality Advice:** Point out cliches or generic statements that need cited evidence.
-4. **Polished Exemplar Version:** Provide a beautifully revised, grammatically flawless version of the excerpt.
-5. **Citations:** Provide template citations in ${citationStyle} format for references mentioned.
+Task:
+${modeInstruction}
 
-Format in clean markdown with structured headings.
+Format cleanly in structured markdown with clear headings.
 `.trim();
 
-    await executeCoinTool(req, res, {
-      cost: 8,
+    await executeManagedTool(req, res, {
+      toolKey: "polish_essay",
       actionType: "polish_essay",
-      description: "Polished coursework draft",
-      activityDetails: `Coursework Polisher (${citationStyle})`,
+      description: `Coursework ${subMode} (${citationStyle})`,
+      activityDetails: `Coursework ${subMode} (${tone}, ${citationStyle})`,
       prompt,
-      buildResponse: (review) => ({ review, polished: review }),
+      buildResponse: (review) => ({ review, polished: review, content: review }),
     });
   } catch (err) {
     console.error("Essay polish error:", err.message);
@@ -876,38 +1206,44 @@ Format in clean markdown with structured headings.
   }
 });
 
-// ── FINAL YEAR PROJECT & PROPOSAL ARCHITECT (10 COINS) ────────
+// ── FINAL YEAR PROJECT & PROPOSAL ARCHITECT ───────────────────
 router.post("/project-proposals", async (req, res) => {
   try {
     const field = req.body.field || req.body.department || "Computer Science / Engineering";
     const interests = req.body.interests || "Modern applied systems and AI";
     const level = req.body.level || "Undergraduate / BSc";
+    const outputFormat = req.body.outputFormat || "Detailed Proposal Pack";
+
+    if (!String(field).trim()) {
+      return res.status(400).json({ error: "Please specify your department or field of study." });
+    }
 
     const prompt = `
 You are CampusTutor AI University Thesis Committee Chair and Academic Research Supervisor.
 Degree Level: ${level}
-Department / Field of Study: ${field}
-Specific Area of Interest: ${interests}
+Department / Field / Topic Input: ${String(field).trim().slice(0, 10000)}
+Methodology Focus: ${interests}
+Requested Format: ${outputFormat}
 
 Generate 3 high-impact, committee-approvable, original thesis/final year project proposals.
 For each project topic provide:
-1. **Official Project Title** (Research-grade, professional phrasing).
-2. **Background & Problem Statement** (The real-world gap this research solves).
-3. **Research Objectives (Aim + 3 Specific Objectives)**.
-4. **Proposed Methodology & Tools/Tech Stack** (Data collection, algorithms, hardware/software tools).
-5. **Expected Deliverables & Academic Contribution**.
-6. **Supervisor Approval Probability & Feasibility Rating** (Rated out of 10 with reasons).
+1. **Official Project Title**
+2. **Background & Problem Statement**
+3. **Research Objectives (Aim + 3 Specific Objectives)**
+4. **Proposed Methodology & Tools/Tech Stack**
+5. **Expected Deliverables & Academic Contribution**
+6. **Supervisor Approval Probability & Feasibility Rating** (out of 10 with justification)
 
-Format in rich markdown with clean cards/dividers.
+Format in rich markdown with clean section headers and dividers.
 `.trim();
 
-    await executeCoinTool(req, res, {
-      cost: 10,
+    await executeManagedTool(req, res, {
+      toolKey: "project_proposals",
       actionType: "project_proposals",
-      description: `Project proposals in ${field}`,
-      activityDetails: `Project Architect: ${field} (${level})`,
+      description: `Project proposals in ${String(field).slice(0, 35)}`,
+      activityDetails: `Project Architect: ${String(field).slice(0, 40)} (${level})`,
       prompt,
-      buildResponse: (proposals) => ({ proposals }),
+      buildResponse: (proposals) => ({ proposals, content: proposals }),
     });
   } catch (err) {
     console.error("Project proposals error:", err.message);
@@ -915,37 +1251,43 @@ Format in rich markdown with clean cards/dividers.
   }
 });
 
-// ── VIVA & THESIS ORAL DEFENSE DRILL SIMULATOR (12 COINS) ──────
+// ── VIVA & THESIS ORAL DEFENSE DRILL SIMULATOR ────────────────
 router.post("/viva-defense", async (req, res) => {
   try {
     const projectTitle = req.body.projectTitle || req.body.title;
     const abstractText = req.body.abstract || req.body.text || "";
+    const rigor = req.body.rigor || "Rigorous / Standard";
+    const studyLevel = req.body.studyLevel || "Undergraduate Final Year";
+    const outputFormat = req.body.outputFormat || "Full Defense Dossier";
 
-    if (!projectTitle || projectTitle.trim().length < 5) {
-      return res.status(400).json({ error: "Please provide your project/thesis title." });
+    if (!projectTitle || String(projectTitle).trim().length < 5) {
+      return res.status(400).json({ error: "Please provide your project/thesis title (at least 5 characters)." });
     }
 
     const prompt = `
 You are a formidable, seasoned External University Examiner conducting a Project/Thesis Oral Defense (Viva Voce).
-Project Title: "${projectTitle.trim()}"
-${abstractText ? `Project Abstract / Scope:\n"""\n${abstractText.trim()}\n"""` : ""}
+Project Title: "${String(projectTitle).trim()}"
+Panel Rigor: ${rigor}
+Study Level: ${studyLevel}
+Requested Output: ${outputFormat}
+${abstractText ? `Project Abstract / Scope:\n"""\n${String(abstractText).trim().slice(0, 20000)}\n"""` : ""}
 
 Generate a high-stakes Oral Defense Preparation Dossier:
 1. **The 5 Toughest Technical Questions** the panel will ask about methodology, limitations, and design trade-offs.
 2. **Model High-Scoring Defense Responses** showing how to answer each tough question calmly and authoritatively.
-3. **Trap Warning: 3 Things NEVER to say** during this project defense.
-4. **Confidence Checklist & 2-Minute Opening Pitch Script** (Ready-to-memorize introduction for the student).
+3. **Trap Warning: 3 Things NEVER to say** during this defense.
+4. **Confidence Checklist & 2-Minute Opening Pitch Script**.
 
-Format in rich, highly structured markdown with clear callout blocks.
+Format in rich, highly structured markdown.
 `.trim();
 
-    await executeCoinTool(req, res, {
-      cost: 12,
+    await executeManagedTool(req, res, {
+      toolKey: "viva_defense",
       actionType: "viva_defense",
-      description: `Viva defense prep for: "${projectTitle.substring(0, 30)}..."`,
-      activityDetails: `Viva Defense Drill: "${projectTitle.trim().substring(0, 50)}"`,
+      description: `Viva defense prep: "${String(projectTitle).substring(0, 30)}..."`,
+      activityDetails: `Viva Defense (${studyLevel}): "${String(projectTitle).trim().substring(0, 50)}"`,
       prompt,
-      buildResponse: (defenseDossier) => ({ defenseDossier }),
+      buildResponse: (defenseDossier) => ({ defenseDossier, content: defenseDossier }),
     });
   } catch (err) {
     console.error("Viva defense error:", err.message);
@@ -953,37 +1295,41 @@ Format in rich, highly structured markdown with clear callout blocks.
   }
 });
 
-// ── EXAM PAST QUESTIONS & HIGH-PROBABILITY PREDICTOR (15 COINS) ──
+// ── EXAM PAST QUESTIONS & HIGH-PROBABILITY PREDICTOR ──────────
 router.post("/predict-past-questions", async (req, res) => {
   try {
-    const courseCode = req.body.courseCode || req.body.course || "General University Course";
+    const courseCode = req.body.courseCode || req.body.course || "";
     const syllabusOrTopics = req.body.syllabus || req.body.topics || "";
+    const examStyle = req.body.examStyle || "Standard University Exam";
+    const level = req.body.level || "University Undergraduate";
+    const focus = req.body.outputFormat || "Comprehensive Exam Pack";
 
-    if (!courseCode || courseCode.trim().length < 2) {
+    if (!courseCode || String(courseCode).trim().length < 2) {
       return res.status(400).json({ error: "Please provide the course code or title (e.g. MTH101, CSC302)." });
     }
 
     const prompt = `
 You are CampusTutor AI Chief University Examination Board Predictor.
-Course Code / Title: "${courseCode.trim()}"
-${syllabusOrTopics ? `Lecture Topics / Key Themes:\n"""\n${syllabusOrTopics.trim()}\n"""` : ""}
+Course Code / Title: "${String(courseCode).trim()}"
+Exam Style: ${examStyle} | Level: ${level} | Focus: ${focus}
+${syllabusOrTopics ? `Lecture Topics / Key Themes:\n"""\n${String(syllabusOrTopics).trim().slice(0, 25000)}\n"""` : ""}
 
 Generate a high-probability "Exam Master Dossier" based on standard university examination patterns:
-1. **Top 5 High-Probability Theoretical / Essay Questions** that examiners love to repeat, complete with detailed marking guide points.
-2. **Top 5 Critical Calculation / Problem Questions** with full step-by-step model workings and standard formulas in LaTeX (\\( ... \\) or \\[ ... \\]).
+1. **Top 5 High-Probability Theoretical / Essay Questions** with detailed marking guide points.
+2. **Top 5 Critical Calculation / Problem Questions** with full step-by-step model workings and standard formulas in LaTeX ($...$ or $$...$$).
 3. **10 CBT Rapid-Fire Practice MCQs** with correct options and brief explanations.
-4. **"Lecturer's Trap Alert":** 3 areas where over 60% of students lose marks on this course.
+4. **"Lecturer's Trap Alert":** 3 areas where students commonly lose marks in this course.
 
-Format in clean, high-density markdown with distinct section cards.
+Format in clean, high-density markdown.
 `.trim();
 
-    await executeCoinTool(req, res, {
-      cost: 15,
+    await executeManagedTool(req, res, {
+      toolKey: "exam_predict",
       actionType: "exam_predict",
-      description: `Exam predictions for: ${courseCode}`,
-      activityDetails: `Exam Predictor: ${courseCode.trim().substring(0, 40)}`,
+      description: `Exam predictions: ${String(courseCode).slice(0, 35)}`,
+      activityDetails: `Exam Predictor (${examStyle}): ${String(courseCode).trim().substring(0, 40)}`,
       prompt,
-      buildResponse: (predictionDossier) => ({ predictionDossier }),
+      buildResponse: (predictionDossier) => ({ predictionDossier, content: predictionDossier }),
     });
   } catch (err) {
     console.error("Exam predictor error:", err.message);
@@ -991,41 +1337,49 @@ Format in clean, high-density markdown with distinct section cards.
   }
 });
 
-// ── AI TURNITIN PLAGIARISM BYPASSER & HUMANIZER (10 COINS) ─────
+// ── AI TURNITIN PLAGIARISM BYPASSER & HUMANIZER ────────────────
 router.post("/humanize-rewrite", async (req, res) => {
   try {
     const rawText = req.body.text || req.body.draftText || "";
-    if (!rawText || rawText.trim().length < 40) {
+    const voice = req.body.voice || "Undergraduate Natural";
+    const originalityGoal = req.body.originalityGoal || "Turnitin Zero Detection";
+    const languageStyle = req.body.languageStyle || "Global Academic English";
+
+    if (!rawText || String(rawText).trim().length < 40) {
       return res.status(400).json({ error: "Please provide at least 40 characters of text to humanize." });
     }
 
+    const cleanText = String(rawText).trim().slice(0, 40000);
     const prompt = `
 You are CampusTutor AI Academic Writing Stylist and Originality Specialist.
-Text to Humanize & De-Plagiarize:
+Voice Profile: ${voice}
+Originality Target: ${originalityGoal}
+Language Variant: ${languageStyle}
+
+Text to Humanize & De-Cliché:
 """
-${rawText.trim()}
+${cleanText}
 """
 
 Task:
-1. Rewrite this excerpt completely to make it sound authentic, deeply human, and academically sophisticated.
-2. Strip out robotic AI phrasing (e.g. "delve", "testament to", "it is crucial to note", "tapestry", "in conclusion").
-3. Vary sentence cadence: blend punchy short observations with complex compound academic assertions (burstiness and perplexity).
-4. Preserve all technical meanings, data points, and core citations faithfully.
-5. Provide:
-   - **Originality Confidence Score** (0-100%).
-   - **The Fully Humanized, Submission-Ready Rewrite**.
-   - **Key Stylistic Transformations Applied** (Summary of how sentence structures were reformed).
+1. Rewrite this excerpt completely to sound authentic, deeply human, and academically credible.
+2. Remove robotic AI clichés (e.g. "delve", "testament to", "it is crucial to note", "tapestry", "in conclusion").
+3. Vary sentence cadence and structure naturally while preserving all technical meanings, data points, and citations faithfully.
+4. Provide:
+   - **Originality & Natural Cadence Assessment**
+   - **The Fully Humanized, Submission-Ready Rewrite**
+   - **Key Stylistic Transformations Applied**
 
 Format cleanly in markdown.
 `.trim();
 
-    await executeCoinTool(req, res, {
-      cost: 10,
+    await executeManagedTool(req, res, {
+      toolKey: "humanize_rewrite",
       actionType: "humanize_rewrite",
       description: "Turnitin humanizer & originality rewrite",
-      activityDetails: `Academic Humanizer (${rawText.trim().split(/\s+/).length} words)`,
+      activityDetails: `Academic Humanizer (${cleanText.split(/\s+/).length} words, ${voice})`,
       prompt,
-      buildResponse: (humanizedResult) => ({ humanizedResult }),
+      buildResponse: (humanizedResult) => ({ humanizedResult, content: humanizedResult }),
     });
   } catch (err) {
     console.error("Humanize rewrite error:", err.message);
@@ -1034,7 +1388,7 @@ Format cleanly in markdown.
 });
 
 // ── GET SAVED RESULTS ─────────────────────────────────────────
-router.get("/results/:documentId", authMiddleware, async (req, res) => {
+router.get("/results/:documentId", async (req, res) => {
   try {
     const { data: results, error } = await supabase
       .from("ai_results")
@@ -1048,8 +1402,15 @@ router.get("/results/:documentId", authMiddleware, async (req, res) => {
 
     const resultsMap = {};
     (results || []).forEach((r) => {
-      resultsMap[r.result_type] =
-        ["flashcards", "questions"].includes(r.result_type) ? JSON.parse(r.content) : r.content;
+      if (["flashcards", "questions"].includes(r.result_type)) {
+        try {
+          resultsMap[r.result_type] = JSON.parse(r.content);
+        } catch (_) {
+          resultsMap[r.result_type] = r.content;
+        }
+      } else {
+        resultsMap[r.result_type] = r.content;
+      }
     });
 
     res.json({ results: resultsMap });
@@ -1059,7 +1420,7 @@ router.get("/results/:documentId", authMiddleware, async (req, res) => {
 });
 
 // ── DOWNLOAD ENDPOINTS ────────────────────────────────────────
-router.get("/download/summary/:documentId/txt", authMiddleware, async (req, res) => {
+router.get("/download/summary/:documentId/txt", async (req, res) => {
   try {
     const { data: result, error } = await supabase
       .from("ai_results")
@@ -1074,20 +1435,20 @@ router.get("/download/summary/:documentId/txt", authMiddleware, async (req, res)
     }
 
     const content = result.content
-      .replace(/\$/g, "[MATH]")
-      .replace(/\$\$/g, "\n[EQUATION]\n");
+      .replace(/\$\$([\s\S]*?)\$\$/g, "\n[EQUATION: $1]\n")
+      .replace(/\$([^\$\n]+)\$/g, "[MATH: $1]");
 
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Content-Disposition", "attachment; filename=summary.txt");
     res.send(content);
 
-    await logUserActivity(req.user.id, "download_summary", `Downloaded summary (TXT)`);
+    await logUserActivity(req.user.id, "download_summary", "Downloaded summary (TXT)");
   } catch (err) {
     res.status(500).json({ error: "Failed to download file." });
   }
 });
 
-router.get("/download/flashcards/:documentId/csv", authMiddleware, async (req, res) => {
+router.get("/download/flashcards/:documentId/csv", async (req, res) => {
   try {
     const { data: result, error } = await supabase
       .from("ai_results")
@@ -1102,7 +1463,6 @@ router.get("/download/flashcards/:documentId/csv", authMiddleware, async (req, r
     }
 
     const flashcards = JSON.parse(result.content);
-    
     let csv = "Question,Answer,Category\n";
     flashcards.forEach((card) => {
       const front = (card.front || "").replace(/"/g, '""');
@@ -1121,7 +1481,7 @@ router.get("/download/flashcards/:documentId/csv", authMiddleware, async (req, r
   }
 });
 
-router.get("/download/questions/:documentId/txt", authMiddleware, async (req, res) => {
+router.get("/download/questions/:documentId/txt", async (req, res) => {
   try {
     const { data: result, error } = await supabase
       .from("ai_results")
@@ -1139,20 +1499,27 @@ router.get("/download/questions/:documentId/txt", authMiddleware, async (req, re
     try {
       const quiz = JSON.parse(result.content);
       textOutput = "## 📝 REVISION QUIZ POOL\n\n";
-      
+
       if (quiz.mcqs) {
         textOutput += "### MULTIPLE CHOICE QUESTIONS\n";
         quiz.mcqs.forEach((q, i) => {
-          textOutput += `Q${i+1}: ${q.question}\n`;
-          Object.entries(q.options).forEach(([k, v]) => textOutput += `   ${k}) ${v}\n`);
+          textOutput += `Q${i + 1}: ${q.question}\n`;
+          Object.entries(q.options || {}).forEach(([k, v]) => (textOutput += `   ${k}) ${v}\n`));
           textOutput += `Correct Answer: ${q.correctAnswer}\n\n`;
         });
       }
-      
+
       if (quiz.shortAnswer) {
         textOutput += "\n### SHORT ANSWER QUESTIONS\n";
         quiz.shortAnswer.forEach((q, i) => {
-          textOutput += `Q${i+1}: ${q.question}\nModel Answer: ${q.modelAnswer}\nGrading Criteria: ${q.gradingCriteria}\n\n`;
+          textOutput += `Q${i + 1}: ${q.question}\nModel Answer: ${q.modelAnswer}\nGrading Criteria: ${q.gradingCriteria}\n\n`;
+        });
+      }
+
+      if (quiz.essays) {
+        textOutput += "\n### ESSAY QUESTIONS\n";
+        quiz.essays.forEach((q, i) => {
+          textOutput += `Q${i + 1}: ${q.question}\nKey Points: ${(q.keyPoints || []).join("; ")}\n\n`;
         });
       }
     } catch (e) {
@@ -1160,20 +1527,20 @@ router.get("/download/questions/:documentId/txt", authMiddleware, async (req, re
     }
 
     const content = textOutput
-      .replace(/\$/g, "[MATH]")
-      .replace(/\$\$/g, "\n[EQUATION]\n");
+      .replace(/\$\$([\s\S]*?)\$\$/g, "\n[EQUATION: $1]\n")
+      .replace(/\$([^\$\n]+)\$/g, "[MATH: $1]");
 
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Content-Disposition", "attachment; filename=questions.txt");
     res.send(content);
 
-    await logUserActivity(req.user.id, "download_questions", `Downloaded questions (TXT)`);
+    await logUserActivity(req.user.id, "download_questions", "Downloaded questions (TXT)");
   } catch (err) {
     res.status(500).json({ error: "Failed to download file." });
   }
 });
 
-router.get("/download/explanation/:documentId/txt", authMiddleware, async (req, res) => {
+router.get("/download/explanation/:documentId/txt", async (req, res) => {
   try {
     const { data: result, error } = await supabase
       .from("ai_results")
@@ -1192,13 +1559,15 @@ router.get("/download/explanation/:documentId/txt", authMiddleware, async (req, 
       .replace(/\\\)/g, "]")
       .replace(/\\\[/g, "\n[EQUATION]\n")
       .replace(/\\\]/g, "\n[/EQUATION]\n")
+      .replace(/\$\$([\s\S]*?)\$\$/g, "\n[EQUATION: $1]\n")
+      .replace(/\$([^\$\n]+)\$/g, "[MATH: $1]")
       .replace(/<[^>]*>/g, "");
 
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Content-Disposition", "attachment; filename=explanation.txt");
     res.send(content);
 
-    await logUserActivity(req.user.id, "download_explanation", `Downloaded explanation (TXT)`);
+    await logUserActivity(req.user.id, "download_explanation", "Downloaded explanation (TXT)");
   } catch (err) {
     res.status(500).json({ error: "Failed to download file." });
   }

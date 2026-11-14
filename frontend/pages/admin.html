@@ -391,7 +391,10 @@
 <div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="closeAdminMobileMenu()"></div>
 <nav class="mobile-menu" id="mobileMenu">
   <button class="mobile-menu-item" onclick="showPanel('overview',this);closeAdminMobileMenu();"><i class="fa-solid fa-house"></i> Overview</button>
+  <button class="mobile-menu-item" onclick="showPanel('subscriptions',this);closeAdminMobileMenu();"><i class="fa-solid fa-chart-pie"></i> Subscriptions</button>
   <button class="mobile-menu-item" onclick="showPanel('users',this);closeAdminMobileMenu();"><i class="fa-solid fa-users"></i> Users</button>
+  <button class="mobile-menu-item" onclick="showPanel('coins',this);closeAdminMobileMenu();"><i class="fa-solid fa-coins"></i> Coins &amp; Ledger</button>
+  <button class="mobile-menu-item" onclick="showPanel('aitools',this);closeAdminMobileMenu();"><i class="fa-solid fa-robot"></i> AI Tools</button>
   <button class="mobile-menu-item" onclick="showPanel('premium',this);closeAdminMobileMenu();"><i class="fa-solid fa-crown"></i> Premium Users</button>
   <button class="mobile-menu-item" onclick="showPanel('verified',this);closeAdminMobileMenu();"><i class="fa-solid fa-circle-check"></i> Verified Users</button>
   <button class="mobile-menu-item" onclick="showPanel('feedback',this);closeAdminMobileMenu();"><i class="fa-solid fa-star"></i> Feedback</button>
@@ -410,10 +413,19 @@
     <button class="adm-nav-link active" data-panel="overview" onclick="showPanel('overview',this)">
       <i class="fa-solid fa-house"></i> Overview
     </button>
+    <button class="adm-nav-link" data-panel="subscriptions" onclick="showPanel('subscriptions',this)">
+      <i class="fa-solid fa-chart-pie"></i> Subscriptions
+    </button>
 
-    <div class="adm-sidebar-section" style="margin-top:8px;">Users</div>
+    <div class="adm-sidebar-section" style="margin-top:8px;">Users &amp; Controls</div>
     <button class="adm-nav-link" data-panel="users" onclick="showPanel('users',this)">
       <i class="fa-solid fa-users"></i> All Users
+    </button>
+    <button class="adm-nav-link" data-panel="coins" onclick="showPanel('coins',this)">
+      <i class="fa-solid fa-coins"></i> Coins &amp; Ledger
+    </button>
+    <button class="adm-nav-link" data-panel="aitools" onclick="showPanel('aitools',this)">
+      <i class="fa-solid fa-robot"></i> AI Tools &amp; Limits
     </button>
     <button class="adm-nav-link" data-panel="premium" onclick="showPanel('premium',this)">
       <i class="fa-solid fa-crown"></i> Premium Users
@@ -422,7 +434,7 @@
       <i class="fa-solid fa-circle-check"></i> Verified Users
     </button>
 
-    <div class="adm-sidebar-section" style="margin-top:8px;">Premium & Payouts</div>
+    <div class="adm-sidebar-section" style="margin-top:8px;">Premium &amp; Payouts</div>
     <button class="adm-nav-link" data-panel="gift" onclick="showPanel('gift',this)">
       <i class="fa-solid fa-gift"></i> Gift Premium
     </button>
@@ -430,7 +442,7 @@
       <i class="fa-solid fa-money-bill-transfer"></i> Payout Queue
     </button>
 
-    <div class="adm-sidebar-section" style="margin-top:8px;">Feedback & Tickets</div>
+    <div class="adm-sidebar-section" style="margin-top:8px;">Feedback &amp; Tickets</div>
     <button class="adm-nav-link" data-panel="feedback" onclick="showPanel('feedback',this)">
       <i class="fa-solid fa-star"></i> User Feedbacks
     </button>
@@ -527,7 +539,7 @@
     <div class="adm-panel" id="panel-users">
       <div class="adm-header">
         <h1>User Management <i class="fa-solid fa-users"></i></h1>
-        <p>Search, filter and manage all registered students and admins.</p>
+        <p>Search by name, email, or user ID, inspect profiles, adjust coins, and manage subscriptions.</p>
       </div>
 
       <div class="adm-toolbar">
@@ -535,11 +547,17 @@
           type="search"
           class="adm-search"
           id="userSearch"
-          placeholder="Search by name or email..."
+          placeholder="Search by name, email, or user ID..."
           oninput="debouncedSearch()"
         />
+        <select class="adm-filter" id="planFilter" onchange="loadUsers()">
+          <option value="">All Plans</option>
+          <option value="free">Free</option>
+          <option value="plus">Plus</option>
+          <option value="pro">Pro</option>
+        </select>
         <select class="adm-filter" id="statusFilter" onchange="loadUsers()">
-          <option value="all">All Users</option>
+          <option value="all">All Statuses</option>
           <option value="active">Active Only</option>
           <option value="banned">Banned Only</option>
         </select>
@@ -553,15 +571,16 @@
           <thead>
             <tr>
               <th>User</th>
-              <th>Role</th>
+              <th>Plan &amp; Expiry</th>
+              <th>Coins</th>
               <th>Status</th>
-              <th>Last Login</th>
+              <th>AI / Docs</th>
               <th>Joined</th>
               <th style="text-align:right;">Actions</th>
             </tr>
           </thead>
           <tbody id="usersBody">
-            <tr><td colspan="6" class="adm-loading"><div class="spinner"></div> Loading...</td></tr>
+            <tr><td colspan="7" class="adm-loading"><div class="spinner"></div> Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -753,6 +772,137 @@
       </div>
     </div>
 
+    <!-- ── SUBSCRIPTIONS OVERVIEW PANEL ── -->
+    <div class="adm-panel" id="panel-subscriptions">
+      <div class="adm-header">
+        <h1>Subscriptions &amp; Revenue Overview <i class="fa-solid fa-chart-pie" style="color:var(--blue);"></i></h1>
+        <p>Monitor Free, Plus, and Pro distributions, expirations, manual grants, and Paystack revenue.</p>
+      </div>
+
+      <div class="adm-stats" id="subStatsGrid">
+        <div class="adm-stat"><div class="adm-stat-icon"><i class="fa-solid fa-user"></i></div><div class="adm-stat-num" id="sub-free">—</div><div class="adm-stat-lbl">Free Users</div></div>
+        <div class="adm-stat"><div class="adm-stat-icon"><i class="fa-solid fa-bolt" style="color:#2563eb;"></i></div><div class="adm-stat-num" id="sub-plus" style="color:#2563eb;">—</div><div class="adm-stat-lbl">Plus Subscribers</div></div>
+        <div class="adm-stat"><div class="adm-stat-icon"><i class="fa-solid fa-crown" style="color:#7c3aed;"></i></div><div class="adm-stat-num" id="sub-pro" style="color:#7c3aed;">—</div><div class="adm-stat-lbl">Pro Subscribers</div></div>
+        <div class="adm-stat"><div class="adm-stat-icon"><i class="fa-solid fa-circle-check" style="color:#10b981;"></i></div><div class="adm-stat-num" id="sub-active" style="color:#10b981;">—</div><div class="adm-stat-lbl">Active Paid</div></div>
+        <div class="adm-stat"><div class="adm-stat-icon"><i class="fa-solid fa-clock-rotate-left" style="color:#f59e0b;"></i></div><div class="adm-stat-num" id="sub-expired" style="color:#f59e0b;">—</div><div class="adm-stat-lbl">Expired</div></div>
+        <div class="adm-stat"><div class="adm-stat-icon"><i class="fa-solid fa-naira-sign" style="color:#10b981;"></i></div><div class="adm-stat-num" id="sub-revenue" style="color:#10b981;font-size:1.35rem;">₦0</div><div class="adm-stat-lbl">Verified Revenue</div></div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+        <button class="btn btn-primary btn-sm" onclick="loadSubscriptionOverview()"><i class="fa-solid fa-rotate-right"></i> Refresh Overview</button>
+      </div>
+
+      <div class="adm-section-title">Recently Upgraded / Granted Users</div>
+      <div class="adm-table-wrap" style="margin-bottom:24px;">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Plan</th>
+              <th>Source</th>
+              <th>Status</th>
+              <th>Expires</th>
+              <th>Updated</th>
+            </tr>
+          </thead>
+          <tbody id="recentUpgradesBody">
+            <tr><td colspan="6" class="adm-loading"><div class="spinner"></div> Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="adm-section-title">Recent Verified Payment Records</div>
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Type / Item</th>
+              <th>Amount</th>
+              <th>User ID</th>
+              <th>Paid At</th>
+            </tr>
+          </thead>
+          <tbody id="recentPaymentsBody">
+            <tr><td colspan="5" class="adm-loading"><div class="spinner"></div> Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── COINS & LEDGER PANEL ── -->
+    <div class="adm-panel" id="panel-coins">
+      <div class="adm-header">
+        <h1>Manual Coin Management &amp; Audit Ledger <i class="fa-solid fa-coins" style="color:#eab308;"></i></h1>
+        <p>Credit or deduct CampusCoins for any user with full audit tracking and inspect recent coin transactions.</p>
+      </div>
+
+      <div style="background:var(--card-bg,rgba(255,255,255,0.7));border:1px solid var(--sep);border-radius:16px;padding:18px;margin-bottom:20px;">
+        <div style="font-weight:800;font-size:0.95rem;margin-bottom:12px;">Manual Coin Transaction</div>
+        <form onsubmit="submitLedgerCoinAdjust(event)" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end;">
+          <div>
+            <label style="font-size:0.75rem;font-weight:700;display:block;margin-bottom:4px;">Target User (ID or Email)</label>
+            <input type="text" id="ledgerUserIdent" class="adm-search" style="width:100%;" placeholder="User UUID or email..." required />
+          </div>
+          <div>
+            <label style="font-size:0.75rem;font-weight:700;display:block;margin-bottom:4px;">Action</label>
+            <select id="ledgerCoinAction" class="adm-filter" style="width:100%;">
+              <option value="credit">Credit (+ Add Coins)</option>
+              <option value="deduct">Deduct (- Remove Coins)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.75rem;font-weight:700;display:block;margin-bottom:4px;">Amount</label>
+            <input type="number" id="ledgerCoinAmount" class="adm-search" style="width:100%;" min="1" max="100000" placeholder="e.g. 50" required />
+          </div>
+          <div>
+            <label style="font-size:0.75rem;font-weight:700;display:block;margin-bottom:4px;">Reason / Audit Note</label>
+            <input type="text" id="ledgerCoinReason" class="adm-search" style="width:100%;" placeholder="Reason (required)..." required />
+          </div>
+          <div>
+            <button type="submit" class="btn btn-primary btn-sm" style="width:100%;padding:10px;"><i class="fa-solid fa-check"></i> Confirm Transaction</button>
+          </div>
+        </form>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div class="adm-section-title" style="margin:0;">Recent Coin Transaction Ledger</div>
+        <button class="btn btn-primary btn-sm" onclick="loadCoinsLedger()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+      </div>
+
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Type</th>
+              <th>Coins</th>
+              <th>Balance After</th>
+              <th>Reason &amp; Admin</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="coinsLedgerBody">
+            <tr><td colspan="6" class="adm-loading"><div class="spinner"></div> Loading ledger...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── AI TOOLS & LIMITS MANAGEMENT PANEL ── -->
+    <div class="adm-panel" id="panel-aitools">
+      <div class="adm-header">
+        <h1>AI Tools &amp; Usage Limits Manager <i class="fa-solid fa-robot" style="color:var(--blue);"></i></h1>
+        <p>Configure per-tool availability, Free / Plus / Pro daily &amp; monthly quotas (-1 = Unlimited, 0 = Locked), coin costs, and allowed plans. No API secrets are exposed here.</p>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+        <button class="btn btn-primary btn-sm" onclick="loadAIToolsManager()"><i class="fa-solid fa-rotate-right"></i> Reload Config</button>
+      </div>
+
+      <div id="aiToolsConfigList" style="display:grid;grid-template-columns:1fr;gap:14px;">
+        <div class="adm-loading"><div class="spinner"></div> Loading AI tool configurations...</div>
+      </div>
     </div>
 
   </main>
@@ -760,7 +910,7 @@
 
 <!-- ── USER DETAIL MODAL ── -->
 <div class="adm-overlay" id="userModal">
-  <div class="adm-modal" style="max-height: 90vh; overflow-y: auto;">
+  <div class="adm-modal" style="max-height: 92vh; max-width: 780px; width: 96%; overflow-y: auto;">
     <button class="adm-modal-close" onclick="closeModal('userModal')"><i class="fa-solid fa-xmark"></i></button>
     <h2 id="modalUserName">User Details</h2>
     <div class="adm-modal-sub" id="modalUserEmail"></div>
@@ -768,9 +918,68 @@
     <!-- A. USER INFORMATION -->
     <div class="adm-user-info" id="modalUserInfo"></div>
 
-    <!-- B. QUICK ACTIONS -->
-    <div class="adm-section-title"><i class="fa-solid fa-bolt"></i> Quick Actions</div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;" id="modalActions"></div>
+    <!-- B. QUICK ACCOUNT ACTIONS -->
+    <div class="adm-section-title"><i class="fa-solid fa-bolt"></i> Account Actions</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;" id="modalActions"></div>
+
+    <!-- B2. MANUAL COINS & SUBSCRIPTION MANAGEMENT -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:22px;">
+      <!-- Manual Coin Control -->
+      <div style="padding:14px;border-radius:14px;border:1px solid var(--sep);background:rgba(234,179,8,0.06);">
+        <div style="font-weight:800;font-size:0.86rem;margin-bottom:8px;"><i class="fa-solid fa-coins" style="color:#eab308;"></i> Manual Coin Control</div>
+        <div style="display:flex;gap:6px;margin-bottom:8px;">
+          <select id="modalCoinAction" class="adm-filter" style="flex:1;">
+            <option value="credit">Credit (+)</option>
+            <option value="deduct">Deduct (-)</option>
+          </select>
+          <input type="number" id="modalCoinAmount" class="adm-search" style="width:95px;" min="1" placeholder="Coins" />
+        </div>
+        <input type="text" id="modalCoinReason" class="adm-search" style="width:100%;margin-bottom:8px;" placeholder="Reason (required for audit log)..." />
+        <button type="button" class="btn btn-primary btn-sm" style="width:100%;" onclick="submitModalCoinAdjust()">Apply Coin Adjustment</button>
+      </div>
+
+      <!-- Manual Subscription Control -->
+      <div style="padding:14px;border-radius:14px;border:1px solid var(--sep);background:rgba(37,99,235,0.06);">
+        <div style="font-weight:800;font-size:0.86rem;margin-bottom:8px;"><i class="fa-solid fa-crown" style="color:#2563eb;"></i> Manual Subscription Control</div>
+        <div style="display:flex;gap:6px;margin-bottom:8px;">
+          <select id="modalSubAction" class="adm-filter" style="flex:1;" onchange="toggleModalSubFields()">
+            <option value="grant">Grant New</option>
+            <option value="extend">Extend Current</option>
+            <option value="change">Change Plan</option>
+            <option value="revoke">Revoke to Free</option>
+          </select>
+          <select id="modalSubPlan" class="adm-filter" style="width:100px;">
+            <option value="plus">Plus</option>
+            <option value="pro">Pro</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:8px;" id="modalSubDurationRow">
+          <select id="modalSubDurationPreset" class="adm-filter" style="flex:1;" onchange="syncCustomDaysFromPreset()">
+            <option value="7">7 Days</option>
+            <option value="30" selected>30 Days</option>
+            <option value="90">90 Days</option>
+            <option value="180">180 Days</option>
+            <option value="365">365 Days</option>
+            <option value="custom">Custom Days...</option>
+          </select>
+          <input type="number" id="modalSubCustomDays" class="adm-search" style="width:95px;display:none;" min="1" max="3650" placeholder="Days" />
+        </div>
+        <input type="text" id="modalSubReason" class="adm-search" style="width:100%;margin-bottom:8px;" placeholder="Audit reason (optional)..." />
+        <button type="button" class="btn btn-primary btn-sm" style="width:100%;" onclick="submitModalSubManage()">Apply Subscription Change</button>
+      </div>
+    </div>
+
+    <!-- B3. AI USAGE ALLOWANCES -->
+    <div class="adm-section-title"><i class="fa-solid fa-gauge-high"></i> AI Usage Statistics</div>
+    <div id="modalUserUsage" style="margin-bottom:22px;">
+      <div class="adm-loading"><div class="spinner"></div> Loading usage...</div>
+    </div>
+
+    <!-- B4. COIN TRANSACTION HISTORY -->
+    <div class="adm-section-title"><i class="fa-solid fa-receipt"></i> User Coin History</div>
+    <div id="modalUserCoinsHistory" class="adm-activity-list" style="margin-bottom:22px;">
+      <div class="adm-loading"><div class="spinner"></div> Loading coin history...</div>
+    </div>
 
     <!-- C. ACTIVITY TIMELINE (last 50 events) -->
     <div class="adm-section-title"><i class="fa-solid fa-chart-simple"></i> Recent Activity
@@ -830,11 +1039,19 @@ if (adminUser) document.getElementById('adminName').textContent = `Admin: ${admi
 function showPanel(name, btn) {
   document.querySelectorAll('.adm-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.adm-nav-link').forEach(b => b.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
+  const panelEl = document.getElementById('panel-' + name);
+  if (panelEl) panelEl.classList.add('active');
   if (btn) btn.classList.add('active');
+  else {
+    const navMatch = document.querySelector(`.adm-nav-link[data-panel="${name}"]`);
+    if (navMatch) navMatch.classList.add('active');
+  }
 
   if (name === 'users') loadUsers();
   if (name === 'overview') loadStats();
+  if (name === 'subscriptions') loadSubscriptionOverview();
+  if (name === 'coins') loadCoinsLedger();
+  if (name === 'aitools') loadAIToolsManager();
   if (name === 'premium') loadPremiumSubscribers();
   if (name === 'verified') loadVerifiedUsers();
   if (name === 'feedback') loadUserFeedbacks();
@@ -1135,41 +1352,54 @@ function debouncedSearch() {
   searchTimeout = setTimeout(loadUsers, 350);
 }
 
+let currentModalUserId = null;
+
 async function loadUsers() {
   const search = document.getElementById('userSearch').value.trim();
   const status = document.getElementById('statusFilter').value;
+  const plan = document.getElementById('planFilter')?.value || '';
   const tbody  = document.getElementById('usersBody');
-  tbody.innerHTML = '<tr><td colspan="6" class="adm-loading"><div class="spinner"></div> Loading...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="adm-loading"><div class="spinner"></div> Loading...</td></tr>';
 
-  const { data, error } = await apiAdminGetUsers(search, status === 'all' ? '' : status);
+  const { data, error } = await apiAdminGetUsers(search, status === 'all' ? '' : status, plan);
   if (error) {
-    tbody.innerHTML = `<tr><td colspan="6" class="adm-empty">Failed to load users: ${esc(error)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="adm-empty">Failed to load users: ${esc(error)}</td></tr>`;
     return;
   }
 
   document.getElementById('userCountLabel').textContent = `${data.total} user${data.total !== 1 ? 's' : ''} found`;
 
   if (!data.users.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="adm-empty">No users match your search.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="adm-empty">No users match your search.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = data.users.map(u => `
+  tbody.innerHTML = data.users.map(u => {
+    const planKey = (u.plan || 'free').toLowerCase();
+    const planColor = planKey === 'pro' ? '#7c3aed' : planKey === 'plus' ? '#2563eb' : '#10b981';
+    const expStr = u.subscriptionEnd ? `Exp ${formatDate(u.subscriptionEnd)}` : (planKey === 'free' ? 'Free Tier' : 'Active');
+    const srcTag = u.subscriptionSource === 'admin_grant' ? ' · Admin' : u.subscriptionSource === 'paystack' ? ' · Paystack' : '';
+    return `
     <tr>
       <td>
-        <div style="font-weight:700;font-size:.88rem;">${esc(u.fullName)}</div>
+        <div style="font-weight:700;font-size:.88rem;">${esc(u.fullName)} <span class="adm-badge adm-badge-${u.role}" style="font-size:.66rem;">${u.role}</span></div>
         <div style="font-size:.76rem;color:var(--label3);">${esc(u.email)}</div>
+        <div style="font-size:.68rem;color:var(--label4);font-family:monospace;">${esc(u.id)}</div>
       </td>
-      <td><span class="adm-badge adm-badge-${u.role}">${u.role}</span></td>
+      <td>
+        <span style="font-weight:800;font-size:.78rem;color:${planColor};text-transform:uppercase;">${esc(planKey)}</span>
+        <div style="font-size:.72rem;color:var(--label3);">${esc(expStr)}${esc(srcTag)}</div>
+      </td>
+      <td style="font-weight:800;color:#d97706;">${Number(u.coins || 0).toLocaleString()}</td>
       <td><span class="adm-badge adm-badge-${u.status}">${u.status}</span></td>
-      <td style="font-size:.8rem;color:var(--label3);">${formatDateTime(u.lastLogin)}</td>
+      <td style="font-size:.78rem;color:var(--label2);">${Number(u.aiUsageCount || 0)} AI · ${Number(u.documentsCount || 0)} docs</td>
       <td style="font-size:.8rem;color:var(--label3);">${formatDate(u.createdAt)}</td>
       <td style="text-align:right;">
         <div class="adm-action-wrap">
           <button class="adm-action-btn" onclick="toggleDropdown('dd-${u.id}')">⋯</button>
           <div class="adm-dropdown" id="dd-${u.id}">
-            <button class="adm-dropdown-item" onclick="openUserModal(${JSON.stringify(u).replace(/"/g,'&quot;')});closeAllDropdowns()">
-              <i class="fa-solid fa-user"></i> View Details
+            <button class="adm-dropdown-item" onclick="openUserModalById('${u.id}');closeAllDropdowns()">
+              <i class="fa-solid fa-user"></i> View &amp; Manage
             </button>
             <div class="adm-dropdown-divider"></div>
             ${u.status === 'banned'
@@ -1186,7 +1416,8 @@ async function loadUsers() {
           </div>
         </div>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 // ── DROPDOWN HELPERS ──────────────────────────────────────────
@@ -1201,24 +1432,72 @@ function closeAllDropdowns() {
   document.querySelectorAll('.adm-dropdown.open').forEach(d => d.classList.remove('open'));
 }
 
-// Close dropdowns when clicking outside
 document.addEventListener('click', e => {
   if (!e.target.closest('.adm-action-wrap')) closeAllDropdowns();
 });
 
 // ── USER DETAIL MODAL ─────────────────────────────────────────
-async function openUserModal(u) {
-  document.getElementById('modalUserName').textContent = u.fullName;
-  document.getElementById('modalUserEmail').textContent = u.email;
+function toggleModalSubFields() {
+  const action = document.getElementById('modalSubAction').value;
+  const planSel = document.getElementById('modalSubPlan');
+  const durRow = document.getElementById('modalSubDurationRow');
+  if (action === 'revoke') {
+    planSel.style.display = 'none';
+    durRow.style.display = 'none';
+  } else {
+    planSel.style.display = 'block';
+    durRow.style.display = action === 'change' ? 'none' : 'flex';
+  }
+}
+
+function syncCustomDaysFromPreset() {
+  const preset = document.getElementById('modalSubDurationPreset').value;
+  const customInput = document.getElementById('modalSubCustomDays');
+  customInput.style.display = preset === 'custom' ? 'block' : 'none';
+}
+
+async function openUserModalById(userId) {
+  currentModalUserId = userId;
+  openModal('userModal');
+  document.getElementById('modalUserName').textContent = 'Loading profile...';
+  document.getElementById('modalUserEmail').textContent = userId;
+  document.getElementById('modalUserInfo').innerHTML = '<div class="adm-loading"><div class="spinner"></div> Loading user profile...</div>';
+  document.getElementById('modalUserUsage').innerHTML = '<div class="adm-loading"><div class="spinner"></div> Loading usage...</div>';
+  document.getElementById('modalUserCoinsHistory').innerHTML = '<div class="adm-loading"><div class="spinner"></div> Loading coin history...</div>';
+
+  const { data, error } = await apiAdminGetUserDetails(userId);
+  if (error || !data?.user) {
+    showToast(error || 'Failed to load user details', 'error');
+    return;
+  }
+  await openUserModal(data.user, data.usage, data.coinHistory);
+}
+
+async function openUserModal(u, usageData = null, coinHistory = null) {
+  currentModalUserId = u.id;
+  document.getElementById('modalUserName').textContent = u.fullName || 'Student';
+  document.getElementById('modalUserEmail').textContent = `${u.email} · ID: ${u.id}`;
+
+  const plan = String(u.plan || 'free').toLowerCase();
+  const expiryStr = u.subscriptionEnd ? formatDateTime(u.subscriptionEnd) : 'None';
+  const sourceStr = u.subscriptionSource === 'admin_grant' ? 'Admin Grant' : u.subscriptionSource === 'paystack' ? 'Paystack' : 'Free Tier';
 
   document.getElementById('modalUserInfo').innerHTML = `
     <div class="adm-info-item">
-      <div class="adm-info-label">Role</div>
-      <div class="adm-info-val"><span class="adm-badge adm-badge-${u.role}">${u.role}</span></div>
+      <div class="adm-info-label">Plan</div>
+      <div class="adm-info-val" style="font-weight:800;text-transform:uppercase;">${esc(plan)} (${esc(u.subscriptionStatus || 'free')})</div>
     </div>
     <div class="adm-info-item">
-      <div class="adm-info-label">Status</div>
-      <div class="adm-info-val"><span class="adm-badge adm-badge-${u.status}">${u.status}</span></div>
+      <div class="adm-info-label">Sub Source &amp; Expiry</div>
+      <div class="adm-info-val">${esc(sourceStr)} · ${esc(expiryStr)}</div>
+    </div>
+    <div class="adm-info-item">
+      <div class="adm-info-label">CampusCoins</div>
+      <div class="adm-info-val" style="font-weight:800;color:#d97706;">${Number(u.coins || 0).toLocaleString()} Coins</div>
+    </div>
+    <div class="adm-info-item">
+      <div class="adm-info-label">Role &amp; Status</div>
+      <div class="adm-info-val"><span class="adm-badge adm-badge-${u.role}">${u.role}</span> <span class="adm-badge adm-badge-${u.status}">${u.status}</span></div>
     </div>
     <div class="adm-info-item">
       <div class="adm-info-label">Joined</div>
@@ -1248,13 +1527,42 @@ async function openUserModal(u) {
     <button class="btn btn-danger btn-sm" onclick="actionDelete('${u.id}','${esc(u.fullName)}')"><i class="fa-solid fa-trash-can"></i> Delete</button>
   `;
 
-  openModal('userModal');
+  // Render AI Usage Stats
+  const usageEl = document.getElementById('modalUserUsage');
+  if (usageData && Array.isArray(usageData.tools)) {
+    usageEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;">` +
+      usageData.tools.map(t => `
+        <div style="padding:8px 10px;border-radius:10px;border:1px solid var(--sep);font-size:0.78rem;">
+          <div style="font-weight:700;">${esc(t.name)}</div>
+          <div style="color:var(--label3);margin-top:2px;">Today: ${t.usedToday}/${t.dailyLimit === -1 ? '∞' : t.dailyLimit} · Month: ${t.usedThisMonth}/${t.monthlyLimit === -1 ? '∞' : t.monthlyLimit}</div>
+        </div>
+      `).join('') + `</div>`;
+  } else {
+    usageEl.innerHTML = '<div class="adm-empty">No usage stats available.</div>';
+  }
+
+  // Render Coin Transaction History
+  const coinHistEl = document.getElementById('modalUserCoinsHistory');
+  if (Array.isArray(coinHistory) && coinHistory.length) {
+    coinHistEl.innerHTML = coinHistory.slice(0, 20).map(tx => `
+      <div class="adm-activity-item">
+        <div class="adm-activity-dot" style="background:${tx.amount >= 0 ? '#10b981' : '#ef4444'};"></div>
+        <div>
+          <div class="adm-activity-action">${tx.amount >= 0 ? '+' : ''}${tx.amount} Coins (${esc(tx.type || 'tx')})</div>
+          <div class="adm-activity-detail">${esc(tx.description || tx.reason || '')}${tx.adminEmail ? ` · By ${esc(tx.adminEmail)}` : ''}</div>
+          <div class="adm-activity-time">${formatDateTime(tx.createdAt || tx.created_at)}</div>
+        </div>
+      </div>
+    `).join('');
+  } else {
+    coinHistEl.innerHTML = '<div class="adm-empty">No coin transactions yet.</div>';
+  }
 
   // ── LOAD ACTIVITY ─────────────────────────────────────────
   const actDiv = document.getElementById('modalActivity');
   actDiv.innerHTML = '<div class="adm-loading"><div class="spinner"></div> Loading...</div>';
   const { data: actData, error: actError } = await apiAdminGetActivity(u.id);
-  if (actError || !actData.activities.length) {
+  if (actError || !actData?.activities?.length) {
     actDiv.innerHTML = '<div class="adm-empty">No activity recorded yet.</div>';
   } else {
     actDiv.innerHTML = actData.activities.map(a => `
@@ -1272,7 +1580,7 @@ async function openUserModal(u) {
   const aiDiv = document.getElementById('modalAIInteractions');
   aiDiv.innerHTML = '<div class="adm-loading"><div class="spinner"></div> Loading...</div>';
   const { data: aiData, error: aiError } = await apiAdminGetAIInteractions(u.id);
-  if (aiError || !aiData.interactions.length) {
+  if (aiError || !aiData?.interactions?.length) {
     aiDiv.innerHTML = '<div class="adm-empty">No AI interactions yet.</div>';
   } else {
     const typeEmoji = { summarize: '<i class="fa-solid fa-list-check"></i>', explain: '<i class="fa-solid fa-lightbulb"></i>', questions: '<i class="fa-solid fa-circle-question"></i>', flashcards: '<i class="fa-solid fa-id-card"></i>' };
@@ -1291,7 +1599,7 @@ async function openUserModal(u) {
   const filesDiv = document.getElementById('modalFiles');
   filesDiv.innerHTML = '<div class="adm-loading"><div class="spinner"></div> Loading...</div>';
   const { data: filesData, error: filesError } = await apiAdminGetUserFiles(u.id);
-  if (filesError || !filesData.files.length) {
+  if (filesError || !filesData?.files?.length) {
     filesDiv.innerHTML = '<div class="adm-empty">No files uploaded.</div>';
     document.getElementById('fileCountBadge').textContent = '';
   } else {
@@ -1301,65 +1609,276 @@ async function openUserModal(u) {
         <div>
           <div style="font-weight:500;color:var(--label);">${esc(f.name)}</div>
           <div style="font-size:0.85rem;color:var(--label3);">
-            ${f.type.toUpperCase()} • ${f.pages || 0} pages • ${formatDateTime(f.uploadedAt)}
+            ${esc((f.type || 'doc').toUpperCase())} • ${f.pages || 0} pages • ${formatDateTime(f.uploadedAt)}
           </div>
         </div>
         <div style="display:flex;gap:6px;">
-          <button class="btn btn-glass btn-xs" style="font-size:0.8rem;" onclick="showToast('View feature coming soon', 'info')"><i class="fa-solid fa-eye"></i> View</button>
-          <button class="btn btn-glass btn-xs" style="font-size:0.8rem;" onclick="downloadUserFile('${f.id}','${esc(f.name)}')"><i class="fa-solid fa-download"></i> Download</button>
+          <button class="btn btn-glass btn-xs" style="font-size:0.8rem;" onclick="downloadUserFile('${u.id}','${f.id}','${esc(f.name)}')"><i class="fa-solid fa-download"></i> Download</button>
         </div>
       </div>`).join('');
   }
 }
 
-async function downloadUserFile(fileId, fileName) {
+async function submitModalCoinAdjust() {
+  if (!currentModalUserId) return;
+  const action = document.getElementById('modalCoinAction').value;
+  const amount = Number(document.getElementById('modalCoinAmount').value);
+  const reason = document.getElementById('modalCoinReason').value.trim();
+  if (!amount || amount <= 0) { showToast('Enter a positive coin amount.', 'error'); return; }
+  if (!reason || reason.length < 3) { showToast('Please enter a reason for the audit log.', 'error'); return; }
+
+  const confirmMsg = action === 'deduct'
+    ? `Confirm deducting ${amount} coins from this user? Reason: ${reason}`
+    : `Confirm crediting ${amount} coins to this user? Reason: ${reason}`;
+  if (!confirm(confirmMsg)) return;
+
+  const { data, error } = await apiAdminAdjustCoins(currentModalUserId, { action, amount, reason });
+  if (error) { showToast(error, 'error'); return; }
+  showToast(data?.message || 'Coins updated!', 'success');
+  document.getElementById('modalCoinAmount').value = '';
+  document.getElementById('modalCoinReason').value = '';
+  await openUserModalById(currentModalUserId);
+  loadUsers();
+}
+
+async function submitModalSubManage() {
+  if (!currentModalUserId) return;
+  const action = document.getElementById('modalSubAction').value;
+  const plan = document.getElementById('modalSubPlan').value;
+  const preset = document.getElementById('modalSubDurationPreset').value;
+  const durationDays = preset === 'custom'
+    ? Number(document.getElementById('modalSubCustomDays').value || 30)
+    : Number(preset || 30);
+  const reason = document.getElementById('modalSubReason').value.trim();
+
+  if (action !== 'revoke' && action !== 'change' && (!durationDays || durationDays < 1)) {
+    showToast('Enter a valid duration in days.', 'error');
+    return;
+  }
+  if (action === 'revoke' && !confirm('Revoke this user back to the Free plan?')) return;
+
+  const { data, error } = await apiAdminManageSubscription(currentModalUserId, { action, plan, durationDays, reason });
+  if (error) { showToast(error, 'error'); return; }
+  showToast(data?.message || 'Subscription updated!', 'success');
+  document.getElementById('modalSubReason').value = '';
+  await openUserModalById(currentModalUserId);
+  loadUsers();
+}
+
+async function loadSubscriptionOverview() {
+  const { data, error } = await apiAdminGetSubscriptionOverview();
+  if (error || !data) {
+    showToast(error || 'Failed to load subscription overview.', 'error');
+    return;
+  }
+  document.getElementById('sub-free').textContent = data.freeUsers ?? 0;
+  document.getElementById('sub-plus').textContent = data.plusSubscribers ?? 0;
+  document.getElementById('sub-pro').textContent = data.proSubscribers ?? 0;
+  document.getElementById('sub-active').textContent = data.activeSubscriptions ?? 0;
+  document.getElementById('sub-expired').textContent = data.expiredSubscriptions ?? 0;
+  document.getElementById('sub-revenue').textContent = `₦${Number(data.revenue?.totalRevenueNgn || 0).toLocaleString()}`;
+
+  const upgBody = document.getElementById('recentUpgradesBody');
+  if (!data.recentlyUpgraded?.length) {
+    upgBody.innerHTML = '<tr><td colspan="6" class="adm-empty">No recent upgrades recorded.</td></tr>';
+  } else {
+    upgBody.innerHTML = data.recentlyUpgraded.map(u => `
+      <tr>
+        <td><div style="font-weight:700;">${esc(u.fullName)}</div><div style="font-size:.75rem;color:var(--label3);">${esc(u.email)}</div></td>
+        <td><strong style="text-transform:uppercase;">${esc(u.plan)}</strong></td>
+        <td>${u.source === 'admin_grant' ? '<span class="adm-badge" style="background:rgba(124,58,237,0.12);color:#7c3aed;">Admin Grant</span>' : '<span class="adm-badge" style="background:rgba(16,185,129,0.12);color:#059669;">Paystack</span>'}</td>
+        <td>${esc(u.status)}</td>
+        <td style="font-size:.8rem;">${u.subscriptionEnd ? formatDate(u.subscriptionEnd) : '—'}</td>
+        <td style="font-size:.8rem;color:var(--label3);">${formatDateTime(u.updatedAt)}</td>
+      </tr>
+    `).join('');
+  }
+
+  const payBody = document.getElementById('recentPaymentsBody');
+  if (!data.recentPayments?.length) {
+    payBody.innerHTML = '<tr><td colspan="5" class="adm-empty">No verified payment records yet.</td></tr>';
+  } else {
+    payBody.innerHTML = data.recentPayments.map(p => `
+      <tr>
+        <td style="font-family:monospace;font-size:.78rem;">${esc(p.reference)}</td>
+        <td>${esc(p.paymentType || p.plan || 'payment')}</td>
+        <td style="font-weight:700;color:#10b981;">₦${Number(p.amountNgn || 0).toLocaleString()}</td>
+        <td style="font-family:monospace;font-size:.74rem;">${esc(p.userId || '')}</td>
+        <td style="font-size:.8rem;color:var(--label3);">${formatDateTime(p.paidAt || p.createdAt)}</td>
+      </tr>
+    `).join('');
+  }
+}
+
+async function loadCoinsLedger() {
+  const tbody = document.getElementById('coinsLedgerBody');
+  tbody.innerHTML = '<tr><td colspan="6" class="adm-loading"><div class="spinner"></div> Loading ledger...</td></tr>';
+  const { data, error } = await apiAdminGetCoinTransactions(100);
+  if (error || !data) {
+    tbody.innerHTML = `<tr><td colspan="6" class="adm-empty">${esc(error || 'Failed to load coin transactions.')}</td></tr>`;
+    return;
+  }
+  if (!data.transactions?.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="adm-empty">No coin transactions recorded yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.transactions.map(t => `
+    <tr>
+      <td><div style="font-weight:700;">${esc(t.userName || t.userEmail || t.userId)}</div><div style="font-size:.72rem;color:var(--label3);">${esc(t.userEmail || t.userId)}</div></td>
+      <td><span class="adm-badge">${esc(t.type || 'tx')}</span></td>
+      <td style="font-weight:800;color:${t.amount >= 0 ? '#10b981' : '#ef4444'};">${t.amount >= 0 ? '+' : ''}${t.amount}</td>
+      <td>${t.balanceAfter ?? '—'}</td>
+      <td><div style="font-size:.82rem;">${esc(t.description || t.reason || '')}</div>${t.adminEmail ? `<div style="font-size:.72rem;color:var(--label3);">Admin: ${esc(t.adminEmail)}</div>` : ''}</td>
+      <td style="font-size:.78rem;color:var(--label3);">${formatDateTime(t.createdAt)}</td>
+    </tr>
+  `).join('');
+}
+
+async function submitLedgerCoinAdjust(event) {
+  event.preventDefault();
+  const ident = document.getElementById('ledgerUserIdent').value.trim();
+  const action = document.getElementById('ledgerCoinAction').value;
+  const amount = Number(document.getElementById('ledgerCoinAmount').value);
+  const reason = document.getElementById('ledgerCoinReason').value.trim();
+
+  if (!ident || !amount || amount <= 0 || reason.length < 3) {
+    showToast('Please enter user, positive amount, and audit reason.', 'error');
+    return;
+  }
+
+  let targetUserId = ident;
+  if (ident.includes('@')) {
+    const { data: uRes } = await apiAdminGetUsers(ident, '', '');
+    const exact = uRes?.users?.find(x => x.email.toLowerCase() === ident.toLowerCase()) || uRes?.users?.[0];
+    if (!exact) { showToast(`No user found matching "${ident}"`, 'error'); return; }
+    targetUserId = exact.id;
+  }
+
+  if (!confirm(`Confirm ${action.toUpperCase()} ${amount} coins for ${ident}?\nReason: ${reason}`)) return;
+
+  const { data, error } = await apiAdminAdjustCoins(targetUserId, { action, amount, reason });
+  if (error) { showToast(error, 'error'); return; }
+  showToast(data?.message || 'Coin transaction completed!', 'success');
+  document.getElementById('ledgerCoinAmount').value = '';
+  document.getElementById('ledgerCoinReason').value = '';
+  loadCoinsLedger();
+}
+
+async function loadAIToolsManager() {
+  const wrap = document.getElementById('aiToolsConfigList');
+  wrap.innerHTML = '<div class="adm-loading"><div class="spinner"></div> Loading AI tools...</div>';
+  const { data, error } = await apiAdminGetAITools();
+  if (error || !Array.isArray(data?.tools)) {
+    wrap.innerHTML = `<div class="adm-empty">${esc(error || 'Failed to load AI tools config.')}</div>`;
+    return;
+  }
+
+  wrap.innerHTML = data.tools.map(t => `
+    <div style="border:1px solid var(--sep);border-radius:14px;padding:16px;background:var(--card-bg,rgba(255,255,255,0.75));">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+        <div>
+          <div style="font-weight:800;font-size:0.98rem;">${esc(t.name)} <span style="font-size:0.72rem;font-family:monospace;color:var(--label3);">(${esc(t.toolKey)})</span></div>
+          <div style="font-size:0.78rem;color:var(--label3);">${esc(t.description || '')}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <label style="font-size:0.8rem;font-weight:700;display:flex;align-items:center;gap:5px;cursor:pointer;">
+            <input type="checkbox" id="tool-enabled-${t.toolKey}" ${t.enabled ? 'checked' : ''} /> Enabled
+          </label>
+          <label style="font-size:0.8rem;font-weight:700;display:flex;align-items:center;gap:5px;cursor:pointer;">
+            <input type="checkbox" id="tool-bypass-${t.toolKey}" ${t.allowCoinsBypass ? 'checked' : ''} /> Coin Fallback
+          </label>
+          <button type="button" class="btn btn-primary btn-sm" onclick="saveAIToolConfig('${t.toolKey}')">Save</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;font-size:0.78rem;">
+        <div>
+          <label style="font-weight:700;display:block;margin-bottom:3px;">Coin Cost</label>
+          <input type="number" id="tool-cost-${t.toolKey}" class="adm-search" style="width:100%;" min="0" value="${t.coinCost ?? 5}" />
+        </div>
+        <div>
+          <label style="font-weight:700;display:block;margin-bottom:3px;">Free Daily / Monthly</label>
+          <div style="display:flex;gap:4px;">
+            <input type="number" id="tool-df-${t.toolKey}" class="adm-search" style="width:50%;" min="-1" value="${t.dailyLimit?.free ?? 0}" title="Daily (-1=unlimited)" />
+            <input type="number" id="tool-mf-${t.toolKey}" class="adm-search" style="width:50%;" min="-1" value="${t.monthlyLimit?.free ?? 0}" title="Monthly (-1=unlimited)" />
+          </div>
+        </div>
+        <div>
+          <label style="font-weight:700;display:block;margin-bottom:3px;">Plus Daily / Monthly</label>
+          <div style="display:flex;gap:4px;">
+            <input type="number" id="tool-dp-${t.toolKey}" class="adm-search" style="width:50%;" min="-1" value="${t.dailyLimit?.plus ?? 0}" />
+            <input type="number" id="tool-mp-${t.toolKey}" class="adm-search" style="width:50%;" min="-1" value="${t.monthlyLimit?.plus ?? 0}" />
+          </div>
+        </div>
+        <div>
+          <label style="font-weight:700;display:block;margin-bottom:3px;">Pro Daily / Monthly</label>
+          <div style="display:flex;gap:4px;">
+            <input type="number" id="tool-dr-${t.toolKey}" class="adm-search" style="width:50%;" min="-1" value="${t.dailyLimit?.pro ?? -1}" />
+            <input type="number" id="tool-mr-${t.toolKey}" class="adm-search" style="width:50%;" min="-1" value="${t.monthlyLimit?.pro ?? -1}" />
+          </div>
+        </div>
+        <div>
+          <label style="font-weight:700;display:block;margin-bottom:3px;">Allowed Plans</label>
+          <div style="display:flex;gap:8px;padding-top:6px;">
+            <label><input type="checkbox" id="tool-plan-free-${t.toolKey}" ${(t.allowedPlans || []).includes('free') ? 'checked' : ''}/> Free</label>
+            <label><input type="checkbox" id="tool-plan-plus-${t.toolKey}" ${(t.allowedPlans || []).includes('plus') ? 'checked' : ''}/> Plus</label>
+            <label><input type="checkbox" id="tool-plan-pro-${t.toolKey}" ${(t.allowedPlans || []).includes('pro') ? 'checked' : ''}/> Pro</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function saveAIToolConfig(toolKey) {
+  const allowedPlans = ['free', 'plus', 'pro'].filter(p => document.getElementById(`tool-plan-${p}-${toolKey}`)?.checked);
+  const payload = {
+    enabled: Boolean(document.getElementById(`tool-enabled-${toolKey}`)?.checked),
+    allowCoinsBypass: Boolean(document.getElementById(`tool-bypass-${toolKey}`)?.checked),
+    coinCost: Number(document.getElementById(`tool-cost-${toolKey}`)?.value || 0),
+    allowedPlans,
+    dailyLimit: {
+      free: Number(document.getElementById(`tool-df-${toolKey}`)?.value || 0),
+      plus: Number(document.getElementById(`tool-dp-${toolKey}`)?.value || 0),
+      pro: Number(document.getElementById(`tool-dr-${toolKey}`)?.value ?? -1)
+    },
+    monthlyLimit: {
+      free: Number(document.getElementById(`tool-mf-${toolKey}`)?.value || 0),
+      plus: Number(document.getElementById(`tool-mp-${toolKey}`)?.value || 0),
+      pro: Number(document.getElementById(`tool-mr-${toolKey}`)?.value ?? -1)
+    }
+  };
+  const { data, error } = await apiAdminUpdateAITool(toolKey, payload);
+  if (error) { showToast(error, 'error'); return; }
+  showToast(data?.message || `Updated ${toolKey} configuration!`, 'success');
+}
+
+async function downloadUserFile(userId, fileId, fileName) {
   try {
     const token = getToken();
-    
     if (!token) {
       showToast('You must be logged in to download files', 'error');
       return;
     }
-
-    // Extract Supabase project ID from localStorage or use hardcoded value
-    // The project ID is typically stored in the auth context
-    // For production, you may want to store this during initialization
-    const SUPABASE_PROJECT_ID = 'ipwwtqfqlnhbkzgwjczf'; // Replace with your actual project ID
-    const BUCKET_NAME = 'uploaded-files';
-    
-    // Construct the download URL
-    const downloadUrl = `https://${SUPABASE_PROJECT_ID}.supabase.co/storage/v1/object/authenticated/${BUCKET_NAME}/${fileId}`;
-    
-    // Create a link element and trigger download with auth token
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.setAttribute('download', fileName);
-    link.setAttribute('target', '_blank');
-    
-    // Add authorization header by creating a new request
+    const downloadUrl = `${API_BASE}/api/admin/users/${encodeURIComponent(userId)}/files/${encodeURIComponent(fileId)}/download`;
     const response = await fetch(downloadUrl, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': '*/*'
-      }
+      headers: { Authorization: `Bearer ${token}` }
     });
-    
     if (!response.ok) {
-      throw new Error(`Download failed: ${response.statusText}`);
+      const errBody = await response.json().catch(() => ({}));
+      throw new Error(errBody.error || `Download failed (${response.status})`);
     }
-    
-    // Create blob from response and download
     const blob = await response.blob();
     const blobUrl = window.URL.createObjectURL(blob);
     const downloadLink = document.createElement('a');
     downloadLink.href = blobUrl;
-    downloadLink.setAttribute('download', fileName);
+    downloadLink.setAttribute('download', fileName || `document_${fileId}`);
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
     window.URL.revokeObjectURL(blobUrl);
-    
+    showToast(`Downloading ${fileName}...`, 'success');
   } catch (err) {
     console.error('[Admin] Download error:', err);
     showToast('Error downloading file: ' + err.message, 'error');

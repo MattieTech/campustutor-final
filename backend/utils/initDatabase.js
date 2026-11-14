@@ -254,7 +254,7 @@ async function fixRLSPolicies() {
       // This uses the service_role key which should allow DDL operations
       const { error } = await supabase.rpc("exec", {
         sql: `ALTER TABLE ${table} DISABLE ROW LEVEL SECURITY;`,
-      }).catch(() => ({ error: { message: "RPC not available" } }));
+      });
 
       if (error) {
         // RPC method not available, try a workaround

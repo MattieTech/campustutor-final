@@ -9,9 +9,9 @@ const authMiddleware = require("../middleware/authMiddleware");
 const { getUserCoinBalance, claimDailyBonus, getCoinHistory } = require("../utils/coins");
 const supabase = require("../utils/supabase");
 
-const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || "sk_test_mockkey";
+const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY || "";
 
-// Expensive coin packages definition (100 coins = ₦1,500)
+// Canonical server-side coin packages (never trust client-supplied prices)
 const COIN_PACKAGES = {
   starter: { id: "starter", name: "Starter Stash", coins: 100, priceNGN: 1500, amountKobo: 150000 },
   popular: { id: "popular", name: "Scholar Pack", coins: 250, priceNGN: 3500, amountKobo: 350000 },
@@ -20,13 +20,11 @@ const COIN_PACKAGES = {
 };
 
 // ── GET AVAILABLE PACKAGES ────────────────────────────────────
-// GET /api/coins/packages
 router.get("/packages", (req, res) => {
   res.json({ packages: Object.values(COIN_PACKAGES) });
 });
 
 // ── GET USER COIN BALANCE ─────────────────────────────────────
-// GET /api/coins/balance
 router.get("/balance", authMiddleware, async (req, res) => {
   try {
     const data = await getUserCoinBalance(req.user.id, req.user);
@@ -36,8 +34,7 @@ router.get("/balance", authMiddleware, async (req, res) => {
   }
 });
 
-// ── CLAIM DAILY LOGIN BONUS (GAMIFICATION) ────────────────────
-// POST /api/coins/claim-daily
+// ── CLAIM DAILY LOGIN BONUS ───────────────────────────────────
 router.post("/claim-daily", authMiddleware, async (req, res) => {
   try {
     const result = await claimDailyBonus(req.user.id, req.user);
@@ -51,32 +48,23 @@ router.post("/claim-daily", authMiddleware, async (req, res) => {
 });
 
 // ── BUY COINS CHECKOUT (PAYSTACK) ─────────────────────────────
-// POST /api/coins/buy-package
 router.post("/buy-package", authMiddleware, async (req, res) => {
   try {
-    let { packageId, coins, amountNgn } = req.body;
+    if (!PAYSTACK_SECRET) {
+      return res.status(503).json({ error: "Payment service is not configured." });
+    }
+
+    const { packageId, coins } = req.body;
     let pkg = null;
 
     if (packageId && COIN_PACKAGES[packageId]) {
       pkg = COIN_PACKAGES[packageId];
     } else if (coins) {
-      // Find matching package by coins
-      pkg = Object.values(COIN_PACKAGES).find(p => p.coins === Number(coins));
+      pkg = Object.values(COIN_PACKAGES).find((p) => p.coins === Number(coins)) || null;
     }
 
-    // Fallback if custom or direct
     if (!pkg) {
-      if (coins && amountNgn) {
-        pkg = {
-          id: `custom_${coins}`,
-          name: `${coins} CampusCoins`,
-          coins: Number(coins),
-          priceNGN: Number(amountNgn),
-          amountKobo: Number(amountNgn) * 100,
-        };
-      } else {
-        return res.status(400).json({ error: "Invalid coin package selected." });
-      }
+      return res.status(400).json({ error: "Invalid coin package selected. Choose one of the official CampusCoins packs." });
     }
 
     const userId = req.user.id;
@@ -92,18 +80,20 @@ router.post("/buy-package", authMiddleware, async (req, res) => {
 
     const callbackBase = req.body.callbackUrl || `${req.headers.origin || "http://localhost:3000"}/pages/dashboard.html`;
     const callbackUrl = callbackBase.includes("?")
-      ? `${callbackBase}&payment=coins_success&pkg=${packageId}`
-      : `${callbackBase}?payment=coins_success&pkg=${packageId}`;
+      ? `${callbackBase}&payment=coins_success&pkg=${pkg.id}`
+      : `${callbackBase}?payment=coins_success&pkg=${pkg.id}`;
 
     const params = JSON.stringify({
       email: profile.email,
       amount: pkg.amountKobo,
+      currency: "NGN",
       callback_url: callbackUrl,
       metadata: {
         userId,
         type: "coins",
-        packageId,
+        packageId: pkg.id,
         coinsAwarded: pkg.coins,
+        expectedAmountKobo: pkg.amountKobo,
       },
     });
 
@@ -140,7 +130,7 @@ router.post("/buy-package", authMiddleware, async (req, res) => {
       });
     });
 
-    paystackReq.on("error", (error) => {
+    paystackReq.on("error", () => {
       res.status(500).json({ error: "Failed to connect to Paystack." });
     });
 
@@ -152,7 +142,6 @@ router.post("/buy-package", authMiddleware, async (req, res) => {
 });
 
 // ── GET TRANSACTION HISTORY ───────────────────────────────────
-// GET /api/coins/history
 router.get("/history", authMiddleware, async (req, res) => {
   try {
     const history = await getCoinHistory(req.user.id);

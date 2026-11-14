@@ -1,43 +1,89 @@
 // ============================================================
 // middleware/authMiddleware.js — Protect private routes
 //
-// "Middleware" is code that runs BETWEEN the request arriving
-// and your route handler running. Think of it as a bouncer
-// at a club — it checks if you have a valid ticket (JWT token)
-// before letting you in.
-//
-// HOW JWT AUTHENTICATION WORKS:
-// 1. User logs in → Supabase returns a JWT token (a long string)
-// 2. Frontend stores the token in localStorage
-// 3. Frontend sends the token in every request header:
-//    Authorization: Bearer eyJhbGci...
-// 4. This middleware checks the token before the route runs
-// 5. If valid → user info is attached to req.user → route runs
-// 6. If invalid → 401 Unauthorized error is returned
+// Verifies JWT token from Authorization header against Supabase
+// Auth. Includes in-memory caching (60s TTL) and exponential
+// backoff retries on transient network/DNS hiccups for rock-solid
+// reliability under high concurrency and unstable connections.
 // ============================================================
 
 const supabase = require("../utils/supabase");
 
+// In-memory cache: token -> { user, expiresAt }
+const tokenCache = new Map();
+const CACHE_TTL_MS = 60 * 1000;
+
+// Periodic cleanup of stale cache entries
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of tokenCache.entries()) {
+    if (val.expiresAt <= now) tokenCache.delete(key);
+  }
+}, 120 * 1000).unref();
+
+/**
+ * Verify a Supabase JWT with caching and transient error retry
+ */
+async function verifyTokenWithRetry(token) {
+  if (!token) return { user: null, error: new Error("No token provided") };
+
+  const cached = tokenCache.get(token);
+  if (cached && cached.expiresAt > Date.now()) {
+    return { user: cached.user, error: null };
+  }
+
+  let lastErr = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const { data, error } = await supabase.auth.getUser(token);
+      if (error) {
+        const msg = String(error.message || "").toLowerCase();
+        // Retry only on network / DNS / server-side gateway hiccups
+        const isTransient =
+          msg.includes("fetch failed") ||
+          msg.includes("enotfound") ||
+          msg.includes("etimedout") ||
+          msg.includes("econnreset") ||
+          error.status === 502 ||
+          error.status === 503 ||
+          error.status === 504;
+
+        if (isTransient) {
+          lastErr = error;
+          await new Promise((r) => setTimeout(r, 200 * (attempt + 1)));
+          continue;
+        }
+        return { user: null, error };
+      }
+
+      if (data?.user) {
+        tokenCache.set(token, { user: data.user, expiresAt: Date.now() + CACHE_TTL_MS });
+        return { user: data.user, error: null };
+      }
+    } catch (netErr) {
+      lastErr = netErr;
+      await new Promise((r) => setTimeout(r, 200 * (attempt + 1)));
+    }
+  }
+
+  return { user: null, error: lastErr || new Error("Failed to verify token after retries") };
+}
+
+function invalidateTokenCache(token) {
+  if (token) tokenCache.delete(token);
+}
+
 async function authMiddleware(req, res, next) {
   try {
-    // 1. Get the token from the Authorization header
-    //    Header looks like: "Bearer eyJhbGciOiJIUzI1NiIs..."
     const authHeader = req.headers.authorization;
-
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         error: "No token provided. Please log in first.",
       });
     }
 
-    // 2. Extract just the token part (remove "Bearer ")
     const token = authHeader.split(" ")[1];
-
-    // 3. Ask Supabase to verify the token and get the user
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(token);
+    const { user, error } = await verifyTokenWithRetry(token);
 
     if (error || !user) {
       return res.status(401).json({
@@ -45,11 +91,9 @@ async function authMiddleware(req, res, next) {
       });
     }
 
-    // 4. Attach user info to the request object
-    //    Now any route after this middleware can access req.user
     req.user = user;
 
-    // 5. Check if user is banned
+    // Check if user is banned
     const userStatus = user.app_metadata?.status;
     if (userStatus === "banned") {
       return res.status(403).json({
@@ -58,7 +102,6 @@ async function authMiddleware(req, res, next) {
       });
     }
 
-    // 6. Call next() to pass control to the actual route handler
     next();
   } catch (err) {
     console.error("Auth middleware error:", err.message);
@@ -67,3 +110,5 @@ async function authMiddleware(req, res, next) {
 }
 
 module.exports = authMiddleware;
+module.exports.verifyTokenWithRetry = verifyTokenWithRetry;
+module.exports.invalidateTokenCache = invalidateTokenCache;

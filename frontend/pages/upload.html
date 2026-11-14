@@ -53,22 +53,41 @@
   </aside>
   <main class="main-content" style="max-width:680px;">
     <div class="page-header">
-      <h1>Upload Files <i class="fa-solid fa-cloud-arrow-up anim-rocket" style="color:var(--blue);margin-left:6px;"></i></h1>
-      <p>Upload PDF notes, images, or screenshots to analyze with AI</p>
+      <h1>Upload Study Materials <i class="fa-solid fa-cloud-arrow-up anim-rocket" style="color:var(--blue);margin-left:6px;"></i></h1>
+      <p>Upload PDF, PowerPoint, Word, Text notes, or lecture photos to analyze with AI</p>
     </div>
+
+    <!-- Live Upload Quota & Allowance Banner -->
+    <div id="uploadQuotaCard" class="card" style="margin-bottom:18px;background:rgba(0,122,255,0.05);border:1px solid rgba(0,122,255,0.2);">
+      <div class="card-body" style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--blue);" id="uploadPlanBadge">Checking plan quota...</div>
+          <div style="font-size:0.84rem;color:var(--label2);margin-top:3px;" id="uploadQuotaDetails">Loading your document and image upload limits...</div>
+        </div>
+        <a href="/pages/pricing.html" class="btn btn-outline btn-sm" id="uploadUpgradeCta" style="display:none;"><i class="fa-solid fa-crown" style="color:#f59e0b;"></i> Upgrade Plan</a>
+      </div>
+    </div>
+
+    <!-- Actionable Limit / Error Alert Banner -->
+    <div id="uploadAlertBanner" style="display:none;margin-bottom:18px;padding:16px 18px;border-radius:14px;border:1px solid rgba(245,158,11,0.45);background:rgba(245,158,11,0.09);">
+      <div style="font-weight:800;font-size:0.92rem;margin-bottom:4px;" id="uploadAlertTitle">Upload Notice</div>
+      <div style="font-size:0.84rem;line-height:1.5;color:var(--label2);" id="uploadAlertMsg"></div>
+      <div id="uploadAlertActions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
+    </div>
+
     <div class="card">
       <div class="card-body">
-        <!-- PDF/PPTX Upload -->
+        <!-- PDF/PPTX/DOCX/TXT Upload -->
         <div style="margin-bottom: 32px;">
-          <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px;"><i class="fa-solid fa-file-pdf"></i> Upload PDF or PowerPoint (.pptx)</h3>
+          <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px;"><i class="fa-solid fa-file-lines"></i> Upload Document (PDF, PPTX, DOCX, TXT)</h3>
           <div class="upload-zone" id="pdfUploadZone">
-            <input type="file" id="pdfInput" accept=".pdf,.pptx,.ppt"/>
+            <input type="file" id="pdfInput" accept=".pdf,.pptx,.ppt,.docx,.txt"/>
             <div class="upload-icon"><i class="fa-solid fa-file-pdf anim-book" style="color:#ef4444;"></i></div>
-            <h3>Drop your PDF or PowerPoint slides here</h3>
+            <h3>Drop your PDF, PowerPoint, Word, or Text file here</h3>
             <p>or click to browse files</p>
-            <p style="margin-top:6px;font-size:0.75rem;">PDF, PPTX, PPT · Max 50MB</p>
+            <p style="margin-top:6px;font-size:0.75rem;">PDF, PPTX, PPT, DOCX, TXT · Max 50MB</p>
           </div>
-          <div id="pdfFileInfo" style="display:none;margin-top:18px;padding:14px;background:rgba(118,118,128,0.06);border-radius:var(--r);border:0.5px solid var(--sep);display:flex;align-items:center;gap:14px;">
+          <div id="pdfFileInfo" style="display:none;margin-top:18px;padding:14px;background:rgba(118,118,128,0.06);border-radius:var(--r);border:0.5px solid var(--sep);align-items:center;gap:14px;">
             <div style="font-size:1.8rem;"><i class="fa-solid fa-file-pdf"></i></div>
             <div style="flex:1;"><div id="pdfFileName" style="font-weight:700;font-size:0.9rem;"></div><div id="pdfFileSize" style="font-size:0.78rem;color:var(--label3);margin-top:2px;"></div></div>
             <button onclick="clearPdfFile()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-xmark"></i></button>
@@ -82,15 +101,15 @@
 
         <!-- Image Upload -->
         <div>
-          <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px;"><i class="fa-solid fa-image"></i> Upload Image (JPG, PNG, WEBP)</h3>
+          <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px;"><i class="fa-solid fa-image"></i> Camera Note / Handwritten Image OCR (JPG, PNG, WEBP)</h3>
           <div class="upload-zone" id="imageUploadZone">
             <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.webp"/>
             <div class="upload-icon"><i class="fa-solid fa-image anim-sparkle" style="color:#3b82f6;"></i></div>
-            <h3>Drop your image here</h3>
+            <h3>Drop your lecture photo or screenshot here</h3>
             <p>or click to browse files</p>
-            <p style="margin-top:6px;font-size:0.75rem;">JPG, PNG, WEBP · Max 50MB</p>
+            <p style="margin-top:6px;font-size:0.75rem;">JPG, PNG, WEBP · Max 50MB · Pro Plan Feature</p>
           </div>
-          <div id="imageFileInfo" style="display:none;margin-top:18px;padding:14px;background:rgba(118,118,128,0.06);border-radius:var(--r);border:0.5px solid var(--sep);display:flex;align-items:center;gap:14px;">
+          <div id="imageFileInfo" style="display:none;margin-top:18px;padding:14px;background:rgba(118,118,128,0.06);border-radius:var(--r);border:0.5px solid var(--sep);align-items:center;gap:14px;">
             <div style="font-size:1.8rem;"><i class="fa-solid fa-image"></i></div>
             <div style="flex:1;"><div id="imageFileName" style="font-weight:700;font-size:0.9rem;"></div><div id="imageFileSize" style="font-size:0.78rem;color:var(--label3);margin-top:2px;"></div></div>
             <button onclick="clearImageFile()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-xmark"></i></button>
@@ -99,17 +118,17 @@
             <div style="font-size:0.83rem;color:var(--label3);margin-bottom:8px;" id="imageProgressLabel">Uploading...</div>
             <div class="progress-bar"><div class="progress-fill" id="imageProgressFill" style="width:0%"></div></div>
           </div>
-          <button class="btn btn-primary btn-full btn-lg" id="imageUploadBtn" onclick="uploadImage()" disabled style="margin-top:20px;"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Image</button>
+          <button class="btn btn-primary btn-full btn-lg" id="imageUploadBtn" onclick="uploadImage()" disabled style="margin-top:20px;"><i class="fa-solid fa-cloud-arrow-up"></i> Upload &amp; OCR Image</button>
         </div>
       </div>
     </div>
     <div style="margin-top:20px;padding:20px;background:rgba(0,122,255,0.06);border:0.5px solid rgba(0,122,255,0.2);border-radius:var(--r-lg);">
       <h3 style="font-size:0.88rem;color:var(--blue);margin-bottom:10px;font-family:var(--font-ui);font-weight:700;"><i class="fa-solid fa-lightbulb anim-bulb" style="color:#eab308;margin-right:6px;"></i> Tips for Best Results</h3>
       <ul style="font-size:0.83rem;color:var(--label3);padding-left:18px;line-height:2.1;">
-        <li>Use text-based PDFs (not scanned images)</li>
-        <li>PDFs from Microsoft Word or Google Docs work best</li>
-        <li>Keep files under 10MB for fast processing</li>
-        <li>One topic per upload gives more focused AI results</li>
+        <li>Text-based PDFs, DOCX, PPTX, and TXT extract instantaneously</li>
+        <li>Scanned PDFs and clear photos are automatically processed with Gemini AI OCR</li>
+        <li>Keep files under 50MB for reliable processing</li>
+        <li>One topic or chapter per upload gives sharper AI summaries and quizzes</li>
       </ul>
     </div>
   </main>
@@ -166,7 +185,72 @@ document.documentElement.setAttribute('data-theme',t);
 initThemeToggle();
 initMobileMenu();
 
-// ── PDF UPLOAD HANDLERS ────────────────────────────────────────
+async function loadUploadQuota() {
+  try {
+    const { data } = await apiGetUsage();
+    if (!data || !Array.isArray(data.tools)) return;
+    const plan = String(data.plan || 'free').toUpperCase();
+    const docTool = data.tools.find(x => x.toolKey === 'upload_pdf');
+    const imgTool = data.tools.find(x => x.toolKey === 'upload_image');
+    const badgeEl = document.getElementById('uploadPlanBadge');
+    const detailsEl = document.getElementById('uploadQuotaDetails');
+    const upgBtn = document.getElementById('uploadUpgradeCta');
+    if (badgeEl) badgeEl.textContent = `${plan} PLAN · UPLOAD ALLOWANCES`;
+    const docTxt = docTool
+      ? (docTool.monthlyLimit === -1 ? 'Documents: Unlimited' : `Documents: ${docTool.remainingMonthly ?? Math.max(0, docTool.monthlyLimit - docTool.usedThisMonth)}/${docTool.monthlyLimit} left this month (${docTool.remainingDaily ?? Math.max(0, docTool.dailyLimit - docTool.usedToday)}/${docTool.dailyLimit} today)`)
+      : '';
+    const imgTxt = imgTool
+      ? (!imgTool.planAllowed || imgTool.dailyLimit === 0 ? 'Image OCR: Pro Plan Only' : (imgTool.dailyLimit === -1 ? 'Image OCR: Unlimited' : `Image OCR: ${imgTool.remainingDaily ?? Math.max(0, imgTool.dailyLimit - imgTool.usedToday)}/${imgTool.dailyLimit} left today`))
+      : '';
+    if (detailsEl) detailsEl.textContent = [docTxt, imgTxt].filter(Boolean).join(' · ');
+    if (upgBtn && data.plan !== 'pro') upgBtn.style.display = 'inline-flex';
+  } catch (_) {}
+}
+loadUploadQuota();
+
+function showUploadAlert(payload, retryFn) {
+  const banner = document.getElementById('uploadAlertBanner');
+  const titleEl = document.getElementById('uploadAlertTitle');
+  const msgEl = document.getElementById('uploadAlertMsg');
+  const actEl = document.getElementById('uploadAlertActions');
+  if (!banner) return;
+
+  const isLimit = Boolean(payload?.limitReached);
+  const isPlan = Boolean(payload?.planRestricted || payload?.subscriptionRequired);
+  const isCoins = Boolean(payload?.insufficientCoins || payload?.needCoins);
+  titleEl.textContent = isLimit ? 'Upload Limit Reached' : isPlan ? 'Plan Upgrade Required' : isCoins ? 'Insufficient CampusCoins' : 'Upload Error';
+  const resetStr = payload?.resetsAt ? `<br><strong>Resets:</strong> ${escapeHTML(new Date(payload.resetsAt).toLocaleString())}` : '';
+  msgEl.innerHTML = `${escapeHTML(payload?.error || 'Upload failed.')}${resetStr}`;
+  actEl.innerHTML = '';
+
+  if (isLimit || isPlan || payload?.recommendedUpgrade) {
+    const a = document.createElement('a');
+    a.href = '/pages/pricing.html';
+    a.className = 'btn btn-primary btn-sm';
+    a.innerHTML = `<i class="fa-solid fa-crown"></i> Upgrade to ${escapeHTML((payload?.recommendedUpgrade || 'Plus').toUpperCase())}`;
+    actEl.appendChild(a);
+  }
+  if (isCoins && typeof openCoinsModal === 'function') {
+    const c = document.createElement('button');
+    c.type = 'button';
+    c.className = 'btn btn-primary btn-sm';
+    c.innerHTML = '<i class="fa-solid fa-coins"></i> Top Up Coins';
+    c.onclick = () => openCoinsModal('packages');
+    actEl.appendChild(c);
+  }
+  if (typeof retryFn === 'function') {
+    const r = document.createElement('button');
+    r.type = 'button';
+    r.className = 'btn btn-ghost btn-sm';
+    r.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Retry';
+    r.onclick = retryFn;
+    actEl.appendChild(r);
+  }
+  banner.style.display = 'block';
+  banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── DOCUMENT UPLOAD HANDLERS ───────────────────────────────────
 const pdfInput=document.getElementById('pdfInput');
 const pdfUploadZone=document.getElementById('pdfUploadZone');
 const pdfUploadBtn=document.getElementById('pdfUploadBtn');
@@ -176,13 +260,16 @@ let selectedPdfFile=null;
 pdfInput.addEventListener('change',e=>{if(e.target.files[0])handlePdfFile(e.target.files[0]);});
 function handlePdfFile(f){
   const ext = f.name.split('.').pop().toLowerCase();
+  const allowedExts = ['pdf', 'pptx', 'ppt', 'docx', 'txt'];
   const allowedTypes = [
-    'application/pdf', 
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation', 
-    'application/vnd.ms-powerpoint'
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain'
   ];
-  if(ext!=='pdf' && ext!=='pptx' && ext!=='ppt' && !allowedTypes.includes(f.type)){
-    showToast('Please select a PDF or PowerPoint file only.','error');
+  if(!allowedExts.includes(ext) && !allowedTypes.includes(f.type)){
+    showToast('Please select a PDF, PPTX, DOCX, or TXT file only.','error');
     return;
   }
   if(f.size>50*1024*1024){showToast('File too large. Max 50MB.','error');return;}
@@ -200,27 +287,27 @@ pdfUploadZone.addEventListener('drop',e=>{e.preventDefault();pdfUploadZone.class
 
 async function uploadPDF(){
   if(!selectedPdfFile)return;
+  document.getElementById('uploadAlertBanner').style.display='none';
   document.getElementById('pdfProgressArea').style.display='block';
   const lbl=document.getElementById('pdfProgressLabel'),fill=document.getElementById('pdfProgressFill');
+  fill.style.background='';fill.style.width='0%';
   pdfUploadBtn.disabled=true;
   let p=0;
   const iv=setInterval(()=>{
     p=Math.min(p+Math.random()*12,85);fill.style.width=p+'%';
     lbl.textContent=p<40?'Uploading file…':p<70?'Extracting text…':'Saving to database…';
   },300);
-  const{data,error}=await apiUploadPDF(selectedPdfFile);
+  const res=await apiUploadPDF(selectedPdfFile);
   clearInterval(iv);
-  if(error){
-    fill.style.width='100%';fill.style.background='var(--red)';lbl.textContent='Upload failed.';
-    showToast(error,'error');
-    if ((error || '').toLowerCase().includes('upgrade') || (error || '').toLowerCase().includes('limit')) {
-      setTimeout(() => { window.location.href = '/pages/pricing.html'; }, 1500);
-    }
+  if(res.error){
+    fill.style.width='100%';fill.style.background='var(--red)';lbl.textContent='Upload not completed.';
+    showToast(res.error,'error');
+    showUploadAlert(res, uploadPDF);
     pdfUploadBtn.disabled=false;return;
   }
   fill.style.width='100%';lbl.innerHTML='<i class="fa-solid fa-circle-check"></i> Done! Redirecting...';
   showToast('Document uploaded and processed! <i class="fa-solid fa-circle-check"></i>','success');
-  setTimeout(()=>{window.location.href=`/pages/study.html?docId=${data.document.id}&name=${encodeURIComponent(data.document.fileName)}`;},1000);
+  setTimeout(()=>{window.location.href=`/pages/study.html?docId=${res.data.document.id}&name=${encodeURIComponent(res.data.document.fileName)}`;},1000);
 }
 
 // ── IMAGE UPLOAD HANDLERS ──────────────────────────────────────
@@ -241,7 +328,7 @@ function handleImageFile(f){
   imageFileInfo.style.display='flex';
   imageUploadBtn.disabled=false;imageUploadBtn.innerHTML=`<i class="fa-solid fa-cloud-arrow-up"></i> Upload "${f.name.length>30?f.name.substring(0,30)+'…':f.name}"`;
 }
-function clearImageFile(){selectedImageFile=null;imageInput.value='';imageFileInfo.style.display='none';imageUploadBtn.disabled=true;imageUploadBtn.innerHTML='<i class="fa-solid fa-cloud-arrow-up"></i> Upload Image';}
+function clearImageFile(){selectedImageFile=null;imageInput.value='';imageFileInfo.style.display='none';imageUploadBtn.disabled=true;imageUploadBtn.innerHTML='<i class="fa-solid fa-cloud-arrow-up"></i> Upload &amp; OCR Image';}
 
 imageUploadZone.addEventListener('dragover',e=>{e.preventDefault();imageUploadZone.classList.add('dragover');});
 imageUploadZone.addEventListener('dragleave',()=>imageUploadZone.classList.remove('dragover'));
@@ -249,13 +336,15 @@ imageUploadZone.addEventListener('drop',e=>{e.preventDefault();imageUploadZone.c
 
 async function uploadImage(){
   if(!selectedImageFile)return;
+  document.getElementById('uploadAlertBanner').style.display='none';
   document.getElementById('imageProgressArea').style.display='block';
   const lbl=document.getElementById('imageProgressLabel'),fill=document.getElementById('imageProgressFill');
+  fill.style.background='';fill.style.width='0%';
   imageUploadBtn.disabled=true;
   let p=0;
   const iv=setInterval(()=>{
     p=Math.min(p+Math.random()*15,90);fill.style.width=p+'%';
-    lbl.textContent='Uploading image…';
+    lbl.textContent='Uploading & running OCR…';
   },300);
   
   try{
@@ -269,15 +358,13 @@ async function uploadImage(){
     const data=await response.json();
     clearInterval(iv);
       if(!response.ok){
-        fill.style.width='100%';fill.style.background='var(--red)';lbl.textContent='Upload failed.';
+        fill.style.width='100%';fill.style.background='var(--red)';lbl.textContent='Upload not completed.';
         showToast(data.error||'Upload failed.','error');
-        if (response.status === 403 || (data.error || '').toLowerCase().includes('upgrade') || (data.error || '').toLowerCase().includes('limit')) {
-          setTimeout(() => { window.location.href = '/pages/pricing.html'; }, 1500);
-        }
+        showUploadAlert(data, uploadImage);
         imageUploadBtn.disabled=false;return;
       }
       fill.style.width='100%';lbl.innerHTML='<i class="fa-solid fa-circle-check"></i> Done! Redirecting...';
-      showToast('Image uploaded and processed! <i class="fa-solid fa-circle-check"></i>','success');
+      showToast('Image uploaded and OCR complete! <i class="fa-solid fa-circle-check"></i>','success');
       setTimeout(()=>{window.location.href=`/pages/study.html?docId=${data.document.id}&name=${encodeURIComponent(data.document.fileName)}`;},1000);
   }catch(err){
     clearInterval(iv);fill.style.width='100%';fill.style.background='var(--red)';lbl.textContent='Upload failed.';

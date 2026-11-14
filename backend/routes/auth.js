@@ -289,6 +289,7 @@ router.post("/verify", async (req, res) => {
 // ── GET CURRENT USER PROFILE (/me) ────────────────────────────
 router.get("/me", authMiddleware, async (req, res) => {
   try {
+    const { resolveEffectiveSubscription, getUserUsageSummary } = require("../utils/usageService");
     const userId = req.user.id;
     const { data: profile, error } = await supabase
       .from("profiles")
@@ -300,32 +301,28 @@ router.get("/me", authMiddleware, async (req, res) => {
       return res.status(404).json({ error: "User profile not found." });
     }
 
-    let activePlan = (profile.plan || "free").toLowerCase();
-    let subStatus = (profile.subscription_status || "inactive").toLowerCase();
-    const subEnd = profile.subscription_end ? new Date(profile.subscription_end) : null;
-    if (activePlan !== "free" && subEnd && subEnd < new Date()) {
-      activePlan = "free";
-      subStatus = "expired";
-      await supabase
-        .from("profiles")
-        .update({ plan: "free", subscription_status: "expired" })
-        .eq("id", userId);
-    }
+    const isAdmin =
+      profile.role === "admin" || req.user.app_metadata?.role === "admin";
+    const sub = await resolveEffectiveSubscription(userId, profile);
+    const activePlan = isAdmin ? "pro" : sub.plan;
+    const subStatus = isAdmin ? "active" : sub.status;
 
     const coinInfo = await getUserCoinBalance(userId, req.user);
     const effectiveProfileStreak = computeEffectiveStreak(profile.streak, profile.last_activity_date);
     const streak = Math.max(effectiveProfileStreak, Number(coinInfo.streak || 0));
     const meta = req.user.user_metadata || {};
+    const usage = await getUserUsageSummary(userId, activePlan, isAdmin);
 
     res.json({
       user: {
         id: profile.id,
         email: profile.email || req.user.email,
         fullName: profile.full_name,
-        role: profile.role || req.user.app_metadata?.role || "student",
+        role: isAdmin ? "admin" : (profile.role || req.user.app_metadata?.role || "user"),
         plan: activePlan,
         subscriptionStatus: subStatus,
         subscriptionEnd: profile.subscription_end || null,
+        subscriptionSource: sub.subscriptionSource,
         coins: Number(coinInfo.coins ?? 0),
         canClaimDaily: Boolean(coinInfo.canClaimDaily),
         isVerified: profile.is_verified ?? true,
@@ -335,11 +332,75 @@ router.get("/me", authMiddleware, async (req, res) => {
         level: profile.level || 1,
         academicLevel: profile.academic_level || meta.academic_level || "200L Student",
         preferences: profile.preferences || meta.preferences || {},
+        usage,
       }
     });
   } catch (err) {
     console.error("Fetch /me error:", err);
     res.status(500).json({ error: "Failed to fetch user profile." });
+  }
+});
+
+// ── GET USER USAGE & ALLOWANCES (/usage) ──────────────────────
+router.get("/usage", authMiddleware, async (req, res) => {
+  try {
+    const { resolveEffectiveSubscription, getUserUsageSummary } = require("../utils/usageService");
+    const userId = req.user.id;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const isAdmin =
+      profile?.role === "admin" || req.user.app_metadata?.role === "admin";
+    const sub = await resolveEffectiveSubscription(userId, profile);
+    const activePlan = isAdmin ? "pro" : sub.plan;
+    const coinInfo = await getUserCoinBalance(userId, req.user);
+    const usage = await getUserUsageSummary(userId, activePlan, isAdmin);
+
+    res.json({
+      plan: activePlan,
+      subscriptionStatus: isAdmin ? "active" : sub.status,
+      subscriptionEnd: profile?.subscription_end || null,
+      subscriptionSource: sub.subscriptionSource,
+      coins: Number(coinInfo.coins ?? 0),
+      ...usage,
+    });
+  } catch (err) {
+    console.error("Fetch /usage error:", err.message);
+    res.status(500).json({ error: "Failed to fetch usage allowances." });
+  }
+});
+
+// ── PUBLIC PLANS & ALLOWANCES CONFIG (/plans-config) ──────────
+router.get("/plans-config", async (req, res) => {
+  try {
+    const { getAllToolsConfig, PLAN_PRICING } = require("../utils/toolConfig");
+    const { COIN_PACKAGES } = require("./coins");
+    const allTools = await getAllToolsConfig();
+
+    const tools = Object.values(allTools).map((t) => ({
+      toolKey: t.toolKey,
+      name: t.name,
+      description: t.description,
+      category: t.category,
+      enabled: t.enabled,
+      coinCost: t.coinCost,
+      allowCoinsBypass: t.allowCoinsBypass,
+      allowedPlans: t.allowedPlans,
+      dailyLimit: t.dailyLimit,
+      monthlyLimit: t.monthlyLimit,
+      extraConfig: t.extraConfig,
+    }));
+
+    res.json({
+      pricing: PLAN_PRICING,
+      coinPackages: Object.values(COIN_PACKAGES),
+      tools,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load plans configuration." });
   }
 });
 
@@ -355,14 +416,12 @@ router.put("/profile", authMiddleware, async (req, res) => {
       await supabase.from("profiles").update(profileUpdates).eq("id", userId);
     }
 
-    // Attempt optional academic_level column update if schema has it
     if (academicLevel !== undefined) {
       try {
         await supabase.from("profiles").update({ academic_level: academicLevel }).eq("id", userId);
       } catch (_) {}
     }
 
-    // Always persist in Auth user_metadata so settings survive refreshes
     const metaUpdates = { ...(req.user.user_metadata || {}) };
     if (fullName && fullName.trim()) metaUpdates.full_name = fullName.trim();
     if (academicLevel !== undefined) metaUpdates.academic_level = academicLevel;
@@ -382,12 +441,10 @@ router.put("/preferences", authMiddleware, async (req, res) => {
     const { appearance, language, notifications, autoDownload } = req.body;
     const prefs = { appearance, language, notifications, autoDownload };
     
-    // Attempt save to DB if column exists
     try {
       await supabase.from("profiles").update({ preferences: prefs }).eq("id", userId);
     } catch (_) {}
 
-    // Always persist in Auth user_metadata
     const metaUpdates = { ...(req.user.user_metadata || {}), preferences: prefs };
     await supabase.auth.admin.updateUserById(userId, { user_metadata: metaUpdates });
 
@@ -414,16 +471,33 @@ router.post("/google-login", async (req, res) => {
       return res.status(400).json({ error: "Google OAuth credential token is required." });
     }
 
-    // 1. Decode Google credential JWT to get email & name
+    // 1. Cryptographically verify Google ID token via Google tokeninfo endpoint
     let email, fullName;
     try {
-      const payloadBase64 = credential.split(".")[1];
-      const payload = JSON.parse(Buffer.from(payloadBase64, "base64").toString("utf-8"));
+      const verifyResp = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`,
+        { signal: AbortSignal.timeout(10000) }
+      );
+      if (!verifyResp.ok) {
+        return res.status(401).json({ error: "Invalid or expired Google token." });
+      }
+      const payload = await verifyResp.json();
+      const configuredClientId = process.env.GOOGLE_CLIENT_ID;
+      if (
+        configuredClientId &&
+        !configuredClientId.includes("placeholder") &&
+        payload.aud !== configuredClientId
+      ) {
+        return res.status(401).json({ error: "Google token audience mismatch." });
+      }
+      if (String(payload.email_verified) !== "true" || !payload.email) {
+        return res.status(401).json({ error: "Google account email is not verified." });
+      }
       email = payload.email;
       fullName = payload.name || payload.given_name;
     } catch (e) {
-      console.error("Failed to parse Google credential:", e);
-      return res.status(400).json({ error: "Invalid Google credential token." });
+      console.error("Failed to verify Google credential:", e.message);
+      return res.status(401).json({ error: "Could not verify Google sign-in token." });
     }
 
     if (!email) {
