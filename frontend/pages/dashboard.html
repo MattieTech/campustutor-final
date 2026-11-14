@@ -842,6 +842,23 @@
     <button onclick="openVerificationModal()" style="background:#f97316; color:#fff; border:none; padding:4px 10px; border-radius:999px; font-weight:700; font-size:0.72rem; cursor:pointer; flex-shrink:0;">Verify</button>
   </div>
 
+  <!-- Unsubscribed / Free Plan Warning Banner -->
+  <div id="subscriptionWarningBanner" style="display:none; padding:12px 16px; border-radius:14px; background:linear-gradient(135deg, rgba(37,99,235,0.12), rgba(168,85,247,0.15)); border:1px solid rgba(37,99,235,0.3); border-left:4px solid #2563eb; justify-content:space-between; align-items:center; gap:12px; font-size:0.84rem; width:100%; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+    <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+      <div style="width:34px; height:34px; border-radius:10px; background:#2563eb; color:#fff; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <i class="fa-solid fa-crown" style="font-size:0.9rem;"></i>
+      </div>
+      <div>
+        <div style="font-weight:800; color:var(--label1, #1e293b); font-size:0.88rem;">No Active Subscription</div>
+        <div style="color:var(--label2, #64748b); font-size:0.78rem;">Subscribe to PLUS or PRO to unlock AI study tools, document notes & past questions.</div>
+      </div>
+    </div>
+    <a href="/pages/pricing.html" style="background:#2563eb; color:#fff; text-decoration:none; padding:8px 16px; border-radius:999px; font-weight:800; font-size:0.78rem; display:inline-flex; align-items:center; gap:6px; flex-shrink:0; white-space:nowrap; box-shadow:0 2px 8px rgba(37,99,235,0.35);">
+      <span>Unlock Now</span>
+      <i class="fa-solid fa-arrow-right" style="font-size:0.72rem;"></i>
+    </a>
+  </div>
+
   <!-- HERO BANNER CARD (Matches reference screenshot) -->
   <div class="ct-exact-hero">
     <div class="ct-exact-hero-left">
@@ -1409,8 +1426,8 @@ function renderUsageAllowances(usage) {
     let barColor = '#10b981';
 
     if (planBlocked) {
-      dailyLabel = t.allowCoinsBypass ? `Coins only (${t.coinCost}c/use)` : 'Plus / Pro required';
-      monthlyLabel = 'Upgrade to unlock free allowance';
+      dailyLabel = plan === 'free' ? 'Subscription required' : (t.allowCoinsBypass ? `Coins only (${t.coinCost}c/use)` : 'Pro required');
+      monthlyLabel = 'Subscribe to unlock allowance';
       pct = 100;
       barColor = '#94a3b8';
     } else if (!dailyUnlimited && t.dailyLimit > 0) {
@@ -1484,6 +1501,13 @@ async function loadUserStats() {
   const currentPlan = (activeUser?.plan || stats.plan || 'free').toLowerCase();
   const subEnd = activeUser?.subscriptionEnd || activeUser?.usage?.subscriptionEnd || null;
   const subSource = activeUser?.subscriptionSource || activeUser?.usage?.subscriptionSource || null;
+
+  // Show/Hide subscription prompt banner for unsubscribed users
+  const subBanner = document.getElementById('subscriptionWarningBanner');
+  if (subBanner) {
+    const isPaid = currentPlan === 'plus' || currentPlan === 'pro' || activeUser?.role === 'admin' || activeUser?.isAdmin;
+    subBanner.style.display = isPaid ? 'none' : 'flex';
+  }
 
   const statPlan = document.getElementById('statPlan');
   if (statPlan) {

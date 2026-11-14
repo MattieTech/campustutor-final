@@ -440,11 +440,27 @@ async function requirePaidSubscription() {
     window.location.href = "/pages/login.html";
     return false;
   }
-  // Sync latest user profile from server in background to ensure upgraded status is recognized
   try {
-    const user = getUser();
-    if (user && user.plan === 'free') {
-      apiGetMe().catch(() => {});
+    let user = getUser();
+    const isAdmin = user?.role === 'admin' || user?.app_metadata?.role === 'admin' || user?.isAdmin;
+    if (isAdmin) return true;
+
+    // Check plan from cache or server
+    let plan = (user?.plan || 'free').toLowerCase();
+    if (plan === 'free') {
+      const { data } = await apiGetMe();
+      if (data && data.user) {
+        user = data.user;
+        plan = (user.plan || 'free').toLowerCase();
+      }
+    }
+
+    if (plan === 'free') {
+      showToast('A paid subscription is required to use CampusTutor AI tools. Redirecting...', 'warning');
+      setTimeout(() => {
+        window.location.href = "/pages/pricing.html?sub_required=true";
+      }, 600);
+      return false;
     }
   } catch(e) {}
   return true;
