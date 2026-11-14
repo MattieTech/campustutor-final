@@ -1338,7 +1338,7 @@ img{max-width:100%;display:block;}
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 1000;
+  z-index: 100005;
   width: calc(100% - 40px);
   max-width: 540px;
   background: var(--glass-hv);
@@ -1349,6 +1349,24 @@ img{max-width:100%;display:block;}
   padding: 14px 20px;
   box-shadow: 0 16px 48px rgba(0,0,0,0.22), 0 4px 16px rgba(0,0,0,0.1);
   animation: slideUpAudio 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (max-width: 768px) {
+  .audio-player-floating {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    width: calc(100% - 24px) !important;
+    padding: 10px 14px !important;
+    border-radius: 18px !important;
+  }
+  .audio-player-floating .audio-icon-pulse {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 0.95rem !important;
+  }
+  .audio-player-floating .audio-ctrl-btn {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.78rem !important;
+  }
 }
 @keyframes slideUpAudio {
   from { transform: translate(-50%, 40px); opacity: 0; }

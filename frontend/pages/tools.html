@@ -809,6 +809,130 @@ html, body {
   margin-top: 1px;
 }
 
+/* ── STUDY & REVISION CARDS (Exact Match to Study Hub) ── */
+.study-tools-section-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  margin-bottom: 2px;
+}
+[data-theme="dark"] .study-tools-section-title { color: #f8fafc; }
+
+.study-action-grid-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.study-tool-exact-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 20px;
+  padding: 16px 20px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 18px -2px rgba(0, 0, 0, 0.03);
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+}
+[data-theme="dark"] .study-tool-exact-card {
+  background: #111827;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.study-tool-exact-card:hover {
+  transform: translateY(-2px);
+  border-color: #0070F3;
+  box-shadow: 0 8px 24px -4px rgba(0, 112, 243, 0.12);
+}
+.study-tool-exact-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(0, 112, 243, 0.08);
+  color: #0070F3;
+  display: grid;
+  place-items: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+[data-theme="dark"] .study-tool-exact-icon {
+  background: rgba(0, 112, 243, 0.2);
+  color: #60a5fa;
+}
+.study-tool-exact-details {
+  flex: 1;
+  min-width: 0;
+}
+.study-tool-exact-name {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 2px;
+  letter-spacing: -0.01em;
+}
+[data-theme="dark"] .study-tool-exact-name { color: #f8fafc; }
+.study-tool-exact-desc {
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+[data-theme="dark"] .study-tool-exact-desc { color: #94a3b8; }
+.study-tool-exact-arrow {
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.study-tool-exact-card:hover .study-tool-exact-arrow {
+  color: #0070F3;
+  transform: translateX(3px);
+}
+
+/* Category Switcher Tabs */
+.tools-category-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(148, 163, 184, 0.12);
+  padding: 4px;
+  border-radius: 14px;
+  margin-bottom: 4px;
+}
+.tools-cat-pill {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 11px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: all 0.2s;
+}
+[data-theme="dark"] .tools-cat-pill { color: #94a3b8; }
+.tools-cat-pill.active {
+  background: #ffffff;
+  color: #0070F3;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+[data-theme="dark"] .tools-cat-pill.active {
+  background: #1e293b;
+  color: #60a5fa;
+}
+
 </style>
 </head>
 <body>
@@ -853,6 +977,90 @@ html, body {
     <!-- LEFT / MAIN COLUMN -->
     <div style="display:flex; flex-direction:column; gap:12px;">
       
+      <!-- TOP CATEGORY SELECTOR: Study & Revision vs Academic AI -->
+      <div class="tools-category-tabs">
+        <button type="button" class="tools-cat-pill active" id="tabCatAcademic" onclick="switchToolCategory('academic')">
+          <i class="fa-solid fa-graduation-cap"></i>
+          <span>Academic AI Tools</span>
+        </button>
+        <button type="button" class="tools-cat-pill" id="tabCatStudy" onclick="switchToolCategory('study')">
+          <i class="fa-solid fa-book-open-reader"></i>
+          <span>Study & Revision Tools</span>
+        </button>
+      </div>
+
+      <!-- SECTION A: STUDY & REVISION TOOLS (Screenshot 3 - Exact 5 Study Tools) -->
+      <div id="studyToolsSection" style="display:none; flex-direction:column; gap:12px;">
+        <div class="study-tools-section-title">
+          <span>Active Study & Revision Suite</span>
+          <span style="font-size:0.75rem; color:#2563eb; font-weight:700;"><i class="fa-solid fa-sparkles"></i> 5 Tools Available</span>
+        </div>
+
+        <div class="study-action-grid-tools">
+          <!-- 1. Summarize Notes -->
+          <div class="study-tool-exact-card" onclick="openStudyToolAction('summarize')">
+            <div class="study-tool-exact-icon" style="background:rgba(37,99,235,0.1); color:#2563eb;">
+              <i class="fa-solid fa-list-check"></i>
+            </div>
+            <div class="study-tool-exact-details">
+              <div class="study-tool-exact-name">Summarize Notes</div>
+              <div class="study-tool-exact-desc">Get a clean overview of all key points</div>
+            </div>
+            <div class="study-tool-exact-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+          </div>
+
+          <!-- 2. Revision Questions -->
+          <div class="study-tool-exact-card" onclick="openStudyToolAction('questions')">
+            <div class="study-tool-exact-icon" style="background:rgba(16,185,129,0.1); color:#10b981;">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </div>
+            <div class="study-tool-exact-details">
+              <div class="study-tool-exact-name">Revision Questions</div>
+              <div class="study-tool-exact-desc">MCQs + essay questions with model answers</div>
+            </div>
+            <div class="study-tool-exact-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+          </div>
+
+          <!-- 3. Create Flashcards -->
+          <div class="study-tool-exact-card" onclick="openStudyToolAction('flashcards')">
+            <div class="study-tool-exact-icon" style="background:rgba(245,158,11,0.1); color:#f59e0b;">
+              <i class="fa-solid fa-id-card"></i>
+            </div>
+            <div class="study-tool-exact-details">
+              <div class="study-tool-exact-name">Create Flashcards</div>
+              <div class="study-tool-exact-desc">Interactive flip-card study set</div>
+            </div>
+            <div class="study-tool-exact-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+          </div>
+
+          <!-- 4. AI Exam Simulator -->
+          <div class="study-tool-exact-card" onclick="openStudyToolAction('exam')">
+            <div class="study-tool-exact-icon" style="background:rgba(249,115,22,0.1); color:#f97316;">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div class="study-tool-exact-details">
+              <div class="study-tool-exact-name">AI Exam Simulator</div>
+              <div class="study-tool-exact-desc">Timed mock test with letter grade prediction</div>
+            </div>
+            <div class="study-tool-exact-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+          </div>
+
+          <!-- 5. Audio Notes (Voice) -->
+          <div class="study-tool-exact-card" onclick="openStudyToolAction('audio')">
+            <div class="study-tool-exact-icon" style="background:rgba(168,85,247,0.1); color:#a855f7;">
+              <i class="fa-solid fa-headphones"></i>
+            </div>
+            <div class="study-tool-exact-details">
+              <div class="study-tool-exact-name">Audio Notes (Voice)</div>
+              <div class="study-tool-exact-desc">Hands-free voice revision on the go</div>
+            </div>
+            <div class="study-tool-exact-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION B: ACADEMIC AI SUITE -->
+      <div id="academicToolsSection" style="display:flex; flex-direction:column; gap:12px;">
       <!-- 1. HORIZONTAL TOOL SWITCHER STRIP (Above the fold) -->
       <div class="tool-switcher-strip" id="toolSwitcherStrip">
         <button type="button" class="tool-switcher-pill active" onclick="switchAcademicTool('polisher', this)">
@@ -1064,6 +1272,8 @@ html, body {
         </div>
         <div id="recentHistoryList" style="display:flex; flex-direction:column; gap:8px;"></div>
       </div>
+
+      </div><!-- /academicToolsSection -->
 
     </div>
 

@@ -919,6 +919,88 @@
     </a>
   </div>
 
+  <!-- PROMOTIONAL BANNER CAROUSEL (3 Auto-Scrolling & Swipable Banners) - Placed immediately below quick stats -->
+  <div class="ct-promo-carousel-wrap" id="promoCarouselWrap" style="margin-top: 14px; margin-bottom: 16px;">
+    <div class="ct-promo-track" id="promoTrack">
+      <!-- Banner 1: Refer and Earn -->
+      <div class="ct-promo-slide ct-promo-slide-referral">
+        <div class="ct-promo-badge"><i class="fa-solid fa-gift"></i> Refer & Earn</div>
+        <div class="ct-promo-body">
+          <div class="ct-promo-text-col">
+            <h3 class="ct-promo-title">Earn While You Learn!</h3>
+            <p class="ct-promo-desc">Invite your friends to Campus Tutor AI and earn up to ₦5,000 for every successful referral.</p>
+            <div class="ct-promo-actions">
+              <a href="/pages/referral.html" class="ct-promo-btn ct-promo-btn-gold">
+                <span>Refer a Friend</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+          <div class="ct-promo-visual">
+            <div class="ct-promo-icon-circle ct-promo-icon-gold">
+              <i class="fa-solid fa-hand-holding-dollar"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Banner 2: WhatsApp Community -->
+      <div class="ct-promo-slide ct-promo-slide-whatsapp">
+        <div class="ct-promo-badge ct-badge-whatsapp"><i class="fa-brands fa-whatsapp"></i> Student Community</div>
+        <div class="ct-promo-body">
+          <div class="ct-promo-text-col">
+            <h3 class="ct-promo-title">Join Our WhatsApp Community</h3>
+            <p class="ct-promo-desc">Connect with other students, share ideas, get updates and stay informed about everything happening at Campus Tutor AI.</p>
+            <div class="ct-promo-actions">
+              <a href="https://chat.whatsapp.com/CNlccvf5Eue6ZvE4Pz3JGX" target="_blank" rel="noopener" class="ct-promo-btn ct-promo-btn-green">
+                <span>Join Community</span>
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              </a>
+            </div>
+          </div>
+          <div class="ct-promo-visual">
+            <div class="ct-promo-icon-circle ct-promo-icon-green">
+              <i class="fa-brands fa-whatsapp"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Banner 3: Upgrade to Pro -->
+      <div class="ct-promo-slide ct-promo-slide-pro">
+        <div class="ct-promo-badge ct-badge-pro"><i class="fa-solid fa-crown"></i> Premium Access</div>
+        <div class="ct-promo-body">
+          <div class="ct-promo-text-col">
+            <h3 class="ct-promo-title">Unlock More with Campus Tutor AI Pro</h3>
+            <p class="ct-promo-desc">Get more access to powerful AI learning tools, enjoy a better learning experience and unlock additional benefits.</p>
+            <div class="ct-promo-actions">
+              <a href="/pages/pricing.html" class="ct-promo-btn ct-promo-btn-white">
+                <span>Explore Pro</span>
+                <i class="fa-solid fa-sparkles"></i>
+              </a>
+              <button type="button" onclick="openCoinsModal()" class="ct-promo-btn ct-promo-btn-coins">
+                <i class="fa-solid fa-coins"></i>
+                <span>Buy Coins</span>
+              </button>
+            </div>
+          </div>
+          <div class="ct-promo-visual">
+            <div class="ct-promo-icon-circle ct-promo-icon-purple">
+              <i class="fa-solid fa-crown"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Carousel Pagination Indicators -->
+    <div class="ct-promo-dots" id="promoDots">
+      <span class="ct-promo-dot active" onclick="goToPromoSlide(0)"></span>
+      <span class="ct-promo-dot" onclick="goToPromoSlide(1)"></span>
+      <span class="ct-promo-dot" onclick="goToPromoSlide(2)"></span>
+    </div>
+  </div>
+
   <!-- EXPLAIN A CONCEPT CARD (Matches reference screenshot) -->
   <div class="ct-exact-concept-card">
     <div class="ct-exact-concept-main">
@@ -1037,88 +1119,6 @@
       <div style="font-size:0.8rem;color:#64748b;padding:8px 0;">Fetching real-time tool allowances...</div>
     </div>
   </section>
-
-  <!-- PROMOTIONAL BANNER CAROUSEL (3 Auto-Scrolling & Swipable Banners) -->
-  <div class="ct-promo-carousel-wrap" id="promoCarouselWrap">
-    <div class="ct-promo-track" id="promoTrack">
-      <!-- Banner 1: Refer and Earn -->
-      <div class="ct-promo-slide ct-promo-slide-referral">
-        <div class="ct-promo-badge"><i class="fa-solid fa-gift"></i> Refer & Earn</div>
-        <div class="ct-promo-body">
-          <div class="ct-promo-text-col">
-            <h3 class="ct-promo-title">Earn While You Learn!</h3>
-            <p class="ct-promo-desc">Invite your friends to Campus Tutor AI and earn up to ₦5,000 for every successful referral.</p>
-            <div class="ct-promo-actions">
-              <a href="/pages/referral.html" class="ct-promo-btn ct-promo-btn-gold">
-                <span>Refer a Friend</span>
-                <i class="fa-solid fa-arrow-right"></i>
-              </a>
-            </div>
-          </div>
-          <div class="ct-promo-visual">
-            <div class="ct-promo-icon-circle ct-promo-icon-gold">
-              <i class="fa-solid fa-hand-holding-dollar"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Banner 2: WhatsApp Community -->
-      <div class="ct-promo-slide ct-promo-slide-whatsapp">
-        <div class="ct-promo-badge ct-badge-whatsapp"><i class="fa-brands fa-whatsapp"></i> Student Community</div>
-        <div class="ct-promo-body">
-          <div class="ct-promo-text-col">
-            <h3 class="ct-promo-title">Join Our WhatsApp Community</h3>
-            <p class="ct-promo-desc">Connect with other students, share ideas, get updates and stay informed about everything happening at Campus Tutor AI.</p>
-            <div class="ct-promo-actions">
-              <a href="https://chat.whatsapp.com/CNlccvf5Eue6ZvE4Pz3JGX" target="_blank" rel="noopener" class="ct-promo-btn ct-promo-btn-green">
-                <span>Join Community</span>
-                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-              </a>
-            </div>
-          </div>
-          <div class="ct-promo-visual">
-            <div class="ct-promo-icon-circle ct-promo-icon-green">
-              <i class="fa-brands fa-whatsapp"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Banner 3: Upgrade to Pro -->
-      <div class="ct-promo-slide ct-promo-slide-pro">
-        <div class="ct-promo-badge ct-badge-pro"><i class="fa-solid fa-crown"></i> Premium Access</div>
-        <div class="ct-promo-body">
-          <div class="ct-promo-text-col">
-            <h3 class="ct-promo-title">Unlock More with Campus Tutor AI Pro</h3>
-            <p class="ct-promo-desc">Get more access to powerful AI learning tools, enjoy a better learning experience and unlock additional benefits.</p>
-            <div class="ct-promo-actions">
-              <a href="/pages/pricing.html" class="ct-promo-btn ct-promo-btn-white">
-                <span>Explore Pro</span>
-                <i class="fa-solid fa-sparkles"></i>
-              </a>
-              <button type="button" onclick="openCoinsModal()" class="ct-promo-btn ct-promo-btn-coins">
-                <i class="fa-solid fa-coins"></i>
-                <span>Buy Coins</span>
-              </button>
-            </div>
-          </div>
-          <div class="ct-promo-visual">
-            <div class="ct-promo-icon-circle ct-promo-icon-purple">
-              <i class="fa-solid fa-crown"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Carousel Pagination Indicators -->
-    <div class="ct-promo-dots" id="promoDots">
-      <span class="ct-promo-dot active" onclick="goToPromoSlide(0)"></span>
-      <span class="ct-promo-dot" onclick="goToPromoSlide(1)"></span>
-      <span class="ct-promo-dot" onclick="goToPromoSlide(2)"></span>
-    </div>
-  </div>
 
 </div>
 
